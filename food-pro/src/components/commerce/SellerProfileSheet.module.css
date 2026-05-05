@@ -1,0 +1,562 @@
+/* ── Full-screen page ─────────────────────────────────────────────────────── */
+.page {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  overflow: hidden;
+}
+
+/* ── Full-height background image ────────────────────────────────────────── */
+.bgImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  z-index: 0;
+}
+
+.bgFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(141,198,63,0.2) 0%, #080808 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+
+.bgInitial {
+  font-size: 120px;
+  font-weight: 900;
+  color: rgba(141,198,63,0.2);
+}
+
+/* Bottom-heavy gradient so text reads over image */
+.bgGrad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.96) 0%,
+    rgba(0,0,0,0.65) 28%,
+    rgba(0,0,0,0.15) 60%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  z-index: 10;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px 6px 9px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(6px);
+}
+
+/* Clipping wrapper crops the whitespace padding in the source image */
+.indooLogoWrap {
+  width: 200px;
+  height: 66px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: -10px;
+  margin-left: -13px;
+}
+
+.indooLogoImg {
+  position: absolute;
+  width: 220%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+}
+
+.locationText {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  margin: 0 0 4px;
+}
+
+
+/* ── Floating right side panel ───────────────────────────────────────────── */
+.sidePanel {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0a0a0a;
+  border: 1.5px solid rgba(141,198,63,0.4);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 8px;
+  z-index: 10;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 20px rgba(141,198,63,0.12);
+}
+
+.sidePanelBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #111;
+  border: 1.5px solid rgba(141,198,63,0.35);
+  color: #8DC63F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  text-decoration: none;
+}
+
+.sidePanelBtn:hover {
+  background: rgba(141,198,63,0.12);
+  border-color: rgba(141,198,63,0.65);
+  transform: scale(1.08);
+}
+
+.sidePanelBtnActive {
+  background: rgba(141,198,63,0.18);
+  border-color: #8DC63F;
+}
+
+.sidePanelBtnDim {
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.2);
+  cursor: default;
+}
+
+.sidePanelBtnDim:hover {
+  background: #111;
+  border-color: rgba(255,255,255,0.1);
+  transform: none;
+}
+
+/* ── Opening hours card ──────────────────────────────────────────────────── */
+.hoursCard {
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0a0a0a;
+  border: 1.5px solid rgba(141,198,63,0.4);
+  border-radius: 14px;
+  padding: 12px 16px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+
+.hoursTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hoursTime {
+  font-size: 14px;
+  font-weight: 800;
+  color: #8DC63F;
+}
+
+/* ── Bottom overlay ──────────────────────────────────────────────────────── */
+.bottomOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 20px 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brandName {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.7);
+}
+
+.ownerName {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin-top: -2px;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.categoryChip,
+.cityChip,
+.conditionChip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.categoryChip {
+  background: rgba(141,198,63,0.2);
+  border: 1px solid rgba(141,198,63,0.4);
+  color: #8DC63F;
+}
+
+.cityChip {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.75);
+}
+
+.conditionChip {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+}
+
+.bio {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.55;
+  margin: 4px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Action row (Chat + Socials side by side) ────────────────────────────── */
+.actionRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: stretch;
+}
+
+/* Chat with Seller — primary */
+.chatBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 14px;
+  background: rgba(141,198,63,0.15);
+  border: 1.5px solid rgba(141,198,63,0.4);
+  border-radius: 14px;
+  color: #8DC63F;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s;
+}
+.chatBtn:active { background: rgba(141,198,63,0.25); }
+
+/* Socials — secondary */
+.contactRowBtn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 16px;
+  background: rgba(141,198,63,0.12);
+  border: 1.5px solid rgba(141,198,63,0.35);
+  border-radius: 14px;
+  color: #8DC63F;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.contactRowBtn:active { background: rgba(141,198,63,0.2); }
+
+/* ── Contact slide-up sheet ──────────────────────────────────────────────── */
+.contactBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+.contactSheet {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid rgba(141,198,63,0.25);
+  border-radius: 22px 22px 0 0;
+  padding: 0 0 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.contactHandle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 14px auto 0;
+}
+
+.contactTitle {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+  padding: 16px 20px 2px;
+  text-align: center;
+}
+
+.contactSub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  padding: 0 20px 16px;
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+/* Gold WhatsApp CTA button */
+.contactItemWa {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 14px;
+  background: #8DC63F;
+  border: none;
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-shadow: 0 4px 16px rgba(141,198,63,0.4);
+}
+
+.contactItemWa:hover {
+  background: #FBBF24;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.contactItem:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.contactItemDisabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.contactItemDisabled:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.contactIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contactItemText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.contactItemLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+
+.contactItemSub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+}
+
+.contactDismiss {
+  margin: 16px 16px 0;
+  padding: 13px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.contactDismiss:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.contactEmpty {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  padding: 8px 20px 0;
+  margin: 0;
+}
+
+/* ── Two-choice buttons (Free Chat / Unlock) ── */
+.contactChoices {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.choiceChat,
+.choiceUnlock {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.choiceChat {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.choiceChat:hover { background: rgba(255,255,255,0.1); }
+
+.choiceUnlock {
+  background: rgba(249,115,22,0.12);
+  border: 1px solid rgba(249,115,22,0.4);
+  color: #F97316;
+}
+
+.choiceUnlock:hover { background: rgba(249,115,22,0.2); }
+
+.choiceChat span,
+.choiceUnlock span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choiceChat strong,
+.choiceUnlock strong {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.choiceChat span span,
+.choiceUnlock span span {
+  font-size: 10px;
+  opacity: 0.6;
+  font-weight: 500;
+}
+
+/* ── Locked contact preview ── */
+.lockedPreview {
+  margin: 0 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.lockedRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.lockedRow:last-child { border-bottom: none; }
+
+.lockedIcon { font-size: 13px; opacity: 0.4; }
+
+.lockedLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.lockedBlur {
+  font-size: 10px;
+  color: rgba(255,255,255,0.12);
+  letter-spacing: 2px;
+  filter: blur(4px);
+  user-select: none;
+  flex: 1;
+}

@@ -1,0 +1,465 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: #0a0a12;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+  isolation: isolate;
+}
+
+/* ── Time-based background layers ── */
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transition: opacity 2.5s ease;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.bgLayerVisible {
+  opacity: 1;
+  animation: kenBurns 36s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurns {
+  0%   { transform: scale(1.0)  translate(0%,    0%);   }
+  33%  { transform: scale(1.05) translate(-0.8%, 0.4%); }
+  66%  { transform: scale(1.04) translate(0.6%,  -0.5%);}
+  100% { transform: scale(1.07) translate(-0.4%, 0.6%); }
+}
+
+.bgSunsetOverlay {
+  position: absolute;
+  inset: 0;
+  background: #070710;
+  pointer-events: none;
+  transition: opacity 4s ease;
+  z-index: 0;
+}
+
+/* ── City light shimmer ── */
+.cityShimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 55% 32% at 18% 78%, rgba(255, 168, 48, 0.16) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 38% at 56% 86%, rgba(255, 205, 72, 0.13) 0%, transparent 100%),
+    radial-gradient(ellipse 42% 26% at 84% 70%, rgba(255, 148, 38, 0.11) 0%, transparent 100%);
+  animation: cityBreath 9s ease-in-out infinite alternate;
+}
+
+.cityShimmer::before {
+  content: '';
+  position: absolute;
+  width: 24%;
+  height: 20%;
+  left: 10%;
+  bottom: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 188, 58, 0.28) 0%, transparent 70%);
+  filter: blur(10px);
+  animation: flicker1 3.4s ease-in-out infinite alternate;
+}
+
+.cityShimmer::after {
+  content: '';
+  position: absolute;
+  width: 20%;
+  height: 16%;
+  right: 12%;
+  bottom: 22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 218, 88, 0.22) 0%, transparent 70%);
+  filter: blur(8px);
+  animation: flicker2 5.1s ease-in-out infinite alternate;
+}
+
+@keyframes cityBreath {
+  from { opacity: 0.45; }
+  to   { opacity: 1.0;  }
+}
+
+@keyframes flicker1 {
+  0%   { opacity: 0.35; transform: scale(0.94); }
+  35%  { opacity: 1.0;  transform: scale(1.06); }
+  68%  { opacity: 0.55; transform: scale(0.98); }
+  100% { opacity: 0.85; transform: scale(1.03); }
+}
+
+@keyframes flicker2 {
+  0%   { opacity: 0.7;  transform: scale(1.0);  }
+  28%  { opacity: 0.25; transform: scale(0.91); }
+  62%  { opacity: 0.9;  transform: scale(1.05); }
+  100% { opacity: 0.45; transform: scale(0.95); }
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+/* Logo — top-left above the sheet */
+.heroLogo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 35%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 1;
+  pointer-events: none;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.headerLogo {
+  height: 240px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 24px rgba(0,0,0,0.6));
+}
+.heroSlogan {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+  margin-top: -110px;
+  background: linear-gradient(90deg, #fff 0%, #fff 40%, #8DC63F 60%, #fff 80%, #fff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: sloganShine 3s linear infinite;
+}
+@keyframes sloganShine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sheet {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-top: 3px solid rgba(141,198,63,0.3);
+  padding: var(--space-3) var(--space-6) calc(var(--safe-bottom) + var(--space-6));
+  max-height: 85dvh;
+  max-height: 85svh;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overscroll-behavior: contain;
+}
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #8DC63F, transparent);
+  border-radius: 3px;
+  animation: sheetRunLight 2.5s linear infinite;
+}
+@keyframes sheetRunLight {
+  0% { left: -80px; }
+  100% { left: 100%; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%) }
+  to   { transform: translateY(0) }
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: #8DC63F;
+  border-radius: 2px;
+  margin: 0 auto var(--space-5);
+  cursor: pointer;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+
+.emoji {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  margin: 0;
+}
+
+.titleShine {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #ffffff 35%,
+    #8DC63F 48%,
+    #d4f5a0 52%,
+    #ffffff 65%,
+    #ffffff 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleShineMove 3.5s ease-in-out infinite;
+}
+
+@keyframes titleShineMove {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.sub {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  width: 100%;
+}
+
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: var(--color-live);
+  outline: none;
+}
+
+.otpInput {
+  text-align: center;
+  letter-spacing: 0.4em;
+  font-size: var(--font-size-xl);
+}
+
+.passWrap {
+  position: relative;
+  width: 100%;
+}
+
+.passWrap .input {
+  padding-right: 44px;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--color-text-muted);
+  padding: var(--space-1);
+}
+
+/* Primary button */
+.primaryBtn {
+  width: 100%;
+  background: var(--color-live);
+  color: #000;
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.skipBtn {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: underline;
+  padding: var(--space-2);
+}
+
+.toggleMode {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-decoration: underline;
+  padding: var(--space-1);
+}
+
+/* Photo picker */
+.photoRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.photoCircle {
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 3px dashed rgba(141,198,63,0.6);
+  box-shadow: 0 0 0 4px rgba(141,198,63,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.photoCircle:hover {
+  border-color: var(--color-live);
+  box-shadow: 0 0 0 6px rgba(141,198,63,0.2);
+}
+
+.photoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoPlus {
+  font-size: 28px;
+  color: var(--color-text-muted);
+}
+
+.cameraIcon {
+  color: rgba(255,255,255,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileStepImg {
+  position: absolute;
+  right: -12px;
+  bottom: 167px;
+  width: 130px;
+  height: auto;
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.4));
+}
+
+.photoLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: underline;
+}
+
+.hidden { display: none; }
+
+/* Phone row */
+.phoneRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+  width: 100%;
+}
+
+.dialBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.phoneInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  transition: border-color var(--transition-fast);
+}
+
+.phoneInput:focus { border-color: var(--color-live); outline: none; }
+
+.sentTo {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  width: 100%;
+}
+
+.otpBikerImg {
+  position: absolute;
+  right: -23px;
+  bottom: 103px;
+  width: 140px;
+  height: auto;
+  pointer-events: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+}

@@ -1,0 +1,407 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  background: #080808;
+  display: flex;
+  flex-direction: column;
+  z-index: 500;
+  font-family: inherit;
+}
+
+/* ── 10% rate badge — food-specific ── */
+.rateBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(232,69,140,0.08);
+  border: 1px solid rgba(232,69,140,0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.rateBadgeIcon { font-size: 22px; flex-shrink: 0; }
+
+.rateBadgeTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: #E8458C;
+  letter-spacing: -0.01em;
+}
+
+.rateBadgeSub {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid #111;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  flex: 1;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.headerRight { width: 36px; flex-shrink: 0; }
+
+/* ── Scroll container ── */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 40px;
+}
+
+/* ── Balance card ── */
+.balanceCard {
+  background: #111;
+  border: 1px solid rgba(255,149,0,0.2);
+  border-radius: 18px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.balanceCardOverdue {
+  border-color: rgba(255,59,48,0.3);
+  box-shadow: 0 0 24px rgba(255,59,48,0.08);
+}
+
+.balanceRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.balanceStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balanceStat:last-child { align-items: flex-end; }
+
+.balanceDivider {
+  width: 1px;
+  height: 50px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  margin: 0 20px;
+}
+
+.balanceLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.balanceAmount { font-size: 26px; font-weight: 800; font-family: monospace; }
+.balanceAmountOrange { color: #FF9500; }
+.balanceAmountRed    { color: #FF3B30; }
+.balanceAmountGreen  { font-size: 26px; font-weight: 800; font-family: monospace; color: #34C759; }
+
+.overdueChip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FF3B30;
+  background: rgba(255,59,48,0.1);
+  border: 1px solid rgba(255,59,48,0.3);
+  border-radius: 20px;
+  padding: 2px 8px;
+  width: fit-content;
+}
+
+.paidChip {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(52,199,89,0.7);
+}
+
+/* Pay section */
+.paySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+}
+
+.payNote {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.payActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btnPay {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: #FF9500;
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.btnPay:active { opacity: 0.85; }
+
+.btnUpgrade {
+  width: 100%;
+  padding: 13px;
+  background: rgba(141,198,63,0.1);
+  color: #8DC63F;
+  font-size: 14px;
+  font-weight: 800;
+  border: 1.5px solid rgba(141,198,63,0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btnUpgrade:active { background: rgba(141,198,63,0.2); }
+
+/* All clear */
+.allClearRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+}
+
+.allClearIcon { font-size: 20px; }
+
+.allClearText {
+  font-size: 13px;
+  font-weight: 700;
+  color: #34C759;
+}
+
+/* ── Info card ── */
+.infoCard {
+  display: flex;
+  gap: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 16px 14px;
+}
+
+.infoIcon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+.infoBody { display: flex; flex-direction: column; gap: 6px; }
+
+.infoTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+}
+
+.infoText {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.infoText strong { color: rgba(255,255,255,0.7); }
+
+/* ── Sections ── */
+.section {
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ── Tab bar ── */
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tabBtnActive {
+  color: #FF9500;
+  border-bottom-color: #FF9500;
+}
+
+.tabBadge {
+  background: rgba(255,149,0,0.15);
+  color: #FF9500;
+  border-radius: 20px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ── Commission rows ── */
+.list { display: flex; flex-direction: column; }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  gap: 12px;
+}
+
+.row:last-child { border-bottom: none; }
+
+.rowLeft { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+
+.rowRef {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  font-family: monospace;
+}
+
+.rowDate {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+}
+
+.rowRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.rowAmount {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  font-family: monospace;
+}
+
+.rowStatus {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Delivery grid ── */
+.deliveryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.deliveryChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+}
+
+.cityTag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #FF9500;
+  background: rgba(255,149,0,0.12);
+  border-radius: 10px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Empty state ── */
+.empty {
+  padding: 32px;
+  text-align: center;
+  color: rgba(255,255,255,0.25);
+  font-size: 14px;
+}

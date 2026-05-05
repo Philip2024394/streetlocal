@@ -1,0 +1,98 @@
+.avatar {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  border: 2px solid transparent;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.live {
+  border-color: var(--color-live);
+  box-shadow: 0 0 0 2px var(--color-bg), var(--shadow-live);
+}
+
+.mutual {
+  border-color: var(--color-mutual);
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 16px rgba(168, 85, 247, 0.5);
+}
+
+.scheduled {
+  border-color: #E8890C;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 14px rgba(232,137,12,0.45);
+}
+
+.inviteOut {
+  border-color: #F5C518;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 14px rgba(245,197,24,0.45);
+}
+
+.dating {
+  border-color: #F472B6;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 14px rgba(244,114,182,0.5);
+}
+
+/* ── No-photo brand card ── */
+.brandCard {
+  background: linear-gradient(160deg, #0d1a0d 0%, #0e0e0e 100%);
+  border-color: rgba(141,198,63,0.3) !important;
+  overflow: hidden;
+}
+
+.brandInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px 4px;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+
+.brandMark {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #8DC63F;
+  text-transform: lowercase;
+  line-height: 1;
+}
+
+.brandQuote {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.noPhotoTag {
+  font-size: 6.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.3);
+  line-height: 1;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Very small fallback */
+.brandMarkSm {
+  font-size: 0.7em;
+  color: #8DC63F;
+  opacity: 0.8;
+}

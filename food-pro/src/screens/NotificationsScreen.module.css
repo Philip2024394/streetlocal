@@ -1,0 +1,502 @@
+/* ── Screen ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  background-color: #000;
+  background-image: url('https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33.png?updatedAt=1775555797749');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: local;
+  z-index: var(--z-header);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+/* Single glass overlay — sits between image and all content */
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.headerIcon {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.unreadBadge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FF3B30;
+  background: rgba(255,59,48,0.12);
+  border: 1px solid rgba(255,59,48,0.3);
+  border-radius: 100px;
+  padding: 4px 10px;
+}
+
+/* Home button — right side */
+.homeBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+
+.homeBtn:active {
+  transform: scale(0.92);
+  background: rgba(141,198,63,0.1);
+  color: #8DC63F;
+}
+
+/* ── Stats strip — fixed just below header ── */
+.statsStrip {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.statChip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.statNum {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.statMeta {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.statDivider {
+  width: 1px;
+  height: 30px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+/* ── Scroll ── */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(100px + var(--safe-bottom));
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Section headers ── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 8px;
+  position: sticky;
+  top: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sectionDating  { border-color: rgba(255, 107, 163, 0.4); }
+.sectionDating  .sectionTitle { color: #FF6BA3; }
+.sectionMarket  { border-color: rgba(245, 197, 24, 0.4); }
+.sectionMarket  .sectionTitle { color: #F5C518; }
+.sectionFood    { border-color: rgba(249, 115, 22, 0.4); }
+.sectionFood    .sectionTitle { color: #F97316; }
+.sectionRide    { border-color: rgba(141, 198, 63, 0.4); }
+.sectionRide    .sectionTitle { color: #8DC63F; }
+
+.sectionImgIcon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sectionIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.sectionTitle {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.sectionCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+/* ── Landscape viewer card ── */
+.viewerCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.1s;
+}
+
+.viewerCard:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.viewerAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.viewerBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.viewerTop {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.viewerName {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewerAge {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+}
+
+.viewerCity {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewerViews {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(141,198,63,0.7);
+}
+
+/* Online dot on avatar */
+.viewerAvatar {
+  position: relative;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #8DC63F;
+  border: 2px solid var(--color-bg);
+  box-shadow: 0 0 6px #8DC63F;
+}
+
+/* Online / time pills */
+.onlinePill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8DC63F;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.timePill {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.25);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Like button on viewer card */
+.likeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+}
+
+.likeBtn:active { transform: scale(0.92); }
+
+/* ── Vibe Blast section ─────────────────────────────────────────────────── */
+.sectionVibe .sectionIcon { filter: drop-shadow(0 0 6px rgba(244,114,182,0.7)); }
+.sectionVibe .sectionTitle { color: #F472B6; }
+.sectionVibe .sectionCount {
+  background: rgba(244,114,182,0.15);
+  color: #F472B6;
+  border: 1px solid rgba(244,114,182,0.3);
+}
+
+.vibeBlastRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(244,114,182,0.03);
+}
+
+.vibeBlastAvatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(244,114,182,0.1);
+  border: 2px solid rgba(244,114,182,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(244,114,182,0.2);
+}
+
+.vibeBlastBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vibeBlastName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.vibeBlastMeta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.4;
+}
+
+.vibeBlastExpiry {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(244,114,182,0.7);
+}
+
+.vibeBlastPink {
+  font-size: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(244,114,182,0.6));
+}
+
+.likeBtnActive {
+  background: rgba(255,59,48,0.12);
+  border-color: rgba(255,59,48,0.4);
+  color: #FF3B30;
+}
+
+/* ── Notification row ── */
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.1s;
+  position: relative;
+}
+
+.rowUnread { background: rgba(255, 59, 48, 0.04); }
+
+.rowUnread:active,
+.row:active { background: rgba(255, 255, 255, 0.04); }
+
+.rowEmoji {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.rowEmojiUnread {
+  border-color: rgba(255,59,48,0.4);
+  background: rgba(255,59,48,0.08);
+}
+
+.rowText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.rowTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.rowBody {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.rowTime {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 2px;
+}
+
+/* Tappable row */
+.rowTappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rowTappable:active { background: rgba(141,198,63,0.06); }
+
+/* Right side of row */
+.rowRight { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.rowChevron { font-size: 20px; color: rgba(141,198,63,0.6); line-height: 1; }
+
+/* Unread red dot */
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #FF3B30;
+  box-shadow: 0 0 6px rgba(255,59,48,0.7);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* ── Ride history rows ── */
+.viewAllBtn {
+  font-size: 11px; font-weight: 700; color: #8DC63F;
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; padding: 0; margin-left: auto;
+}
+
+.rideRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.rideIcon { font-size: 40px; flex-shrink: 0; display: flex; align-items: center; }
+.rideIconImg { width: 72px; height: 72px; object-fit: contain; }
+.rideBody { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rideDest {
+  font-size: 13px; font-weight: 700; color: var(--color-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rideMeta { font-size: 11px; color: #555; }
+.rideRight { flex-shrink: 0; text-align: right; }
+.rideFare { font-size: 13px; font-weight: 800; color: #8DC63F; }
+.warningBadge {
+  height: 72px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}

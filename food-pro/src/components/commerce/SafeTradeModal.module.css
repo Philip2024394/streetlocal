@@ -1,0 +1,445 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9100;
+  backdrop-filter: blur(6px);
+  padding: 20px;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  width: 100%;
+  max-width: 400px;
+  max-height: 85vh;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  animation: scaleIn 0.2s cubic-bezier(0.32,0.72,0,1) forwards;
+  /* Orange top border with running glow */
+  border: 1px solid rgba(141,198,63,0.2);
+  border-top: 2px solid #8DC63F;
+  box-shadow: 0 -4px 20px rgba(141,198,63,0.25), 0 -1px 8px rgba(141,198,63,0.4);
+}
+
+/* Background image */
+.modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('https://ik.imagekit.io/nepgaxllc/Untitledsdfsssasdassdasda.png') center/cover no-repeat;
+  z-index: 0;
+}
+
+/* Frosted glass overlay */
+.modal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1;
+}
+
+/* Running orange glow animation on top edge */
+.modalGlow {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.modalGlow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #8DC63F, #FBBF24, #8DC63F, transparent);
+  animation: runningGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes runningGlow {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.modalInner {
+  position: relative;
+  z-index: 2;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modalInner::-webkit-scrollbar { width: 3px; }
+.modalInner::-webkit-scrollbar-thumb { background: rgba(141,198,63,0.2); border-radius: 2px; }
+
+.closeBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 3;
+}
+
+.closeBtn:hover { background: rgba(255,255,255,0.14); }
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.safeTradeLogo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin: 6px 0 0;
+}
+
+/* ── Sections ── */
+.section {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+}
+
+.sectionText {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Steps ── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.stepNum {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(141,198,63,0.15);
+  border: 1px solid rgba(141,198,63,0.35);
+  color: #8DC63F;
+  font-size: 12px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.stepLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.stepSub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ── Seller status ── */
+.sellerStatus {
+  padding: 20px 24px 24px;
+}
+
+.sellerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sellerLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.statusOn {
+  background: rgba(141,198,63,0.12);
+  border: 1px solid rgba(141,198,63,0.3);
+  color: #8DC63F;
+}
+
+.statusOff {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.35);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusOn .statusDot { background: #8DC63F; box-shadow: 0 0 6px rgba(141,198,63,0.5); }
+.statusOff .statusDot { background: rgba(255,255,255,0.25); }
+
+/* ── Payment methods ── */
+.methods {
+  display: flex;
+  gap: 10px;
+}
+
+.methodCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+}
+
+/* ── Method explanation blocks ── */
+.methodExplain {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.methodLogoWrap {
+  width: 70px;
+  min-width: 70px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.methodLogo {
+  width: 100%;
+  height: 28px;
+  object-fit: contain;
+}
+
+.methodDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.methodName {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.methodDesc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.methodDesc strong {
+  color: rgba(255,255,255,0.75);
+}
+
+.methodFee {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8DC63F;
+}
+
+/* ── Benefits list ── */
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.5;
+}
+
+.benefitIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Seller status cards ── */
+.sellerNote {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.methodCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+}
+
+.methodCardLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8DC63F;
+}
+
+.notAvailableText {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.65;
+  margin: 0 0 14px;
+}
+
+/* ── Request Safe Trade button ── */
+.requestBtn {
+  width: 100%;
+  padding: 13px;
+  background: rgba(141,198,63,0.12);
+  border: 1.5px solid rgba(141,198,63,0.35);
+  border-radius: 12px;
+  color: #8DC63F;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.requestBtn:hover { background: rgba(141,198,63,0.2); }
+
+.requestBtn:disabled {
+  background: rgba(141,198,63,0.08);
+  border-color: rgba(141,198,63,0.25);
+  color: #8DC63F;
+  cursor: default;
+}
+
+/* ── Indoo recommendation banner ── */
+.recommendation {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 24px 20px;
+  font-size: 11px;
+  color: rgba(141,198,63,0.7);
+  line-height: 1.6;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.recommendIcon {
+  flex-shrink: 0;
+  color: #8DC63F;
+  margin-top: 1px;
+}

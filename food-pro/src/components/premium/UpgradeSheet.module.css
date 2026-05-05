@@ -1,0 +1,451 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  background: #0f0f0f;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 36px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-top: 3px solid #ef4444;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.07);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 8px 0 20px;
+}
+
+.headerIcon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  line-height: 1.5;
+  padding: 0 16px;
+}
+
+/* Package tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 6px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.tab:active { transform: scale(0.97); }
+
+.tabActive {
+  border-color: #8DC63F;
+  background: rgba(141,198,63,0.07);
+}
+
+.tabBadge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #8DC63F;
+  color: #000;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.tabName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tabPrice {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+}
+
+.tabActive .tabName,
+.tabActive .tabPrice {
+  color: #8DC63F;
+}
+
+/* Selected card */
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.cardName {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 3px;
+}
+
+.cardTagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+}
+
+.cardPricing {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.cardPrice {
+  font-size: 22px;
+  font-weight: 800;
+  color: #8DC63F;
+}
+
+.cardPeriod {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* Features list */
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.4;
+}
+
+.featureTick {
+  color: #8DC63F;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* CTA */
+.ctaBtn {
+  width: 100%;
+  padding: 15px;
+  background: #8DC63F;
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.ctaBtn:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+.ctaSub {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  margin: 8px 0 16px;
+}
+
+/* View toggle (maker) */
+.viewToggle {
+  display: flex;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 18px;
+  gap: 3px;
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toggleBtnActive {
+  background: #F5C518;
+  color: #000;
+  font-weight: 800;
+}
+
+/* Highlight banner (maker) */
+.highlightBanner {
+  background: rgba(245,197,24,0.1);
+  border: 1px solid rgba(245,197,24,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #F5C518;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+/* Unlock packs (maker) */
+.unlockIntro {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.packList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.packCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.packCardActive {
+  border-color: #F5C518;
+  background: rgba(245,197,24,0.06);
+}
+
+.packInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.packLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.packEach {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.packRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.packSave {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F5C518;
+}
+
+.packPrice {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Unlock note link */
+.unlockNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 4px;
+}
+
+.unlockNoteBtn {
+  background: none;
+  border: none;
+  color: rgba(245,197,24,0.8);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Lifetime option */
+.lifetimeBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.lifetimeBtn:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.lifetimeLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+}
+
+.lifetimeName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lifetimeSub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.lifetimePrice {
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.85);
+}
+
+/* ── Map Spot banner ── */
+.spotBanner {
+  margin-top: 14px;
+  background: rgba(232,137,12,0.07);
+  border: 1.5px solid rgba(232,137,12,0.3);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+.spotBanner:active { background: rgba(232,137,12,0.12); }
+
+.spotBannerIcon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.spotBannerBody {
+  flex: 1;
+}
+
+.spotBannerTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 2px;
+}
+
+.spotBannerSub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+}
+
+.spotBannerPrice {
+  font-size: 14px;
+  font-weight: 900;
+  color: #E8890C;
+  white-space: nowrap;
+}
+

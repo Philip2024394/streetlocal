@@ -1,0 +1,1811 @@
+import { useState, useEffect, useRef } from 'react'
+import { supabase } from './supabase'
+import Admin from './Admin'
+
+/* ─── Translations ─── */
+const TRANSLATIONS = {
+  en: {
+    heroTitle: 'Street Local',
+    heroSub: 'Apps built for local businesses.',
+    heroSub2: 'Simple. Powerful. Mobile-first.',
+    navAbout: 'About Us',
+    navFaq: 'FAQ',
+    navServices: 'T&C',
+    aboutTitle: 'About Us',
+    aboutBody: 'StreetLocal is redefining how local businesses operate in a digital world.\n\nWe empower street food vendors, restaurants, property businesses, laundries, hair salons, and more with their own fully branded mobile apps — giving them the same power as big brands, without the high costs or complicated systems.\n\nAt the price of a coffee, your business can go fully digital.\n\nNo middlemen. No commissions. Just a direct connection between you and your customers.\n\nWe believe every local business deserves to own its customers, its data, and its future. That\'s why StreetLocal is built to be simple, powerful, and accessible — whether you\'re running a small warung or scaling a growing brand.\n\nOur platforms don\'t just look good — they work hard. Taking orders, managing bookings, connecting with customers, and driving growth 24/7… even while you sleep.\n\nThis isn\'t just about technology.\nIt\'s about freedom.\n\nFreedom to grow your business your way.\nFreedom to keep more of what you earn.\nFreedom to compete with anyone — no matter your size.\n\nOur mission is simple: to help local businesses thrive in the digital age with tools that are affordable, reliable, and built for real-world success.\n\nStreetLocal isn\'t just a service.\nIt\'s a smarter, simpler, more powerful way to do business.',
+    faqTitle: 'FAQ',
+    faqs: [
+      { q: 'How does it work?', a: 'Choose your plan, subscribe, and we set up your branded food app within 24 hours. You get a link to share with customers.' },
+      { q: 'Do I need technical skills?', a: 'No! Everything is managed through a simple dashboard. If you can use WhatsApp, you can manage your app.' },
+      { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no lock-in. Cancel anytime from your dashboard.' },
+      { q: 'How do customers order?', a: 'Customers open your app link, browse your menu, and checkout via WhatsApp or direct payment.' },
+      { q: 'Do you take commission on orders?', a: 'Never. You keep 100% of your revenue. We only charge the monthly subscription.' },
+      { q: 'Can I customize my app?', a: 'Yes — your brand name, menu, prices, photos, and promotions are all under your control.' },
+    ],
+    termsTitle: 'Terms & Conditions',
+    termsLastUpdated: 'Last updated: 5 May 2026',
+    termsSections: [
+      {
+        title: '1. Definitions & Interpretation',
+        body: '"StreetLocal" (also referred to as "we", "us", "our", or "the Company") refers to StreetLocal, a software technology company that develops and licenses mobile application software on a subscription basis. "User" (also referred to as "you", "your", or "Subscriber") refers to any individual, sole proprietor, business entity, or organization that subscribes to, accesses, or uses any StreetLocal software product. "Software" refers to any and all mobile applications, web applications, dashboards, tools, APIs, and digital products developed, owned, and licensed by StreetLocal. "Subscription" refers to the paid license granted to the User to access and use the Software for a defined period (monthly or yearly). "Content" refers to all data, text, images, menus, pricing, business information, and any other material uploaded or entered into the Software by the User.'
+      },
+      {
+        title: '2. Nature of Service — Software License Only',
+        body: 'StreetLocal is exclusively a software technology company. We develop, maintain, and license mobile application software to businesses and individuals on a subscription basis. We are NOT a food business, restaurant, delivery service, ride-hailing company, transportation provider, logistics company, food handler, food processor, employment agency, partnership, joint venture, franchise, or any other type of operating business beyond software development and licensing.\n\nThe Software is provided "as-is" as a digital tool. StreetLocal does not participate in, control, manage, direct, or have any involvement whatsoever in the day-to-day operations, business decisions, hiring practices, pricing strategies, food preparation, delivery operations, customer service, or any other aspect of the User\'s business.\n\nUsers are independent business operators. There is no employer-employee relationship, partnership, joint venture, franchise, agency, or any other legal relationship between StreetLocal and the User beyond a standard software license agreement. Users are not agents, representatives, employees, contractors, partners, or affiliates of StreetLocal under any circumstances.'
+      },
+      {
+        title: '3. User Responsibilities & Legal Compliance',
+        body: 'By subscribing to and using StreetLocal Software, the User acknowledges and agrees that they are solely and entirely responsible for:\n\n• Complying with ALL applicable local, regional, national, and international laws, regulations, ordinances, permits, licenses, and legal requirements in the jurisdiction(s) where they operate their business, including but not limited to: business registration and licensing, food safety and hygiene regulations, health department permits, tax registration and reporting (including income tax, VAT/PPN, and any other applicable taxes), employment and labor laws, consumer protection laws, data protection and privacy laws, transportation and ride-hailing regulations, insurance requirements, zoning and operating permits, and any industry-specific regulations.\n\n• Obtaining and maintaining all necessary business permits, food handling certificates, health inspections, trade licenses, and any other regulatory approvals required to legally operate their business.\n\n• Collecting, reporting, and remitting all applicable taxes, duties, and government fees. StreetLocal does not collect, withhold, report, or remit any taxes on behalf of Users.\n\n• Ensuring their business operations, products, services, pricing, advertising, and customer interactions comply with all applicable consumer protection, advertising standards, and fair trading laws.\n\n• Understanding that laws regarding food businesses, delivery services, ride-hailing, transportation, e-commerce, and digital services vary significantly between countries, states, provinces, cities, and municipalities. It is the User\'s sole responsibility to research, understand, and comply with the specific laws that apply to their business in their specific location(s).\n\nStreetLocal provides software tools only. We do not provide legal, tax, financial, regulatory, or business advice. Users should consult qualified local legal and financial professionals regarding their obligations.'
+      },
+      {
+        title: '4. Subscription Terms & Payment',
+        body: 'Subscriptions are available on a monthly or yearly basis at the prices displayed at the time of purchase. All prices are in Indonesian Rupiah (IDR) unless otherwise stated. Payment is made via bank transfer. Subscription activation occurs after payment verification, which may take up to 24 hours.\n\nSubscriptions auto-renew at the end of each billing cycle unless cancelled. No refunds are provided for partial months, partial years, or unused subscription periods. StreetLocal reserves the right to modify pricing with 30 days written notice. Continued use of the Software after a price change constitutes acceptance of the new pricing.\n\nLate or non-payment may result in immediate suspension or termination of the Software license without notice. StreetLocal is not liable for any business disruption caused by suspension due to non-payment.'
+      },
+      {
+        title: '5. Intellectual Property & Restrictions',
+        body: 'All Software, source code, design, architecture, algorithms, databases, branding, trademarks, documentation, and any associated intellectual property are and remain the exclusive property of StreetLocal. The subscription grants a limited, non-exclusive, non-transferable, revocable license to USE the Software — not to own it.\n\nUsers are strictly prohibited from: copying, reproducing, duplicating, or cloning the Software or any part thereof; reverse engineering, decompiling, disassembling, or attempting to derive the source code; modifying, adapting, translating, or creating derivative works; scraping, crawling, or automated data extraction from the Software; sublicensing, reselling, renting, leasing, or distributing the Software to third parties; removing, altering, or obscuring any proprietary notices, branding, or attributions; using the Software to build a competing product or service; sharing login credentials, access tokens, or API keys with unauthorized parties.\n\nAny violation of these intellectual property restrictions will result in immediate and permanent revocation of the Software license without refund, and StreetLocal reserves the right to pursue all available legal remedies including but not limited to injunctive relief and damages.'
+      },
+      {
+        title: '6. License Revocation & Termination',
+        body: 'StreetLocal reserves the absolute right to suspend, terminate, or permanently revoke any User\'s Software license at any time, with or without notice, for any reason including but not limited to: violation of these Terms & Conditions; non-payment or late payment; use of the Software for illegal, fraudulent, or unethical purposes; intellectual property violations; misrepresentation of business information; abusive behavior toward StreetLocal staff or systems; any activity that damages or threatens to damage StreetLocal\'s reputation, infrastructure, or other Users.\n\nUpon termination: all rights granted under the license cease immediately; the User must stop using the Software; StreetLocal may delete User data after 30 days; no refunds will be provided for the remaining subscription period; StreetLocal is not liable for any business disruption, loss of revenue, loss of data, or any other damages resulting from termination.'
+      },
+      {
+        title: '7. Limitation of Liability & Disclaimer of Warranties',
+        body: 'TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW:\n\nThe Software is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether express, implied, statutory, or otherwise, including but not limited to implied warranties of merchantability, fitness for a particular purpose, non-infringement, reliability, accuracy, or completeness.\n\nStreetLocal does not warrant that the Software will be uninterrupted, error-free, secure, or free from viruses, bugs, or defects. StreetLocal does not warrant that the Software will meet the User\'s specific requirements or expectations.\n\nIN NO EVENT SHALL STREETLOCAL, ITS DIRECTORS, OFFICERS, EMPLOYEES, AGENTS, PARTNERS, OR AFFILIATES BE LIABLE FOR: any indirect, incidental, special, consequential, punitive, or exemplary damages; any loss of profits, revenue, business, savings, data, or goodwill; any damages arising from business interruption, system downtime, or data loss; any damages arising from unauthorized access to or alteration of data; any damages arising from the User\'s business operations, products, or services; any damages arising from third-party claims against the User; any damages arising from the User\'s failure to comply with applicable laws.\n\nStreetLocal\'s total aggregate liability for all claims arising from or related to these Terms or the Software shall not exceed the amount paid by the User in subscription fees during the twelve (12) months immediately preceding the claim.\n\nSome jurisdictions do not allow the exclusion of certain warranties or limitation of liability. In such jurisdictions, our liability shall be limited to the maximum extent permitted by law.'
+      },
+      {
+        title: '8. Indemnification',
+        body: 'The User agrees to fully indemnify, defend, and hold harmless StreetLocal, its directors, officers, employees, agents, partners, licensors, and affiliates from and against any and all claims, demands, actions, suits, proceedings, liabilities, damages, losses, costs, and expenses (including reasonable legal fees and court costs) arising from or related to: the User\'s use or misuse of the Software; the User\'s violation of these Terms & Conditions; the User\'s violation of any applicable law, regulation, or third-party rights; the User\'s business operations, products, services, or customer interactions; any content uploaded, published, or transmitted through the Software by the User; any tax liability, regulatory fine, or legal penalty incurred by the User; any claims by the User\'s customers, employees, contractors, partners, or any third party; any dispute between the User and their customers or business partners.\n\nThis indemnification obligation survives the termination of these Terms and the User\'s subscription.'
+      },
+      {
+        title: '9. No Partnership, Employment, or Agency',
+        body: 'Nothing in these Terms & Conditions shall be construed as creating any partnership, joint venture, employment relationship, franchise, agency, or any other legal relationship between StreetLocal and the User beyond a standard software license.\n\nThe User has no authority to bind, represent, or act on behalf of StreetLocal in any capacity. The User shall not hold themselves out as a partner, employee, agent, representative, or affiliate of StreetLocal.\n\nStreetLocal is not responsible for, and has no control over, the User\'s business decisions, operations, hiring, firing, pricing, service quality, customer relations, or any other aspect of the User\'s business.\n\nAny claims, disputes, lawsuits, regulatory actions, or legal proceedings arising from the User\'s business operations are the sole responsibility of the User. StreetLocal shall not be made a party to, or held liable in, any such proceedings.'
+      },
+      {
+        title: '10. Data & Privacy',
+        body: 'Users retain ownership of all Content they upload to the Software. StreetLocal may access User data solely for the purposes of providing and maintaining the Software, troubleshooting technical issues, and improving the service.\n\nStreetLocal will not sell User data to third parties. However, StreetLocal may disclose data when required by law, regulation, legal process, or governmental request.\n\nUsers are solely responsible for complying with all applicable data protection and privacy laws (including but not limited to Indonesia\'s UU PDP, EU GDPR, and any other applicable privacy regulations) with respect to their customers\' personal data.\n\nStreetLocal implements reasonable security measures but does not guarantee absolute security. Users accept the inherent risks of transmitting data over the internet.'
+      },
+      {
+        title: '11. Governing Law & Dispute Resolution',
+        body: 'These Terms & Conditions shall be governed by and construed in accordance with the laws of the Republic of Indonesia, without regard to its conflict of law provisions.\n\nAny dispute arising from or relating to these Terms shall first be attempted to be resolved through good faith negotiation. If negotiation fails, the dispute shall be submitted to binding arbitration in accordance with the rules of the Indonesian National Arbitration Board (BANI) in Jakarta, Indonesia.\n\nThe User agrees that any legal proceedings shall be conducted in the Indonesian language and English. The arbitral award shall be final and binding on both parties.\n\nThe User waives any right to participate in class action lawsuits or class-wide arbitration against StreetLocal.'
+      },
+      {
+        title: '12. Modifications to Terms',
+        body: 'StreetLocal reserves the right to modify, update, or replace these Terms & Conditions at any time. Material changes will be communicated via the Software interface or email with at least 14 days notice. Continued use of the Software after changes take effect constitutes acceptance of the updated Terms.\n\nIf the User does not agree with any changes, their sole remedy is to cancel the subscription and stop using the Software.'
+      },
+      {
+        title: '13. Severability & Entire Agreement',
+        body: 'If any provision of these Terms is held to be invalid, illegal, or unenforceable by a court of competent jurisdiction, such provision shall be modified to the minimum extent necessary to make it valid and enforceable, or if modification is not possible, it shall be severed from these Terms. The remaining provisions shall continue in full force and effect.\n\nThese Terms & Conditions, together with the Privacy Policy and any supplemental terms, constitute the entire agreement between StreetLocal and the User regarding the use of the Software, superseding all prior agreements, representations, warranties, and understandings.\n\nThe failure of StreetLocal to enforce any right or provision of these Terms shall not constitute a waiver of such right or provision.'
+      },
+      {
+        title: '14. Contact',
+        body: 'For questions regarding these Terms & Conditions, contact us via WhatsApp at +62 813 9200 0050 or visit streetlocal.live.'
+      },
+    ],
+    register: {
+      title: 'Set Up Your Business',
+      subtitle: 'Fill in your details below. Your app will be activated once we confirm your payment.',
+      businessName: 'Business Name',
+      businessNamePlaceholder: 'e.g. Warung Sari Rasa',
+      urlLabel: 'Choose Your URL',
+      urlPrefix: 'streetlocal.live/',
+      urlPlaceholder: 'your-business-name',
+      whatsapp: 'WhatsApp Number',
+      whatsappPlaceholder: '+62 812 3456 7890',
+      email: 'Email Address',
+      emailPlaceholder: 'you@email.com',
+      submitBtn: 'Submit Registration',
+      pendingTitle: 'Registration Submitted!',
+      pendingMsg: 'We\'re verifying your payment. You\'ll receive a WhatsApp message once your app is activated.',
+      backHome: 'Back to Home',
+    },
+    ourApps: 'Starting Rp 35.000/Month',
+    comingSoon: 'Coming Soon',
+    back: '← Back',
+    viewDetails: 'View Details →',
+    features: 'Features',
+    openApp: 'Try Free Demo',
+    subscribe: 'Subscribe',
+    footer: 'Street Local © 2026',
+    apps: '{count} apps →',
+    perMonth: '/month',
+    perYear: '/year',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    tabDetails: 'App Details',
+    payment: {
+      title: 'Subscribe to',
+      transferTo: 'Transfer to',
+      bankName: 'Bank BCA',
+      accountNumber: 'XXXX-XXXX-XXXX',
+      accountHolder: 'Account Holder Name',
+      copyAccount: 'Copy Account Number',
+      copied: 'Copied!',
+      uploadTitle: 'Upload Payment Proof',
+      uploadBtn: 'Tap to upload screenshot',
+      changeImage: 'Change image',
+      sendWhatsApp: 'Send to WhatsApp',
+      close: 'Close',
+    },
+    tabBenefits: 'Why Your Own App?',
+    benefitsIntro: 'As a restaurant owner, having your own app presence is no longer a luxury — it\'s a smart, strategic move.',
+    benefitsBody: 'For years, food delivery platforms have steadily increased their commission rates, cutting deeper into your profits. At the same time, your restaurant is buried among hundreds of competitors, all fighting for the same limited customer attention.\n\nWith Street Local, you can finally stand out from the crowd by building your own direct customer base. Imagine your customers having your restaurant app right on their phone — just one tap away from ordering. No distractions, no competing listings. Just your brand, your menu, and your experience.\n\nOrdering becomes seamless, with checkout flowing directly to your WhatsApp, making communication fast and personal.\n\nRestaurant apps are quickly becoming one of the most powerful tools for generating consistent income — and it\'s an opportunity many owners have been missing for years.',
+    benefitsWithApp: 'With your own app, you can:',
+    benefitsClosing: 'Owning your own app means owning your customer relationships, your data, and your growth. You\'re no longer renting space on someone else\'s platform — you\'re building your own ecosystem where your brand comes first.',
+    benefitGroups: [
+      {
+        icon: '💰',
+        title: 'Keep More Money',
+        points: [
+          'Zero commission — keep 100% of your revenue',
+          'Get paid directly, no waiting days for payouts',
+          'No platform fees eating into your profits',
+        ],
+      },
+      {
+        icon: '📱',
+        title: 'Grow Your Brand',
+        points: [
+          'Your brand name and identity — not a marketplace',
+          'Share your app on Instagram, TikTok, Facebook & website',
+          'Link directly from Instagram bio and stories',
+          'Built-in SEO so customers find you online',
+        ],
+      },
+      {
+        icon: '📊',
+        title: 'Own Your Business',
+        points: [
+          'Full analytics — what sells, peak hours, repeat rates',
+          'Customer reviews live on YOUR app, not next to competitors',
+          'Update menu, prices & photos instantly — no platform approval',
+          'Push notifications to customers\' phones — free, no ad spend',
+        ],
+      },
+      {
+        icon: '⚡',
+        title: 'Better Customer Experience',
+        points: [
+          'One-tap ordering — no distractions or competitor listings',
+          'WhatsApp checkout — fast and personal',
+          'Works even when other platforms go down',
+          'Build real loyalty and lasting relationships',
+        ],
+      },
+    ],
+    categories: {
+      food: {
+        name: 'Food Apps',
+        description: 'Complete food business solutions',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+        apps: {
+          basic: {
+            name: 'Street Vendor',
+            tier: 'Basic',
+            price: 'Rp 35.000',
+            yearlyPrice: 'Rp 420.000',
+            tagline: 'Simple menu & ordering for street food stalls',
+            description: 'Perfect for warung, kaki lima, and small food stalls. Show your menu, take WhatsApp orders, and manage availability — all from your phone.',
+            features: ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
+          },
+          pro: {
+            name: 'Restaurant',
+            tier: 'Pro',
+            price: 'Rp 100.000',
+            yearlyPrice: 'Rp 1.200.000',
+            tagline: 'Full restaurant management system',
+            description: 'Built for restaurants, cafes, and established food businesses. Table management, order tracking, analytics, and more.',
+            features: ['Table management', 'Order tracking dashboard', 'Sales analytics', 'Multi-staff access', 'Customer reviews', 'Reservation system'],
+          },
+        },
+      },
+    },
+  },
+  id: {
+    heroTitle: 'Street Local',
+    heroSub: 'Aplikasi untuk bisnis lokal.',
+    heroSub2: 'Simpel. Kuat. Mobile-first.',
+    navAbout: 'Tentang',
+    navFaq: 'FAQ',
+    navServices: 'S&K',
+    aboutTitle: 'Tentang Kami',
+    aboutBody: 'StreetLocal mendefinisikan ulang cara bisnis lokal beroperasi di dunia digital.\n\nKami memberdayakan pedagang kaki lima, restoran, bisnis properti, laundry, salon, dan lainnya dengan aplikasi mobile bermerek sendiri — memberikan kekuatan yang sama seperti brand besar, tanpa biaya mahal atau sistem rumit.\n\nDengan harga secangkir kopi, bisnis kamu bisa sepenuhnya digital.\n\nTanpa perantara. Tanpa komisi. Hanya koneksi langsung antara kamu dan pelanggan.\n\nKami percaya setiap bisnis lokal layak memiliki pelanggannya, datanya, dan masa depannya. Itulah mengapa StreetLocal dibangun untuk sederhana, kuat, dan mudah diakses — baik kamu mengelola warung kecil atau mengembangkan brand yang tumbuh.\n\nPlatform kami bukan hanya tampil bagus — tapi bekerja keras. Menerima pesanan, mengelola booking, terhubung dengan pelanggan, dan mendorong pertumbuhan 24/7… bahkan saat kamu tidur.\n\nIni bukan hanya soal teknologi.\nIni soal kebebasan.\n\nKebebasan untuk mengembangkan bisnis dengan caramu.\nKebebasan untuk menyimpan lebih banyak dari yang kamu hasilkan.\nKebebasan untuk bersaing dengan siapa saja — tak peduli seberapa besar ukuranmu.\n\nMisi kami sederhana: membantu bisnis lokal berkembang di era digital dengan alat yang terjangkau, andal, dan dibangun untuk kesuksesan nyata.\n\nStreetLocal bukan hanya layanan.\nIni cara berbisnis yang lebih cerdas, lebih sederhana, dan lebih kuat.',
+    faqTitle: 'FAQ',
+    faqs: [
+      { q: 'Bagaimana cara kerjanya?', a: 'Pilih paket, berlangganan, dan kami siapkan aplikasi makanan bermerek kamu dalam 24 jam. Kamu dapat link untuk dibagikan ke pelanggan.' },
+      { q: 'Apakah perlu keahlian teknis?', a: 'Tidak! Semuanya dikelola melalui dashboard sederhana. Kalau bisa pakai WhatsApp, bisa kelola aplikasi.' },
+      { q: 'Bisa batal kapan saja?', a: 'Ya. Tanpa kontrak, tanpa ikatan. Batalkan kapan saja dari dashboard.' },
+      { q: 'Bagaimana pelanggan memesan?', a: 'Pelanggan buka link aplikasi kamu, jelajahi menu, dan checkout via WhatsApp atau pembayaran langsung.' },
+      { q: 'Apakah ada komisi dari pesanan?', a: 'Tidak pernah. Kamu simpan 100% pendapatan. Kami hanya mengenakan biaya langganan bulanan.' },
+      { q: 'Bisa kustomisasi aplikasi?', a: 'Ya — nama brand, menu, harga, foto, dan promosi semuanya di bawah kendali kamu.' },
+    ],
+    termsTitle: 'Syarat & Ketentuan',
+    termsLastUpdated: 'Terakhir diperbarui: 5 Mei 2026',
+    termsSections: 'same',
+    register: {
+      title: 'Siapkan Bisnis Kamu',
+      subtitle: 'Isi detail di bawah. Aplikasi kamu akan diaktifkan setelah kami konfirmasi pembayaran.',
+      businessName: 'Nama Bisnis',
+      businessNamePlaceholder: 'contoh: Warung Sari Rasa',
+      urlLabel: 'Pilih URL Kamu',
+      urlPrefix: 'streetlocal.live/',
+      urlPlaceholder: 'nama-bisnis-kamu',
+      whatsapp: 'Nomor WhatsApp',
+      whatsappPlaceholder: '+62 812 3456 7890',
+      email: 'Alamat Email',
+      emailPlaceholder: 'kamu@email.com',
+      submitBtn: 'Kirim Pendaftaran',
+      pendingTitle: 'Pendaftaran Terkirim!',
+      pendingMsg: 'Kami sedang memverifikasi pembayaran kamu. Kamu akan menerima pesan WhatsApp setelah aplikasi diaktifkan.',
+      backHome: 'Kembali ke Beranda',
+    },
+    ourApps: 'Mulai Rp 35.000/Bulan',
+    comingSoon: 'Segera Hadir',
+    back: '← Kembali',
+    viewDetails: 'Lihat Detail →',
+    features: 'Fitur',
+    openApp: 'Coba Demo Gratis',
+    subscribe: 'Berlangganan',
+    footer: 'Street Local © 2026',
+    apps: '{count} aplikasi →',
+    perMonth: '/bulan',
+    perYear: '/tahun',
+    monthly: 'Bulanan',
+    yearly: 'Tahunan',
+    payment: {
+      title: 'Berlangganan',
+      transferTo: 'Transfer ke',
+      bankName: 'Bank BCA',
+      accountNumber: 'XXXX-XXXX-XXXX',
+      accountHolder: 'Nama Pemilik Rekening',
+      copyAccount: 'Salin Nomor Rekening',
+      copied: 'Tersalin!',
+      uploadTitle: 'Upload Bukti Pembayaran',
+      uploadBtn: 'Ketuk untuk upload screenshot',
+      changeImage: 'Ganti gambar',
+      sendWhatsApp: 'Kirim ke WhatsApp',
+      close: 'Tutup',
+    },
+    tabDetails: 'Detail Aplikasi',
+    tabBenefits: 'Kenapa Aplikasi Sendiri?',
+    benefitsIntro: 'Sebagai pemilik restoran, punya aplikasi sendiri bukan lagi kemewahan — ini langkah strategis yang cerdas.',
+    benefitsBody: 'Selama bertahun-tahun, platform pesan antar makanan terus menaikkan komisi mereka, memotong lebih dalam ke keuntungan kamu. Sementara itu, restoran kamu tenggelam di antara ratusan kompetitor, semua bersaing untuk perhatian pelanggan yang terbatas.\n\nDengan Street Local, kamu akhirnya bisa tampil beda dengan membangun basis pelanggan langsung. Bayangkan pelanggan punya aplikasi restoran kamu di HP mereka — cuma satu ketukan untuk pesan. Tanpa gangguan, tanpa daftar kompetitor. Hanya brand kamu, menu kamu, dan pengalaman kamu.\n\nPemesanan jadi mulus, dengan checkout langsung ke WhatsApp kamu, komunikasi jadi cepat dan personal.\n\nAplikasi restoran dengan cepat menjadi salah satu alat paling kuat untuk menghasilkan pendapatan konsisten — dan ini peluang yang sudah dilewatkan banyak pemilik restoran selama bertahun-tahun.',
+    benefitsWithApp: 'Dengan aplikasi sendiri, kamu bisa:',
+    benefitsClosing: 'Punya aplikasi sendiri berarti memiliki hubungan pelanggan, data, dan pertumbuhan kamu. Kamu tidak lagi menyewa tempat di platform orang lain — kamu membangun ekosistem sendiri di mana brand kamu yang utama.',
+    benefitGroups: [
+      {
+        icon: '💰',
+        title: 'Simpan Lebih Banyak Uang',
+        points: [
+          'Tanpa komisi — simpan 100% pendapatan kamu',
+          'Dibayar langsung, tanpa menunggu berhari-hari',
+          'Tanpa biaya platform yang memotong keuntungan',
+        ],
+      },
+      {
+        icon: '📱',
+        title: 'Kembangkan Brand Kamu',
+        points: [
+          'Nama brand dan identitas kamu — bukan marketplace',
+          'Bagikan aplikasi di Instagram, TikTok, Facebook & website',
+          'Link langsung dari bio dan story Instagram',
+          'SEO bawaan supaya pelanggan menemukan kamu online',
+        ],
+      },
+      {
+        icon: '📊',
+        title: 'Miliki Bisnis Kamu',
+        points: [
+          'Analitik lengkap — apa yang laris, jam ramai, pelanggan setia',
+          'Ulasan pelanggan ada di aplikasi KAMU, bukan di sebelah kompetitor',
+          'Update menu, harga & foto langsung — tanpa persetujuan platform',
+          'Notifikasi push ke HP pelanggan — gratis, tanpa biaya iklan',
+        ],
+      },
+      {
+        icon: '⚡',
+        title: 'Pengalaman Pelanggan Lebih Baik',
+        points: [
+          'Pesan satu ketukan — tanpa gangguan atau daftar kompetitor',
+          'Checkout via WhatsApp — cepat dan personal',
+          'Tetap jalan meski platform lain down',
+          'Bangun loyalitas nyata dan hubungan langgeng',
+        ],
+      },
+    ],
+    categories: {
+      food: {
+        name: 'Aplikasi Makanan',
+        description: 'Solusi lengkap bisnis makanan',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_13_42%20PM.png?updatedAt=1777886075863',
+        apps: {
+          basic: {
+            name: 'Pedagang Kaki Lima',
+            tier: 'Dasar',
+            price: 'Rp 35.000',
+            yearlyPrice: 'Rp 420.000',
+            tagline: 'Menu & pemesanan simpel untuk warung makan',
+            description: 'Cocok untuk warung, kaki lima, dan kedai kecil. Tampilkan menu, terima pesanan via WhatsApp, dan kelola ketersediaan — semua dari HP.',
+            features: ['Menu digital dengan foto', 'Pemesanan WhatsApp', 'Toggle Buka/Tutup', 'Halaman lokasi & jam buka', 'Berbagi kode QR'],
+          },
+          pro: {
+            name: 'Restoran',
+            tier: 'Pro',
+            price: 'Rp 100.000',
+            yearlyPrice: 'Rp 1.200.000',
+            tagline: 'Sistem manajemen restoran lengkap',
+            description: 'Dibangun untuk restoran, kafe, dan bisnis makanan mapan. Manajemen meja, pelacakan pesanan, analitik, dan lainnya.',
+            features: ['Manajemen meja', 'Dashboard pelacakan pesanan', 'Analitik penjualan', 'Akses multi-staf', 'Ulasan pelanggan', 'Sistem reservasi'],
+          },
+        },
+      },
+    },
+  },
+}
+
+/* ─── IP-based locale detection ─── */
+function useLocale() {
+  const [locale, setLocale] = useState('en')
+
+  useEffect(() => {
+    async function detectLocale() {
+      try {
+        const res = await fetch('https://ip2c.org/s')
+        const text = await res.text()
+        const parts = text.split(';')
+        if (parts[1] === 'ID') {
+          setLocale('id')
+        }
+      } catch {
+        // fallback to English
+      }
+    }
+    detectLocale()
+  }, [])
+
+  return [locale, setLocale]
+}
+
+/* ─── Build localized categories from translations ─── */
+function getCategories(t) {
+  return [
+    {
+      id: 'food',
+      name: t.categories.food.name,
+      icon: '🍜',
+      description: t.categories.food.description,
+      bannerImage: t.categories.food.bannerImage,
+      apps: [
+        {
+          id: 'basic',
+          ...t.categories.food.apps.basic,
+          screenshots: [],
+          url: '/food/basic/',
+          color: '#FF6B35',
+        },
+        {
+          id: 'pro',
+          ...t.categories.food.apps.pro,
+          screenshots: ['https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png'],
+          url: '/food/pro/',
+          color: '#FFD600',
+        },
+      ],
+    },
+  ]
+}
+
+/* ─── iPhone Mockup Component ─── */
+function PhoneMockup({ screenshot, color, small }) {
+  const w = small ? 180 : 280
+  const h = small ? 360 : 560
+  const r = small ? 28 : 44
+  const sr = small ? 26 : 40
+  const p = small ? 3 : 4
+  const diW = small ? 46 : 72
+  const diH = small ? 14 : 22
+  const diTop = small ? 6 : 10
+  const hiW = small ? 50 : 80
+  const hiH = small ? 3 : 4
+  const hiBot = small ? 4 : 6
+
+  return (
+    <div style={{
+      width: w,
+      height: h,
+      borderRadius: r,
+      background: '#1a1a1a',
+      padding: p,
+      position: 'relative',
+      boxShadow: `0 20px 60px ${color}22, 0 8px 24px rgba(0,0,0,0.15)`,
+      border: '2px solid #333',
+    }}>
+      {/* Side button — right */}
+      <div style={{
+        position: 'absolute', right: -3, top: small ? 75 : 120,
+        width: 3, height: small ? 26 : 40, borderRadius: '0 2px 2px 0',
+        background: '#333',
+      }} />
+      {/* Volume buttons — left */}
+      <div style={{
+        position: 'absolute', left: -3, top: small ? 62 : 100,
+        width: 3, height: small ? 16 : 24, borderRadius: '2px 0 0 2px',
+        background: '#333',
+      }} />
+      <div style={{
+        position: 'absolute', left: -3, top: small ? 82 : 132,
+        width: 3, height: small ? 16 : 24, borderRadius: '2px 0 0 2px',
+        background: '#333',
+      }} />
+      {/* Screen */}
+      <div style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: sr,
+        background: screenshot ? '#000' : `linear-gradient(135deg, ${color}15, ${color}05)`,
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}>
+        {/* Dynamic Island */}
+        <div style={{
+          position: 'absolute',
+          top: diTop,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: diW,
+          height: diH,
+          background: '#000',
+          borderRadius: 20,
+          zIndex: 3,
+        }} />
+        {screenshot ? (
+          <img src={screenshot} alt="App screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+        ) : (
+          <span style={{ fontSize: small ? 32 : 48, opacity: 0.3 }}>📱</span>
+        )}
+        {/* Home indicator */}
+        <div style={{
+          position: 'absolute',
+          bottom: hiBot,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: hiW,
+          height: hiH,
+          borderRadius: 2,
+          background: 'rgba(255,255,255,0.3)',
+          zIndex: 3,
+        }} />
+      </div>
+    </div>
+  )
+}
+
+/* ─── Animated Section ─── */
+function FadeIn({ children, delay = 0 }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
+      { threshold: 0.1 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(30px)',
+        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ─── Language Switcher ─── */
+function LangSwitcher({ locale, setLocale }) {
+  return (
+    <div style={styles.langSwitcher}>
+      <button
+        onClick={() => setLocale('en')}
+        style={{
+          ...styles.langBtn,
+          ...(locale === 'en' ? styles.langBtnActive : {}),
+        }}
+      >
+        EN
+      </button>
+      <button
+        onClick={() => setLocale('id')}
+        style={{
+          ...styles.langBtn,
+          ...(locale === 'id' ? styles.langBtnActive : {}),
+        }}
+      >
+        ID
+      </button>
+    </div>
+  )
+}
+
+/* ─── Main App ─── */
+export default function App() {
+  const [selectedApp, setSelectedApp] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [locale, setLocale] = useLocale()
+  const [detailTab, setDetailTab] = useState('details')
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [paymentProof, setPaymentProof] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [currentPage, setCurrentPage] = useState(null)
+  const [regForm, setRegForm] = useState({ name: '', url: '', whatsapp: '', email: '' })
+  const [regSubmitted, setRegSubmitted] = useState(false)
+  const [billingCycle, setBillingCycle] = useState('monthly')
+  const [adminAuth, setAdminAuth] = useState(false)
+  const [adminPin, setAdminPin] = useState('')
+  const [registrations, setRegistrations] = useState([])
+  const [adminFilter, setAdminFilter] = useState('all')
+
+  const t = TRANSLATIONS[locale]
+  const CATEGORIES = getCategories(t)
+
+  /* Detail page for an app */
+  if (selectedApp) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <button onClick={() => setSelectedApp(null)} style={styles.backBtn}>
+            {t.back}
+          </button>
+          <LangSwitcher locale={locale} setLocale={setLocale} />
+        </div>
+
+        {/* Hero: phone + name + price */}
+        <div style={styles.detailHero}>
+          <PhoneMockup screenshot={selectedApp.screenshots[0]} color={selectedApp.color} small />
+        </div>
+
+        <div style={styles.detailContent}>
+          <span style={{ ...styles.tierBadge, background: selectedApp.color + '15', color: selectedApp.color }}>
+            {selectedApp.tier}
+          </span>
+          <h1 style={styles.detailTitle}>{selectedApp.name}</h1>
+          {/* Billing toggle */}
+          <div style={{ ...styles.detailToggle, marginBottom: 10, marginTop: 10 }}>
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'monthly' ? { background: '#1a1a1a', color: '#FFD600' } : {}) }}
+            >
+              {t.monthly}
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'yearly' ? { background: '#1a1a1a', color: '#FFD600' } : {}) }}
+            >
+              {t.yearly}
+            </button>
+          </div>
+          <p style={{ fontSize: 22, fontWeight: 900, margin: '4px 0 4px' }}>
+            {billingCycle === 'monthly' ? selectedApp.price : selectedApp.yearlyPrice}
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
+          </p>
+          <p style={styles.detailTagline}>{selectedApp.tagline}</p>
+
+          {/* Toggle tabs */}
+          <div style={styles.detailToggle}>
+            <button
+              onClick={() => setDetailTab('details')}
+              style={{
+                ...styles.detailToggleBtn,
+                ...(detailTab === 'details' ? { background: selectedApp.color, color: '#fff' } : {}),
+              }}
+            >
+              {t.tabDetails}
+            </button>
+            <button
+              onClick={() => setDetailTab('benefits')}
+              style={{
+                ...styles.detailToggleBtn,
+                ...(detailTab === 'benefits' ? { background: selectedApp.color, color: '#fff' } : {}),
+              }}
+            >
+              {t.tabBenefits}
+            </button>
+          </div>
+
+          {/* Tab content: Details */}
+          {detailTab === 'details' && (
+            <>
+              <p style={styles.detailDesc}>{selectedApp.description}</p>
+
+              <h3 style={styles.featuresTitle}>{t.features}</h3>
+              <ul style={styles.featuresList}>
+                {selectedApp.features.map((f, i) => (
+                  <li key={i} style={styles.featureItem}>
+                    <span style={{ ...styles.featureCheck, background: '#22c55e', color: '#fff' }}>✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {selectedApp.screenshots.length > 1 && (
+                <div style={styles.screenshotRow}>
+                  {selectedApp.screenshots.map((s, i) => (
+                    <div key={i} style={styles.screenshotThumb}>
+                      <img src={s} alt={`Screenshot ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Tab content: Benefits */}
+          {detailTab === 'benefits' && (
+            <div>
+              {/* Intro */}
+              <p style={styles.benefitsIntro}>{t.benefitsIntro}</p>
+
+              {/* Body paragraphs */}
+              {t.benefitsBody.split('\n\n').map((para, i) => (
+                <p key={i} style={styles.benefitsBodyText}>{para}</p>
+              ))}
+
+              {/* "With your own app" header */}
+              <h3 style={styles.benefitsWithApp}>{t.benefitsWithApp}</h3>
+
+              {/* Benefit groups */}
+              <div style={styles.benefitsGrid}>
+                {t.benefitGroups.map((g, i) => (
+                  <div key={i} style={styles.benefitCard}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <span style={styles.benefitIcon}>{g.icon}</span>
+                      <h4 style={styles.benefitTitle}>{g.title}</h4>
+                    </div>
+                    <ul style={styles.benefitPoints}>
+                      {g.points.map((p, j) => (
+                        <li key={j} style={styles.benefitPoint}><span style={{ color: '#22c55e', marginRight: 8, fontWeight: 900 }}>&#10003;</span>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {/* Closing */}
+              <p style={styles.benefitsClosing}>{t.benefitsClosing}</p>
+            </div>
+          )}
+
+          {/* Registration form tab */}
+          {detailTab === 'register' && !regSubmitted && (
+            <FadeIn>
+              <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>{t.register.title}</h3>
+              <p style={{ fontSize: 14, color: '#666', lineHeight: 1.5, marginBottom: 24 }}>{t.register.subtitle}</p>
+
+              <label style={styles.regLabel}>{t.register.businessName}</label>
+              <input
+                type="text"
+                value={regForm.name}
+                onChange={e => setRegForm({ ...regForm, name: e.target.value })}
+                placeholder={t.register.businessNamePlaceholder}
+                style={styles.regInput}
+              />
+
+              <label style={styles.regLabel}>{t.register.urlLabel}</label>
+              <div style={styles.regUrlRow}>
+                <span style={styles.regUrlPrefix}>{t.register.urlPrefix}</span>
+                <input
+                  type="text"
+                  value={regForm.url}
+                  onChange={e => setRegForm({ ...regForm, url: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                  placeholder={t.register.urlPlaceholder}
+                  style={{ ...styles.regInput, borderRadius: '0 12px 12px 0', margin: 0 }}
+                />
+              </div>
+
+              <label style={styles.regLabel}>{t.register.whatsapp}</label>
+              <input
+                type="tel"
+                value={regForm.whatsapp}
+                onChange={e => setRegForm({ ...regForm, whatsapp: e.target.value })}
+                placeholder={t.register.whatsappPlaceholder}
+                style={styles.regInput}
+              />
+
+              <label style={styles.regLabel}>{t.register.email}</label>
+              <input
+                type="email"
+                value={regForm.email}
+                onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                placeholder={t.register.emailPlaceholder}
+                style={styles.regInput}
+              />
+
+              <button
+                onClick={() => {
+                  if (!regForm.name || !regForm.url || !regForm.whatsapp) return
+                  const phone = '6281392000050'
+                  const msg = encodeURIComponent(
+                    `*New Business Registration*\n\n` +
+                    `Business: ${regForm.name}\n` +
+                    `URL: streetlocal.live/${regForm.url}\n` +
+                    `WhatsApp: ${regForm.whatsapp}\n` +
+                    `Email: ${regForm.email || 'N/A'}\n` +
+                    `App: ${selectedApp?.name || 'N/A'} (${selectedApp?.tier || 'N/A'})`
+                  )
+                  window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+                  setRegSubmitted(true)
+                }}
+                style={{
+                  ...styles.ctaButton,
+                  background: regForm.name && regForm.url && regForm.whatsapp ? '#FFD600' : '#e0e0e0',
+                  color: regForm.name && regForm.url && regForm.whatsapp ? '#1a1a1a' : '#999',
+                  border: 'none',
+                  cursor: regForm.name && regForm.url && regForm.whatsapp ? 'pointer' : 'default',
+                }}
+              >
+                {t.register.submitBtn}
+              </button>
+            </FadeIn>
+          )}
+
+          {detailTab === 'register' && regSubmitted && (
+            <FadeIn>
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <span style={{ fontSize: 64, display: 'block', marginBottom: 16 }}>✅</span>
+                <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 10 }}>{t.register.pendingTitle}</h2>
+                <p style={{ fontSize: 15, color: '#666', lineHeight: 1.6, marginBottom: 24 }}>{t.register.pendingMsg}</p>
+                <button
+                  onClick={() => { setSelectedApp(null); setCurrentPage(null); setRegSubmitted(false); setRegForm({ name: '', url: '', whatsapp: '', email: '' }); setDetailTab('details') }}
+                  style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#fff', border: 'none' }}
+                >
+                  {t.register.backHome}
+                </button>
+              </div>
+            </FadeIn>
+          )}
+
+          {selectedApp.url && detailTab !== 'register' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Try Demo */}
+              <a
+                href={window.location.port === '5173' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/') : selectedApp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
+              >
+                {t.openApp}
+              </a>
+              {/* Subscribe */}
+              <button
+                onClick={() => { setPaymentOpen(true); setPaymentProof(null); setCopied(false) }}
+                style={{ ...styles.ctaButton, background: '#FFD600', color: '#1a1a1a', border: 'none' }}
+              >
+                {t.subscribe} — {billingCycle === 'monthly' ? selectedApp.price + t.perMonth : selectedApp.yearlyPrice + t.perYear}
+              </button>
+            </div>
+          ) : (
+            <div style={{ ...styles.ctaButton, background: '#e0e0e0', color: '#999', cursor: 'default' }}>
+              {t.comingSoon}
+            </div>
+          )}
+
+          {/* Payment Sheet */}
+          {paymentOpen && (
+            <div style={styles.paymentOverlay} onClick={() => setPaymentOpen(false)}>
+              <div style={styles.paymentSheet} onClick={e => e.stopPropagation()}>
+                {/* Handle bar */}
+                <div style={styles.paymentHandle} />
+                {/* Header */}
+                <div style={styles.paymentHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <img src="https://ik.imagekit.io/nepgaxllc/mmmass-removebg-preview.png?updatedAt=1777002478628" alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                    <h3 style={styles.paymentTitle}>{t.payment.title} {selectedApp.name}</h3>
+                  </div>
+                  <button onClick={() => setPaymentOpen(false)} style={styles.paymentClose}>&times;</button>
+                </div>
+
+                <p style={styles.paymentPrice}>
+                  {billingCycle === 'monthly' ? selectedApp.price : selectedApp.yearlyPrice}
+                  <span style={{ fontSize: 14, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
+                </p>
+
+                {/* Bank Details */}
+                <div style={styles.paymentBank}>
+                  <p style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>{t.payment.transferTo}</p>
+                  <p style={{ fontSize: 16, fontWeight: 800 }}>🏦 {t.payment.bankName}</p>
+                  <p style={{ fontSize: 20, fontWeight: 900, letterSpacing: 1, margin: '6px 0' }}>{t.payment.accountNumber}</p>
+                  <p style={{ fontSize: 14, color: '#666' }}>{t.payment.accountHolder}</p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(t.payment.accountNumber.replace(/-/g, ''))
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    }}
+                    style={styles.paymentCopyBtn}
+                  >
+                    {copied ? '✓ ' + t.payment.copied : '📋 ' + t.payment.copyAccount}
+                  </button>
+                </div>
+
+                {/* Upload Proof */}
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{t.payment.uploadTitle}</p>
+                  <label style={styles.paymentUpload}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const file = e.target.files[0]
+                        if (file) setPaymentProof(file)
+                      }}
+                    />
+                    {paymentProof ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img
+                          src={URL.createObjectURL(paymentProof)}
+                          alt="Proof"
+                          style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8, marginBottom: 8 }}
+                        />
+                        <span style={{ fontSize: 13, color: '#FFD600' }}>{t.payment.changeImage}</span>
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledddddccc-removebg-preview.png?updatedAt=1777894363133" alt="Upload" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+                        <p style={{ fontSize: 14, color: '#888', marginTop: 8 }}>{t.payment.uploadBtn}</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* WhatsApp Send */}
+                <button
+                  onClick={() => {
+                    const phone = '6281392000050'
+                    const msg = encodeURIComponent(
+                      `*New Subscription Request*\n\n` +
+                      `App: ${selectedApp.name} (${selectedApp.tier})\n` +
+                      `Plan: ${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}\n` +
+                      `Price: ${billingCycle === 'monthly' ? selectedApp.price + '/month' : selectedApp.yearlyPrice + '/year'}\n\n` +
+                      `Payment proof screenshot will be sent next.\n` +
+                      `Please activate my account.`
+                    )
+                    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+                    // Close payment sheet and show registration after short delay
+                    setTimeout(() => {
+                      setPaymentOpen(false)
+                      setRegSubmitted(false)
+                      setRegForm({ name: '', url: '', whatsapp: '', email: '' })
+                      setDetailTab('register')
+                    }, 1000)
+                  }}
+                  style={{
+                    ...styles.ctaButton,
+                    background: '#25D366',
+                    color: '#fff',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    opacity: paymentProof ? 1 : 0.4,
+                    pointerEvents: paymentProof ? 'auto' : 'none',
+                  }}
+                >
+                  <img src="https://ik.imagekit.io/nepgaxllc/Untitledsddsssdsssssssssdddd-removebg-preview%20(1).png?updatedAt=1777493111283" alt="WhatsApp" style={{ width: 24, height: 24, objectFit: 'contain' }} /> {t.payment.sendWhatsApp}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={styles.footer}>
+          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
+          <p style={styles.footerText}>{t.footer}</p>
+        </div>
+      </div>
+    )
+  }
+
+  /* Category detail — show apps in that category */
+  if (selectedCategory) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <button onClick={() => setSelectedCategory(null)} style={styles.backBtn}>
+            {t.back}
+          </button>
+          <LangSwitcher locale={locale} setLocale={setLocale} />
+        </div>
+
+        {/* Hero image */}
+        {selectedCategory.id === 'food' && (
+          <FadeIn>
+            <div style={{ textAlign: 'center', padding: '10px 20px 0' }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_48_31%20PM.png" alt="Food Apps" style={{ width: 144, height: 144, borderRadius: 20, objectFit: 'cover' }} />
+            </div>
+          </FadeIn>
+        )}
+
+        <div style={{ padding: '12px 20px 40px' }}>
+          <FadeIn>
+            <h1 style={{ ...styles.catTitle, justifyContent: 'center' }}>
+              {selectedCategory.id !== 'food' && (
+                <span style={{ fontSize: 36 }}>{selectedCategory.icon}</span>
+              )}
+              {selectedCategory.name}
+            </h1>
+            <p style={{ ...styles.catDesc, textAlign: 'center' }}>{selectedCategory.description}</p>
+          </FadeIn>
+
+          <div style={styles.appList}>
+            {selectedCategory.apps.map((app, i) => (
+              <FadeIn key={app.id} delay={i * 0.1}>
+                <div
+                  style={styles.appCard}
+                  onClick={() => { setSelectedApp(app); setDetailTab('details') }}
+                >
+                  <div style={styles.appCardPhone}>
+                    <PhoneMockup screenshot={app.screenshots[0]} color={app.color} small />
+                  </div>
+                  <div style={styles.appCardInfo}>
+                    <span style={{ ...styles.tierBadge, background: app.color + '15', color: app.color }}>
+                      {app.tier}
+                    </span>
+                    <h3 style={styles.appCardName}>{app.name}</h3>
+                    <p style={styles.appCardPrice}>
+                      <span style={{ fontSize: 20, fontWeight: 900, color: '#1a1a1a' }}>{app.price}</span>
+                      <span style={{ fontSize: 13, color: '#888' }}>{t.perMonth}</span>
+                    </p>
+                    <p style={styles.appCardTagline}>{app.tagline}</p>
+                    <span style={{ ...styles.appCardBtn, color: app.color }}>
+                      {t.viewDetails}
+                    </span>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+        <div style={styles.footer}>
+          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
+          <p style={styles.footerText}>{t.footer}</p>
+        </div>
+      </div>
+    )
+  }
+
+  /* ─── Admin Dashboard ─── */
+  if (currentPage === 'admin') {
+    return <Admin onClose={() => setCurrentPage(null)} />
+  }
+
+  /* ─── Sub Pages (About, FAQ, Services) ─── */
+  if (currentPage) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <button onClick={() => setCurrentPage(null)} style={styles.backBtn}>
+            {t.back}
+          </button>
+          <LangSwitcher locale={locale} setLocale={setLocale} />
+        </div>
+
+        <div style={{ padding: '20px 24px 40px' }}>
+          {currentPage === 'about' && (
+            <div>
+              <img src="https://ik.imagekit.io/nepgaxllc/dsfsdfffsss.png" alt="About Us" style={{ width: '100%', borderRadius: 20, marginBottom: 20 }} />
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 16 }}>{t.aboutTitle}</h1>
+              {t.aboutBody.split('\n\n').map((p, i) => (
+                <p key={i} style={{ fontSize: 15, color: '#444', lineHeight: 1.7, marginBottom: 14 }}>{p}</p>
+              ))}
+            </div>
+          )}
+
+          {currentPage === 'faq' && (
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 16 }}>{t.faqTitle}</h1>
+              {t.faqs.map((faq, i) => (
+                <div key={i} style={styles.faqItem}>
+                  <h4 style={styles.faqQ}>{faq.q}</h4>
+                  <p style={styles.faqA}>{faq.a}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {currentPage === 'services' && (
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>{t.termsTitle}</h1>
+              <p style={{ fontSize: 12, color: '#999', marginBottom: 20 }}>{t.termsLastUpdated}</p>
+              {(t.termsSections === 'same' ? TRANSLATIONS.en.termsSections : t.termsSections).map((sec, i) => (
+                <div key={i} style={{ marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>{sec.title}</h3>
+                  {sec.body.split('\n\n').map((para, j) => (
+                    <p key={j} style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>{para}</p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+
+        <div style={styles.footer}>
+          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
+          <p style={styles.footerText}>{t.footer}</p>
+        </div>
+      </div>
+    )
+  }
+
+  /* ─── Home / Landing ─── */
+  return (
+    <div style={styles.page}>
+      {/* Lang switcher on landing */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 20px 0' }}>
+        <LangSwitcher locale={locale} setLocale={setLocale} />
+      </div>
+
+      {/* Hero */}
+      <FadeIn>
+        <div style={styles.hero}>
+          <img
+            src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2002_58_20%20PM.png"
+            alt="Street Local Live"
+            style={styles.heroLogo}
+          />
+          <p style={styles.heroSub}>
+            {t.heroSub}<br />{t.heroSub2}
+          </p>
+        </div>
+      </FadeIn>
+
+      {/* Nav Buttons */}
+      <FadeIn delay={0.15}>
+        <div style={styles.navButtons}>
+          <button onClick={() => setCurrentPage('about')} style={styles.navBtn}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
+            <span style={styles.navBtnLabel}>{t.navAbout}</span>
+          </button>
+          <button onClick={() => setCurrentPage('faq')} style={styles.navBtn}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsssssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
+            <span style={styles.navBtnLabel}>{t.navFaq}</span>
+          </button>
+          <button onClick={() => setCurrentPage('services')} style={styles.navBtn}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsssssssssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
+            <span style={styles.navBtnLabel}>{t.navServices}</span>
+          </button>
+        </div>
+      </FadeIn>
+
+      {/* Categories */}
+      <div style={styles.section}>
+        <FadeIn delay={0.2}>
+          <h2 style={styles.sectionTitle}>{t.ourApps}</h2>
+        </FadeIn>
+
+        {/* Food App — full-width banner card with image */}
+        {CATEGORIES.filter(c => c.id === 'food').map((cat) => (
+          <FadeIn key={cat.id} delay={0.3}>
+            <div
+              style={styles.foodBannerCard}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {/* Header over image */}
+              <div style={styles.foodBannerHeader}>
+                <span style={styles.foodBannerHeaderText}>{cat.name}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>2,572 downloads</span>
+              </div>
+              <img
+                src={cat.bannerImage}
+                alt={cat.name}
+                style={styles.foodBannerImage}
+              />
+              {/* Yellow enter button */}
+              <div style={styles.foodBannerBottom}>
+                <button style={styles.foodBannerEnterBtn}>
+                  {locale === 'id' ? 'Masuk' : 'Enter'} →
+                </button>
+              </div>
+            </div>
+          </FadeIn>
+        ))}
+
+        {/* Remaining + placeholder categories */}
+        <div style={{ ...styles.catGrid, marginTop: 12 }}>
+          {CATEGORIES.filter(c => c.id !== 'food').map((cat, i) => (
+            <FadeIn key={cat.id} delay={0.4 + i * 0.1}>
+              <div
+                style={styles.catCard}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                <span style={styles.catIcon}>{cat.icon}</span>
+                <h3 style={styles.catCardName}>{cat.name}</h3>
+                <p style={styles.catCardDesc}>{cat.description}</p>
+                <span style={styles.catCardCount}>
+                  {t.apps.replace('{count}', cat.apps.length)}
+                </span>
+              </div>
+            </FadeIn>
+          ))}
+
+          {/* Placeholder cards for future categories */}
+          {[...Array(3)].map((_, i) => (
+            <FadeIn key={`placeholder-${i}`} delay={0.5 + i * 0.1}>
+              <div style={styles.catCardPlaceholder}>
+                <span style={{ fontSize: 28, opacity: 0.3 }}>🔜</span>
+                <span style={{ fontSize: 14, color: '#ccc', fontWeight: 600 }}>{t.comingSoon}</span>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={styles.footer}>
+        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
+        <p style={styles.footerText} onClick={() => setCurrentPage('admin')}>{t.footer}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Styles ─── */
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#ffffff',
+    color: '#1a1a1a',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    maxWidth: 480,
+    margin: '0 auto',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+  },
+
+  /* Nav Buttons */
+  navButtons: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 24,
+    padding: '8px 20px 16px',
+  },
+  navBtn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 6,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+  },
+  navBtnIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    background: '#FFD600',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 22,
+    boxShadow: '0 4px 12px rgba(255,214,0,0.3)',
+    color: '#1a1a1a',
+  },
+  navBtnLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#666',
+  },
+
+  /* FAQ */
+  faqItem: {
+    background: '#f8f9fa',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    border: '1px solid #f0f0f0',
+  },
+  faqQ: {
+    fontSize: 15,
+    fontWeight: 800,
+    margin: '0 0 6px',
+    color: '#1a1a1a',
+  },
+  faqA: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 1.6,
+    margin: 0,
+  },
+
+  /* Registration Form */
+  regLabel: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#333',
+    display: 'block',
+    marginBottom: 6,
+  },
+  regInput: {
+    width: '100%',
+    padding: '14px 16px',
+    borderRadius: 12,
+    border: '1.5px solid #e0e0e0',
+    fontSize: 15,
+    fontWeight: 500,
+    outline: 'none',
+    marginBottom: 16,
+    fontFamily: 'inherit',
+    minHeight: 48,
+  },
+  regUrlRow: {
+    display: 'flex',
+    alignItems: 'stretch',
+    marginBottom: 16,
+  },
+  regUrlPrefix: {
+    background: '#1a1a1a',
+    color: '#FFD600',
+    padding: '14px 12px',
+    borderRadius: '12px 0 0 12px',
+    fontSize: 13,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    whiteSpace: 'nowrap',
+  },
+
+  /* Service Card */
+  serviceCard: {
+    display: 'flex',
+    gap: 14,
+    alignItems: 'flex-start',
+    background: '#f8f9fa',
+    borderRadius: 16,
+    padding: 16,
+    border: '1px solid #f0f0f0',
+  },
+
+  /* Hero */
+  hero: {
+    padding: '8px 24px 8px',
+    textAlign: 'center',
+  },
+  heroLogo: {
+    width: '100%',
+    maxWidth: 320,
+    height: 'auto',
+    marginBottom: -30,
+  },
+  heroSub: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 1.6,
+    margin: 0,
+  },
+
+  /* Section */
+  section: {
+    padding: '0 20px 40px',
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 800,
+    marginBottom: 20,
+  },
+
+  /* Category Grid */
+  catGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12,
+  },
+  catCard: {
+    background: '#f8f9fa',
+    borderRadius: 20,
+    padding: 20,
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    border: '1px solid #f0f0f0',
+  },
+  catCardPlaceholder: {
+    background: '#fafafa',
+    borderRadius: 20,
+    padding: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 120,
+    border: '1px dashed #e0e0e0',
+  },
+  catIcon: {
+    fontSize: 32,
+    display: 'block',
+    marginBottom: 8,
+  },
+  catCardName: {
+    fontSize: 16,
+    fontWeight: 700,
+    margin: '0 0 4px',
+  },
+  catCardDesc: {
+    fontSize: 13,
+    color: '#888',
+    margin: '0 0 8px',
+    lineHeight: 1.4,
+  },
+  catCardCount: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#FFD600',
+  },
+
+  /* Category Detail */
+  catTitle: {
+    fontSize: 28,
+    fontWeight: 900,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    margin: '0 0 8px',
+  },
+  catDesc: {
+    fontSize: 15,
+    color: '#666',
+    margin: '0 0 24px',
+  },
+
+  /* App List */
+  appList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+  },
+  appCard: {
+    background: '#f8f9fa',
+    borderRadius: 24,
+    padding: 20,
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    border: '1px solid #f0f0f0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 16,
+  },
+  appCardPhone: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appCardInfo: {
+    width: '100%',
+    textAlign: 'center',
+  },
+  appCardName: {
+    fontSize: 18,
+    fontWeight: 800,
+    margin: '6px 0 4px',
+  },
+  appCardPrice: {
+    margin: '4px 0 6px',
+    display: 'flex',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  appCardTagline: {
+    fontSize: 13,
+    color: '#666',
+    margin: '0 0 10px',
+    lineHeight: 1.4,
+  },
+  appCardBtn: {
+    fontSize: 14,
+    fontWeight: 700,
+  },
+
+  /* Tier Badge */
+  tierBadge: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: 8,
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  /* Detail Page */
+  detailHeader: {
+    padding: '16px 20px',
+    position: 'sticky',
+    top: 0,
+    background: 'rgba(255,255,255,0.9)',
+    backdropFilter: 'blur(10px)',
+    zIndex: 10,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  backBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: 16,
+    fontWeight: 600,
+    color: '#FFD600',
+    cursor: 'pointer',
+    padding: '8px 0',
+    minHeight: 44,
+  },
+  detailHero: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '20px 0 30px',
+  },
+  detailContent: {
+    padding: '0 24px 60px',
+  },
+  detailTitle: {
+    fontSize: 28,
+    fontWeight: 900,
+    margin: '10px 0 6px',
+  },
+  detailTagline: {
+    fontSize: 16,
+    color: '#666',
+    margin: '0 0 16px',
+  },
+  detailDesc: {
+    fontSize: 15,
+    color: '#444',
+    lineHeight: 1.7,
+    margin: '0 0 24px',
+  },
+  featuresTitle: {
+    fontSize: 18,
+    fontWeight: 800,
+    margin: '0 0 12px',
+  },
+  featuresList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: '0 0 24px',
+  },
+  featureItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '10px 0',
+    fontSize: 15,
+    borderBottom: '1px solid #f0f0f0',
+  },
+  featureCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    color: '#fff',
+    fontSize: 12,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+
+  /* Screenshots */
+  screenshotRow: {
+    display: 'flex',
+    gap: 10,
+    overflowX: 'auto',
+    padding: '0 0 20px',
+    WebkitOverflowScrolling: 'touch',
+  },
+  screenshotThumb: {
+    width: 120,
+    height: 240,
+    borderRadius: 12,
+    overflow: 'hidden',
+    flexShrink: 0,
+    background: '#f0f0f0',
+  },
+
+  /* Detail Toggle Tabs */
+  detailToggle: {
+    display: 'flex',
+    gap: 0,
+    background: '#f0f0f0',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 20,
+  },
+  detailToggleBtn: {
+    flex: 1,
+    border: 'none',
+    background: 'transparent',
+    padding: '10px 8px',
+    borderRadius: 11,
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#888',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    minHeight: 44,
+  },
+
+  /* Benefits */
+  benefitsIntro: {
+    fontSize: 17,
+    fontWeight: 800,
+    color: '#1a1a1a',
+    lineHeight: 1.6,
+    margin: '0 0 16px',
+  },
+  benefitsBodyText: {
+    fontSize: 15,
+    color: '#444',
+    lineHeight: 1.7,
+    margin: '0 0 14px',
+  },
+  benefitsWithApp: {
+    fontSize: 18,
+    fontWeight: 800,
+    color: '#1a1a1a',
+    margin: '20px 0 14px',
+  },
+  benefitsClosing: {
+    fontSize: 15,
+    fontWeight: 700,
+    color: '#1a1a1a',
+    lineHeight: 1.7,
+    margin: '20px 0 24px',
+    padding: 18,
+    background: '#FFD600',
+    borderRadius: 16,
+  },
+  benefitsGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    marginBottom: 24,
+  },
+  benefitCard: {
+    background: '#f8f9fa',
+    borderRadius: 16,
+    padding: '16px 18px',
+    border: '1px solid #f0f0f0',
+  },
+  benefitIcon: {
+    fontSize: 24,
+    flexShrink: 0,
+  },
+  benefitTitle: {
+    fontSize: 16,
+    fontWeight: 800,
+    margin: 0,
+    color: '#1a1a1a',
+  },
+  benefitPoints: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+  },
+  benefitPoint: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 1.5,
+    padding: '4px 0',
+    display: 'flex',
+    alignItems: 'flex-start',
+  },
+
+  /* Payment Sheet */
+  paymentOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.6)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
+    zIndex: 1000,
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  paymentSheet: {
+    background: '#fff',
+    borderRadius: '24px 24px 0 0',
+    padding: '0 20px 32px',
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    animation: 'slideUp 0.3s ease',
+    borderTop: '4px solid #FFD600',
+  },
+  paymentHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    background: '#ddd',
+    margin: '10px auto 16px',
+  },
+  paymentHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  paymentTitle: {
+    fontSize: 18,
+    fontWeight: 800,
+    margin: 0,
+  },
+  paymentClose: {
+    background: '#8B0000',
+    border: 'none',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    fontSize: 20,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+  },
+  paymentPrice: {
+    fontSize: 28,
+    fontWeight: 900,
+    marginBottom: 20,
+  },
+  paymentBank: {
+    background: '#f8f9fa',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    border: '1px solid #f0f0f0',
+  },
+  paymentCopyBtn: {
+    marginTop: 10,
+    background: '#1a1a1a',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 10,
+    padding: '10px 16px',
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
+    width: '100%',
+    minHeight: 44,
+  },
+  paymentUpload: {
+    display: 'block',
+    border: '2px dashed #ddd',
+    borderRadius: 16,
+    padding: 12,
+    cursor: 'pointer',
+    transition: 'border-color 0.2s',
+  },
+
+  /* CTA */
+  ctaButton: {
+    display: 'block',
+    width: '100%',
+    padding: '16px',
+    borderRadius: 14,
+    border: 'none',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 700,
+    textAlign: 'center',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    marginTop: 8,
+  },
+
+  /* Food Banner Card */
+  foodBannerCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+  },
+  foodBannerHeader: {
+    background: '#1a1a1a',
+    padding: '14px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  foodBannerHeaderText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 800,
+    letterSpacing: -0.3,
+  },
+  foodBannerImage: {
+    width: '100%',
+    height: 'auto',
+    display: 'block',
+  },
+  foodBannerBottom: {
+    padding: '14px 20px',
+    background: '#1a1a1a',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  foodBannerEnterBtn: {
+    background: '#FFD600',
+    color: '#1a1a1a',
+    border: 'none',
+    borderRadius: 12,
+    padding: '12px 0',
+    width: '100%',
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: 'pointer',
+    minHeight: 48,
+    letterSpacing: 0.3,
+  },
+
+  /* Language Switcher */
+  langSwitcher: {
+    display: 'flex',
+    gap: 4,
+    background: '#f0f0f0',
+    borderRadius: 10,
+    padding: 3,
+  },
+  langBtn: {
+    border: 'none',
+    background: 'transparent',
+    padding: '6px 14px',
+    borderRadius: 8,
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#888',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    minHeight: 44,
+    minWidth: 44,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langBtnActive: {
+    background: '#fff',
+    color: '#1a1a1a',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+  },
+
+  /* Footer */
+  footer: {
+    padding: '20px 20px 30px',
+    textAlign: 'center',
+  },
+  footerImage: {
+    width: '100%',
+    height: 'auto',
+    display: 'block',
+    marginBottom: 12,
+  },
+  footerText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: 600,
+  },
+}

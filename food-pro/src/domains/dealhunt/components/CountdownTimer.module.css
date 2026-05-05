@@ -1,0 +1,50 @@
+/* CountdownTimer — deal expiry countdown */
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'SF Mono', 'Cascadia Mono', 'Consolas', monospace;
+  white-space: nowrap;
+}
+
+/* Variants */
+.pill {
+  padding: 3px 8px;
+  background: rgba(229, 57, 53, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  color: #fff;
+}
+
+.inline {
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Sizes */
+.small .digits { font-size: 11px; font-weight: 700; }
+.small .icon { font-size: 10px; }
+
+.large .digits { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+.large .icon { font-size: 18px; }
+
+/* Urgent — < 1 hour */
+.urgent {
+  animation: flashUrgent 1s ease-in-out infinite;
+}
+@keyframes flashUrgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Expired */
+.expired .digits {
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.expired.pill {
+  background: rgba(100, 100, 100, 0.7);
+}

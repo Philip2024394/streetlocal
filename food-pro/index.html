@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Street Local Live" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="msapplication-navbutton-color" content="#0a0a0a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Street Local Live</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; width: 100%; background: #111; }
+      body { display: flex; justify-content: center; align-items: center; overflow: hidden; }
+      #app-shell {
+        width: 100%;
+        max-width: 480px;
+        height: 100%;
+        position: relative;
+        background: #0a0a0a;
+        overflow: hidden;
+        transform: translateZ(0);
+      }
+      #root { height: 100%; width: 100%; overflow: hidden; }
+      * { scrollbar-width: none; -ms-overflow-style: none; }
+      *::-webkit-scrollbar { display: none; }
+      @media (min-width: 481px) {
+        #app-shell {
+          max-height: 100vh;
+          border-left: 1px solid rgba(255,255,255,0.06);
+          border-right: 1px solid rgba(255,255,255,0.06);
+          box-shadow: 0 0 80px rgba(0,0,0,0.5);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-shell">
+      <div id="root"></div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

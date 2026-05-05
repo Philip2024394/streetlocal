@@ -1,0 +1,105 @@
+/* DealFilters — category pills + sort dropdown */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 8px;
+}
+
+/* Horizontal scroll pills */
+.pillScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.pillScroll::-webkit-scrollbar { display: none; }
+
+.pillTrack {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.pillActive {
+  background: rgba(141, 198, 63, 0.15);
+  border-color: rgba(141, 198, 63, 0.4);
+  color: #8DC63F;
+}
+.pillActive:hover {
+  background: rgba(141, 198, 63, 0.2);
+  color: #8DC63F;
+}
+
+.pillEmoji { font-size: 14px; }
+.pillLabel { font-size: 12px; }
+
+/* Sort dropdown */
+.sortWrap {
+  position: relative;
+  align-self: flex-end;
+}
+
+.sortSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 6px 30px 6px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sortSelect:hover {
+  border-color: rgba(141, 198, 63, 0.3);
+  color: #fff;
+}
+.sortSelect:focus {
+  outline: none;
+  border-color: rgba(141, 198, 63, 0.5);
+}
+.sortSelect option {
+  background: #1a1a1e;
+  color: #fff;
+}
+
+.sortIcon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}

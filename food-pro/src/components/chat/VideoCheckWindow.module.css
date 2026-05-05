@@ -1,0 +1,236 @@
+/* ── Overlay sits inside .window (position: fixed), above input bar ── */
+.overlay {
+  position: absolute;
+  bottom: 70px; /* sits above the input bar */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 14px;
+  z-index: 10;
+  animation: fadeIn 0.25s ease;
+  pointer-events: none;
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: #0e0e0e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(96, 165, 250, 0.15);
+  pointer-events: all;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.liveRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+.liveLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.endBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 20px;
+  padding: 5px 11px;
+  color: #EF4444;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans, sans-serif);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.endBtn:active { background: rgba(239, 68, 68, 0.2); }
+
+/* ── Video feeds ── */
+.feeds {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.feedWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Remote — larger circle */
+.circleRemote {
+  width: 110px;
+  height: 110px;
+}
+
+/* Local — smaller circle */
+.circleLocal {
+  width: 80px;
+  height: 80px;
+}
+
+.circle {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1a1a1a;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.circleConnecting {
+  border-color: rgba(96, 165, 250, 0.4);
+  animation: connectingGlow 1.8s ease-in-out infinite;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transform: scaleX(-1); /* mirror for natural feel */
+}
+
+/* Countdown SVG ring */
+.ring {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  z-index: 2;
+  pointer-events: none;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.ringTrack {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3;
+}
+
+.ringProgress {
+  fill: none;
+  stroke: #34D399;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.9s linear;
+}
+
+/* Connecting spinner */
+.connectingSpinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 14, 14, 0.6);
+  z-index: 3;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(96, 165, 250, 0.2);
+  border-top-color: #60A5FA;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.feedLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-sans, sans-serif);
+}
+
+/* ── Countdown column (between feeds) ── */
+.countdownCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 36px;
+}
+
+.countdownNum {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  font-family: var(--font-sans, sans-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdownSub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 600;
+  font-family: var(--font-sans, sans-serif);
+}
+
+/* ── Footer ── */
+.footer {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans, sans-serif);
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(239, 68, 68, 0.7); }
+  50%       { opacity: 0.6; box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+}
+
+@keyframes connectingGlow {
+  0%, 100% { border-color: rgba(96, 165, 250, 0.4); }
+  50%       { border-color: rgba(96, 165, 250, 0.8); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,305 @@
+/* IntentGrid — full-screen, no scroll */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Full-screen sheet ─────────────────────────────────────────────────────── */
+.sheet {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  background: #08080f;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: pageFadeIn 0.3s ease;
+}
+
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasdsdasda.png') center / cover no-repeat;
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Particle layer ────────────────────────────────────────────────────────── */
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  bottom: -10%;
+  line-height: 1;
+  user-select: none;
+  animation: floatUp var(--dur, 9s) ease-in infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.6);
+  }
+  15% {
+    opacity: var(--peak, 0.25);
+  }
+  80% {
+    opacity: var(--peak, 0.25);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-110vh) translateX(var(--drift-x, 0px)) scale(1.1);
+  }
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+.header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 10px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.04em;
+}
+
+.sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* ── Grid — fills remaining height, no scroll ─────────────────────────────── */
+.grid {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 6px;
+  padding: 6px 10px 10px;
+  overflow: hidden;
+}
+
+/* ── Tile ──────────────────────────────────────────────────────────────────── */
+.tile {
+  position: relative;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 6px 18px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+
+  opacity: 0;
+  transform: translateY(14px) scale(0.93);
+  transition:
+    opacity   0.34s ease,
+    transform 0.34s cubic-bezier(0.34, 1.2, 0.64, 1),
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.tileIn {
+  opacity: 1;
+  transform: none;
+}
+
+.tile:active {
+  transform: scale(0.93) !important;
+}
+
+/* ── Tile content ───────────────────────────────────────────────────────────── */
+
+/* Full-cover background image */
+.tileBgImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+/* Gradient overlay so text is readable */
+.tileBgGrad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.05) 0%,
+    rgba(0,0,0,0.5) 55%,
+    rgba(0,0,0,0.85) 100%
+  );
+  pointer-events: none;
+}
+
+/* Text pinned to bottom over the image */
+.tileOverlayText {
+  position: absolute;
+  bottom: 10px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.tileEmoji {
+  line-height: 1;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.tileLabel {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-align: center;
+  line-height: 1.2;
+  pointer-events: none;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.tileDesc {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+  pointer-events: none;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* City stat fades in after tiles settle */
+.tileStat {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.tileStatOn {
+  opacity: 0.85;
+  transform: none;
+}
+
+/* Check badge */
+.tileCheck {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: checkPop 0.2s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+@keyframes checkPop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+.footer {
+  padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ctaBtn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s, transform 0.12s;
+}
+
+.ctaBtn:active { transform: scale(0.97); }
+
+.ctaBtnOn {
+  border-color: transparent;
+  color: #fff;
+}
+
+.browseAllBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 0;
+  letter-spacing: 0.01em;
+  transition: color 0.15s;
+}
+
+.browseAllBtn:active { color: rgba(255, 255, 255, 0.6); }

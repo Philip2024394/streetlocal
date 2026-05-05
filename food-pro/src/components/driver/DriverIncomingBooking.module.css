@@ -1,0 +1,85 @@
+.overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.85);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.modal {
+  width: 100%; max-width: 480px;
+  background: #111; border-radius: 24px 24px 0 0;
+  padding: 0 0 28px;
+  display: flex; flex-direction: column; align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+.modalBg {
+  position: absolute; inset: 0;
+  background-image: url('https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_39_04%20AM.png?updatedAt=1776814761653');
+  background-size: cover; background-position: center;
+  opacity: 0.15; pointer-events: none;
+  border-radius: 24px 24px 0 0;
+}
+
+/* Timer bar */
+.timerBar { width: 100%; height: 4px; background: #1a1a1a; }
+.timerFill { height: 100%; transition: width 1s linear; }
+
+.pulse { font-size: 40px; margin-top: 20px; animation: pulse 1s ease-in-out infinite alternate; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+.title { font-size: 20px; font-weight: 900; color: #fff; margin: 8px 0 2px; }
+.countdown { font-size: 13px; color: #555; margin: 0 0 16px; }
+.countdown strong { color: #F5C518; }
+
+/* Passenger */
+.passengerRow {
+  display: flex; align-items: center; gap: 12px;
+  width: calc(100% - 40px); background: #181818;
+  border: 1px solid #222; border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 12px;
+}
+.passengerAvatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #222; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.avatarImg { width: 100%; height: 100%; object-fit: cover; }
+.avatarInitial { font-size: 18px; font-weight: 800; color: #8DC63F; }
+.passengerInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.passengerName { font-size: 14px; font-weight: 800; color: #fff; }
+.passengerRating { font-size: 12px; color: #888; }
+.fare { font-size: 18px; font-weight: 900; color: #8DC63F; flex-shrink: 0; }
+
+/* Route */
+.route {
+  width: calc(100% - 40px);
+  background: #181818; border: 1px solid #222; border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 20px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.routeRow { display: flex; align-items: flex-start; gap: 12px; }
+.routeDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.routeTextWrap { display: flex; flex-direction: column; gap: 1px; }
+.routeLabel { font-size: 10px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.routeAddr { font-size: 13px; color: #ccc; font-weight: 600; }
+.routeConnector { width: 1px; height: 12px; background: #333; margin-left: 4px; }
+
+/* Actions */
+.actions { display: flex; gap: 12px; width: calc(100% - 40px); }
+.btnDecline {
+  flex: 1; padding: 14px; border-radius: 14px;
+  background: #7F1D1D; color: #fff;
+  border: none;
+  font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.btnDecline:hover:not(:disabled) { background: #991B1B; }
+.btnAccept {
+  flex: 2; padding: 14px; border-radius: 14px;
+  background: #8DC63F; color: #000;
+  border: none; font-size: 15px; font-weight: 900;
+  cursor: pointer; font-family: inherit; transition: opacity 0.15s;
+}
+.btnAccept:disabled, .btnDecline:disabled { opacity: 0.5; cursor: default; }

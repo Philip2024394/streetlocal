@@ -1,0 +1,261 @@
+.card {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.headerIcon { font-size: 18px; flex-shrink: 0; }
+
+.headerTitle {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+}
+
+.headerRef {
+  display: block;
+  font-size: 10px;
+  font-family: monospace;
+  color: rgba(255,255,255,0.35);
+}
+
+.statePill {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.statePill_awaiting_proof { background: rgba(245,197,24,0.12); color: #f5c518; border: 1px solid rgba(245,197,24,0.25); }
+.statePill_proof_uploaded  { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+.statePill_confirmed       { background: rgba(52,199,89,0.12);  color: #34C759; border: 1px solid rgba(52,199,89,0.25); }
+
+/* ── Bank card visual ── */
+.bankCard {
+  margin: 12px 12px 0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.bankCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.bankCardBrand {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bankCardName {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+}
+
+.bankCardNumber {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  font-family: monospace;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.bankCardBottom {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bankCardHolder {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Amounts ── */
+.amounts {
+  padding: 12px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.amountRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+.amountLabelGray { color: rgba(255,255,255,0.3); }
+.amountValueCross { text-decoration: line-through; color: rgba(255,255,255,0.25); }
+.amountDiscount { color: #34C759; font-weight: 600; font-size: 11px; }
+
+.amountRowFinal {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 2px;
+}
+
+.amountFinal {
+  font-size: 16px;
+  font-weight: 800;
+  color: #E8458C;
+  font-family: monospace;
+}
+
+/* ── Steps ── */
+.steps {
+  padding: 10px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.4;
+}
+
+.step strong { color: rgba(255,255,255,0.8); }
+
+.stepNum {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.6);
+  flex-shrink: 0;
+}
+
+/* ── Proof ── */
+.proofWrap {
+  margin: 10px 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+
+.proofImg {
+  width: 100%;
+  display: block;
+  max-height: 160px;
+  object-fit: cover;
+}
+
+.proofLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.6);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── Confirmed ── */
+.confirmedRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px 0;
+}
+
+.confirmedIcon { font-size: 16px; flex-shrink: 0; }
+
+.confirmedText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34C759;
+  line-height: 1.4;
+}
+
+/* ── Upload button ── */
+.uploadBtn {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 12px 12px;
+  padding: 12px;
+  background: #E8458C;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.uploadBtn:disabled { opacity: 0.5; cursor: default; }
+.uploadBtn:not(:disabled):active { opacity: 0.85; }
+
+/* ── Waiting ── */
+.waitingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px;
+}
+
+.waitingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #60a5fa;
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.waitingText {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.4;
+}

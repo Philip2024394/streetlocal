@@ -1,0 +1,17 @@
+{
+  "name": "Street Local Live",
+  "short_name": "Street Local Live",
+  "description": "Order food direct — Indonesian & Western grilled favourites",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

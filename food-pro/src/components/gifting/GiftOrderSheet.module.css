@@ -1,0 +1,504 @@
+/* ── Backdrop ────────────────────────────────────────────────────────────── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 1300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* ── Sheet ───────────────────────────────────────────────────────────────── */
+.sheet {
+  width: 100%;
+  max-width: 430px;
+  max-height: 90dvh;
+  background: #111;
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  padding: 0 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  margin: 12px auto 4px;
+  flex-shrink: 0;
+}
+
+/* ── Floating draggable profile bubble ───────────────────────────────────── */
+.floatingBubble {
+  position: fixed;
+  z-index: 1310;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  filter: drop-shadow(0 6px 20px rgba(232,69,140,0.55));
+}
+
+.floatingBubble:active {
+  cursor: grabbing;
+}
+
+.bubbleRing {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #E8458C 0%, #A855F7 50%, #E8458C 100%);
+  box-shadow:
+    0 0 0 1px rgba(232,69,140,0.4),
+    0 0 18px rgba(232,69,140,0.6),
+    0 0 36px rgba(168,85,247,0.3);
+  animation: bubblePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes bubblePulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(232,69,140,0.4), 0 0 18px rgba(232,69,140,0.6), 0 0 36px rgba(168,85,247,0.3); }
+  50%       { box-shadow: 0 0 0 2px rgba(232,69,140,0.6), 0 0 28px rgba(232,69,140,0.8), 0 0 52px rgba(168,85,247,0.45); }
+}
+
+.bubblePhoto {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #111;
+  display: block;
+}
+
+.bubblePhotoFallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(232,69,140,0.2);
+  border: 2px solid #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.bubbleName {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.bubbleLabel {
+  font-size: 9px;
+  font-weight: 800;
+  color: #E8458C;
+  background: rgba(232,69,140,0.15);
+  border: 1px solid rgba(232,69,140,0.35);
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Product card ────────────────────────────────────────────────────────── */
+.productCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+}
+
+.productImg {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+}
+
+.productImgFallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.productInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.productName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.productVariant {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+}
+
+.productSeller {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productPrice {
+  font-size: 15px;
+  font-weight: 800;
+  color: #F59E0B;
+  flex-shrink: 0;
+}
+
+/* ── Delivery section ────────────────────────────────────────────────────── */
+.deliverySection {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deliveryTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.distanceTag {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.deliveryTiers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tierRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+
+.tierRowActive {
+  background: rgba(141,198,63,0.12);
+  border: 1px solid rgba(141,198,63,0.3);
+}
+
+.tierLabel {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+}
+
+.tierRowActive .tierLabel {
+  color: #fff;
+  font-weight: 600;
+}
+
+.tierFee {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+}
+
+.tierRowActive .tierFee {
+  color: #8DC63F;
+}
+
+.sellerShipsNote {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 11px 14px;
+  line-height: 1.6;
+}
+
+.deliveryFeeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  padding-top: 2px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.deliveryFeeValue {
+  font-weight: 700;
+  color: #8DC63F;
+}
+
+/* ── Message ─────────────────────────────────────────────────────────────── */
+.messageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.messageLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+}
+
+.messageLabelOptional {
+  font-weight: 400;
+  color: rgba(255,255,255,0.3);
+}
+
+.messageInput {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 12px 14px;
+  resize: none;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.messageInput:focus {
+  border-color: rgba(232,69,140,0.5);
+}
+
+.messageInput::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.messageCount {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  text-align: right;
+}
+
+/* ── Total row ───────────────────────────────────────────────────────────── */
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 4px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.totalLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+}
+
+.totalValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* ── Send button ─────────────────────────────────────────────────────────── */
+.sendBtn {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #E8458C 0%, #A855F7 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: inherit;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(232,69,140,0.35);
+}
+
+.sendBtn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sendBtnSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.closeBtn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: rgba(255,255,255,0.6);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ── Privacy note ────────────────────────────────────────────────────────── */
+.privacyNote {
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 8px;
+}
+
+/* ── Success state ───────────────────────────────────────────────────────── */
+.successWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 8px;
+  text-align: center;
+}
+
+.successEmoji {
+  font-size: 52px;
+}
+
+.successTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.successSub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+  max-width: 300px;
+  margin: 0;
+}
+
+.successSub strong {
+  color: #fff;
+}
+
+.successPrivacy {
+  font-size: 12px;
+  color: rgba(141,198,63,0.7);
+  background: rgba(141,198,63,0.08);
+  border: 1px solid rgba(141,198,63,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  line-height: 1.5;
+  max-width: 300px;
+  margin: 0;
+}
+
+.doneBtn {
+  width: 100%;
+  max-width: 240px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #E8458C 0%, #A855F7 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: inherit;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* ── Live order tracking ─────────────────────────────────────────────────────── */
+.trackStatus {
+  font-size: 14px;
+  font-weight: 800;
+  color: #E8458C;
+  letter-spacing: 0.02em;
+}
+
+.trackBar {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.trackStep {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.4s ease;
+}
+
+.trackStepDone {
+  background: linear-gradient(90deg, #E8458C, #F472B6);
+}

@@ -1,0 +1,120 @@
+/* ── Bottom nav bar ── */
+.bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-map-controls);
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(10, 10, 14, 0.82);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 6px 4px;
+  pointer-events: all;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* Each tab button */
+.btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  border-radius: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, transform 0.12s ease;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.btn:active {
+  transform: scale(0.92);
+}
+
+.btnActive {
+  background: rgba(141, 198, 63, 0.12);
+  color: #8DC63F;
+}
+
+/* Icon wrapper — holds svg + badge */
+.iconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+/* Profile photo avatar */
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+
+.btnActive .avatar {
+  border-color: #8DC63F;
+}
+
+/* Notification / unread badge */
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  background: #FF3B30;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #080808;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.7), 0 2px 4px rgba(0,0,0,0.4);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  line-height: 1;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Tab label */
+.label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  pointer-events: none;
+  transition: color 0.15s;
+}

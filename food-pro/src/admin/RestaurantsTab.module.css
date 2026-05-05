@@ -1,0 +1,74 @@
+.root { display: flex; flex-direction: column; gap: 20px; }
+.loading { color: #555; font-size: 14px; padding: 40px; text-align: center; }
+.empty   { color: #444; font-size: 14px; padding: 40px; text-align: center; background: #0f0f0f; border-radius: 12px; }
+
+.stats { display: flex; gap: 12px; }
+.stat  { flex: 1; background: #0f0f0f; border: 1px solid #1a1a1a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.statNum { font-size: 28px; font-weight: 900; color: #F59E0B; line-height: 1; }
+.statLbl { font-size: 11px; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.filterRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.filterBtn {
+  padding: 8px 16px; border-radius: 100px;
+  background: #0f0f0f; border: 1px solid #1a1a1a;
+  color: #444; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.filterBtnActive { background: rgba(255,255,255,0.04); }
+.filterCount {
+  display: inline-block; margin-left: 6px; background: rgba(255,255,255,0.07);
+  border-radius: 100px; padding: 1px 7px; font-size: 11px;
+}
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { background: #0f0f0f; border: 1px solid #1a1a1a; border-radius: 14px; overflow: hidden; }
+.status_pending  { border-left: 3px solid #F59E0B; }
+.status_approved { border-left: 3px solid #F59E0B; }
+.status_rejected { border-left: 3px solid #ff6b6b; opacity: 0.7; }
+
+.cardHeader { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; cursor: pointer; }
+.restaurantIcon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.restaurantInfo { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.restaurantName { font-size: 15px; font-weight: 800; color: #eee; }
+.restaurantMeta { font-size: 11px; color: #555; }
+.adminNote { font-size: 11px; color: #F59E0B; font-weight: 600; }
+.cardRight { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+.chevron { color: #444; font-size: 11px; flex-shrink: 0; margin-top: 4px; }
+
+.statusPill {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 100px; border: 1px solid;
+}
+.pill_pending  { color: #F59E0B; border-color: rgba(245,197,24,0.3);  background: rgba(245,197,24,0.08); }
+.pill_approved { color: #F59E0B; border-color: rgba(141,198,63,0.3);  background: rgba(141,198,63,0.08); }
+.pill_rejected { color: #ff6b6b; border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.08); }
+
+.openPill {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; border: 1px solid;
+}
+.openPillOn  { color: #F59E0B; border-color: rgba(141,198,63,0.3); }
+.openPillOff { color: #555; border-color: #222; }
+
+.actions { display: flex; gap: 8px; padding: 0 16px 14px; flex-wrap: wrap; }
+.btn {
+  padding: 9px 18px; border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btnApprove  { background: #F59E0B; color: #000; }
+.btnReject   { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+.btnResubmit { background: rgba(245,197,24,0.1);  color: #F59E0B;  border: 1px solid rgba(245,197,24,0.25); }
+.btnCancel    { background: #1a1a1a; color: #666; }
+.btnSuspend   { background: rgba(255,160,0,0.12);  color: #ffa000;  border: 1px solid rgba(255,160,0,0.3); }
+.btnClose     { background: rgba(255,107,107,0.1); color: #ff6b6b;  border: 1px solid rgba(255,107,107,0.25); }
+.btnOpen      { background: rgba(141,198,63,0.1);  color: #F59E0B;  border: 1px solid rgba(141,198,63,0.25); }
+.btnFeature   { background: rgba(245,197,24,0.1);  color: #F59E0B;  border: 1px solid rgba(245,197,24,0.25); }
+.btnUnfeature { background: rgba(255,255,255,0.05); color: #666;    border: 1px solid #222; }
+
+.modalBackdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { background: #111; border-radius: 18px; padding: 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+.modalTitle { font-size: 18px; font-weight: 900; color: #fff; margin: 0; }
+.modalSub   { font-size: 13px; color: #555; margin: 0; }
+.notesInput { background: #0f0f0f; border: 1px solid #1e1e1e; border-radius: 10px; color: #fff; font-size: 13px; font-family: inherit; padding: 10px 12px; width: 100%; box-sizing: border-box; resize: vertical; }
+.notesInput:focus { outline: none; border-color: rgba(141,198,63,0.4); }
+.modalActions { display: flex; gap: 10px; }

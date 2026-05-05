@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "cd landing && npm install && cd ../food-basic && npm install && cd ../food-pro && npm install",
+  "framework": null,
+  "rewrites": [
+    { "source": "/food/basic/(.*)", "destination": "/food-basic/$1" },
+    { "source": "/food/basic", "destination": "/food-basic/index.html" },
+    { "source": "/food/pro/(.*)", "destination": "/food-pro/$1" },
+    { "source": "/food/pro", "destination": "/food-pro/index.html" },
+    { "source": "/(.*)", "destination": "/landing/$1" }
+  ]
+}

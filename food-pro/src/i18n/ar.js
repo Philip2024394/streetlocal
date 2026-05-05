@@ -1,0 +1,91 @@
+export default {
+  // Landing
+  'landing.tagline':     '🇮🇩 إندونيسيا',
+  'landing.headline':    'دراجة. سيارة.\nتوصيل طعام.',
+  'landing.sub':         'عروض لا تُقاوم — في متناول يدك.',
+  'landing.getStarted':  'ابدأ — مجاناً',
+  'landing.signIn':      'لديك حساب؟ سجّل دخولك',
+  'landing.browse':      '← استكشف أولاً، بدون حساب',
+  'landing.legal':       'بالمتابعة، أنت توافق على الشروط وسياسة الخصوصية',
+
+  // Join / Onboarding
+  'join.phone.title':       'انضم إلى INDOO',
+  'join.phone.sub':         'سنرسل رمزاً — بدون رسائل مزعجة.',
+  'join.phone.placeholder': '٨١٢ ٣٤٥٦ ٧٨٩٠',
+  'join.phone.send':        'أرسل الرمز ←',
+  'join.phone.sending':     'جارٍ الإرسال…',
+  'join.otp.title':         'أدخل الرمز',
+  'join.otp.sentTo':        'أُرسل إلى',
+  'join.otp.verify':        'تحقق',
+  'join.otp.verifying':     'جارٍ التحقق…',
+  'join.otp.change':        'تغيير الرقم →',
+  'join.profile.title':     'اقتربت من النهاية!',
+  'join.profile.sub':       'أضف اسمك حتى يتعرف عليك الآخرون.',
+  'join.profile.name':      'اسمك',
+  'join.profile.save':      'هيا نبدأ! ←',
+  'join.profile.saving':    'جارٍ الحفظ…',
+  'join.profile.skip':      'تخطَّ الآن',
+  'join.profile.addPhoto':  '📷 أضف صورة',
+  'join.profile.changePhoto': 'تغيير الصورة',
+  'join.google':            'تابع مع Google',
+  'join.google.loading':    'جارٍ الاتصال…',
+
+  // Bottom navigation
+  'nav.home':    'الرئيسية',
+  'nav.alerts':  'التنبيهات',
+  'nav.chat':    'المحادثة',
+  'nav.profile': 'الملف الشخصي',
+
+  // Floating icon dock
+  'icons.ride':    'ركوب',
+  'icons.street':  'الشارع',
+  'icons.dating':  'المواعدة',
+  'icons.car':     'سيارة',
+  'icons.andong':  'أندونغ',
+  'icons.shop':    'تسوق',
+  'icons.massage': 'تدليك',
+  'icons.rentals': 'إيجار',
+  'icons.places': 'أماكن',
+
+  // Deal Hunt
+  'dealhunt.landing.title': 'إندونيسيا',
+  'dealhunt.landing.sub': 'بين يديك',
+  'dealhunt.landing.start': 'ابدأ البحث 🔥',
+  'dealhunt.search': 'بحث عن عروض، بائعين...',
+  'dealhunt.filter': 'تصفية',
+  'dealhunt.getdeal': 'احصل على هذا العرض',
+  'dealhunt.dealends': 'ينتهي في',
+  'dealhunt.expired': 'منتهي',
+  'dealhunt.soldout': 'نفذت الكمية!',
+  'dealhunt.dealended': 'انتهى العرض',
+  'dealhunt.claimed': 'تم الحجز',
+  'dealhunt.remaining': 'متبقي',
+  'dealhunt.chat': 'محادثة',
+  'dealhunt.reviews': 'تقييمات',
+  'dealhunt.share': 'مشاركة',
+  'dealhunt.deals': 'عروض',
+  'dealhunt.home': 'الرئيسية',
+  'dealhunt.confirm': 'تأكيد العرض؟',
+  'dealhunt.nodeal': 'إلغاء',
+  'dealhunt.yesdeal': 'تأكيد! 🔥',
+  'dealhunt.send': 'إرسال رسالة',
+  'dealhunt.ask': 'اسأل عن هذا العرض...',
+  'sellrent.buy': 'شراء',
+  'sellrent.rent': 'إيجار',
+  'rental.forsale': 'للبيع',
+  'rental.forrent': 'للإيجار',
+  'rental.rentals': 'إيجارات',
+  'rental.alllistings': 'جميع القوائم',
+  'rental.activate': 'تفعيل الحساب',
+
+  // Map header
+  'header.signIn': 'دخول',
+  'header.live':   'مباشر',
+
+  // Language toast
+  'lang.choose':   'اختر لغتك',
+
+  // Common
+  'common.or':    'أو',
+  'common.error': 'حدث خطأ ما. حاول مجدداً.',
+}

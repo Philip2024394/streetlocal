@@ -1,0 +1,84 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.autoBusyBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F5C518;
+  background: rgba(245,197,24,0.1);
+  border: 1px solid rgba(245,197,24,0.25);
+  border-radius: 100px;
+  padding: 4px 12px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toggleBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px 10px 14px;
+  border-radius: 100px;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+  overflow: hidden;
+}
+.toggleBtn:active { transform: scale(0.94); }
+.toggleBtn:disabled { opacity: 0.6; cursor: default; }
+
+/* Online state — green */
+.online {
+  background: rgba(141,198,63,0.15);
+  color: #8DC63F;
+  border: 1.5px solid rgba(141,198,63,0.4);
+  box-shadow: 0 0 16px rgba(141,198,63,0.2);
+}
+
+/* Offline state — grey */
+.offline {
+  background: rgba(255,255,255,0.05);
+  color: #555;
+  border: 1.5px solid #222;
+}
+
+/* Status dot */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.online  .dot { background: #8DC63F; }
+.offline .dot { background: #444; }
+
+.label { line-height: 1; }
+
+/* Ripple pulse for online state */
+.pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 100px;
+  background: radial-gradient(circle, rgba(141,198,63,0.18) 0%, transparent 70%);
+  animation: pulse-ring 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0;   transform: scale(1.15); }
+}

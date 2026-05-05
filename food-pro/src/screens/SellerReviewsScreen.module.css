@@ -1,0 +1,130 @@
+.screen {
+  position: fixed; inset: 0; z-index: 9800;
+  background: #0a0a0a;
+  display: flex; flex-direction: column;
+  padding-right: 52px;
+}
+
+.header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.backBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.headerLogo { height: 35px; object-fit: contain; margin-top: 4px; }
+.title { flex: 1; font-size: 17px; font-weight: 900; color: #fff; margin: 0; }
+
+/* Stats */
+.statsRow {
+  display: flex; gap: 8px; padding: 12px 14px; flex-shrink: 0;
+}
+.statCard {
+  flex: 1; padding: 10px 8px;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.08); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.statBig { font-size: 22px; font-weight: 900; color: #fff; }
+.statLabel { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); }
+.statSub { font-size: 9px; color: rgba(255,255,255,0.3); }
+
+/* Stars */
+.stars { display: flex; gap: 1px; }
+.starFilled { color: #FBBF24; font-size: 14px; }
+.starEmpty { color: rgba(255,255,255,0.15); font-size: 14px; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 4px; padding: 0 14px 10px; flex-shrink: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { height: 0; }
+.tab {
+  padding: 6px 12px; white-space: nowrap;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.08); border-radius: 20px;
+  color: rgba(255,255,255,0.45); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.tabActive { background: rgba(0,0,0,0.85); border-color: #8DC63F; color: #8DC63F; }
+
+/* List */
+.list {
+  flex: 1; overflow-y: auto; padding: 0 14px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.list::-webkit-scrollbar { width: 3px; }
+.list::-webkit-scrollbar-thumb { background: rgba(141,198,63,0.2); border-radius: 2px; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 60px 20px; color: rgba(255,255,255,0.25); font-size: 14px;
+}
+.emptyIcon { font-size: 40px; }
+
+/* Review card */
+.card {
+  padding: 14px;
+  background: rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.cardUnreplied {
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(141,198,63,0.15);
+}
+
+.cardHeader { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.cardMeta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.buyerName { font-size: 13px; font-weight: 700; color: #fff; }
+.cardDate { font-size: 10px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+.cardProduct { font-size: 11px; color: #8DC63F; font-weight: 600; }
+.cardText { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.5; margin: 0; }
+
+/* Seller reply box */
+.replyBox {
+  padding: 10px 12px;
+  background: rgba(141,198,63,0.06); border: 1px solid rgba(141,198,63,0.15);
+  border-radius: 10px; border-left: 3px solid #8DC63F;
+}
+.replyLabel { font-size: 10px; font-weight: 700; color: #8DC63F; display: block; margin-bottom: 4px; }
+.replyText { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0; }
+
+/* Reply button */
+.replyBtn {
+  align-self: flex-start; padding: 7px 14px;
+  background: rgba(141,198,63,0.1); border: 1px solid rgba(141,198,63,0.3);
+  border-radius: 8px; color: #8DC63F; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
+/* Reply input */
+.replyInput { display: flex; flex-direction: column; gap: 8px; }
+.replyTextarea {
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 10px; color: #fff; font-size: 13px; font-family: inherit;
+  outline: none; resize: none;
+}
+.replyTextarea:focus { border-color: #8DC63F; }
+.replyTextarea::placeholder { color: rgba(255,255,255,0.25); }
+
+.replyActions { display: flex; gap: 8px; justify-content: flex-end; }
+.replyCancelBtn {
+  padding: 7px 14px; background: none;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+  color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.replySubmitBtn {
+  padding: 7px 16px; background: #8DC63F; border: none; border-radius: 8px;
+  color: #000; font-size: 12px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+}
+.replySubmitBtn:disabled { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.2); cursor: default; }

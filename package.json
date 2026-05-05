@@ -1,0 +1,15 @@
+{
+  "name": "streetlocal-monorepo",
+  "private": true,
+  "scripts": {
+    "dev:landing": "cd landing && npm run dev",
+    "dev:food-basic": "cd food-basic && npm run dev -- --port 5176",
+    "dev:food-pro": "cd food-pro && npm run dev -- --port 5174",
+    "dev": "npm run dev:landing & npm run dev:food-basic & npm run dev:food-pro",
+    "build:landing": "cd landing && npm run build",
+    "build:food-basic": "cd food-basic && npm run build",
+    "build:food-pro": "cd food-pro && npm run build",
+    "build": "npm run build:landing && npm run build:food-basic && npm run build:food-pro",
+    "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../food-pro && npm install"
+  }
+}

@@ -1,0 +1,239 @@
+/* ── Modal overlay ────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* ── Slide-up panel ──────────────────────────────────────────────────────── */
+.panel {
+  width: 100%;
+  max-width: 560px;
+  background: #0a0a0a;
+  border: 1.5px solid rgba(141,198,63,0.35);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  padding: 0 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 96vh;
+  overflow-y: auto;
+}
+
+.panel::-webkit-scrollbar { width: 0; }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid rgba(141,198,63,0.12);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #8DC63F;
+}
+
+.cancelBtn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.45);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 8px;
+}
+
+/* ── Preview ─────────────────────────────────────────────────────────────── */
+.previewBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #111;
+  cursor: pointer;
+}
+
+.previewImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* transform and objectPosition set via inline style */
+}
+
+.previewEmpty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.previewIcon { font-size: 36px; }
+
+.previewHint {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 600;
+}
+
+/* ── Watermark overlay (preview) ─────────────────────────────────────────── */
+.wmOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* The angle mirrors the canvas export: atan2(-H, W) ≈ -37° for 4:3 */
+.wmText {
+  display: block;
+  transform: rotate(-37deg);
+  font-size: clamp(14px, 4.5vw, 32px);
+  font-weight: 900;
+  color: rgba(255,255,255,0.22);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── Change photo ─────────────────────────────────────────────────────────── */
+.changeBtn {
+  align-self: flex-start;
+  margin: 10px 18px 0;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* ── Sliders ─────────────────────────────────────────────────────────────── */
+.sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 4px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sliderLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.slider {
+  flex: 1;
+  accent-color: #8DC63F;
+  height: 4px;
+  cursor: pointer;
+}
+
+.sliderVal {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8DC63F;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Watermark section ───────────────────────────────────────────────────── */
+.wmSection {
+  padding: 14px 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.wmLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wmOptional {
+  color: rgba(255,255,255,0.22);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.wmInput {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 13px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wmInput:focus {
+  outline: none;
+  border-color: rgba(141,198,63,0.4);
+}
+
+.wmInput::placeholder { color: rgba(255,255,255,0.25); }
+
+.wmHint {
+  font-size: 11px;
+  color: rgba(141,198,63,0.55);
+  margin: 0;
+}
+
+/* ── Confirm button ──────────────────────────────────────────────────────── */
+.confirmBtn {
+  margin: 16px 18px 0;
+  width: calc(100% - 36px);
+  padding: 15px;
+  background: #8DC63F;
+  border: none;
+  border-radius: 14px;
+  color: #000;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(141,198,63,0.35);
+  transition: background 0.15s;
+}
+
+.confirmBtn:hover  { background: #FBBF24; }
+.confirmBtn:disabled { opacity: 0.45; cursor: not-allowed; }

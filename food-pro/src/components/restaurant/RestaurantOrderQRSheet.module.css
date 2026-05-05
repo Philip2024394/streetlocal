@@ -1,0 +1,235 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9000;
+  backdrop-filter: blur(4px);
+}
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #111;
+  border-radius: 22px 22px 0 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-bottom: none;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1) forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+/* ── Header ── */
+.header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+}
+
+.headerTitle {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.01em;
+}
+
+.headerSub {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.5;
+}
+
+/* ── QR ── */
+.qrWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 18px 16px;
+  gap: 12px;
+}
+
+.qr {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 3px;
+  width: 180px;
+  height: 180px;
+  padding: 14px;
+  background: #fff;
+  border-radius: 14px;
+}
+
+.qrCell {
+  border-radius: 2px;
+  background: transparent;
+}
+
+.qrCellFilled {
+  background: #000;
+}
+
+.qrRef {
+  font-size: 12px;
+  font-family: monospace;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.08em;
+}
+
+/* ── Amount card ── */
+.amountCard {
+  margin: 0 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.amountLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.amountValue {
+  font-size: 28px;
+  font-weight: 900;
+  font-family: monospace;
+  color: #34C759;
+  letter-spacing: -0.02em;
+}
+
+.amountNote {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 2px;
+}
+
+/* ── Steps ── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 14px 20px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.45;
+}
+
+.stepNum {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.4);
+  margin-top: 1px;
+}
+
+/* ── Simulate button (dev only) ── */
+.simulateBtn {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 0 14px;
+  padding: 13px;
+  background: rgba(255,149,0,0.1);
+  border: 1.5px dashed rgba(255,149,0,0.35);
+  border-radius: 12px;
+  color: rgba(255,149,0,0.8);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.simulateBtn:disabled { opacity: 0.4; cursor: default; }
+.simulateBtn:not(:disabled):active { opacity: 0.7; }
+
+/* ── Scanned state ── */
+.scannedState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 24px 10px;
+}
+
+.scannedIcon { font-size: 52px; }
+
+.scannedTitle {
+  font-size: 22px;
+  font-weight: 900;
+  color: #34C759;
+  letter-spacing: -0.02em;
+}
+
+.scannedSub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.commissionPill {
+  margin-top: 4px;
+  padding: 8px 16px;
+  background: rgba(52,199,89,0.1);
+  border: 1px solid rgba(52,199,89,0.25);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #34C759;
+}
+
+.doneBtn {
+  width: calc(100% - 28px);
+  margin: 14px 0 0;
+  padding: 15px;
+  background: #34C759;
+  color: #000;
+  font-size: 15px;
+  font-weight: 900;
+  border: none;
+  border-radius: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.doneBtn:active { opacity: 0.85; }

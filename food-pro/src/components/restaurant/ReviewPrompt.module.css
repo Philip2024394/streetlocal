@@ -1,0 +1,96 @@
+/* ── Notification badge ───────────────────────────────────────────────────────── */
+.badge {
+  position: fixed; bottom: 90px; left: 16px; z-index: 9800;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(10,10,10,0.96);
+  border: 1px solid rgba(245,197,24,0.3);
+  border-radius: 16px; padding: 10px 14px 10px 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1);
+  max-width: 260px;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.badgeDot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: #F59E0B; color: #000;
+  font-size: 13px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+.badgeText  { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.badgeTitle { font-size: 12px; font-weight: 900; color: #fff; }
+.badgeSub   { font-size: 10px; color: #555; font-weight: 600; }
+
+/* ── Review modal ─────────────────────────────────────────────────────────────── */
+.backdrop {
+  position: fixed; inset: 0; z-index: 9900;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end;
+  animation: fadeIn 0.25s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  width: 100%; background: #0f0f0f;
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 16px 24px calc(env(safe-area-inset-bottom,0px) + 28px);
+  display: flex; flex-direction: column; gap: 14px;
+  animation: slideUp2 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes slideUp2 {
+  from { transform: translateY(60px); opacity: 0.5; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modalHandle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.1); align-self: center; margin-bottom: 4px;
+}
+.modalOrderRef { font-size: 10px; color: #F59E0B; font-weight: 800; letter-spacing: 0.06em; margin: 0; }
+.modalTitle    { font-size: 22px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.03em; }
+.modalSub      { font-size: 13px; color: #444; margin: -8px 0 0; }
+
+/* Stars */
+.starsRow {
+  display: flex; gap: 8px; justify-content: center; padding: 4px 0;
+}
+.starBtn {
+  font-size: 36px; background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.12); transition: color 0.1s, transform 0.1s;
+  padding: 0; line-height: 1;
+}
+.starBtn:active { transform: scale(1.2); }
+.starOn { color: #F59E0B; }
+
+.starLabels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: #444; font-weight: 700;
+  margin-top: -8px; padding: 0 4px;
+}
+
+.commentInput {
+  background: #111; border: 1px solid #1e1e1e; border-radius: 14px;
+  color: #fff; font-size: 14px; font-family: inherit;
+  padding: 12px 14px; resize: none; outline: none;
+  transition: border-color 0.15s;
+}
+.commentInput:focus  { border-color: rgba(245,197,24,0.35); }
+.commentInput::placeholder { color: #333; }
+
+.submitBtn {
+  width: 100%; padding: 16px; border-radius: 14px;
+  background: #F59E0B; color: #000; border: none;
+  font-size: 15px; font-weight: 900; cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s;
+}
+.submitBtn:disabled { opacity: 0.35; cursor: default; }
+
+.dismissBtn {
+  width: 100%; padding: 12px; border-radius: 14px;
+  background: none; border: none; color: #333;
+  font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+}

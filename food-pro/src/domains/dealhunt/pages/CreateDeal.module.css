@@ -1,0 +1,368 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   CREATE DEAL — Full-screen overlay form
+   Dark glass design language, brand green #8DC63F
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ────────────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 9950;
+  background: #0a0a0c;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.headerTitle {
+  font-size: 18px; font-weight: 800; color: #fff;
+  letter-spacing: -0.02em;
+}
+.closeBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.6);
+  font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* ── Scrollable content ─────────────────────────────────────────────────────── */
+.content {
+  flex: 1; overflow-y: auto;
+  padding: 16px 16px 100px;
+  display: flex; flex-direction: column; gap: 20px;
+  scroll-behavior: smooth;
+}
+.content::-webkit-scrollbar { display: none; }
+.content { scrollbar-width: none; }
+
+/* ── Glass card sections ────────────────────────────────────────────────────── */
+.card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.cardTitle {
+  font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.85);
+  margin: 0 0 4px;
+}
+.cardSub {
+  font-size: 11px; color: rgba(255,255,255,0.25);
+  margin: 0 0 12px; font-weight: 500;
+}
+
+/* ── Image upload grid ──────────────────────────────────────────────────────── */
+.imageGrid {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.imageSlot {
+  width: 80px; height: 80px; border-radius: 12px;
+  overflow: hidden; position: relative; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+.imageSlotMain {
+  width: 100%; height: 100%;
+  border: 2px solid rgba(141,198,63,0.3);
+}
+.imageSlotImg {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.imageSlotRemove {
+  position: absolute; top: 3px; right: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(239,68,68,0.9); border: none;
+  color: #fff; font-size: 10px; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.imageSlotBadge {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(141,198,63,0.85); color: #000;
+  font-size: 8px; font-weight: 800; text-align: center;
+  padding: 1px 0; letter-spacing: 0.04em;
+}
+.imageAddBtn {
+  width: 80px; height: 80px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: rgba(141,198,63,0.03);
+  border: 2px dashed rgba(141,198,63,0.2);
+  border-radius: 12px; cursor: pointer;
+  color: #8DC63F; font-size: 22px; font-weight: 300;
+  transition: all 0.2s;
+}
+.imageAddBtn:hover { border-color: rgba(141,198,63,0.5); background: rgba(141,198,63,0.06); }
+.imageAddLabel { font-size: 9px; font-weight: 700; }
+
+/* ── Category grid ──────────────────────────────────────────────────────────── */
+.catGrid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.catBtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 8px;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  cursor: pointer; transition: all 0.2s;
+  font-family: inherit;
+}
+.catBtn:hover { border-color: rgba(255,255,255,0.12); }
+.catBtnActive {
+  background: rgba(141,198,63,0.08);
+  border-color: #8DC63F;
+  box-shadow: 0 0 16px rgba(141,198,63,0.15);
+}
+.catIcon { font-size: 26px; }
+.catLabel {
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+.catBtnActive .catLabel { color: #8DC63F; }
+
+/* ── Inputs ─────────────────────────────────────────────────────────────────── */
+.input {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  color: #fff; font-size: 14px; font-weight: 500;
+  font-family: inherit; outline: none;
+  transition: all 0.2s;
+}
+.input::placeholder { color: rgba(255,255,255,0.15); font-weight: 400; }
+.input:focus {
+  border-color: rgba(141,198,63,0.5);
+  box-shadow: 0 0 0 3px rgba(141,198,63,0.08);
+}
+
+.textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  color: #fff; font-size: 14px; font-weight: 500;
+  font-family: inherit; outline: none;
+  resize: none; min-height: 80px;
+  transition: all 0.2s;
+}
+.textarea::placeholder { color: rgba(255,255,255,0.15); font-weight: 400; }
+.textarea:focus {
+  border-color: rgba(141,198,63,0.5);
+  box-shadow: 0 0 0 3px rgba(141,198,63,0.08);
+}
+
+.select {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  color: #fff; font-size: 14px; font-weight: 500;
+  font-family: inherit; outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238DC63F' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  transition: all 0.2s;
+}
+.select:focus {
+  border-color: rgba(141,198,63,0.5);
+  box-shadow: 0 0 0 3px rgba(141,198,63,0.08);
+}
+.select option { background: #1a1a1e; color: #fff; }
+
+.charCount {
+  font-size: 10px; color: rgba(255,255,255,0.2);
+  text-align: right; margin-top: 4px; font-weight: 500;
+}
+.charCountWarn { color: #FBBF24; }
+
+/* ── Label ──────────────────────────────────────────────────────────────────── */
+.label {
+  font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.4);
+  margin-bottom: 6px; display: block;
+}
+
+/* ── Price row ──────────────────────────────────────────────────────────────── */
+.priceRow {
+  display: flex; gap: 10px;
+}
+.priceField { flex: 1; min-width: 0; }
+.priceInputWrap {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.priceInputWrap:focus-within {
+  border-color: rgba(141,198,63,0.5);
+  box-shadow: 0 0 0 3px rgba(141,198,63,0.08);
+}
+.pricePrefix {
+  padding: 12px 0 12px 12px;
+  font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.priceInput {
+  flex: 1; min-width: 0;
+  padding: 12px 12px 12px 6px;
+  background: none; border: none; outline: none;
+  color: #fff; font-size: 14px; font-weight: 600;
+  font-family: inherit;
+}
+.priceInput::placeholder { color: rgba(255,255,255,0.12); font-weight: 400; }
+
+/* ── Discount badge ─────────────────────────────────────────────────────────── */
+.discountBadge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 800;
+  margin-top: 8px;
+}
+.discountGreen {
+  background: rgba(141,198,63,0.12);
+  color: #8DC63F;
+  border: 1px solid rgba(141,198,63,0.2);
+}
+.discountWarn {
+  background: rgba(251,191,36,0.12);
+  color: #FBBF24;
+  border: 1px solid rgba(251,191,36,0.2);
+}
+.discountError {
+  background: rgba(239,68,68,0.12);
+  color: #EF4444;
+  border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* ── Quick duration buttons ─────────────────────────────────────────────────── */
+.quickBtns {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+}
+.quickBtn {
+  padding: 8px 14px;
+  background: rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.2s;
+}
+.quickBtn:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); }
+.quickBtnActive {
+  background: rgba(141,198,63,0.08);
+  border-color: #8DC63F; color: #8DC63F;
+}
+
+/* ── Number input row ───────────────────────────────────────────────────────── */
+.numberRow {
+  display: flex; gap: 10px;
+}
+.numberField { flex: 1; min-width: 0; }
+
+/* ── Date row ───────────────────────────────────────────────────────────────── */
+.dateRow {
+  display: flex; gap: 10px;
+}
+.dateField { flex: 1; min-width: 0; }
+
+/* ── Preview card ───────────────────────────────────────────────────────────── */
+.preview {
+  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.previewImg {
+  width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;
+}
+.previewImgPlaceholder {
+  width: 100%; aspect-ratio: 16/9;
+  background: rgba(255,255,255,0.02);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.1); font-size: 36px;
+}
+.previewBody { padding: 14px; }
+.previewCat {
+  display: inline-block;
+  padding: 3px 10px; border-radius: 6px;
+  background: rgba(141,198,63,0.08);
+  border: 1px solid rgba(141,198,63,0.15);
+  font-size: 10px; font-weight: 700; color: rgba(141,198,63,0.7);
+  margin-bottom: 8px;
+}
+.previewTitle {
+  font-size: 16px; font-weight: 800; color: #fff;
+  margin: 0 0 6px; letter-spacing: -0.02em;
+}
+.previewPrices { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.previewDealPrice {
+  font-size: 20px; font-weight: 900; color: #8DC63F;
+  text-shadow: 0 0 16px rgba(141,198,63,0.2);
+}
+.previewOrigPrice {
+  font-size: 13px; color: rgba(255,255,255,0.3);
+  text-decoration: line-through;
+}
+.previewDiscount {
+  font-size: 11px; font-weight: 800; color: #8DC63F;
+  background: rgba(141,198,63,0.1);
+  padding: 2px 8px; border-radius: 6px;
+}
+.previewMeta {
+  font-size: 11px; color: rgba(255,255,255,0.25);
+  margin-top: 6px; font-weight: 500;
+}
+
+/* ── Error text ─────────────────────────────────────────────────────────────── */
+.error {
+  font-size: 11px; color: #EF4444; font-weight: 600; margin-top: 4px;
+}
+
+/* ── Submit footer ──────────────────────────────────────────────────────────── */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 14px 20px calc(env(safe-area-inset-bottom, 8px) + 14px);
+  background: linear-gradient(to top, #0a0a0c 60%, transparent);
+  z-index: 9951;
+}
+.submitBtn {
+  width: 100%; padding: 16px;
+  background: #8DC63F; border: none; border-radius: 14px;
+  color: #0a0b0d; font-size: 16px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 20px rgba(141,198,63,0.3), 0 0 40px rgba(141,198,63,0.1);
+  transition: all 0.2s; letter-spacing: -0.01em;
+}
+.submitBtn:hover { box-shadow: 0 6px 28px rgba(141,198,63,0.45); transform: translateY(-1px); }
+.submitBtn:active { transform: scale(0.98); }
+.submitBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Toast ──────────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 700;
+  z-index: 9960; animation: toastIn 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toastSuccess { background: rgba(141,198,63,0.9); color: #000; }
+.toastError { background: rgba(239,68,68,0.9); color: #fff; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

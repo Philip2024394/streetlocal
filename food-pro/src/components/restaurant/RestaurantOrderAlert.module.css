@@ -1,0 +1,213 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  background: #080808;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 48px 24px 32px;
+  z-index: 9500;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+/* ── Pulse ring ── */
+.pulseRing {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid rgba(232,69,140,0.3);
+  animation: ring 1.8s ease-out infinite;
+}
+
+@keyframes ring {
+  0%   { transform: translateX(-50%) scale(0.8); opacity: 0.8; }
+  100% { transform: translateX(-50%) scale(2.2); opacity: 0; }
+}
+
+.alertIcon {
+  font-size: 52px;
+  margin-bottom: 12px;
+  animation: bounce 0.6s ease infinite alternate;
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+}
+
+.subTitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  margin: 0 0 20px;
+}
+
+/* ── Payment badge ── */
+.payBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid;
+  border-radius: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 14px;
+}
+
+.payBadgeIcon { font-size: 20px; flex-shrink: 0; }
+
+.payBadgeLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.payBadgeSub {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 1px;
+}
+
+/* ── Order card ── */
+.orderCard {
+  width: 100%;
+  max-width: 360px;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.orderRef {
+  font-size: 11px;
+  font-family: monospace;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 12px;
+}
+
+.itemsList { display: flex; flex-direction: column; gap: 6px; }
+
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.itemName  { color: rgba(255,255,255,0.7); }
+.itemPrice { color: rgba(255,255,255,0.55); font-family: monospace; }
+
+.orderDivider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 10px 0;
+}
+
+.orderTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.orderTotalVal {
+  color: #E8458C;
+  font-family: monospace;
+}
+
+.orderNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* ── Countdown ── */
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.countdownLabel {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.countdownTime {
+  font-size: 36px;
+  font-weight: 900;
+  font-family: monospace;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.04em;
+}
+
+.countdownUrgent .countdownTime {
+  color: #FF3B30;
+  animation: blink 0.5s linear infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Actions ── */
+.actions {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btnAccept {
+  width: 100%;
+  padding: 16px;
+  background: #34C759;
+  color: #000;
+  font-size: 16px;
+  font-weight: 900;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.btnAccept:active { opacity: 0.85; }
+
+.btnDecline {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255,59,48,0.1);
+  color: #FF3B30;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid rgba(255,59,48,0.25);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+}
