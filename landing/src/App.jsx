@@ -129,7 +129,7 @@ const TRANSLATIONS = {
       close: 'Close',
     },
     tabBenefits: 'Why Your Own App?',
-    benefitsIntro: 'As a restaurant owner, having your own app presence is no longer a luxury — it\'s a smart, strategic move.',
+    benefitsIntro: 'As a food business owner, having your own app presence is no longer a luxury — it\'s a smart, strategic move.',
     benefitsBody: 'For years, food delivery platforms have steadily increased their commission rates, cutting deeper into your profits. At the same time, your restaurant is buried among hundreds of competitors, all fighting for the same limited customer attention.\n\nWith Street Local, you can finally stand out from the crowd by building your own direct customer base. Imagine your customers having your restaurant app right on their phone — just one tap away from ordering. No distractions, no competing listings. Just your brand, your menu, and your experience.\n\nOrdering becomes seamless, with checkout flowing directly to your WhatsApp, making communication fast and personal.\n\nRestaurant apps are quickly becoming one of the most powerful tools for generating consistent income — and it\'s an opportunity many owners have been missing for years.',
     benefitsWithApp: 'With your own app, you can:',
     benefitsClosing: 'Owning your own app means owning your customer relationships, your data, and your growth. You\'re no longer renting space on someone else\'s platform — you\'re building your own ecosystem where your brand comes first.',
@@ -269,7 +269,7 @@ const TRANSLATIONS = {
     },
     tabDetails: 'Detail Aplikasi',
     tabBenefits: 'Kenapa Aplikasi Sendiri?',
-    benefitsIntro: 'Sebagai pemilik restoran, punya aplikasi sendiri bukan lagi kemewahan — ini langkah strategis yang cerdas.',
+    benefitsIntro: 'Sebagai pemilik usaha makanan, punya aplikasi sendiri bukan lagi kemewahan — ini langkah strategis yang cerdas.',
     benefitsBody: 'Selama bertahun-tahun, platform pesan antar makanan terus menaikkan komisi mereka, memotong lebih dalam ke keuntungan kamu. Sementara itu, restoran kamu tenggelam di antara ratusan kompetitor, semua bersaing untuk perhatian pelanggan yang terbatas.\n\nDengan Street Local, kamu akhirnya bisa tampil beda dengan membangun basis pelanggan langsung. Bayangkan pelanggan punya aplikasi restoran kamu di HP mereka — cuma satu ketukan untuk pesan. Tanpa gangguan, tanpa daftar kompetitor. Hanya brand kamu, menu kamu, dan pengalaman kamu.\n\nPemesanan jadi mulus, dengan checkout langsung ke WhatsApp kamu, komunikasi jadi cepat dan personal.\n\nAplikasi restoran dengan cepat menjadi salah satu alat paling kuat untuk menghasilkan pendapatan konsisten — dan ini peluang yang sudah dilewatkan banyak pemilik restoran selama bertahun-tahun.',
     benefitsWithApp: 'Dengan aplikasi sendiri, kamu bisa:',
     benefitsClosing: 'Punya aplikasi sendiri berarti memiliki hubungan pelanggan, data, dan pertumbuhan kamu. Kamu tidak lagi menyewa tempat di platform orang lain — kamu membangun ekosistem sendiri di mana brand kamu yang utama.',
@@ -686,6 +686,29 @@ export default function App() {
   const [signupError, setSignupError] = useState('')
   const [signupAction, setSignupAction] = useState(null) // 'demo' or 'subscribe'
   const [slugCheck, setSlugCheck] = useState(null) // null | 'checking' | 'available' | 'taken'
+  const VENDOR_COUNTRIES = [
+    { code: 'ID', flag: '🇮🇩', name: 'Indonesia', prefix: '+62' },
+    { code: 'MY', flag: '🇲🇾', name: 'Malaysia', prefix: '+60' },
+    { code: 'SG', flag: '🇸🇬', name: 'Singapore', prefix: '+65' },
+    { code: 'TH', flag: '🇹🇭', name: 'Thailand', prefix: '+66' },
+    { code: 'VN', flag: '🇻🇳', name: 'Vietnam', prefix: '+84' },
+    { code: 'PH', flag: '🇵🇭', name: 'Philippines', prefix: '+63' },
+    { code: 'IN', flag: '🇮🇳', name: 'India', prefix: '+91' },
+    { code: 'AU', flag: '🇦🇺', name: 'Australia', prefix: '+61' },
+    { code: 'GB', flag: '🇬🇧', name: 'United Kingdom', prefix: '+44' },
+    { code: 'US', flag: '🇺🇸', name: 'United States', prefix: '+1' },
+    { code: 'AE', flag: '🇦🇪', name: 'UAE', prefix: '+971' },
+    { code: 'SA', flag: '🇸🇦', name: 'Saudi Arabia', prefix: '+966' },
+    { code: 'JP', flag: '🇯🇵', name: 'Japan', prefix: '+81' },
+    { code: 'KR', flag: '🇰🇷', name: 'South Korea', prefix: '+82' },
+    { code: 'DE', flag: '🇩🇪', name: 'Germany', prefix: '+49' },
+    { code: 'FR', flag: '🇫🇷', name: 'France', prefix: '+33' },
+  ]
+  const [vendorAuthOpen, setVendorAuthOpen] = useState(false)
+  const [vendorAuthMode, setVendorAuthMode] = useState('login') // 'login' or 'signup'
+  const [vendorAuthForm, setVendorAuthForm] = useState({ phone: '', password: '', name: '', category: '', country: detectedCountry || '', city: '' })
+  const [vendorAuthError, setVendorAuthError] = useState('')
+  const [vendorAuthApp, setVendorAuthApp] = useState(null) // which app they're signing into
   const [slugValue, setSlugValue] = useState('')
   const [showNameHelp, setShowNameHelp] = useState(false)
   const slugTimer = useRef(null)
@@ -739,7 +762,7 @@ export default function App() {
   const CATEGORIES = getCategories(t, countryPricing)
 
   /* Detail page for an app */
-  if (selectedApp) {
+  if (selectedApp && !vendorAuthOpen) {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
@@ -834,7 +857,7 @@ export default function App() {
           {detailTab === 'benefits' && (
             <div>
               {/* Intro */}
-              <p style={styles.benefitsIntro}>{selectedApp.id === 'basic' ? (t.benefitsIntro || '').replace(/restaurant owner/gi, 'food vendor').replace(/pemilik restoran/gi, 'pedagang makanan') : t.benefitsIntro}</p>
+              <p style={styles.benefitsIntro}>{t.benefitsIntro}</p>
 
               {/* Body paragraphs */}
               {t.benefitsBody.split('\n\n').map((para, i) => (
@@ -988,6 +1011,14 @@ export default function App() {
                 style={{ ...styles.ctaButton, background: '#FFD600', color: '#1a1a1a', border: 'none' }}
               >
                 {t.subscribe} — {billingCycle === 'monthly' ? selectedApp.price + t.perMonth : selectedApp.yearlyPrice + t.perYear}
+              </button>
+
+              {/* Vendor Sign In */}
+              <button
+                onClick={() => { setVendorAuthOpen(true); setVendorAuthApp(selectedApp); setVendorAuthMode('login'); setVendorAuthError('') }}
+                style={{ ...styles.ctaButton, background: 'none', color: '#888', border: '1px solid #ddd', fontSize: 13 }}
+              >
+                Already subscribed? Sign In to Manage
               </button>
 
               {/* How It Works — Steps */}
@@ -1247,6 +1278,7 @@ export default function App() {
           )}
 
           {/* Payment Sheet */}
+
           {paymentOpen && (
             <div style={styles.paymentOverlay} onClick={() => setPaymentOpen(false)}>
               <div style={styles.paymentSheet} onClick={e => e.stopPropagation()}>
@@ -1432,7 +1464,7 @@ export default function App() {
   }
 
   /* Category detail — show apps in that category */
-  if (selectedCategory) {
+  if (selectedCategory && !vendorAuthOpen) {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
@@ -1503,6 +1535,175 @@ export default function App() {
   }
 
   /* ─── Admin Dashboard ─── */
+  if (vendorAuthOpen) {
+    return (
+      <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: '#fff', position: 'relative', height: '100vh', overflow: 'hidden' }}>
+        {/* Background image */}
+        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_18_35%20AM.png?updatedAt=1778005134436" alt="" style={{ position: 'absolute', top: 30, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+
+        {/* Header */}
+        <div style={{ ...styles.detailHeader, position: 'relative', zIndex: 2, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', borderBottom: 'none' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => setVendorAuthOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} />
+          </button>
+        </div>
+
+        {/* Form container — centered over image */}
+        <div style={{ position: 'relative', zIndex: 2, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, height: 'calc(100vh - 70px)' }}>
+          <div style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 16, padding: '20px 16px' }}>
+          <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', textAlign: 'center', marginBottom: 4 }}>
+            {vendorAuthMode === 'login' ? 'Sign In' : 'Create Account'}
+          </h3>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 20 }}>
+            {vendorAuthMode === 'login' ? 'Sign in to manage your app' : 'Create your vendor account'}
+          </p>
+          {vendorAuthError && <p style={{ fontSize: 13, color: '#EF4444', marginBottom: 12, fontWeight: 700, background: 'rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: 8 }}>{vendorAuthError}</p>}
+
+          {vendorAuthMode === 'signup' && (
+            <>
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Business Name</label>
+              <input type="text" value={vendorAuthForm.name} onChange={e => setVendorAuthForm({ ...vendorAuthForm, name: e.target.value })} placeholder="Your business name" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Country</label>
+              <select value={vendorAuthForm.country} onChange={e => {
+                const c = VENDOR_COUNTRIES.find(x => x.code === e.target.value)
+                setVendorAuthForm({ ...vendorAuthForm, country: e.target.value, phone: c ? c.prefix : vendorAuthForm.phone })
+              }} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#111', color: vendorAuthForm.country ? '#fff' : '#888', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', appearance: 'auto' }}>
+                <option value="" style={{ background: '#111', color: '#888' }}>Select country</option>
+                {VENDOR_COUNTRIES.map(c => (
+                  <option key={c.code} value={c.code} style={{ background: '#111', color: '#ccc' }}>{c.flag} {c.name} ({c.prefix})</option>
+                ))}
+              </select>
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Food Category</label>
+              <select value={vendorAuthForm.category} onChange={e => setVendorAuthForm({ ...vendorAuthForm, category: e.target.value })} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#111', color: vendorAuthForm.category ? '#fff' : '#888', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', appearance: 'auto' }}>
+                <option value="" style={{ background: '#111', color: '#888' }}>Select category</option>
+                <option value="Indonesian Street Food" style={{ background: '#111', color: '#ccc' }}>Indonesian Street Food</option>
+                <option value="Street Food" style={{ background: '#111', color: '#ccc' }}>Street Food</option>
+                <option value="Asian Cuisine" style={{ background: '#111', color: '#ccc' }}>Asian Cuisine</option>
+                <option value="Kebabs" style={{ background: '#111', color: '#ccc' }}>Kebabs</option>
+                <option value="Burgers" style={{ background: '#111', color: '#ccc' }}>Burgers</option>
+                <option value="Donuts" style={{ background: '#111', color: '#ccc' }}>Donuts</option>
+                <option value="Chicken Satay" style={{ background: '#111', color: '#ccc' }}>Chicken Satay</option>
+                <option value="Fresh Juice" style={{ background: '#111', color: '#ccc' }}>Fresh Juice</option>
+                <option value="Fried Rice" style={{ background: '#111', color: '#ccc' }}>Fried Rice</option>
+                <option value="Noodle Soup" style={{ background: '#111', color: '#ccc' }}>Noodle Soup</option>
+                <option value="Meatball Soup" style={{ background: '#111', color: '#ccc' }}>Meatball Soup</option>
+                <option value="Crispy Chicken" style={{ background: '#111', color: '#ccc' }}>Crispy Chicken</option>
+                <option value="Coffee" style={{ background: '#111', color: '#ccc' }}>Coffee</option>
+              </select>
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>City</label>
+              <input type="text" value={vendorAuthForm.city} onChange={e => setVendorAuthForm({ ...vendorAuthForm, city: e.target.value })} placeholder={{
+                ID: 'e.g. Jakarta, Yogyakarta, Bali',
+                MY: 'e.g. Kuala Lumpur, Penang, Johor',
+                SG: 'e.g. Singapore',
+                TH: 'e.g. Bangkok, Chiang Mai, Phuket',
+                VN: 'e.g. Hanoi, Ho Chi Minh, Da Nang',
+                PH: 'e.g. Manila, Cebu, Davao',
+                IN: 'e.g. Mumbai, Delhi, Bangalore',
+                AU: 'e.g. Sydney, Melbourne, Brisbane',
+                GB: 'e.g. London, Manchester, Birmingham',
+                US: 'e.g. New York, Los Angeles, Chicago',
+                AE: 'e.g. Dubai, Abu Dhabi, Sharjah',
+                SA: 'e.g. Riyadh, Jeddah, Mecca',
+                JP: 'e.g. Tokyo, Osaka, Kyoto',
+                KR: 'e.g. Seoul, Busan, Incheon',
+                DE: 'e.g. Berlin, Munich, Hamburg',
+                FR: 'e.g. Paris, Lyon, Marseille',
+              }[vendorAuthForm.country] || 'Enter your city'} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
+            </>
+          )}
+
+          <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>WhatsApp Number</label>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            <span style={{ padding: '12px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+              {(() => { const c = VENDOR_COUNTRIES.find(x => x.code === vendorAuthForm.country); return c ? `${c.flag} ${c.prefix}` : '📱' })()}
+            </span>
+            <input type="tel" value={vendorAuthForm.phone} onChange={e => setVendorAuthForm({ ...vendorAuthForm, phone: e.target.value })} placeholder="Phone number" style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
+          </div>
+
+          <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Password</label>
+          <input type="password" value={vendorAuthForm.password} onChange={e => setVendorAuthForm({ ...vendorAuthForm, password: e.target.value })} placeholder={vendorAuthMode === 'signup' ? 'Create password' : 'Password'} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 20, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
+
+          <button onClick={async () => {
+            setVendorAuthError('')
+            const phone = vendorAuthForm.phone.replace(/[^0-9]/g, '')
+            if (!phone || !vendorAuthForm.password) { setVendorAuthError('Please fill in all fields'); return }
+            if (vendorAuthMode === 'login') {
+              const { data } = await supabase.from('vendor_accounts').select('*').eq('phone', phone).eq('password_hash', vendorAuthForm.password).single()
+              if (!data) { setVendorAuthError('Invalid phone or password'); return }
+              localStorage.setItem('indoo_vendor_phone', phone)
+              localStorage.setItem('indoo_vendor_pass', vendorAuthForm.password)
+              localStorage.setItem('indoo_vendor_id', data.id)
+              localStorage.setItem('vendorbasic_vendorId', data.id)
+              const isDev = window.location.port === '5173' || window.location.port === '5174'
+              const baseUrl = vendorAuthApp?.id === 'basic'
+                ? (isDev ? 'http://localhost:5176/' : '/food/basic/')
+                : (isDev ? '/food/pro/' : '/food/pro/')
+              const appUrl = `${baseUrl}?vendor=${data.id}`
+              window.open(appUrl, '_blank')
+              setVendorAuthOpen(false)
+            } else {
+              if (!vendorAuthForm.name.trim()) { setVendorAuthError('Enter your business name'); return }
+              if (!vendorAuthForm.country) { setVendorAuthError('Select your country'); return }
+              if (!vendorAuthForm.city.trim()) { setVendorAuthError('Enter your city'); return }
+              if (!vendorAuthForm.category) { setVendorAuthError('Select a food category'); return }
+              if (vendorAuthForm.password.length < 4) { setVendorAuthError('Password min 4 characters'); return }
+              const countryInfo = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)
+              const fullPhone = countryInfo ? countryInfo.prefix.replace('+', '') + phone : phone
+              const slug = vendorAuthForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+              const { data, error } = await supabase.from('vendor_accounts').insert({
+                phone: fullPhone, password_hash: vendorAuthForm.password,
+                shop_name: vendorAuthForm.name, shop_food_type: vendorAuthForm.category,
+                shop_phone: fullPhone, country_code: vendorAuthForm.country, shop_city: vendorAuthForm.city,
+                slug, status: 'active'
+              }).select().single()
+              if (error) { setVendorAuthError(error.message?.includes('duplicate') ? 'Phone already registered' : 'Signup failed'); return }
+              // Register in app_registrations for admin dashboard
+              try {
+                await supabase.from('app_registrations').insert({
+                  business_name: vendorAuthForm.name,
+                  slug,
+                  whatsapp: fullPhone,
+                  email: '',
+                  app_type: vendorAuthApp?.id || 'basic',
+                  app_tier: vendorAuthApp?.id || 'basic',
+                  status: 'active',
+                  billing_cycle: 'monthly',
+                })
+              } catch (e) { /* ignore */ }
+              localStorage.setItem('indoo_vendor_phone', phone)
+              localStorage.setItem('indoo_vendor_pass', vendorAuthForm.password)
+              localStorage.setItem('indoo_vendor_id', data.id)
+              localStorage.setItem('vendorbasic_vendorId', data.id)
+              const isDev = window.location.port === '5173' || window.location.port === '5174'
+              const baseUrl = vendorAuthApp?.id === 'basic'
+                ? (isDev ? 'http://localhost:5176/' : '/food/basic/')
+                : (isDev ? '/food/pro/' : '/food/pro/')
+              const countryName = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)?.name || ''
+              const appUrl = `${baseUrl}?vendor=${data.id}&city=${encodeURIComponent(vendorAuthForm.city)}&country=${encodeURIComponent(countryName)}&cc=${vendorAuthForm.country}`
+              window.open(appUrl, '_blank')
+              setVendorAuthOpen(false)
+            }
+          }} style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+            {vendorAuthMode === 'login' ? 'Sign In' : 'Create Account'}
+          </button>
+
+          <button onClick={() => { setVendorAuthMode(vendorAuthMode === 'login' ? 'signup' : 'login'); setVendorAuthError('') }} style={{ width: '100%', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', marginTop: 12, padding: 4 }}>
+            {vendorAuthMode === 'login' ? (
+              <>Don't have an account? <span style={{ color: '#FACC15', fontWeight: 700 }}>Create Account</span></>
+            ) : (
+              <>Already have an account? <span style={{ color: '#FACC15', fontWeight: 700 }}>Sign In</span></>
+            )}
+          </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (currentPage === 'admin') {
     return <Admin onClose={() => setCurrentPage(null)} />
   }
