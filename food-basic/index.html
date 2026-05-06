@@ -22,6 +22,8 @@
         background: #1a0e05;
         overflow-y: auto;
         overflow-x: hidden;
+        transform: translateZ(0);
+        contain: paint layout;
       }
       #app-bg {
         position: sticky;
@@ -35,9 +37,9 @@
         background-size: 100% 100%;
       }
       #root { width: 100%; min-height: 100%; padding-top: env(safe-area-inset-top, 0px); position: relative; z-index: 1; }
-      #app-shell { transform: translateZ(0); }
       * { scrollbar-width: none; -ms-overflow-style: none; }
       *::-webkit-scrollbar { display: none; }
+      @keyframes slideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
       @media (min-width: 481px) {
         #app-shell {
           border-left: 1px solid rgba(255,255,255,0.06);
@@ -52,6 +54,14 @@
       <div id="app-bg"></div>
       <div id="root"></div>
     </div>
+    <script>
+      // Load saved theme background on startup
+      var savedBg = localStorage.getItem('vendorbasic_themeBg');
+      if (savedBg) {
+        var bg = document.getElementById('app-bg');
+        if (bg) bg.style.backgroundImage = 'url(' + savedBg + ')';
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

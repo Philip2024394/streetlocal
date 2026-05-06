@@ -96,16 +96,22 @@ async function uploadMenuImage(vendorId, file) {
 }
 
 /* ─── Estimated Delivery Costs — built from admin settings ─── */
-function buildDeliveryZones(baseFee = 5000, perKm = 2500, minCharge = 7000, maxKm = 15, roundTo = 1000) {
-  const calc = (km) => Math.max(minCharge, Math.ceil((baseFee + km * perKm) / roundTo) * roundTo)
+function buildDeliveryZones(minCharge = 7000, minKm = 2, perKm = 2500, maxKm = 15, roundTo = 1000, currency = 'Rp') {
+  // minCharge covers 0 to minKm (flat fee)
+  // After minKm, each additional km adds perKm
+  const calc = (km) => {
+    if (km <= minKm) return minCharge
+    const extra = km - minKm
+    return Math.ceil((minCharge + extra * perKm) / roundTo) * roundTo
+  }
   const zones = [
     { name: 'Pickup', radius: 0, fee: 0, label: 'Pickup / Walk-in' },
-    { name: '0-2 km', radius: 2, fee: calc(1), label: `~Rp ${calc(1).toLocaleString('id-ID')}` },
-    { name: '2-5 km', radius: 5, fee: calc(3.5), label: `~Rp ${calc(3.5).toLocaleString('id-ID')}` },
-    { name: '5-10 km', radius: 10, fee: calc(7.5), label: `~Rp ${calc(7.5).toLocaleString('id-ID')}` },
+    { name: `0-${minKm} km`, radius: minKm, fee: minCharge, label: `~${currency} ${minCharge.toLocaleString()}` },
   ]
-  if (maxKm > 10) zones.push({ name: '10-15 km', radius: 15, fee: calc(12.5), label: `~Rp ${calc(12.5).toLocaleString('id-ID')}` })
-  if (maxKm > 15) zones.push({ name: '15-20 km', radius: 20, fee: calc(17.5), label: `~Rp ${calc(17.5).toLocaleString('id-ID')}` })
+  if (maxKm > minKm) zones.push({ name: `${minKm}-5 km`, radius: 5, fee: calc(5), label: `~${currency} ${calc(5).toLocaleString()}` })
+  if (maxKm > 5) zones.push({ name: '5-10 km', radius: 10, fee: calc(10), label: `~${currency} ${calc(10).toLocaleString()}` })
+  if (maxKm > 10) zones.push({ name: '10-15 km', radius: 15, fee: calc(15), label: `~${currency} ${calc(15).toLocaleString()}` })
+  if (maxKm > 15) zones.push({ name: '15-20 km', radius: 20, fee: calc(20), label: `~${currency} ${calc(20).toLocaleString()}` })
   return zones
 }
 
@@ -184,9 +190,9 @@ const S = {
   page: { background: 'transparent', minHeight: '100%', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px', position: 'sticky', top: 0, zIndex: 10 },
   shopLogo: { width: 44, height: 44, borderRadius: 12, objectFit: 'cover', marginRight: 12 },
-  shopName: { fontSize: 20, fontWeight: 700, flex: 1 },
+  shopName: { fontSize: 20, fontWeight: 700, flex: 1, textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 16px rgba(0,0,0,0.4)' },
   gearBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  vendorBar: { background: 'linear-gradient(135deg,#2d7a0e,#8DC63F)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 14, fontWeight: 600 },
+  vendorBar: { background: 'transparent', padding: '4px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 },
   card: { background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: 'none', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative', transition: 'all 0.3s ease' },
   cardImg: { width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
   cardBody: { flex: 1, minWidth: 0 },
@@ -259,6 +265,17 @@ export default function App() {
   const [editItem, setEditItem] = useState(null) // item being edited by vendor
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
+  const [showDeliverySettings, setShowDeliverySettings] = useState(false)
+  const [vendorDrawer, setVendorDrawer] = useState(false)
+  const [shopTheme, setShopTheme] = useState(() => localStorage.getItem('vendorbasic_theme') || 'default')
+  const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('vendorbasic_delBase')) || 5000)
+  const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delPerKm')) || 2500)
+  const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMin')) || 7000)
+  const [delMaxKm, setDelMaxKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMax')) || 15)
+  const [delFreeAbove, setDelFreeAbove] = useState(() => parseInt(localStorage.getItem('vendorbasic_delFree')) || 0)
+  const [delCurrency, setDelCurrency] = useState(() => localStorage.getItem('vendorbasic_delCurrency') || 'Rp')
+  const [delMinKm, setDelMinKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMinKm')) || 2)
+  const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('vendorbasic_delEnabled') !== 'false')
 
   /* Shop info */
   const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Street Food')
@@ -357,6 +374,21 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_shopYT', shopYoutube) }, [shopYoutube])
   useEffect(() => { localStorage.setItem('vendorbasic_shopWeb', shopWebsite) }, [shopWebsite])
   useEffect(() => { localStorage.setItem('vendorbasic_shopFoodType', shopFoodType) }, [shopFoodType])
+  useEffect(() => { localStorage.setItem('vendorbasic_delBase', delBaseFee) }, [delBaseFee])
+  useEffect(() => { localStorage.setItem('vendorbasic_delPerKm', delPerKm) }, [delPerKm])
+  useEffect(() => { localStorage.setItem('vendorbasic_delMin', delMinCharge) }, [delMinCharge])
+  useEffect(() => { localStorage.setItem('vendorbasic_delMax', delMaxKm) }, [delMaxKm])
+  useEffect(() => { localStorage.setItem('vendorbasic_delFree', delFreeAbove) }, [delFreeAbove])
+  useEffect(() => { localStorage.setItem('vendorbasic_delCurrency', delCurrency) }, [delCurrency])
+  useEffect(() => { localStorage.setItem('vendorbasic_delMinKm', delMinKm) }, [delMinKm])
+  useEffect(() => { localStorage.setItem('vendorbasic_delEnabled', delEnabled) }, [delEnabled])
+
+  // Build delivery zones from vendor's own settings
+  useEffect(() => {
+    const zones = buildDeliveryZones(delMinCharge, delMinKm, delPerKm, delMaxKm, 1000, delCurrency)
+    setDeliveryZones(zones)
+    setDeliveryZone(zones[0])
+  }, [delMinCharge, delMinKm, delPerKm, delMaxKm, delCurrency])
 
   // Sync shop config to Supabase when vendor changes settings
   const syncTimer = useRef(null)
@@ -371,9 +403,13 @@ export default function App() {
         shop_tiktok: shopTiktok, shop_facebook: shopFacebook,
         shop_youtube: shopYoutube, shop_website: shopWebsite,
         shop_food_type: shopFoodType,
+        delivery_base_fee: delBaseFee, delivery_per_km: delPerKm,
+        delivery_min_charge: delMinCharge, delivery_max_km: delMaxKm,
+        delivery_free_above: delFreeAbove, delivery_currency: delCurrency,
+        delivery_enabled: delEnabled,
       })
-    }, 2000) // Debounce 2s to avoid too many writes
-  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopFoodType])
+    }, 2000)
+  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopFoodType, delBaseFee, delPerKm, delMinCharge, delMaxKm, delFreeAbove, delCurrency, delEnabled])
 
   // Load shop config from Supabase on vendor login
   useEffect(() => {
@@ -394,6 +430,13 @@ export default function App() {
       if (data.shop_website) setShopWebsite(data.shop_website)
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
+      if (data.delivery_base_fee) setDelBaseFee(data.delivery_base_fee)
+      if (data.delivery_per_km) setDelPerKm(data.delivery_per_km)
+      if (data.delivery_min_charge) setDelMinCharge(data.delivery_min_charge)
+      if (data.delivery_max_km) setDelMaxKm(data.delivery_max_km)
+      if (data.delivery_free_above !== undefined) setDelFreeAbove(data.delivery_free_above)
+      if (data.delivery_currency) setDelCurrency(data.delivery_currency)
+      if (data.delivery_enabled !== undefined) setDelEnabled(data.delivery_enabled)
     })
   }, [vendorId])
 
@@ -686,9 +729,7 @@ export default function App() {
             })()}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setShowCustomers(true)}>👥 Customers</button>
-            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setShopConfig(true)}>⚙️</button>
-            <button style={{ ...S.smallBtn('rgba(0,0,0,0.3)'), color: '#fff' }} onClick={() => setIsVendor(false)}>Logout</button>
+            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setVendorDrawer(true)}>☰</button>
           </div>
         </div>
       )}
@@ -848,7 +889,7 @@ export default function App() {
                 ) : (
                   <span style={{ fontSize: 16 }}>{CAT_ICONS[cat] || '🍽️'}</span>
                 )}
-                <span style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1, flex: 1 }}>{cat}</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1, flex: 1, textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>{cat}</span>
                 {hasDeals && cat === Object.keys(grouped)[0] && (
                   <button onClick={() => setShowDeals(!showDeals)} style={{ padding: '5px 12px', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
                     🔥 Deals
@@ -1296,6 +1337,240 @@ export default function App() {
               </div>
             )
           })()}
+        </div>
+      )}
+
+      {/* ═══ VENDOR SIDE DRAWER ═══ */}
+      {vendorDrawer && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 260, background: '#1a1a1a', zIndex: 501, overflowY: 'auto', borderLeft: '1px solid rgba(255,255,255,0.08)', animation: 'slideRight 0.2s ease' }}>
+            {/* Header */}
+            <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Dashboard</span>
+                <button onClick={() => setVendorDrawer(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>✕</button>
+              </div>
+              <span style={{ fontSize: 11, color: '#8DC63F' }}>{shopName}</span>
+            </div>
+
+            {/* Menu items */}
+            {[
+              { icon: '⚙️', label: 'Shop Config', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
+              { icon: '🛵', label: 'Delivery Settings', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
+              { icon: '👥', label: 'My Customers', onClick: () => { setShowCustomers(true); setVendorDrawer(false) } },
+              { icon: '🍽️', label: 'Daily Deals', onClick: () => { setVendorDrawer(false) } },
+            ].map(item => (
+              <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', border: 'none', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+
+            {/* Theme Backgrounds — full page preview */}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>🎨 App Theme</h3>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Tap a theme to preview how your menu will look</p>
+
+              {/* Horizontal scroll of full previews */}
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
+                {[
+                  { id: 'default', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: 'Wood' },
+                  { id: 'dark', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: 'Dark' },
+                  { id: 'bamboo', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: 'Bamboo' },
+                  { id: 'kebab', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: 'Kebab' },
+                  { id: 'burger', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: 'Burgers' },
+                  { id: 'donut', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: 'Donuts' },
+                  { id: 'asia', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: 'Asia' },
+                  { id: 'satay', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: 'Satay' },
+                  { id: 'juice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_03_51%20PM.png', label: 'Juice' },
+                  { id: 'friedrice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_07_16%20PM.png', label: 'Fried Rice' },
+                ].map(theme => (
+                  <button key={theme.id} onClick={() => {
+                    setShopTheme(theme.id)
+                    localStorage.setItem('vendorbasic_theme', theme.id)
+                    localStorage.setItem('vendorbasic_themeBg', theme.img)
+                    const bg = document.getElementById('app-bg')
+                    if (bg) bg.style.backgroundImage = `url(${theme.img})`
+                  }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0, width: 180 }}>
+                    {/* Full app preview */}
+                    <div style={{ width: '100%', height: 280, backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                      {/* Mock header */}
+                      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.2)' }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ height: 6, width: '60%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
+                          <div style={{ height: 4, width: '40%', background: 'rgba(255,255,255,0.2)', borderRadius: 2 }} />
+                        </div>
+                      </div>
+                      {/* Mock category header */}
+                      <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 16, height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.15)' }} />
+                        <div style={{ height: 6, width: '30%', background: 'rgba(255,255,255,0.4)', borderRadius: 3 }} />
+                      </div>
+                      {/* Mock menu cards */}
+                      {[1, 2, 3].map(i => (
+                        <div key={i} style={{ margin: '3px 10px', padding: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 4 }} />
+                            <div style={{ height: 4, width: '50%', background: 'rgba(255,255,255,0.2)', borderRadius: 2, marginBottom: 3 }} />
+                            <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.7 }} />
+                          </div>
+                        </div>
+                      ))}
+                      {/* Mock sticky cart */}
+                      <div style={{ marginTop: 'auto', padding: '6px 10px 8px' }}>
+                        <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ height: 5, width: '40%', background: 'rgba(255,255,255,0.3)', borderRadius: 3 }} />
+                          <div style={{ height: 16, width: 40, background: 'rgba(255,255,255,0.2)', borderRadius: 6 }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Label */}
+                    <div style={{ fontSize: 11, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
+                      {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom upload */}
+              <label style={{ display: 'block', marginTop: 10, padding: '12px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.15)', textAlign: 'center', cursor: 'pointer', fontSize: 12, color: '#888' }}>
+                📸 Upload Custom Background
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                  const file = e.target.files[0]
+                  if (!file) return
+                  const url = await uploadMenuImage(vendorId, file)
+                  if (url) {
+                    setShopTheme('custom')
+                    localStorage.setItem('vendorbasic_theme', 'custom')
+                    localStorage.setItem('vendorbasic_themeBg', url)
+                    const bg = document.getElementById('app-bg')
+                    if (bg) bg.style.backgroundImage = `url(${url})`
+                  }
+                }} />
+              </label>
+            </div>
+
+            {/* Logout */}
+            <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button onClick={() => { setIsVendor(false); setVendorDrawer(false) }} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                Logout
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══ DELIVERY SETTINGS ═══ */}
+      {showDeliverySettings && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#0a0a0a', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>🛵 Delivery Settings</h2>
+            <button onClick={() => setShowDeliverySettings(false)} style={{ width: 32, height: 32, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+          </div>
+
+          <div style={{ padding: '0 16px 40px' }}>
+            {/* Enable/Disable */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Delivery Estimates</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Show estimated delivery cost to customers</div>
+              </div>
+              <button onClick={() => setDelEnabled(!delEnabled)} style={{ width: 50, height: 28, borderRadius: 14, border: 'none', background: delEnabled ? '#8DC63F' : '#333', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 11, background: '#fff', position: 'absolute', top: 3, left: delEnabled ? 25 : 3, transition: 'all 0.2s' }} />
+              </button>
+            </div>
+
+            {/* Load country defaults */}
+            <button onClick={async () => {
+              if (!supabase) return
+              // Try to detect country
+              try {
+                const res = await fetch('https://ip2c.org/s')
+                const text = await res.text()
+                const country = text.split(';')[1]
+                const { data } = await supabase.from('country_delivery_defaults').select('*').eq('id', country).single()
+                if (data) {
+                  setDelBaseFee(data.base_fee); setDelPerKm(data.per_km); setDelMinCharge(data.min_charge)
+                  setDelMaxKm(data.max_km); setDelCurrency(data.currency)
+                }
+              } catch {}
+            }} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid rgba(141,198,63,0.2)', background: 'rgba(141,198,63,0.06)', color: '#8DC63F', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>
+              📍 Load My Country Default Rates
+            </button>
+
+            {/* Currency */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Currency Symbol</label>
+              <input type="text" value={delCurrency} onChange={e => setDelCurrency(e.target.value)} style={S.input} placeholder="Rp" />
+            </div>
+
+
+            {/* Min Charge — flat fee for short distance */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Minimum Delivery Fee (flat rate)</label>
+              <input type="number" value={delMinCharge} onChange={e => setDelMinCharge(parseInt(e.target.value) || 0)} style={S.input} />
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>This flat fee covers deliveries up to the minimum distance below</p>
+            </div>
+
+            {/* Min KM — distance covered by min charge */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Minimum Distance (km) covered by flat fee</label>
+              <input type="number" value={delMinKm} onChange={e => setDelMinKm(parseInt(e.target.value) || 1)} style={S.input} />
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>0-{delMinKm} km = {delCurrency} {delMinCharge.toLocaleString()} flat</p>
+            </div>
+
+            {/* Per KM — after min distance */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Price Per KM (after {delMinKm} km)</label>
+              <input type="number" value={delPerKm} onChange={e => setDelPerKm(parseInt(e.target.value) || 0)} style={S.input} />
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Each km after {delMinKm} km adds {delCurrency} {delPerKm.toLocaleString()}</p>
+            </div>
+
+            {/* Max KM */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Maximum Delivery Distance (km)</label>
+              <input type="number" value={delMaxKm} onChange={e => setDelMaxKm(parseInt(e.target.value) || 0)} style={S.input} />
+            </div>
+
+            {/* Free Delivery */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Free Delivery for Orders Above (0 = disabled)</label>
+              <input type="number" value={delFreeAbove} onChange={e => setDelFreeAbove(parseInt(e.target.value) || 0)} style={S.input} />
+              {delFreeAbove > 0 && <p style={{ fontSize: 11, color: '#8DC63F', marginTop: 4 }}>Orders above {delCurrency} {delFreeAbove.toLocaleString()} get free delivery</p>}
+            </div>
+
+            {/* Preview */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>Preview — What Customers See</h3>
+              {(() => {
+                const calc = (km) => {
+                  if (km <= delMinKm) return delMinCharge
+                  return Math.ceil((delMinCharge + (km - delMinKm) * delPerKm) / 1000) * 1000
+                }
+                return [
+                  { label: 'Pickup', km: 0, fee: 0 },
+                  { label: `0-${delMinKm} km`, km: delMinKm, fee: delMinCharge, note: 'flat' },
+                  { label: `${delMinKm + 1} km`, km: delMinKm + 1, fee: calc(delMinKm + 1) },
+                  { label: '5 km', km: 5, fee: calc(5) },
+                  { label: '10 km', km: 10, fee: calc(10) },
+                  ...(delMaxKm > 10 ? [{ label: '15 km', km: 15, fee: calc(15) }] : []),
+                ].filter(z => z.km <= delMaxKm || z.km === 0).map(z => (
+                  <div key={z.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{z.label}</span>
+                    <span style={{ fontWeight: 800, color: z.fee === 0 ? '#8DC63F' : '#FACC15' }}>
+                      {z.fee === 0 ? 'FREE' : `~${delCurrency} ${z.fee.toLocaleString()}`}
+                    </span>
+                  </div>
+                ))
+              })()}
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>
+                Based on GoJek/Grab estimates. Customer arranges their own delivery.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
