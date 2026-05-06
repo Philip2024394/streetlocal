@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
+import { useAppLocale, LANGUAGES } from './i18n'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -94,14 +95,21 @@ async function uploadMenuImage(vendorId, file) {
   return data?.publicUrl || null
 }
 
-/* ─── Estimated Delivery Costs (based on GoJek/Grab rates) ─── */
-const DELIVERY_ZONES = [
-  { name: 'Pickup', radius: 0, fee: 0, label: 'Pickup / Walk-in' },
-  { name: '0-2 km', radius: 2, fee: 0, label: 'FREE' },
-  { name: '2-5 km', radius: 5, fee: 8000, label: '~Rp 8,000' },
-  { name: '5-10 km', radius: 10, fee: 15000, label: '~Rp 15,000' },
-  { name: '10-15 km', radius: 15, fee: 22000, label: '~Rp 22,000' },
-]
+/* ─── Estimated Delivery Costs — built from admin settings ─── */
+function buildDeliveryZones(baseFee = 5000, perKm = 2500, minCharge = 7000, maxKm = 15, roundTo = 1000) {
+  const calc = (km) => Math.max(minCharge, Math.ceil((baseFee + km * perKm) / roundTo) * roundTo)
+  const zones = [
+    { name: 'Pickup', radius: 0, fee: 0, label: 'Pickup / Walk-in' },
+    { name: '0-2 km', radius: 2, fee: calc(1), label: `~Rp ${calc(1).toLocaleString('id-ID')}` },
+    { name: '2-5 km', radius: 5, fee: calc(3.5), label: `~Rp ${calc(3.5).toLocaleString('id-ID')}` },
+    { name: '5-10 km', radius: 10, fee: calc(7.5), label: `~Rp ${calc(7.5).toLocaleString('id-ID')}` },
+  ]
+  if (maxKm > 10) zones.push({ name: '10-15 km', radius: 15, fee: calc(12.5), label: `~Rp ${calc(12.5).toLocaleString('id-ID')}` })
+  if (maxKm > 15) zones.push({ name: '15-20 km', radius: 20, fee: calc(17.5), label: `~Rp ${calc(17.5).toLocaleString('id-ID')}` })
+  return zones
+}
+
+const DEFAULT_DELIVERY_ZONES = buildDeliveryZones()
 
 /* ─── Food Type Categories ─── */
 const FOOD_TYPES = {
@@ -163,19 +171,18 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 const SHOP_LAT = -7.7956
 const SHOP_LON = 110.3695
 
-function getDeliveryFee(distKm) {
-  for (let i = DELIVERY_ZONES.length - 1; i >= 0; i--) {
-    if (distKm <= DELIVERY_ZONES[i].radius) {
-      return DELIVERY_ZONES[i]
-    }
+function getDeliveryFee(distKm, zones) {
+  const z = zones || DEFAULT_DELIVERY_ZONES
+  for (let i = z.length - 1; i >= 0; i--) {
+    if (distKm <= z[i].radius) return z[i]
   }
-  return DELIVERY_ZONES[DELIVERY_ZONES.length - 1]
+  return z[z.length - 1]
 }
 
 /* ─── Styles ─── */
 const S = {
-  page: { background: '#0a0a0a', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80 },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px', position: 'relative' },
+  page: { background: 'transparent', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px', position: 'sticky', top: 0, zIndex: 10 },
   shopLogo: { width: 44, height: 44, borderRadius: 12, objectFit: 'cover', marginRight: 12 },
   shopName: { fontSize: 20, fontWeight: 700, flex: 1 },
   gearBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
@@ -190,7 +197,7 @@ const S = {
   stickyCart: { position: 'fixed', bottom: 0, left: 0, right: 0, background: 'linear-gradient(135deg,#2d7a0e,#8DC63F)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100, minHeight: 56 },
   cartText: { fontSize: 15, fontWeight: 600 },
   checkoutBtn: { background: '#fff', color: '#2d7a0e', border: 'none', borderRadius: 12, padding: '10px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 200, overflowY: 'auto', display: 'flex', justifyContent: 'center' },
+  overlay: { position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 200, overflowY: 'auto', display: 'flex', justifyContent: 'center' },
   modal: { background: '#111', borderRadius: 20, maxWidth: 420, width: '100%', margin: '24px 12px', padding: 20, position: 'relative', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto' },
   input: { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 15, outline: 'none', marginBottom: 10, boxSizing: 'border-box' },
   btnGreen: { width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 },
@@ -204,7 +211,7 @@ const S = {
   fab: { position: 'fixed', bottom: 90, right: 16, width: 56, height: 56, borderRadius: 28, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 28, fontWeight: 700, cursor: 'pointer', zIndex: 90, boxShadow: '0 4px 20px rgba(141,198,63,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   closedBanner: { background: 'rgba(255,0,0,0.15)', border: '1px solid rgba(255,0,0,0.3)', borderRadius: 12, margin: '8px 12px', padding: '12px 16px', textAlign: 'center', color: '#ff6b6b', fontSize: 15, fontWeight: 600 },
   qtyRow: { display: 'flex', alignItems: 'center', gap: 16, justifyContent: 'center', margin: '16px 0' },
-  qtyBtn: { width: 44, height: 44, borderRadius: 22, border: 'none', background: '#8B0000', color: '#fff', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  qtyBtn: { width: 44, height: 44, borderRadius: 22, border: 'none', background: '#1a1a1a', color: '#FFD600', fontSize: 22, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   qtyNum: { fontSize: 20, fontWeight: 700, minWidth: 30, textAlign: 'center' },
   zoneBtn: (active) => ({ flex: 1, padding: '10px 6px', borderRadius: 10, border: active ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.12)', background: active ? 'rgba(141,198,63,0.15)' : 'transparent', color: '#fff', fontSize: 13, cursor: 'pointer', textAlign: 'center' }),
   payBtn: (active) => ({ flex: 1, padding: '14px', borderRadius: 14, border: active ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.12)', background: active ? 'rgba(141,198,63,0.15)' : 'transparent', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center' }),
@@ -218,6 +225,10 @@ export default function App() {
 
   if (viewMode === 'admin') return <AdminDashboard />
   if (viewMode === 'activate') return <ActivatePage />
+
+  /* --- i18n --- */
+  const { locale, setLocale, t } = useAppLocale()
+  const [langOpen, setLangOpen] = useState(false)
 
   /* --- State --- */
   const [showLanding, setShowLanding] = useState(true)
@@ -248,13 +259,21 @@ export default function App() {
   const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('vendorbasic_shopFoodType') || 'Indonesian & Street Food')
   const [showLocation, setShowLocation] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
+  const [userDistance, setUserDistance] = useState(null)
+  const [showDeals, setShowDeals] = useState(false)
+  const [dailyDeals, setDailyDeals] = useState(() => loadJSON('vendorbasic_dailyDeals', []))
+  const [showCustomers, setShowCustomers] = useState(false)
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('vendorbasic_installDismissed') === 'true')
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [promoMsg, setPromoMsg] = useState('')
 
   /* Checkout form */
   const [custName, setCustName] = useState('')
   const [custPhone, setCustPhone] = useState('')
   const [custAddress, setCustAddress] = useState('')
   const [payMethod, setPayMethod] = useState('cod')
-  const [deliveryZone, setDeliveryZone] = useState(DELIVERY_ZONES[0])
+  const [deliveryZones, setDeliveryZones] = useState(DEFAULT_DELIVERY_ZONES)
+  const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
 
@@ -267,6 +286,36 @@ export default function App() {
   const [vendorId, setVendorId] = useState(() => localStorage.getItem('vendorbasic_vendorId') || null)
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
+
+  /* Auto-detect user distance */
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const d = haversineKm(SHOP_LAT, SHOP_LON, pos.coords.latitude, pos.coords.longitude)
+        setUserDistance(Math.round(d * 10) / 10)
+      },
+      () => {}
+    )
+  }, [])
+
+  /* Load delivery rates from admin settings (Supabase) */
+  useEffect(() => {
+    if (!supabase) return
+    async function loadRates() {
+      try {
+        const { data } = await supabase.from('admin_settings').select('id,value').in('id', ['delivery_base_fee', 'delivery_per_km', 'delivery_min_charge', 'delivery_max_km', 'delivery_round_to'])
+        if (data && data.length > 0) {
+          const r = {}
+          data.forEach(d => { r[d.id] = Number(d.value) })
+          const zones = buildDeliveryZones(r.delivery_base_fee, r.delivery_per_km, r.delivery_min_charge, r.delivery_max_km, r.delivery_round_to)
+          setDeliveryZones(zones)
+          setDeliveryZone(zones[0])
+        }
+      } catch (e) { console.warn('Failed to load delivery rates:', e) }
+    }
+    loadRates()
+  }, [])
 
   /* New / edit item form */
   const [formName, setFormName] = useState('')
@@ -315,7 +364,7 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const dist = haversineKm(SHOP_LAT, SHOP_LON, pos.coords.latitude, pos.coords.longitude)
-        setDeliveryZone(getDeliveryFee(dist))
+        setDeliveryZone(getDeliveryFee(dist, deliveryZones))
         setGpsLoading(false)
       },
       () => setGpsLoading(false),
@@ -469,15 +518,39 @@ export default function App() {
     const msg = encodeURIComponent(lines.join('\n'))
     const phone = shopPhone.replace(/[^0-9]/g, '')
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+    // Save customer to directory
+    const customers = loadJSON('vendorbasic_customers', [])
+    const existing = customers.find(c => c.phone === custPhone)
+    if (existing) {
+      existing.orders = (existing.orders || 0) + 1
+      existing.totalSpent = (existing.totalSpent || 0) + totalPrice
+      existing.lastOrder = new Date().toISOString()
+      existing.name = custName || existing.name
+    } else {
+      customers.push({ phone: custPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
+    }
+    saveJSON('vendorbasic_customers', customers)
     setOrderDone(true)
   }
 
   /* --- Visible menu --- */
   const visibleMenu = isVendor ? menuItems : menuItems.filter((m) => m.available)
 
+  // Active daily deals — filter by current time
+  const activeDeals = dailyDeals.filter(d => {
+    if (!d.active) return false
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
+    const start = new Date(`${today}T${d.startTime || '00:00'}`)
+    const end = new Date(`${today}T${d.endTime || '23:59'}`)
+    return now >= start && now <= end
+  })
+  const hasDeals = activeDeals.length > 0
+
   /* ═══════════════════════ RENDER ═══════════════════════ */
   return (
     <div style={S.page}>
+
       {/* ═══ LANDING PAGE ═══ */}
       {showLanding && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, overflow: 'hidden' }}>
@@ -547,7 +620,7 @@ export default function App() {
       {isVendor && (
         <div style={S.vendorBar}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>Vendor Mode</span>
+            <span>{t.vendorMode || 'Vendor Mode'}</span>
             {vendorExpiresAt && (() => {
               const days = Math.ceil((new Date(vendorExpiresAt) - new Date()) / (1000 * 60 * 60 * 24))
               return days > 0 ? (
@@ -556,7 +629,8 @@ export default function App() {
             })()}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setShopConfig(true)}>Shop Config</button>
+            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setShowCustomers(true)}>👥 Customers</button>
+            <button style={{ ...S.smallBtn('rgba(0,0,0,0.2)'), color: '#fff' }} onClick={() => setShopConfig(true)}>⚙️</button>
             <button style={{ ...S.smallBtn('rgba(0,0,0,0.3)'), color: '#fff' }} onClick={() => setIsVendor(false)}>Logout</button>
           </div>
         </div>
@@ -579,23 +653,110 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {/* Language picker */}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setLangOpen(!langOpen)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#fff', minHeight: 32 }}>
+              {LANGUAGES.find(l => l.code === locale)?.flag || '🇬🇧'} {locale.toUpperCase()}
+            </button>
+            {langOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setLangOpen(false)} />
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#1a1a1a', borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', zIndex: 999, minWidth: 100, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {LANGUAGES.map(l => (
+                    <button key={l.code} onClick={() => { setLocale(l.code); setLangOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 12px', border: 'none', background: locale === l.code ? 'rgba(141,198,63,0.15)' : 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: locale === l.code ? 800 : 500, color: locale === l.code ? '#8DC63F' : '#fff', textAlign: 'left' }}>
+                      {l.flag} {l.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           {/* Map/location icon */}
-          <button onClick={() => setShowLocation(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            📍
+          <button onClick={() => setShowLocation(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="Visit Us" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          </button>
+          {/* Cart icon */}
+          <button onClick={() => { if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <span style={{ fontSize: 22 }}>🛒</span>
+            {cart.length > 0 && (
+              <span style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {cart.reduce((s, c) => s + c.qty, 0)}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
+      {/* --- Add to Home Screen banner --- */}
+      {!installDismissed && !isVendor && (
+        <div style={{ margin: '8px 12px', padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdafaass-removebg-preview.png" alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{t.addHomeScreen || 'Add to Home Screen'}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>Quick access to {shopName} from your phone</div>
+          </div>
+          <button onClick={() => { setInstallDismissed(true); localStorage.setItem('vendorbasic_installDismissed', 'true') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer', padding: 4, flexShrink: 0 }}>✕</button>
+        </div>
+      )}
+
       {/* --- Closed banner --- */}
       {!shopOpen && !isVendor && (
-        <div style={S.closedBanner}>This shop is currently closed</div>
+        <div style={S.closedBanner}>{t.shopClosed || 'This shop is currently closed'}</div>
+      )}
+
+      {/* --- Daily Deals Button + Cards --- */}
+      {hasDeals && (
+        <div style={{ padding: '0 16px 8px' }}>
+          <button onClick={() => setShowDeals(!showDeals)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center' }}>
+            🔥 Daily Deals ({activeDeals.length})
+            <span style={{ fontSize: 12 }}>{showDeals ? '▲' : '▼'}</span>
+          </button>
+          {showDeals && (
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {activeDeals.map(deal => {
+                const now = new Date()
+                const today = now.toISOString().slice(0, 10)
+                const end = new Date(`${today}T${deal.endTime || '23:59'}`)
+                const remaining = Math.max(0, end - now)
+                const hrs = Math.floor(remaining / 3600000)
+                const mins = Math.floor((remaining % 3600000) / 60000)
+                return (
+                  <div key={deal.id} style={{ background: 'rgba(255,214,0,0.08)', border: '1px solid rgba(255,214,0,0.2)', borderRadius: 14, padding: 14, display: 'flex', gap: 12, alignItems: 'center' }}>
+                    {deal.photo && <img src={deal.photo} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{deal.name}</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#FFD600' }}>{fmt(deal.dealPrice)}</span>
+                        <span style={{ fontSize: 12, color: '#888', textDecoration: 'line-through' }}>{fmt(deal.originalPrice)}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700, marginTop: 4 }}>
+                        ⏰ {hrs}h {mins}m remaining
+                      </div>
+                    </div>
+                    <button onClick={() => {
+                      const existing = cart.find(c => c.id === 'deal-' + deal.id)
+                      if (existing) { setCart(cart.map(c => c.id === 'deal-' + deal.id ? { ...c, qty: c.qty + 1 } : c)) }
+                      else { setCart([...cart, { id: 'deal-' + deal.id, name: deal.name + ' (Deal)', price: deal.dealPrice, qty: 1, photo: deal.photo }]) }
+                    }} style={{ background: '#FFD600', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 800, color: '#1a1a1a', cursor: 'pointer', flexShrink: 0 }}>
+                      + Add
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* --- Menu --- */}
       <div style={{ paddingBottom: 12 }}>
         {(() => {
           // Group items by parent category
-          const CAT_ICONS = { Nasi: '🍚', Mie: '🍜', 'Sop/Soto': '🍲', 'Sate/Bakar': '🔥', Gorengan: '🍳', Jajanan: '🍡', Ayam: '🍗', Seafood: '🦐', Roti: '🍞', Minuman: '🥤', Dessert: '🍰', Bubur: '🥣' }
+          const MEALS_ICON = 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfss-removebg-preview.png?updatedAt=1777006431762'
+          const DRINKS_ICON = 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccdddddsssdaasda-removebg-preview.png?updatedAt=1777019670575'
+          const SNACKS_ICON = 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdasss-removebg-preview.png?updatedAt=1777005796156'
+          const DESSERTS_ICON = 'https://ik.imagekit.io/nepgaxllc/odfssd-removebg-preview.png?updatedAt=1777007963272'
+          const CAT_ICONS = { Nasi: MEALS_ICON, Mie: MEALS_ICON, 'Sop/Soto': MEALS_ICON, 'Sate/Bakar': MEALS_ICON, Gorengan: SNACKS_ICON, Jajanan: SNACKS_ICON, Ayam: MEALS_ICON, Seafood: MEALS_ICON, Roti: SNACKS_ICON, Minuman: DRINKS_ICON, Dessert: DESSERTS_ICON, Bubur: MEALS_ICON, Meal: MEALS_ICON, Drink: DRINKS_ICON, Snack: SNACKS_ICON }
           const getParentCat = (itemCat) => {
             for (const [parent, items] of Object.entries(FOOD_TYPES)) {
               if (items.includes(itemCat)) return parent
@@ -611,8 +772,17 @@ export default function App() {
           return Object.entries(grouped).map(([cat, catItems]) => (
             <div key={cat}>
               <div style={{ padding: '14px 16px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{CAT_ICONS[cat] || '🍽️'}</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1 }}>{cat}</span>
+                {CAT_ICONS[cat]?.startsWith('http') ? (
+                  <img src={CAT_ICONS[cat]} alt={cat} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+                ) : (
+                  <span style={{ fontSize: 16 }}>{CAT_ICONS[cat] || '🍽️'}</span>
+                )}
+                <span style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1, flex: 1 }}>{cat}</span>
+                {hasDeals && cat === Object.keys(grouped)[0] && (
+                  <button onClick={() => setShowDeals(!showDeals)} style={{ padding: '5px 12px', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                    🔥 Deals
+                  </button>
+                )}
               </div>
               {catItems.map((item) => (
           <div
@@ -653,7 +823,7 @@ export default function App() {
         })()}
 
         {visibleMenu.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>No items on the menu</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>{t.noItems || 'No items on the menu'}</div>
         )}
       </div>
 
@@ -665,23 +835,25 @@ export default function App() {
         <div style={S.stickyCart}>
           <span style={S.cartText}>{totalItems} item{totalItems > 1 ? 's' : ''} &middot; {fmt(totalPrice)}</span>
           <button style={S.checkoutBtn} onClick={() => { setCheckoutOpen(true); setOrderDone(false); detectDeliveryZone() }}>
-            Checkout &rarr;
+            {t.checkout || 'Checkout'} &rarr;
           </button>
         </div>
       )}
 
       {/* ═══ ITEM DETAIL MODAL ═══ */}
       {itemModal && (
-        <div style={S.overlay} onClick={() => setItemModal(null)}>
-          <div style={{ ...S.modal, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png?updatedAt=1777784877580)', backgroundSize: 'cover', backgroundPosition: 'center' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ ...S.overlay, flexDirection: 'column' }} onClick={() => setItemModal(null)}>
+          <div style={{ ...S.modal, flex: 1, display: 'flex', flexDirection: 'column', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png?updatedAt=1777784877580)', backgroundSize: 'cover', backgroundPosition: 'center' }} onClick={(e) => e.stopPropagation()}>
             <img
               src={itemModal.photo || 'https://via.placeholder.com/300'}
               alt={itemModal.name}
               style={{ width: '100%', borderRadius: 16, marginBottom: 16, maxHeight: 240, objectFit: 'cover' }}
             />
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>{itemModal.name}</h2>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>{itemModal.desc}</p>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#FACC15', marginBottom: 8 }}>{fmt(itemModal.price)}</div>
+            <div style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4, color: '#fff' }}>{itemModal.name}</h2>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 6, lineHeight: 1.5 }}>{itemModal.desc}</p>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#FACC15' }}>{fmt(itemModal.price)}</div>
+            </div>
 
             {/* Quantity selector */}
             <div style={S.qtyRow}>
@@ -695,10 +867,15 @@ export default function App() {
                 style={S.btnGreen}
                 onClick={() => { addToCart(itemModal, modalQty); setItemModal(null) }}
               >
-                Add to Cart &middot; {fmt(itemModal.price * modalQty)}
+                {t.addToCart || 'Add to Cart'} &middot; {fmt(itemModal.price * modalQty)}
               </button>
             )}
-            <button style={S.btnOutline} onClick={() => setItemModal(null)}>Close</button>
+
+            {/* Spacer pushes close to bottom */}
+            <div style={{ flex: 1 }} />
+
+            {/* Close button at footer */}
+            <button style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#8B0000', color: '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer', marginTop: 16, marginBottom: 16 }} onClick={() => setItemModal(null)}>Close</button>
           </div>
         </div>
       )}
@@ -712,42 +889,77 @@ export default function App() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button onClick={() => setShowLocation(false)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>Find Us</h2>
+              <button onClick={() => setShowLocation(false)} style={{ width: 40, height: 40, borderRadius: '50%', background: '#1a1a1a', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{t.visitUs || 'Visit Us'}</h2>
+                {userDistance !== null && (
+                  <p style={{ fontSize: 16, color: '#8DC63F', fontWeight: 800, margin: '4px 0 0' }}>{userDistance} km away</p>
+                )}
+              </div>
             </div>
             {!isVendor && (
               <button onClick={() => { setShowLocation(false); setVendorLogin(true) }} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚙️</button>
             )}
           </div>
 
+          <div style={{ padding: '0 16px', marginTop: -10, marginBottom: 16, position: 'relative', zIndex: 1 }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsssvvw-removebg-preview.png" alt="Visit Us" style={{ width: '100%', borderRadius: 16, marginBottom: 6 }} />
+            <p style={{ fontSize: 15, color: '#fff', lineHeight: 1.7 }}>
+              Welcome to {shopName}! Stop by and experience the taste first-hand. Watch your food being freshly prepared right in front of you — nothing beats eating it straight from the kitchen.
+            </p>
+          </div>
+
           <div style={{ padding: '0 16px 40px', position: 'relative', zIndex: 1 }}>
-            {/* Address, Hours & WhatsApp */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 20, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
-                <img src="https://ik.imagekit.io/nepgaxllc/Untitleddadaaa-removebg-preview.png?updatedAt=1777894476606" alt="location" style={{ width: 56, height: 56, flexShrink: 0 }} />
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{shopName}</h3>
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{shopAddress}</p>
+
+            {/* 1. Location Address */}
+            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{t.ourLocation || 'Our Location'}</h3>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{shopName}</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>{shopAddress}</p>
                 </div>
+                <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ fontSize: 48, flexShrink: 0 }}>🕐</span>
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Opening Hours</h3>
-                  <p style={{ fontSize: 14, color: '#8DC63F', fontWeight: 700 }}>{shopHours}</p>
-                </div>
+              {shopMapsLink && (
+                <a href={shopMapsLink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 10, padding: '10px', borderRadius: 10, background: 'rgba(141,198,63,0.1)', border: '1px solid rgba(141,198,63,0.2)', textAlign: 'center', textDecoration: 'none' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#8DC63F' }}>{t.openInMaps || 'Open in Google Maps →'}</span>
+                </a>
+              )}
+            </div>
+
+            {/* 2. Opening Times */}
+            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 10 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>🕐 {t.openingHours || 'Opening Hours'}</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { key: 'monday', en: 'Monday' }, { key: 'tuesday', en: 'Tuesday' }, { key: 'wednesday', en: 'Wednesday' },
+                  { key: 'thursday', en: 'Thursday' }, { key: 'friday', en: 'Friday' }, { key: 'saturday', en: 'Saturday' }, { key: 'sunday', en: 'Sunday' }
+                ].map(({ key, en }) => { const day = t[key] || en; return (
+                  <div key={day} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{day}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: key === 'sunday' ? '#EF4444' : '#8DC63F' }}>
+                      {key === 'sunday' ? (t.closed || 'Closed') : shopHours}
+                    </span>
+                  </div>
+                ) })}
               </div>
-              <a href={`https://wa.me/${shopPhone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                <img src="https://ik.imagekit.io/nepgaxllc/Untitledddddccc-removebg-preview.png?updatedAt=1777894363133" alt="whatsapp" style={{ width: 56, height: 56, flexShrink: 0 }} />
+            </div>
+
+            {/* 3. Contact Us */}
+            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>{t.contactUs || 'Contact Us'}</h3>
+              <a href={`https://wa.me/${shopPhone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', padding: '10px', borderRadius: 12, background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', marginBottom: 8 }}>
+                <img src="https://ik.imagekit.io/nepgaxllc/Untitledddddccc-removebg-preview.png?updatedAt=1777894363133" alt="whatsapp" style={{ width: 36, height: 36, flexShrink: 0 }} />
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>WhatsApp</h3>
-                  <p style={{ fontSize: 14, color: '#8DC63F', fontWeight: 700 }}>{shopPhone.replace(/^(\+?62)/, '0')}</p>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#25D366' }}>WhatsApp</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopPhone.replace(/^(\+?62)/, '0')}</div>
                 </div>
               </a>
             </div>
 
-            {/* Google Maps */}
-            {shopMapsLink && (
+            {/* Google Maps — moved inside location card */}
+            {false && shopMapsLink && (
               <a href={shopMapsLink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', background: 'rgba(141,198,63,0.08)', border: '1px solid rgba(141,198,63,0.2)', borderRadius: 16, padding: 20, marginBottom: 12, textDecoration: 'none', textAlign: 'center' }}>
                 <span style={{ fontSize: 16, fontWeight: 800, color: '#8DC63F' }}>📍 Open in Google Maps</span>
               </a>
@@ -756,7 +968,7 @@ export default function App() {
             {/* Social Links */}
             {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite) && (
               <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 20, marginBottom: 12 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>Follow Us</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>{t.followUs || 'Follow Us'}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {shopInstagram && (
                     <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
@@ -795,98 +1007,218 @@ export default function App() {
         </div>
       )}
 
-      {/* ═══ CHECKOUT MODAL ═══ */}
+      {/* ═══ CHECKOUT PAGE ═══ */}
       {checkoutOpen && (
-        <div style={S.overlay} onClick={() => setCheckoutOpen(false)}>
-          <div style={S.modal} onClick={(e) => e.stopPropagation()}>
-            <button style={S.closeBtnX} onClick={() => setCheckoutOpen(false)}>&times;</button>
-
-            {!orderDone ? (
-              <>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Checkout</h2>
-
-                {/* Order summary */}
-                <div style={{ marginBottom: 16 }}>
-                  {cart.map((c) => (
-                    <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 14 }}>
-                      <span>{c.qty}x {c.name}</span>
-                      <span style={{ color: '#FACC15', fontWeight: 600 }}>{fmt(c.price * c.qty)}</span>
-                    </div>
-                  ))}
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 10, paddingTop: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, marginTop: 6 }}>
-                      <span>Food Total</span><span style={{ color: '#FACC15' }}>{fmt(totalPrice)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Estimated Delivery Cost */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8, display: 'block' }}>
-                    📍 Estimated Delivery Cost
-                  </label>
-                  <div style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' }}>
-                    {DELIVERY_ZONES.map((z, i) => (
-                      <div key={z.radius} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '12px 16px',
-                        borderBottom: i < DELIVERY_ZONES.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                      }}>
-                        <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>{z.name}</span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: z.fee === 0 ? '#8DC63F' : '#FACC15' }}>{z.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 8, lineHeight: 1.5 }}>
-                    * Prices based on GoJek/Grab estimates. Order delivery from your preferred app. Vendor address will be in your WhatsApp order.
-                  </p>
-                </div>
-
-                {/* Pickup or Delivery */}
-                <label style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8, display: 'block' }}>Order Type</label>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-                  <button style={S.payBtn(payMethod === 'pickup')} onClick={() => setPayMethod('pickup')}>🏪 Pickup</button>
-                  <button style={S.payBtn(payMethod === 'delivery')} onClick={() => setPayMethod('delivery')}>🛵 Delivery</button>
-                </div>
-
-                {/* Customer info */}
-                <input style={S.input} placeholder="Your name" value={custName} onChange={(e) => setCustName(e.target.value)} />
-                <input style={S.input} placeholder="Phone / WhatsApp" type="tel" value={custPhone} onChange={(e) => setCustPhone(e.target.value)} />
-                {payMethod === 'delivery' && (
-                  <input style={S.input} placeholder="Delivery address (for GoJek pickup)" value={custAddress} onChange={(e) => setCustAddress(e.target.value)} />
-                )}
-
-                {/* Payment */}
-                <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(141,198,63,0.06)', border: '1px solid rgba(141,198,63,0.15)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>💵</span>
-                  <div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#8DC63F' }}>Cash on Delivery / Pickup</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', display: 'block' }}>Pay when you receive your food</span>
-                  </div>
-                </div>
-
-                <button
-                  style={{ ...S.btnGreen, opacity: (custName && custPhone) ? 1 : 0.4 }}
-                  disabled={!custName || !custPhone}
-                  onClick={sendWhatsApp}
-                >
-                  Place Order via WhatsApp
-                </button>
-              </>
-            ) : (
-              /* --- Order Confirmation --- */
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>&#10003;</div>
-                <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Order Sent!</h2>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.5, marginBottom: 24 }}>
-                  Your order has been sent via WhatsApp.<br />The vendor will confirm shortly.
-                </p>
-                <button style={S.btnGreen} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
-                  Done
-                </button>
-              </div>
-            )}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#0a0a0a', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png?updatedAt=1777784877580)', backgroundSize: 'cover', backgroundPosition: 'center', overflowY: 'auto' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{t.checkout || 'Checkout'}</h2>
+            <button onClick={() => setCheckoutOpen(false)} style={{ width: 32, height: 32, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
           </div>
+
+          {!orderDone ? (
+            <div style={{ padding: '12px' }}>
+              {/* Order items — same style as menu cards */}
+              <div style={{ marginBottom: 16 }}>
+                {cart.map((c) => (
+                  <div key={c.id} style={{ ...S.card, margin: '8px 0', alignItems: 'flex-start', position: 'relative' }}>
+                    {/* Delete X — top right corner */}
+                    <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
+                    <img src={c.photo || 'https://via.placeholder.com/80'} alt="" style={S.cardImg} />
+                    <div style={S.cardBody}>
+                      <div style={S.cardName}>{c.name}</div>
+                      <div style={{ fontSize: 14, color: '#FACC15', fontWeight: 700 }}>{fmt(c.price)} each</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#FACC15', marginTop: 2 }}>{fmt(c.price * c.qty)}</div>
+                      {/* Qty controls — under price */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                        <button onClick={() => { if (c.qty > 1) setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty - 1 } : x)) }} style={{ width: 30, height: 30, borderRadius: 15, border: 'none', background: '#1a1a1a', color: '#FFD600', fontSize: 18, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: c.qty <= 1 ? 0.3 : 1 }}>−</button>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', minWidth: 24, textAlign: 'center' }}>{c.qty}</span>
+                        <button onClick={() => setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty + 1 } : x))} style={{ width: 30, height: 30, borderRadius: 15, border: 'none', background: '#1a1a1a', color: '#FFD600', fontSize: 18, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {cart.length === 0 && (
+                  <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 30 }}>{t.cartEmpty || 'Your cart is empty'}</p>
+                )}
+              </div>
+
+              {/* Total */}
+              {cart.length > 0 && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice)}</span>
+                  </div>
+
+                  {/* Delivery estimate — single line */}
+                  <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#8DC63F' }}>
+                      🛵 Estimated delivery: {userDistance ? `${deliveryZone.label} (${userDistance} km)` : deliveryZone.label}
+                    </div>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4, lineHeight: 1.4 }}>
+                      Based on GoJek/Grab rates. Please arrange your own collection or delivery via your preferred service.
+                    </p>
+                  </div>
+
+                  {/* Pickup or Delivery */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                    <button style={S.payBtn(payMethod === 'pickup')} onClick={() => setPayMethod('pickup')}>🏪 {t.pickup || 'Pickup'}</button>
+                    <button style={S.payBtn(payMethod === 'delivery')} onClick={() => setPayMethod('delivery')}>🛵 {t.delivery || 'Delivery'}</button>
+                  </div>
+
+                  {/* Customer info */}
+                  <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 14, padding: 14, marginBottom: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Your Name</label>
+                    <input style={{ ...S.input, marginBottom: 10 }} placeholder="Your name" value={custName} onChange={(e) => setCustName(e.target.value)} />
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Phone / WhatsApp</label>
+                    <input style={{ ...S.input, marginBottom: payMethod === 'delivery' ? 10 : 0 }} placeholder="Phone / WhatsApp" type="tel" value={custPhone} onChange={(e) => setCustPhone(e.target.value)} />
+                    {payMethod === 'delivery' && (
+                      <>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Delivery Address</label>
+                        <input style={S.input} placeholder="Your delivery address" value={custAddress} onChange={(e) => setCustAddress(e.target.value)} />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Order note */}
+                  <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 14, padding: 14, marginBottom: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note (optional)</label>
+                    <textarea
+                      placeholder="e.g. Extra spicy, no onions, allergies..."
+                      style={{ ...S.input, minHeight: 60, resize: 'vertical', marginBottom: 0 }}
+                      id="orderNote"
+                    />
+                  </div>
+
+                  {/* Payment */}
+                  <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>💵</span>
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#8DC63F' }}>Cash on {payMethod === 'pickup' ? 'Pickup' : 'Delivery'}</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'block' }}>Pay when you receive your food</span>
+                    </div>
+                  </div>
+
+                  {/* Order button */}
+                  <button
+                    style={{ ...S.btnGreen, opacity: (custName && custPhone) ? 1 : 0.4 }}
+                    disabled={!custName || !custPhone}
+                    onClick={sendWhatsApp}
+                  >
+                    {t.placeOrder || 'Place Order via WhatsApp'} — {fmt(totalPrice)}
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            /* --- Order Confirmation --- */
+            <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#fff' }}>{t.orderSent || 'Order Sent!'}</h2>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+                {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
+              </p>
+              <button style={S.btnGreen} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
+                Done
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ CUSTOMER DIRECTORY ═══ */}
+      {showCustomers && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#0a0a0a', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{t.myCustomers || 'My Customers'}</h2>
+            <button onClick={() => setShowCustomers(false)} style={{ width: 32, height: 32, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+          </div>
+
+          {(() => {
+            const customers = loadJSON('vendorbasic_customers', [])
+            const sorted = [...customers].sort((a, b) => new Date(b.lastOrder) - new Date(a.lastOrder))
+            const filtered = customerSearch ? sorted.filter(c => c.name?.toLowerCase().includes(customerSearch.toLowerCase()) || c.phone?.includes(customerSearch)) : sorted
+            const totalRevenue = customers.reduce((s, c) => s + (c.totalSpent || 0), 0)
+
+            return (
+              <div style={{ padding: '0 16px 40px' }}>
+                {/* Stats */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 12, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#FFD600' }}>{customers.length}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Customers</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 12, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#8DC63F' }}>{customers.reduce((s, c) => s + (c.orders || 0), 0)}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Total Orders</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 12, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>{fmt(totalRevenue)}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Revenue</div>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <input
+                  type="text"
+                  value={customerSearch}
+                  onChange={e => setCustomerSearch(e.target.value)}
+                  placeholder="Search customer name or phone..."
+                  style={{ ...S.input, marginBottom: 12 }}
+                />
+
+                {/* Promo message template */}
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 14, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Promo Message Template</label>
+                  <textarea
+                    value={promoMsg}
+                    onChange={e => setPromoMsg(e.target.value)}
+                    placeholder={`Hi {name}! 👋\nSpecial offer today at ${shopName}!\n20% off all menu items.\nOrder now: streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    style={{ ...S.input, minHeight: 80, resize: 'vertical', marginBottom: 0 }}
+                  />
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Use {'{name}'} to personalise each message</p>
+                </div>
+
+                {/* Customer list */}
+                {filtered.length === 0 && (
+                  <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 30, fontSize: 14 }}>
+                    {customers.length === 0 ? 'No customers yet. They will appear here after their first order.' : 'No customers match your search.'}
+                  </p>
+                )}
+                {filtered.map((c, i) => {
+                  const daysSince = Math.floor((Date.now() - new Date(c.lastOrder).getTime()) / 86400000)
+                  const lastLabel = daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`
+                  return (
+                    <div key={i} style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 14, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{c.name || 'Customer'}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{c.phone}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700 }}>{c.orders} order{c.orders > 1 ? 's' : ''}</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{lastLabel}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15' }}>{fmt(c.totalSpent || 0)} total</span>
+                        <button
+                          onClick={() => {
+                            const msg = (promoMsg || `Hi ${c.name}! 👋\nSpecial offer today at ${shopName}!\nOrder now and enjoy great food.`).replace('{name}', c.name || 'there')
+                            window.open(`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
+                          }}
+                          style={{ padding: '6px 14px', borderRadius: 10, border: 'none', background: '#25D366', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                          💬 Send
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
       )}
 
@@ -1110,7 +1442,7 @@ export default function App() {
             <button style={S.btnGreen} onClick={() => {
               if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_open: shopOpen }).catch(() => {})
               setShopConfig(false)
-            }}>Done</button>
+            }}>{t.done || 'Done'}</button>
           </div>
         </div>
       )}

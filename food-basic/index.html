@@ -16,14 +16,24 @@
       #app-shell {
         width: 100%;
         max-width: 480px;
-        height: 100%;
+        height: 100vh;
+        max-height: 100vh;
         position: relative;
         background: #0a0a0a;
         overflow-y: auto;
         overflow-x: hidden;
-        transform: translateZ(0);
       }
-      #root { height: 100%; width: 100%; }
+      #app-bg {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: 100vh;
+        margin-bottom: -100vh;
+        z-index: 0;
+        pointer-events: none;
+        background: url('https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928') center/cover no-repeat;
+      }
+      #root { width: 100%; padding-top: env(safe-area-inset-top, 0px); position: relative; z-index: 1; }
       * { scrollbar-width: none; -ms-overflow-style: none; }
       *::-webkit-scrollbar { display: none; }
       @media (min-width: 481px) {
@@ -37,6 +47,7 @@
   </head>
   <body>
     <div id="app-shell">
+      <div id="app-bg"></div>
       <div id="root"></div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

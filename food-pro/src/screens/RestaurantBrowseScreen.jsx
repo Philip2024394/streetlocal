@@ -822,6 +822,7 @@ export default function RestaurantBrowseScreen({ onClose, onBackToCategories, ca
   const [showLanding, setShowLanding] = useState(true) // show landing page first
   const [vendorFilter, setVendorFilter] = useState(null) // null = all, 'restaurant', 'street_vendor'
   const { customer: slCustomer, showPopup: showCustomerPopup, setShowPopup: setShowCustomerPopup, save: saveCustomer } = useCustomerLocation()
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('foodpro_installDismissed') === 'true')
   const [foodOrdersOpen, setFoodOrdersOpen] = useState(false)
   const [foodDashOpen, setFoodDashOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
@@ -2863,6 +2864,18 @@ export default function RestaurantBrowseScreen({ onClose, onBackToCategories, ca
         <PromoBannerPage
           onClose={() => setPromoBrowseOpen(false)}
         />
+      )}
+
+      {/* --- Add to Home Screen banner --- */}
+      {!installDismissed && !showLanding && (
+        <div style={{ position: 'fixed', bottom: 80, left: 12, right: 12, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, zIndex: 9000 }}>
+          <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdafaass-removebg-preview.png" alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Add to Home Screen</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>Quick access from your phone</div>
+          </div>
+          <button onClick={() => { setInstallDismissed(true); localStorage.setItem('foodpro_installDismissed', 'true') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer', padding: 4, flexShrink: 0 }}>✕</button>
+        </div>
       )}
 
       {/* Customer location popup — shown once on first visit */}

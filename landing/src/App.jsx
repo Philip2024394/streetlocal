@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 import Admin from './Admin'
+import { getTranslation, COUNTRY_TO_LANG } from './translations'
 
 /* ─── Translations ─── */
 const TRANSLATIONS = {
   en: {
     heroTitle: 'Street Local',
-    heroSub: 'Apps built for local businesses.',
+    heroSub: 'Software built for local businesses.',
     heroSub2: 'Simple. Powerful. Mobile-first.',
     navAbout: 'About Us',
     navFaq: 'FAQ',
@@ -99,7 +100,7 @@ const TRANSLATIONS = {
       pendingMsg: 'We\'re verifying your payment. You\'ll receive a WhatsApp message once your app is activated.',
       backHome: 'Back to Home',
     },
-    ourApps: 'Starting Rp 35.000/Month',
+    ourApps: 'Starting Rp 38.000/Month',
     comingSoon: 'Coming Soon',
     back: '← Back',
     viewDetails: 'View Details →',
@@ -107,7 +108,7 @@ const TRANSLATIONS = {
     openApp: 'Try Free Demo',
     subscribe: 'Subscribe',
     footer: 'Street Local © 2026',
-    apps: '{count} apps →',
+    apps: '{count} software →',
     perMonth: '/month',
     perYear: '/year',
     monthly: 'Monthly',
@@ -124,7 +125,7 @@ const TRANSLATIONS = {
       uploadTitle: 'Upload Payment Proof',
       uploadBtn: 'Tap to upload screenshot',
       changeImage: 'Change image',
-      sendWhatsApp: 'Send to WhatsApp',
+      confirmPayment: 'Confirm Payment',
       close: 'Close',
     },
     tabBenefits: 'Why Your Own App?',
@@ -175,15 +176,15 @@ const TRANSLATIONS = {
     ],
     categories: {
       food: {
-        name: 'Food Apps',
+        name: 'Food Ordering Software',
         description: 'Complete food business solutions',
         bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
         apps: {
           basic: {
             name: 'Street Vendor',
             tier: 'Basic',
-            price: 'Rp 35.000',
-            yearlyPrice: 'Rp 420.000',
+            price: 'Rp 38.000',
+            yearlyPrice: 'Rp 456.000',
             tagline: 'Simple menu & ordering for street food stalls',
             description: 'Perfect for warung, kaki lima, and small food stalls. Show your menu, take WhatsApp orders, and manage availability — all from your phone.',
             features: ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
@@ -193,9 +194,9 @@ const TRANSLATIONS = {
             tier: 'Pro',
             price: 'Rp 100.000',
             yearlyPrice: 'Rp 1.200.000',
-            tagline: 'Full restaurant management system',
-            description: 'Built for restaurants, cafes, and established food businesses. Table management, order tracking, analytics, and more.',
-            features: ['Table management', 'Order tracking dashboard', 'Sales analytics', 'Multi-staff access', 'Customer reviews', 'Reservation system'],
+            tagline: 'Your brand. Your menu. Unlimited promotion.',
+            description: 'Put your restaurant front and centre with your own branded ordering software. Full menu options with estimated delivery bike rates that can be set to suit any market. Set your opening hours, showcase daily deals and promo offers, and offer discounts to drive customers through your doors. Display your seating capacity, live music, entertainment venues, and outside catering services. Promote weekly events, showcase live entertainment, and run unlimited discount campaigns — all under your brand name.',
+            features: ['Your own branded restaurant name', 'Full menu with delivery km estimates', 'Daily deals & promo offers', 'Customer discount campaigns', 'Seating & venue showcase', 'Live music & entertainment listings', 'Outside catering promotion', 'Weekly event showcase', 'Opening hours management', 'Adjustable delivery bike rates'],
           },
         },
       },
@@ -203,7 +204,7 @@ const TRANSLATIONS = {
   },
   id: {
     heroTitle: 'Street Local',
-    heroSub: 'Aplikasi untuk bisnis lokal.',
+    heroSub: 'Software untuk bisnis lokal.',
     heroSub2: 'Simpel. Kuat. Mobile-first.',
     navAbout: 'Tentang',
     navFaq: 'FAQ',
@@ -239,7 +240,7 @@ const TRANSLATIONS = {
       pendingMsg: 'Kami sedang memverifikasi pembayaran kamu. Kamu akan menerima pesan WhatsApp setelah aplikasi diaktifkan.',
       backHome: 'Kembali ke Beranda',
     },
-    ourApps: 'Mulai Rp 35.000/Bulan',
+    ourApps: 'Mulai Rp 38.000/Bulan',
     comingSoon: 'Segera Hadir',
     back: '← Kembali',
     viewDetails: 'Lihat Detail →',
@@ -247,7 +248,7 @@ const TRANSLATIONS = {
     openApp: 'Coba Demo Gratis',
     subscribe: 'Berlangganan',
     footer: 'Street Local © 2026',
-    apps: '{count} aplikasi →',
+    apps: '{count} software →',
     perMonth: '/bulan',
     perYear: '/tahun',
     monthly: 'Bulanan',
@@ -263,7 +264,7 @@ const TRANSLATIONS = {
       uploadTitle: 'Upload Bukti Pembayaran',
       uploadBtn: 'Ketuk untuk upload screenshot',
       changeImage: 'Ganti gambar',
-      sendWhatsApp: 'Kirim ke WhatsApp',
+      confirmPayment: 'Konfirmasi Pembayaran',
       close: 'Tutup',
     },
     tabDetails: 'Detail Aplikasi',
@@ -315,15 +316,15 @@ const TRANSLATIONS = {
     ],
     categories: {
       food: {
-        name: 'Aplikasi Makanan',
+        name: 'Software Pemesanan Makanan',
         description: 'Solusi lengkap bisnis makanan',
         bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_13_42%20PM.png?updatedAt=1777886075863',
         apps: {
           basic: {
             name: 'Pedagang Kaki Lima',
             tier: 'Dasar',
-            price: 'Rp 35.000',
-            yearlyPrice: 'Rp 420.000',
+            price: 'Rp 38.000',
+            yearlyPrice: 'Rp 456.000',
             tagline: 'Menu & pemesanan simpel untuk warung makan',
             description: 'Cocok untuk warung, kaki lima, dan kedai kecil. Tampilkan menu, terima pesanan via WhatsApp, dan kelola ketersediaan — semua dari HP.',
             features: ['Menu digital dengan foto', 'Pemesanan WhatsApp', 'Toggle Buka/Tutup', 'Halaman lokasi & jam buka', 'Berbagi kode QR'],
@@ -333,9 +334,9 @@ const TRANSLATIONS = {
             tier: 'Pro',
             price: 'Rp 100.000',
             yearlyPrice: 'Rp 1.200.000',
-            tagline: 'Sistem manajemen restoran lengkap',
-            description: 'Dibangun untuk restoran, kafe, dan bisnis makanan mapan. Manajemen meja, pelacakan pesanan, analitik, dan lainnya.',
-            features: ['Manajemen meja', 'Dashboard pelacakan pesanan', 'Analitik penjualan', 'Akses multi-staf', 'Ulasan pelanggan', 'Sistem reservasi'],
+            tagline: 'Brand kamu. Menu kamu. Promosi tanpa batas.',
+            description: 'Tampilkan restoran kamu di depan dengan software pemesanan bermerek sendiri. Menu lengkap dengan estimasi tarif pengiriman motor yang bisa disesuaikan untuk pasar mana saja. Atur jam buka, tampilkan promo harian dan penawaran diskon untuk menarik pelanggan. Tampilkan kapasitas tempat duduk, musik live, tempat hiburan, dan layanan katering luar. Promosikan acara mingguan, tampilkan hiburan live, dan jalankan kampanye diskon tanpa batas — semua di bawah nama brand kamu.',
+            features: ['Nama restoran bermerek sendiri', 'Menu lengkap dengan estimasi km pengiriman', 'Promo harian & penawaran diskon', 'Kampanye diskon pelanggan', 'Tampilan tempat duduk & venue', 'Daftar musik live & hiburan', 'Promosi katering luar', 'Tampilan acara mingguan', 'Manajemen jam buka', 'Tarif pengiriman motor yang bisa diatur'],
           },
         },
       },
@@ -345,25 +346,36 @@ const TRANSLATIONS = {
 
 /* ─── IP-based locale detection ─── */
 function useLocale() {
-  const [locale, setLocale] = useState('en')
+  const [locale, setLocale] = useState(() => {
+    return localStorage.getItem('sl_locale') || 'en'
+  })
+  const [detected, setDetected] = useState(false)
 
   useEffect(() => {
+    // Only auto-detect if user hasn't manually chosen
+    if (localStorage.getItem('sl_locale')) return
     async function detectLocale() {
       try {
         const res = await fetch('https://ip2c.org/s')
         const text = await res.text()
         const parts = text.split(';')
-        if (parts[1] === 'ID') {
-          setLocale('id')
-        }
+        const countryCode = parts[1]
+        const detectedLang = COUNTRY_TO_LANG[countryCode] || 'en'
+        setLocale(detectedLang)
       } catch {
         // fallback to English
       }
+      setDetected(true)
     }
     detectLocale()
   }, [])
 
-  return [locale, setLocale]
+  const setLocaleAndSave = (l) => {
+    localStorage.setItem('sl_locale', l)
+    setLocale(l)
+  }
+
+  return [locale, setLocaleAndSave]
 }
 
 /* ─── Build localized categories from translations ─── */
@@ -371,22 +383,42 @@ function getCategories(t) {
   return [
     {
       id: 'food',
-      name: t.categories.food.name,
+      name: t.foodCategory || 'Food Ordering Software',
       icon: '🍜',
-      description: t.categories.food.description,
-      bannerImage: t.categories.food.bannerImage,
+      description: t.foodCategoryDesc || 'Complete food business solutions',
+      bannerImage: (t.categories?.food?.bannerImage) || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
       apps: [
         {
           id: 'basic',
-          ...t.categories.food.apps.basic,
-          screenshots: [],
+          name: t.basicName || 'Street Vendor',
+          tier: t.basicTier || 'Software 1',
+          price: t.categories?.food?.apps?.basic?.price || 'Rp 38.000',
+          yearlyPrice: t.categories?.food?.apps?.basic?.yearlyPrice || 'Rp 456.000',
+          tagline: t.basicTagline || 'Simple menu & ordering for street food stalls',
+          description: t.basicDesc || '',
+          features: t.basicFeatures || ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
+          screenshots: [
+            'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_13_42%20PM.png?updatedAt=1777886075863',
+          ],
           url: '/food/basic/',
           color: '#FF6B35',
         },
         {
           id: 'pro',
-          ...t.categories.food.apps.pro,
-          screenshots: ['https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png'],
+          name: t.proName || 'Restaurant',
+          tier: t.proTier || 'Software 2',
+          price: t.categories?.food?.apps?.pro?.price || 'Rp 100.000',
+          yearlyPrice: t.categories?.food?.apps?.pro?.yearlyPrice || 'Rp 1.200.000',
+          tagline: t.proTagline || 'Your brand. Your menu. Unlimited promotion.',
+          description: t.proDesc || '',
+          features: t.proFeatures || [],
+          screenshots: [
+            'https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_24_25%20PM.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+          ],
           url: '/food/pro/',
           color: '#FFD600',
         },
@@ -484,6 +516,91 @@ function PhoneMockup({ screenshot, color, small }) {
 }
 
 /* ─── Animated Section ─── */
+/* ─── 3D Phone Carousel ─── */
+function Phone3DCarousel({ screenshots, color }) {
+  const [active, setActive] = useState(0)
+  const touchStart = useRef(0)
+
+  if (!screenshots || screenshots.length === 0) return null
+  if (screenshots.length === 1) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+      <PhoneMockup screenshot={screenshots[0]} color={color} small />
+    </div>
+  )
+
+  const handleTouchStart = (e) => { touchStart.current = e.touches[0].clientX }
+  const handleTouchEnd = (e) => {
+    const diff = touchStart.current - e.changedTouches[0].clientX
+    if (diff > 40) setActive(a => Math.min(screenshots.length - 1, a + 1))
+    if (diff < -40) setActive(a => Math.max(0, a - 1))
+  }
+
+  return (
+    <div
+      style={{ perspective: 800, position: 'relative', height: 380, overflow: 'hidden', margin: '0 auto', maxWidth: 400 }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {screenshots.map((src, i) => {
+          const offset = i - active
+          const isActive = offset === 0
+          const isPrev = offset < 0
+          const isNext = offset > 0
+          const absOff = Math.abs(offset)
+
+          if (absOff > 2) return null
+
+          const translateX = offset * 100
+          const translateZ = isActive ? 0 : -120 * absOff
+          const rotateY = offset * -22
+          const scale = isActive ? 1 : Math.max(0.45, 1 - absOff * 0.3)
+          const opacity = isActive ? 1 : Math.max(0.25, 1 - absOff * 0.4)
+          const zIndex = 10 - absOff
+
+          return (
+            <div
+              key={i}
+              onClick={() => setActive(i)}
+              style={{
+                position: 'absolute',
+                transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                opacity,
+                zIndex,
+                transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                cursor: isActive ? 'default' : 'pointer',
+                filter: isActive ? 'none' : 'brightness(0.7)',
+              }}
+            >
+              <PhoneMockup screenshot={src} color={color} small />
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Dot indicators */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: -10, position: 'relative', zIndex: 20 }}>
+        {screenshots.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            style={{
+              width: i === active ? 20 : 8,
+              height: 8,
+              borderRadius: 4,
+              border: 'none',
+              background: i === active ? color : '#ddd',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function FadeIn({ children, delay = 0 }) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
@@ -513,26 +630,37 @@ function FadeIn({ children, delay = 0 }) {
 
 /* ─── Language Switcher ─── */
 function LangSwitcher({ locale, setLocale }) {
+  const [open, setOpen] = useState(false)
+  const langs = [
+    { code: 'en', flag: '🇬🇧', label: 'EN' },
+    { code: 'id', flag: '🇮🇩', label: 'ID' },
+    { code: 'ms', flag: '🇲🇾', label: 'MY' },
+    { code: 'vi', flag: '🇻🇳', label: 'VN' },
+    { code: 'th', flag: '🇹🇭', label: 'TH' },
+    { code: 'fr', flag: '🇫🇷', label: 'FR' },
+    { code: 'de', flag: '🇩🇪', label: 'DE' },
+    { code: 'es', flag: '🇪🇸', label: 'ES' },
+    { code: 'zh', flag: '🇨🇳', label: 'CN' },
+    { code: 'ar', flag: '🇸🇦', label: 'AR' },
+  ]
+  const current = langs.find(l => l.code === locale) || langs[0]
   return (
-    <div style={styles.langSwitcher}>
-      <button
-        onClick={() => setLocale('en')}
-        style={{
-          ...styles.langBtn,
-          ...(locale === 'en' ? styles.langBtnActive : {}),
-        }}
-      >
-        EN
+    <div style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(!open)} style={{ ...styles.langBtn, ...styles.langBtnActive, display: 'flex', alignItems: 'center', gap: 4 }}>
+        {current.flag} {current.label}
       </button>
-      <button
-        onClick={() => setLocale('id')}
-        style={{
-          ...styles.langBtn,
-          ...(locale === 'id' ? styles.langBtnActive : {}),
-        }}
-      >
-        ID
-      </button>
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setOpen(false)} />
+          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#fff', borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.15)', zIndex: 999, minWidth: 120, overflow: 'hidden' }}>
+            {langs.map(l => (
+              <button key={l.code} onClick={() => { setLocale(l.code); setOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: locale === l.code ? '#f0f0f0' : '#fff', cursor: 'pointer', fontSize: 13, fontWeight: locale === l.code ? 800 : 500, color: '#1a1a1a', textAlign: 'left' }}>
+                <span>{l.flag}</span> {l.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -550,12 +678,37 @@ export default function App() {
   const [regForm, setRegForm] = useState({ name: '', url: '', whatsapp: '', email: '' })
   const [regSubmitted, setRegSubmitted] = useState(false)
   const [billingCycle, setBillingCycle] = useState('monthly')
+  const [userAccount, setUserAccount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sl_user_account')) || null } catch { return null }
+  })
+  const [signupOpen, setSignupOpen] = useState(false)
+  const [signupForm, setSignupForm] = useState({ name: '', email: '', phone: '', country: '', businessName: '' })
+  const [signupError, setSignupError] = useState('')
+  const [signupAction, setSignupAction] = useState(null) // 'demo' or 'subscribe'
+  const [slugCheck, setSlugCheck] = useState(null) // null | 'checking' | 'available' | 'taken'
+  const [slugValue, setSlugValue] = useState('')
+  const [showNameHelp, setShowNameHelp] = useState(false)
+  const slugTimer = useRef(null)
   const [adminAuth, setAdminAuth] = useState(false)
   const [adminPin, setAdminPin] = useState('')
   const [registrations, setRegistrations] = useState([])
   const [adminFilter, setAdminFilter] = useState('all')
 
-  const t = TRANSLATIONS[locale]
+  // Build translations: JSON file for UI strings, inline for category content
+  const jsonT = getTranslation(locale)
+  const inlineT = TRANSLATIONS[locale] || TRANSLATIONS.en
+  // JSON translations override inline for shared keys, but inline keeps category-specific content
+  const t = {}
+  // Copy all inline keys first (categories, about, FAQ, T&C, benefits, register, etc)
+  Object.keys(inlineT).forEach(k => { t[k] = inlineT[k] })
+  // Override with JSON translations (UI strings like heroSub, buttons, signup, steps, payment)
+  Object.keys(jsonT).forEach(k => {
+    if (typeof jsonT[k] === 'object' && jsonT[k] !== null && !Array.isArray(jsonT[k]) && t[k] && typeof t[k] === 'object') {
+      t[k] = { ...t[k], ...jsonT[k] }
+    } else {
+      t[k] = jsonT[k]
+    }
+  })
   const CATEGORIES = getCategories(t)
 
   /* Detail page for an app */
@@ -566,18 +719,18 @@ export default function App() {
           <button onClick={() => setSelectedApp(null)} style={styles.backBtn}>
             {t.back}
           </button>
-          <LangSwitcher locale={locale} setLocale={setLocale} />
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
         </div>
 
-        {/* Hero: phone + name + price */}
-        <div style={styles.detailHero}>
-          <PhoneMockup screenshot={selectedApp.screenshots[0]} color={selectedApp.color} small />
-        </div>
+        {/* Hero: 3D phone carousel */}
+        <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} />
 
         <div style={styles.detailContent}>
-          <span style={{ ...styles.tierBadge, background: selectedApp.color + '15', color: selectedApp.color }}>
-            {selectedApp.tier}
-          </span>
+          <img
+            src={selectedApp.id === 'basic' ? 'https://ik.imagekit.io/nepgaxllc/eeeee-removebg-preview.png' : 'https://ik.imagekit.io/nepgaxllc/eeeeevvv-removebg-preview.png'}
+            alt={selectedApp.tier}
+            style={{ width: 100, height: 100, objectFit: 'contain' }}
+          />
           <h1 style={styles.detailTitle}>{selectedApp.name}</h1>
           {/* Billing toggle */}
           <div style={{ ...styles.detailToggle, marginBottom: 10, marginTop: 10 }}>
@@ -637,7 +790,7 @@ export default function App() {
                 ))}
               </ul>
 
-              {selectedApp.screenshots.length > 1 && (
+              {false && selectedApp.screenshots.length > 1 && (
                 <div style={styles.screenshotRow}>
                   {selectedApp.screenshots.map((s, i) => (
                     <div key={i} style={styles.screenshotThumb}>
@@ -665,19 +818,23 @@ export default function App() {
 
               {/* Benefit groups */}
               <div style={styles.benefitsGrid}>
-                {t.benefitGroups.map((g, i) => (
+                {(t.benefitGroupTitles || ['Keep More Money', 'Grow Your Brand', 'Own Your Business', 'Better Customer Experience']).map((title, i) => {
+                  const icons = ['💰', '📱', '📊', '⚡']
+                  const pointsKey = `benefitGroup${i + 1}`
+                  const points = t[pointsKey] || (t.benefitGroups && t.benefitGroups[i]?.points) || []
+                  return (
                   <div key={i} style={styles.benefitCard}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                      <span style={styles.benefitIcon}>{g.icon}</span>
-                      <h4 style={styles.benefitTitle}>{g.title}</h4>
+                      <span style={styles.benefitIcon}>{icons[i]}</span>
+                      <h4 style={styles.benefitTitle}>{title}</h4>
                     </div>
                     <ul style={styles.benefitPoints}>
-                      {g.points.map((p, j) => (
+                      {points.map((p, j) => (
                         <li key={j} style={styles.benefitPoint}><span style={{ color: '#22c55e', marginRight: 8, fontWeight: 900 }}>&#10003;</span>{p}</li>
                       ))}
                     </ul>
-                  </div>
-                ))}
+                  </div>)
+                })}
               </div>
 
               {/* Closing */}
@@ -777,25 +934,287 @@ export default function App() {
           {selectedApp.url && detailTab !== 'register' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Try Demo */}
-              <a
-                href={window.location.port === '5173' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/') : selectedApp.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
-              >
-                {t.openApp}
-              </a>
+              {userAccount ? (
+                <a
+                  href={window.location.port === '5173' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/') : selectedApp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
+                >
+                  {t.openApp}
+                </a>
+              ) : (
+                <button
+                  onClick={() => { setSignupAction('demo'); setSignupOpen(true) }}
+                  style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
+                >
+                  {t.openApp}
+                </button>
+              )}
               {/* Subscribe */}
               <button
-                onClick={() => { setPaymentOpen(true); setPaymentProof(null); setCopied(false) }}
+                onClick={() => {
+                  if (!userAccount) { setSignupAction('subscribe'); setSignupOpen(true) }
+                  else { setPaymentOpen(true); setPaymentProof(null); setCopied(false) }
+                }}
                 style={{ ...styles.ctaButton, background: '#FFD600', color: '#1a1a1a', border: 'none' }}
               >
                 {t.subscribe} — {billingCycle === 'monthly' ? selectedApp.price + t.perMonth : selectedApp.yearlyPrice + t.perYear}
               </button>
+
+              {/* How It Works — Steps */}
+              <div style={{ marginTop: 20, padding: 16, background: '#f8f9fa', borderRadius: 16, border: '1px solid #f0f0f0' }}>
+                <h4 style={{ fontSize: 15, fontWeight: 900, marginBottom: 4, textAlign: 'center' }}>{t.steps.title}</h4>
+                <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginBottom: 14, lineHeight: 1.5 }}>
+                  {t.steps.subtitle}
+                </p>
+                {[
+                  { step: '1', icon: '👤', title: t.steps.step1, desc: t.steps.step1desc },
+                  { step: '2', icon: '📦', title: t.steps.step2, desc: t.steps.step2desc },
+                  { step: '3', icon: '💳', title: t.steps.step3, desc: t.steps.step3desc },
+                  { step: '4', icon: '🍽️', title: t.steps.step4, desc: t.steps.step4desc },
+                  { step: '5', icon: '🔗', title: t.steps.step5, desc: t.steps.step5desc },
+                  { step: '6', icon: '🚀', title: t.steps.step6, desc: t.steps.step6desc },
+                ].map(s => (
+                  <div key={s.step} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{s.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a' }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>{s.desc}</div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ textAlign: 'center', marginTop: 8, padding: '10px 14px', background: '#1a1a1a', borderRadius: 12 }}>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', margin: 0 }}>
+                    {t.steps.commission}
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ ...styles.ctaButton, background: '#e0e0e0', color: '#999', cursor: 'default' }}>
               {t.comingSoon}
+            </div>
+          )}
+
+          {/* Signup Popup */}
+          {signupOpen && (
+            <div style={styles.paymentOverlay} onClick={() => setSignupOpen(false)}>
+              <div style={{ ...styles.paymentSheet, borderTop: '4px solid #FFD600', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928)', backgroundSize: 'cover', backgroundPosition: 'center' }} onClick={e => e.stopPropagation()}>
+                <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.4)', borderRadius: 2, margin: '10px auto 16px' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>Create Your Account</h3>
+                  <button onClick={() => setSignupOpen(false)} style={styles.paymentClose}>&times;</button>
+                </div>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 20, lineHeight: 1.5, textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>
+                  {signupAction === 'demo' ? 'Create a free account to try the demo.' : 'Create your account to subscribe.'}
+                </p>
+
+                {signupError && <p style={{ fontSize: 13, color: '#EF4444', marginBottom: 12, fontWeight: 700, background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: 8 }}>{signupError}</p>}
+
+                <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'block', marginBottom: 4, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Your Full Name</label>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                  <input type="text" value={signupForm.name} onChange={e => setSignupForm({ ...signupForm, name: e.target.value })} placeholder="Enter your full name" style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, fontWeight: 500, outline: 'none', padding: 0, fontFamily: 'inherit' }} />
+                </div>
+
+                {/* Business / Trading Name with slug check */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Business / Trading Name</label>
+                  <button onClick={() => setShowNameHelp(true)} style={{ background: 'none', border: 'none', color: '#FFD600', fontSize: 14, cursor: 'pointer', padding: 0 }}>ⓘ</button>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${slugCheck === 'taken' ? 'rgba(239,68,68,0.5)' : slugCheck === 'available' ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, padding: '10px 14px', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      type="text"
+                      value={signupForm.businessName}
+                      onChange={e => {
+                        const val = e.target.value
+                        setSignupForm({ ...signupForm, businessName: val })
+                        const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30)
+                        setSlugValue(slug)
+                        setSlugCheck(slug ? 'checking' : null)
+                        clearTimeout(slugTimer.current)
+                        if (slug) {
+                          slugTimer.current = setTimeout(async () => {
+                            try {
+                              const { data, error } = await supabase.from('user_accounts').select('id').eq('slug', slug).maybeSingle()
+                              if (error) { console.warn('Slug check error:', error); setSlugCheck('available') }
+                              else { setSlugCheck(data ? 'taken' : 'available') }
+                            } catch (e) { console.warn('Slug check network error:', e); setSlugCheck('available') }
+                          }, 500)
+                        }
+                      }}
+                      placeholder="e.g. Warung Sari Rasa"
+                      style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, fontWeight: 500, outline: 'none', padding: 0, fontFamily: 'inherit', flex: 1 }}
+                    />
+                    {slugCheck === 'checking' && <span style={{ fontSize: 14, flexShrink: 0 }}>⏳</span>}
+                    {slugCheck === 'available' && <span style={{ fontSize: 14, flexShrink: 0 }}>✅</span>}
+                    {slugCheck === 'taken' && <span style={{ fontSize: 14, flexShrink: 0 }}>❌</span>}
+                  </div>
+                </div>
+                {/* URL Preview */}
+                {slugValue && (
+                  <div style={{ padding: '6px 14px', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>streetlocal.live/</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: slugCheck === 'taken' ? '#EF4444' : slugCheck === 'available' ? '#22c55e' : '#FFD600' }}>{slugValue}</span>
+                    {slugCheck === 'taken' && <span style={{ fontSize: 10, color: '#EF4444', marginLeft: 8 }}>{t.signup.nameTaken}</span>}
+                  </div>
+                )}
+                {!slugValue && <div style={{ height: 8 }} />}
+                {/* Warning */}
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginBottom: 12, paddingLeft: 14, lineHeight: 1.4 }}>
+                  ⚠️ {t.signup.nameWarning}
+                </p>
+
+                {/* Help popup */}
+                {showNameHelp && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setShowNameHelp(false)}>
+                    <div style={{ background: '#fff', borderRadius: 20, padding: 24, maxWidth: 340, width: '100%' }} onClick={e => e.stopPropagation()}>
+                      <h4 style={{ fontSize: 16, fontWeight: 900, marginBottom: 10 }}>{t.signup.helpTitle}</h4>
+                      <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 10 }}>
+                        {t.signup.helpBody}
+                      </p>
+                      <p style={{ fontSize: 13, color: '#EF4444', fontWeight: 700, lineHeight: 1.6, marginBottom: 14 }}>
+                        ⚠️ {t.signup.helpWarning}
+                      </p>
+                      <button onClick={() => setShowNameHelp(false)} style={{ width: '100%', padding: 12, borderRadius: 12, border: 'none', background: '#1a1a1a', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                        {t.signup.helpGotIt}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'block', marginBottom: 4, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Email Address</label>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                  <input type="email" value={signupForm.email} onChange={e => setSignupForm({ ...signupForm, email: e.target.value })} placeholder="you@email.com" style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, fontWeight: 500, outline: 'none', padding: 0, fontFamily: 'inherit' }} />
+                </div>
+
+                <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'block', marginBottom: 4, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Country</label>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 2 }}>Country</label>
+                  <select value={signupForm.country} onChange={e => setSignupForm({ ...signupForm, country: e.target.value })} style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, fontWeight: 500, outline: 'none', padding: 0, fontFamily: 'inherit', appearance: 'auto' }}>
+                  <option value="">Select your country</option>
+                  <option value="ID">🇮🇩 Indonesia</option>
+                  <option value="MY">🇲🇾 Malaysia</option>
+                  <option value="SG">🇸🇬 Singapore</option>
+                  <option value="TH">🇹🇭 Thailand</option>
+                  <option value="PH">🇵🇭 Philippines</option>
+                  <option value="VN">🇻🇳 Vietnam</option>
+                  <option value="AU">🇦🇺 Australia</option>
+                  <option value="GB">🇬🇧 United Kingdom</option>
+                  <option value="US">🇺🇸 United States</option>
+                  <option value="AE">🇦🇪 UAE</option>
+                  <option value="SA">🇸🇦 Saudi Arabia</option>
+                  <option value="IN">🇮🇳 India</option>
+                  <option value="JP">🇯🇵 Japan</option>
+                  <option value="KR">🇰🇷 South Korea</option>
+                  <option value="CN">🇨🇳 China</option>
+                  <option value="NL">🇳🇱 Netherlands</option>
+                  <option value="DE">🇩🇪 Germany</option>
+                  <option value="FR">🇫🇷 France</option>
+                  <option value="CA">🇨🇦 Canada</option>
+                  <option value="NZ">🇳🇿 New Zealand</option>
+                  <option value="OTHER">🌍 Other</option>
+                </select>
+                </div>
+
+                <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'block', marginBottom: 4, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Phone / WhatsApp</label>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                  <input type="tel" value={signupForm.phone} onChange={e => setSignupForm({ ...signupForm, phone: e.target.value })} placeholder="+62 812 3456 7890" style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, fontWeight: 500, outline: 'none', padding: 0, fontFamily: 'inherit' }} />
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!signupForm.name || !signupForm.email || !signupForm.phone || !signupForm.country || !signupForm.businessName) {
+                      setSignupError(t.signup.fillAll)
+                      return
+                    }
+                    if (!slugValue) {
+                      setSignupError(t.signup.enterName)
+                      return
+                    }
+                    if (slugCheck === 'taken') {
+                      setSignupError(t.signup.nameTaken)
+                      return
+                    }
+                    if (slugCheck === 'checking') {
+                      setSignupError(t.signup.checking)
+                      return
+                    }
+                    setSignupError('')
+                    const countryNames = { ID: 'Indonesia', MY: 'Malaysia', SG: 'Singapore', TH: 'Thailand', PH: 'Philippines', VN: 'Vietnam', AU: 'Australia', GB: 'United Kingdom', US: 'United States', AE: 'UAE', SA: 'Saudi Arabia', IN: 'India', JP: 'Japan', KR: 'South Korea', CN: 'China', NL: 'Netherlands', DE: 'Germany', FR: 'France', CA: 'Canada', NZ: 'New Zealand', OTHER: 'Other' }
+                    const account = {
+                      name: signupForm.name,
+                      email: signupForm.email,
+                      phone: signupForm.phone,
+                      country_code: signupForm.country,
+                      country_name: countryNames[signupForm.country] || signupForm.country,
+                      business_name: signupForm.businessName,
+                      slug: slugValue,
+                    }
+                    // Save to Supabase — try insert first, then update if exists
+                    try {
+                      // Check if email already exists
+                      const { data: existing } = await supabase.from('user_accounts').select('id').eq('email', signupForm.email).maybeSingle()
+                      let saveError = null
+                      if (existing) {
+                        // Update existing account
+                        const { error } = await supabase.from('user_accounts').update({
+                          name: account.name,
+                          phone: account.phone,
+                          country_code: account.country_code,
+                          country_name: account.country_name,
+                          business_name: account.business_name,
+                          slug: account.slug,
+                        }).eq('id', existing.id)
+                        saveError = error
+                      } else {
+                        // Insert new account
+                        const { error } = await supabase.from('user_accounts').insert(account)
+                        saveError = error
+                      }
+                      if (saveError) {
+                        console.error('Account save error:', saveError)
+                        if (saveError.message?.includes('slug') || saveError.message?.includes('unique')) {
+                          setSignupError(t.signup.nameTaken)
+                        } else if (saveError.message?.includes('email')) {
+                          setSignupError(t.signup.emailExists)
+                        } else {
+                          setSignupError(t.signup.saveFailed)
+                        }
+                        return
+                      }
+                    } catch (err) {
+                      console.error('Network error:', err)
+                      setSignupError(t.signup.connectionFailed)
+                      return
+                    }
+                    // Save locally
+                    localStorage.setItem('sl_user_account', JSON.stringify(account))
+                    setUserAccount(account)
+                    setSignupOpen(false)
+                    // Perform the action they wanted
+                    if (signupAction === 'demo') {
+                      const demoUrl = window.location.port === '5173'
+                        ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/')
+                        : selectedApp.url
+                      window.open(demoUrl, '_blank')
+                    } else if (signupAction === 'subscribe') {
+                      setPaymentOpen(true)
+                      setPaymentProof(null)
+                      setCopied(false)
+                    }
+                  }}
+                  style={{
+                    ...styles.ctaButton,
+                    background: signupForm.name && signupForm.email && signupForm.phone && signupForm.country && signupForm.businessName && slugCheck === 'available' ? '#FFD600' : '#e0e0e0',
+                    color: signupForm.name && signupForm.email && signupForm.phone && signupForm.country && signupForm.businessName && slugCheck === 'available' ? '#1a1a1a' : '#999',
+                    border: 'none',
+                  }}
+                >
+                  {signupAction === 'demo' ? 'Create Account & Try Demo' : 'Create Account & Subscribe'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -819,23 +1238,62 @@ export default function App() {
                   <span style={{ fontSize: 14, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
                 </p>
 
-                {/* Bank Details */}
-                <div style={styles.paymentBank}>
-                  <p style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>{t.payment.transferTo}</p>
-                  <p style={{ fontSize: 16, fontWeight: 800 }}>🏦 {t.payment.bankName}</p>
-                  <p style={{ fontSize: 20, fontWeight: 900, letterSpacing: 1, margin: '6px 0' }}>{t.payment.accountNumber}</p>
-                  <p style={{ fontSize: 14, color: '#666' }}>{t.payment.accountHolder}</p>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(t.payment.accountNumber.replace(/-/g, ''))
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }}
-                    style={styles.paymentCopyBtn}
-                  >
-                    {copied ? '✓ ' + t.payment.copied : '📋 ' + t.payment.copyAccount}
-                  </button>
-                </div>
+                {/* Payment — Indonesia: QR code, Other countries: contact via WhatsApp */}
+                {userAccount?.country_code === 'ID' ? (
+                  <>
+                    {/* Wise QR Code — Indonesia only */}
+                    <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
+                      <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Scan to Pay</p>
+                      <img
+                        src={selectedApp.id === 'pro' ? 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsdss.png' : 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsd.png'}
+                        alt="Wise QR Code"
+                        style={{ width: '100%', maxWidth: 220, height: 'auto', borderRadius: 12, margin: '0 auto 10px', display: 'block' }}
+                      />
+                      <p style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>
+                        Scan with your banking app or e-wallet. Indonesian Rupiah only.
+                      </p>
+                    </div>
+
+                    {/* Bank fallback */}
+                    <details style={{ marginBottom: 16 }}>
+                      <summary style={{ fontSize: 13, fontWeight: 700, color: '#888', cursor: 'pointer', padding: '8px 0' }}>
+                        Or pay via bank transfer ▾
+                      </summary>
+                      <div style={{ ...styles.paymentBank, marginTop: 8 }}>
+                        <p style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>{t.payment.transferTo}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800 }}>🏦 {t.payment.bankName}</p>
+                        <p style={{ fontSize: 20, fontWeight: 900, letterSpacing: 1, margin: '6px 0' }}>{t.payment.accountNumber}</p>
+                        <p style={{ fontSize: 14, color: '#666' }}>{t.payment.accountHolder}</p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(t.payment.accountNumber.replace(/-/g, ''))
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 2000)
+                          }}
+                          style={styles.paymentCopyBtn}
+                        >
+                          {copied ? '✓ ' + t.payment.copied : '📋 ' + t.payment.copyAccount}
+                        </button>
+                      </div>
+                    </details>
+                  </>
+                ) : (
+                  /* Other countries — contact for pricing */
+                  <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Payment for your country</p>
+                    <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 14 }}>
+                      Pricing may vary based on your location. Contact us via WhatsApp for payment details and pricing in your local currency.
+                    </p>
+                    <a
+                      href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi, I'd like to subscribe to ${selectedApp.name} (${selectedApp.tier}). My country: ${userAccount?.country_name || 'N/A'}. Please send me payment details.`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ ...styles.ctaButton, background: '#25D366', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}
+                    >
+                      💬 Contact for Pricing
+                    </a>
+                  </div>
+                )}
 
                 {/* Upload Proof */}
                 <div style={{ marginBottom: 16 }}>
@@ -868,19 +1326,23 @@ export default function App() {
                   </label>
                 </div>
 
-                {/* WhatsApp Send */}
+                {/* Confirm Payment — send to email */}
                 <button
                   onClick={() => {
-                    const phone = '6281392000050'
-                    const msg = encodeURIComponent(
-                      `*New Subscription Request*\n\n` +
-                      `App: ${selectedApp.name} (${selectedApp.tier})\n` +
+                    const subject = encodeURIComponent(`Payment Confirmation — ${selectedApp.name} (${selectedApp.tier})`)
+                    const body = encodeURIComponent(
+                      `New Subscription Payment\n\n` +
+                      `Customer: ${userAccount?.name || 'N/A'}\n` +
+                      `Email: ${userAccount?.email || 'N/A'}\n` +
+                      `Phone: ${userAccount?.phone || 'N/A'}\n` +
+                      `Country: ${userAccount?.country_name || 'N/A'}\n\n` +
+                      `Software: ${selectedApp.name} (${selectedApp.tier})\n` +
                       `Plan: ${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}\n` +
                       `Price: ${billingCycle === 'monthly' ? selectedApp.price + '/month' : selectedApp.yearlyPrice + '/year'}\n\n` +
-                      `Payment proof screenshot will be sent next.\n` +
+                      `Payment proof screenshot attached.\n` +
                       `Please activate my account.`
                     )
-                    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+                    window.open(`mailto:indootechteam@gmail.com?subject=${subject}&body=${body}`, '_blank')
                     // Close payment sheet and show registration after short delay
                     setTimeout(() => {
                       setPaymentOpen(false)
@@ -891,8 +1353,8 @@ export default function App() {
                   }}
                   style={{
                     ...styles.ctaButton,
-                    background: '#25D366',
-                    color: '#fff',
+                    background: '#FFD600',
+                    color: '#1a1a1a',
                     border: 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -902,7 +1364,7 @@ export default function App() {
                     pointerEvents: paymentProof ? 'auto' : 'none',
                   }}
                 >
-                  <img src="https://ik.imagekit.io/nepgaxllc/Untitledsddsssdsssssssssdddd-removebg-preview%20(1).png?updatedAt=1777493111283" alt="WhatsApp" style={{ width: 24, height: 24, objectFit: 'contain' }} /> {t.payment.sendWhatsApp}
+                  ✉️ Confirm Payment
                 </button>
               </div>
             </div>
@@ -924,14 +1386,14 @@ export default function App() {
           <button onClick={() => setSelectedCategory(null)} style={styles.backBtn}>
             {t.back}
           </button>
-          <LangSwitcher locale={locale} setLocale={setLocale} />
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
         </div>
 
         {/* Hero image */}
         {selectedCategory.id === 'food' && (
           <FadeIn>
             <div style={{ textAlign: 'center', padding: '10px 20px 0' }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_48_31%20PM.png" alt="Food Apps" style={{ width: 144, height: 144, borderRadius: 20, objectFit: 'cover' }} />
+              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_48_31%20PM.png" alt="Food Ordering Software" style={{ width: 180, height: 180, borderRadius: 24, objectFit: 'cover' }} />
             </div>
           </FadeIn>
         )}
@@ -958,9 +1420,11 @@ export default function App() {
                     <PhoneMockup screenshot={app.screenshots[0]} color={app.color} small />
                   </div>
                   <div style={styles.appCardInfo}>
-                    <span style={{ ...styles.tierBadge, background: app.color + '15', color: app.color }}>
-                      {app.tier}
-                    </span>
+                    <img
+                      src={app.id === 'basic' ? 'https://ik.imagekit.io/nepgaxllc/eeeee-removebg-preview.png' : 'https://ik.imagekit.io/nepgaxllc/eeeeevvv-removebg-preview.png'}
+                      alt={app.tier}
+                      style={{ width: 80, height: 80, objectFit: 'contain' }}
+                    />
                     <h3 style={styles.appCardName}>{app.name}</h3>
                     <p style={styles.appCardPrice}>
                       <span style={{ fontSize: 20, fontWeight: 900, color: '#1a1a1a' }}>{app.price}</span>
@@ -997,7 +1461,7 @@ export default function App() {
           <button onClick={() => setCurrentPage(null)} style={styles.backBtn}>
             {t.back}
           </button>
-          <LangSwitcher locale={locale} setLocale={setLocale} />
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
         </div>
 
         <div style={{ padding: '20px 24px 40px' }}>
@@ -1013,7 +1477,7 @@ export default function App() {
 
           {currentPage === 'faq' && (
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 16 }}>{t.faqTitle}</h1>
+              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2006_39_32%20PM.png" alt="FAQ" style={{ width: '100%', borderRadius: 20, marginBottom: 20 }} />
               {t.faqs.map((faq, i) => (
                 <div key={i} style={styles.faqItem}>
                   <h4 style={styles.faqQ}>{faq.q}</h4>
@@ -1114,7 +1578,7 @@ export default function App() {
               {/* Yellow enter button */}
               <div style={styles.foodBannerBottom}>
                 <button style={styles.foodBannerEnterBtn}>
-                  {locale === 'id' ? 'Masuk' : 'Enter'} →
+                  {locale === 'id' || locale === 'ms' ? 'Masuk' : locale === 'vi' ? 'Vào' : locale === 'th' ? 'เข้า' : locale === 'fr' ? 'Entrer' : locale === 'de' ? 'Eintreten' : locale === 'es' ? 'Entrar' : locale === 'zh' ? '进入' : locale === 'ar' ? 'دخول' : 'Enter'} →
                 </button>
               </div>
             </div>

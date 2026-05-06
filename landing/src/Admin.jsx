@@ -6,7 +6,8 @@ const ADMIN_PIN = '5050'
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'alerts', label: 'Alerts', icon: '🚨' },
-  { id: 'members', label: 'Members', icon: '👥' },
+  { id: 'users', label: 'Users', icon: '🧑' },
+  { id: 'members', label: 'Subscribers', icon: '👥' },
   { id: 'payments', label: 'Payments', icon: '💰' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
@@ -29,18 +30,21 @@ export default function Admin({ onClose }) {
   const [alertForm, setAlertForm] = useState({ app_type: '', severity: 'warning', title: '', description: '' })
   const [showAlertForm, setShowAlertForm] = useState(false)
   const [settings, setSettings] = useState({})
+  const [users, setUsers] = useState([])
   const [settingsEditing, setSettingsEditing] = useState(null)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
   const load = async () => {
     setLoading(true)
-    const [regsRes, alertsRes, settingsRes] = await Promise.all([
+    const [regsRes, alertsRes, settingsRes, usersRes] = await Promise.all([
       supabase.from('app_registrations').select('*').order('created_at', { ascending: false }),
       supabase.from('app_alerts').select('*').order('created_at', { ascending: false }),
       supabase.from('admin_settings').select('*'),
+      supabase.from('user_accounts').select('*').order('created_at', { ascending: false }),
     ])
     if (regsRes.data) setRegs(regsRes.data)
     if (alertsRes.data) setAlerts(alertsRes.data)
+    if (usersRes.data) setUsers(usersRes.data)
     if (settingsRes.data) {
       const obj = {}
       settingsRes.data.forEach(s => { obj[s.id] = s.value })
@@ -464,6 +468,59 @@ export default function Admin({ onClose }) {
                 ))}
               </div>
             )}
+          </>
+        )}
+
+        {/* ── USERS (Accounts) ── */}
+        {page === 'users' && (
+          <>
+            <div style={s.statsRow}>
+              <div style={{ ...s.statCard, borderLeft: '4px solid #3B82F6' }}>
+                <div style={s.statNum}>{users.length}</div>
+                <div style={s.statLabel}>Total Users</div>
+              </div>
+              <div style={{ ...s.statCard, borderLeft: '4px solid #FFD600' }}>
+                <div style={s.statNum}>{[...new Set(users.map(u => u.country_code))].length}</div>
+                <div style={s.statLabel}>Countries</div>
+              </div>
+            </div>
+
+            {/* Country breakdown */}
+            <div style={s.section}>
+              <h3 style={s.sectionTitle}>By Country</h3>
+              {Object.entries(users.reduce((acc, u) => { const c = u.country_name || u.country_code || 'Unknown'; acc[c] = (acc[c] || 0) + 1; return acc }, {})).sort((a, b) => b[1] - a[1]).map(([country, count]) => (
+                <div key={country} style={s.appTypeRow}>
+                  <span style={{ fontSize: 14 }}>{country}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: Math.max(20, users.length > 0 ? count / users.length * 120 : 20), height: 8, borderRadius: 4, background: '#3B82F6' }} />
+                    <span style={s.badge}>{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* User list */}
+            <div style={s.section}>
+              <h3 style={s.sectionTitle}>All Users ({users.length})</h3>
+              {users.map(u => (
+                <div key={u.id} style={s.memberCard}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 800 }}>{u.name}</div>
+                      <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{u.email}</div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: '#f0f0f0' }}>
+                      {u.country_name || u.country_code || '?'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 6, display: 'flex', gap: 12 }}>
+                    <span>📱 {u.phone}</span>
+                    <span>📅 {new Date(u.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+              {users.length === 0 && <p style={{ textAlign: 'center', color: '#999', padding: 40 }}>No users yet</p>}
+            </div>
           </>
         )}
 
