@@ -11,7 +11,7 @@ const TRANSLATIONS = {
     heroSub2: 'Simple. Powerful. Mobile-first.',
     navAbout: 'About Us',
     navFaq: 'FAQ',
-    navServices: 'T&C',
+    navServices: 'Terms',
     aboutTitle: 'About Us',
     aboutBody: 'StreetLocal is redefining how local businesses operate in a digital world.\n\nWe empower street food vendors, restaurants, property businesses, laundries, hair salons, and more with their own fully branded mobile apps — giving them the same power as big brands, without the high costs or complicated systems.\n\nAt the price of a coffee, your business can go fully digital.\n\nNo middlemen. No commissions. Just a direct connection between you and your customers.\n\nWe believe every local business deserves to own its customers, its data, and its future. That\'s why StreetLocal is built to be simple, powerful, and accessible — whether you\'re running a small warung or scaling a growing brand.\n\nOur platforms don\'t just look good — they work hard. Taking orders, managing bookings, connecting with customers, and driving growth 24/7… even while you sleep.\n\nThis isn\'t just about technology.\nIt\'s about freedom.\n\nFreedom to grow your business your way.\nFreedom to keep more of what you earn.\nFreedom to compete with anyone — no matter your size.\n\nOur mission is simple: to help local businesses thrive in the digital age with tools that are affordable, reliable, and built for real-world success.\n\nStreetLocal isn\'t just a service.\nIt\'s a smarter, simpler, more powerful way to do business.',
     faqTitle: 'FAQ',
@@ -379,7 +379,7 @@ function useLocale() {
 }
 
 /* ─── Build localized categories from translations ─── */
-function getCategories(t) {
+function getCategories(t, cp) {
   return [
     {
       id: 'food',
@@ -392,8 +392,8 @@ function getCategories(t) {
           id: 'basic',
           name: t.basicName || 'Street Vendor',
           tier: t.basicTier || 'Software 1',
-          price: t.categories?.food?.apps?.basic?.price || 'Rp 38.000',
-          yearlyPrice: t.categories?.food?.apps?.basic?.yearlyPrice || 'Rp 456.000',
+          price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 38.000',
+          yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
           tagline: t.basicTagline || 'Simple menu & ordering for street food stalls',
           description: t.basicDesc || '',
           features: t.basicFeatures || ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
@@ -409,8 +409,8 @@ function getCategories(t) {
           id: 'pro',
           name: t.proName || 'Restaurant',
           tier: t.proTier || 'Software 2',
-          price: t.categories?.food?.apps?.pro?.price || 'Rp 100.000',
-          yearlyPrice: t.categories?.food?.apps?.pro?.yearlyPrice || 'Rp 1.200.000',
+          price: cp ? `${cp.currency_symbol} ${cp.pro_monthly.toLocaleString()}` : 'Rp 100.000',
+          yearlyPrice: cp ? `${cp.currency_symbol} ${cp.pro_yearly.toLocaleString()}` : 'Rp 1.200.000',
           tagline: t.proTagline || 'Your brand. Your menu. Unlimited promotion.',
           description: t.proDesc || '',
           features: t.proFeatures || [],
@@ -689,6 +689,33 @@ export default function App() {
   const [slugValue, setSlugValue] = useState('')
   const [showNameHelp, setShowNameHelp] = useState(false)
   const slugTimer = useRef(null)
+  const [countryPricing, setCountryPricing] = useState(null)
+  const [detectedCountry, setDetectedCountry] = useState(null)
+
+  // Detect country from IP for pricing (before account creation)
+  useEffect(() => {
+    if (countryPricing) return
+    async function detectPricing() {
+      try {
+        const res = await fetch('https://ip2c.org/s')
+        const text = await res.text()
+        const country = text.split(';')[1]
+        setDetectedCountry(country)
+        const { data } = await supabase.from('country_pricing').select('*').eq('id', country).single()
+        if (data) setCountryPricing(data)
+      } catch {}
+    }
+    detectPricing()
+  }, [])
+
+  // Update pricing when user creates account with specific country
+  useEffect(() => {
+    const country = userAccount?.country_code
+    if (!country) return
+    supabase.from('country_pricing').select('*').eq('id', country).single().then(({ data }) => {
+      if (data) setCountryPricing(data)
+    })
+  }, [userAccount?.country_code])
   const [adminAuth, setAdminAuth] = useState(false)
   const [adminPin, setAdminPin] = useState('')
   const [registrations, setRegistrations] = useState([])
@@ -709,17 +736,18 @@ export default function App() {
       t[k] = jsonT[k]
     }
   })
-  const CATEGORIES = getCategories(t)
+  const CATEGORIES = getCategories(t, countryPricing)
 
   /* Detail page for an app */
   if (selectedApp) {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
-          <button onClick={() => setSelectedApp(null)} style={styles.backBtn}>
-            {t.back}
-          </button>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         {/* Hero: 3D phone carousel */}
@@ -806,7 +834,7 @@ export default function App() {
           {detailTab === 'benefits' && (
             <div>
               {/* Intro */}
-              <p style={styles.benefitsIntro}>{t.benefitsIntro}</p>
+              <p style={styles.benefitsIntro}>{selectedApp.id === 'basic' ? (t.benefitsIntro || '').replace(/restaurant owner/gi, 'food vendor').replace(/pemilik restoran/gi, 'pedagang makanan') : t.benefitsIntro}</p>
 
               {/* Body paragraphs */}
               {t.benefitsBody.split('\n\n').map((para, i) => (
@@ -1238,21 +1266,46 @@ export default function App() {
                   <span style={{ fontSize: 14, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
                 </p>
 
-                {/* Payment — Indonesia: QR code, Other countries: contact via WhatsApp */}
-                {userAccount?.country_code === 'ID' ? (
+                {/* Payment — QR code if available for country, otherwise contact */}
+                {countryPricing ? (
                   <>
-                    {/* Wise QR Code — Indonesia only */}
-                    <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
-                      <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Scan to Pay</p>
-                      <img
-                        src={selectedApp.id === 'pro' ? 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsdss.png' : 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsd.png'}
-                        alt="Wise QR Code"
-                        style={{ width: '100%', maxWidth: 220, height: 'auto', borderRadius: 12, margin: '0 auto 10px', display: 'block' }}
-                      />
-                      <p style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>
-                        Scan with your banking app or e-wallet. Indonesian Rupiah only.
-                      </p>
-                    </div>
+                    {/* QR Code — from country_pricing table */}
+                    {(() => {
+                      const qrKey = selectedApp.id === 'pro'
+                        ? (billingCycle === 'monthly' ? 'pro_qr_monthly' : 'pro_qr_yearly')
+                        : (billingCycle === 'monthly' ? 'basic_qr_monthly' : 'basic_qr_yearly')
+                      const qrUrl = countryPricing[qrKey]
+                      // Fallback to Indonesia QR codes if no country-specific QR
+                      const fallbackQr = userAccount?.country_code === 'ID'
+                        ? (selectedApp.id === 'pro' ? 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsdss.png' : 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsd.png')
+                        : null
+                      const finalQr = qrUrl || fallbackQr
+                      return finalQr ? (
+                        <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
+                          <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>{t.payment?.scanToPay || 'Scan to Pay'}</p>
+                          <img src={finalQr} alt="QR Code" style={{ width: '100%', maxWidth: 220, height: 'auto', borderRadius: 12, margin: '0 auto 10px', display: 'block' }} />
+                          <p style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>
+                            {countryPricing.currency_symbol} {billingCycle === 'monthly'
+                              ? (selectedApp.id === 'pro' ? countryPricing.pro_monthly : countryPricing.basic_monthly).toLocaleString()
+                              : (selectedApp.id === 'pro' ? countryPricing.pro_yearly : countryPricing.basic_yearly).toLocaleString()
+                            } — {countryPricing.currency}
+                          </p>
+                        </div>
+                      ) : (
+                        <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
+                          <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t.payment?.otherCountry || 'Payment for your country'}</p>
+                          <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 14 }}>
+                            {countryPricing.currency_symbol} {billingCycle === 'monthly'
+                              ? (selectedApp.id === 'pro' ? countryPricing.pro_monthly : countryPricing.basic_monthly).toLocaleString()
+                              : (selectedApp.id === 'pro' ? countryPricing.pro_yearly : countryPricing.basic_yearly).toLocaleString()
+                            } — {t.payment?.otherCountryMsg || 'Contact us via WhatsApp for payment details.'}
+                          </p>
+                          <a href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi, I'd like to subscribe to ${selectedApp.name}. Country: ${countryPricing.country_name}. Price: ${countryPricing.currency_symbol} ${billingCycle === 'monthly' ? (selectedApp.id === 'pro' ? countryPricing.pro_monthly : countryPricing.basic_monthly) : (selectedApp.id === 'pro' ? countryPricing.pro_yearly : countryPricing.basic_yearly)}`)}`} target="_blank" rel="noreferrer" style={{ ...styles.ctaButton, background: '#25D366', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                            💬 {t.payment?.contactPricing || 'Contact for Payment'}
+                          </a>
+                        </div>
+                      )
+                    })()}
 
                     {/* Bank fallback */}
                     <details style={{ marginBottom: 16 }}>
@@ -1383,10 +1436,11 @@ export default function App() {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
-          <button onClick={() => setSelectedCategory(null)} style={styles.backBtn}>
-            {t.back}
-          </button>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         {/* Hero image */}
@@ -1458,10 +1512,11 @@ export default function App() {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
-          <button onClick={() => setCurrentPage(null)} style={styles.backBtn}>
-            {t.back}
-          </button>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</button>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         <div style={{ padding: '20px 24px 40px' }}>
@@ -1515,8 +1570,12 @@ export default function App() {
   /* ─── Home / Landing ─── */
   return (
     <div style={styles.page}>
-      {/* Lang switcher on landing */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 20px 0' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 0' }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+          <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+        </div>
         <LangSwitcher locale={locale} setLocale={setLocale} />
       </div>
 
@@ -1534,28 +1593,39 @@ export default function App() {
         </div>
       </FadeIn>
 
-      {/* Nav Buttons */}
-      <FadeIn delay={0.15}>
-        <div style={styles.navButtons}>
-          <button onClick={() => setCurrentPage('about')} style={styles.navBtn}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
-            <span style={styles.navBtnLabel}>{t.navAbout}</span>
+      {/* Available in languages */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '0 20px 10px' }}>
+        <span style={{ fontSize: 11, color: '#999', marginRight: 4 }}>{locale === 'id' ? 'Tersedia dalam' : 'Available in'}:</span>
+        {[
+          { code: 'en', flag: '🇬🇧' }, { code: 'id', flag: '🇮🇩' }, { code: 'ms', flag: '🇲🇾' },
+          { code: 'vi', flag: '🇻🇳' }, { code: 'th', flag: '🇹🇭' }, { code: 'fil', flag: '🇵🇭' },
+        ].map(l => (
+          <button key={l.code} onClick={() => setLocaleAndSave(l.code)} style={{ background: locale === l.code ? 'rgba(255,214,0,0.2)' : 'transparent', border: locale === l.code ? '1.5px solid #FFD600' : '1.5px solid transparent', borderRadius: 8, padding: '4px 6px', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>
+            {l.flag}
           </button>
-          <button onClick={() => setCurrentPage('faq')} style={styles.navBtn}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsssssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
-            <span style={styles.navBtnLabel}>{t.navFaq}</span>
-          </button>
-          <button onClick={() => setCurrentPage('services')} style={styles.navBtn}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsssssssssss.png" alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: 'cover' }} />
-            <span style={styles.navBtnLabel}>{t.navServices}</span>
-          </button>
-        </div>
-      </FadeIn>
+        ))}
+      </div>
+
+      {/* Floating right side nav */}
+      <div style={{ position: 'fixed', right: 6, top: '50%', transform: 'translateY(calc(-50% - 70px))', zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button onClick={() => setCurrentPage('about')} style={styles.navBtn}>
+          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a', fontFamily: 'serif' }}>i</div>
+          <span style={styles.navBtnLabel}>{t.navAbout}</span>
+        </button>
+        <button onClick={() => setCurrentPage('faq')} style={styles.navBtn}>
+          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>?</div>
+          <span style={styles.navBtnLabel}>{t.navFaq}</span>
+        </button>
+        <button onClick={() => setCurrentPage('services')} style={styles.navBtn}>
+          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>§</div>
+          <span style={styles.navBtnLabel}>{t.navServices}</span>
+        </button>
+      </div>
 
       {/* Categories */}
       <div style={styles.section}>
         <FadeIn delay={0.2}>
-          <h2 style={styles.sectionTitle}>{t.ourApps}</h2>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 50 }}>{countryPricing ? `${t.ourApps?.split(' ')[0] || 'Starting'} ${countryPricing.currency_symbol} ${countryPricing.basic_monthly.toLocaleString()}${t.perMonth}` : t.ourApps}</h2>
         </FadeIn>
 
         {/* Food App — full-width banner card with image */}
@@ -1567,7 +1637,10 @@ export default function App() {
             >
               {/* Header over image */}
               <div style={styles.foodBannerHeader}>
-                <span style={styles.foodBannerHeaderText}>{cat.name}</span>
+                <span style={styles.foodBannerHeaderText}>
+                  {(cat.name || '').split(' ')[0]}<br />
+                  <span style={{ fontSize: 14 }}>{(cat.name || '').split(' ').slice(1).join(' ')}</span>
+                </span>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>2,572 downloads</span>
               </div>
               <img

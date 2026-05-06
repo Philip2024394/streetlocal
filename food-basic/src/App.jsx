@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
@@ -181,7 +181,7 @@ function getDeliveryFee(distKm, zones) {
 
 /* ─── Styles ─── */
 const S = {
-  page: { background: 'transparent', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
+  page: { background: 'transparent', minHeight: '100%', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px', position: 'sticky', top: 0, zIndex: 10 },
   shopLogo: { width: 44, height: 44, borderRadius: 12, objectFit: 'cover', marginRight: 12 },
   shopName: { fontSize: 20, fontWeight: 700, flex: 1 },
@@ -227,8 +227,25 @@ export default function App() {
   if (viewMode === 'activate') return <ActivatePage />
 
   /* --- i18n --- */
-  const { locale, setLocale, t } = useAppLocale()
-  const [langOpen, setLangOpen] = useState(false)
+  const { locale, setLocale, t, nativeLang } = useAppLocale()
+
+  /* --- Check vendor activation status for public visitors --- */
+  const [publicVendorStatus, setPublicVendorStatus] = useState(null)
+  const [publicVendorName, setPublicVendorName] = useState('')
+  const [publicVendorLogo, setPublicVendorLogo] = useState('')
+  useEffect(() => {
+    // Check if this is a vendor's public page (has slug in URL or stored vendor ID)
+    const storedId = localStorage.getItem('vendorbasic_vendorId')
+    if (storedId && !String(storedId).startsWith('local') && supabase) {
+      supabase.from('vendor_accounts').select('status,shop_name,shop_logo').eq('id', storedId).single().then(({ data }) => {
+        if (data) {
+          setPublicVendorStatus(data.status || 'pending')
+          setPublicVendorName(data.shop_name || '')
+          setPublicVendorLogo(data.shop_logo || '')
+        }
+      })
+    }
+  }, [])
 
   /* --- State --- */
   const [showLanding, setShowLanding] = useState(true)
@@ -324,7 +341,7 @@ export default function App() {
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
 
-  /* --- Persist menu --- */
+  /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('vendorbasic_vendorId', vendorId) }, [vendorId])
   useEffect(() => { saveJSON('vendorbasic_menu', menuItems) }, [menuItems])
   useEffect(() => { localStorage.setItem('vendorbasic_shopName', shopName) }, [shopName])
@@ -340,6 +357,45 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_shopYT', shopYoutube) }, [shopYoutube])
   useEffect(() => { localStorage.setItem('vendorbasic_shopWeb', shopWebsite) }, [shopWebsite])
   useEffect(() => { localStorage.setItem('vendorbasic_shopFoodType', shopFoodType) }, [shopFoodType])
+
+  // Sync shop config to Supabase when vendor changes settings
+  const syncTimer = useRef(null)
+  useEffect(() => {
+    if (!vendorId || String(vendorId).startsWith('local')) return
+    clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(() => {
+      updateVendorConfig(vendorId, {
+        shop_name: shopName, shop_logo: shopLogo, shop_phone: shopPhone,
+        shop_open: shopOpen, shop_address: shopAddress, shop_hours: shopHours,
+        shop_maps_link: shopMapsLink, shop_instagram: shopInstagram,
+        shop_tiktok: shopTiktok, shop_facebook: shopFacebook,
+        shop_youtube: shopYoutube, shop_website: shopWebsite,
+        shop_food_type: shopFoodType,
+      })
+    }, 2000) // Debounce 2s to avoid too many writes
+  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopFoodType])
+
+  // Load shop config from Supabase on vendor login
+  useEffect(() => {
+    if (!vendorId || String(vendorId).startsWith('local')) return
+    if (!supabase) return
+    supabase.from('vendor_accounts').select('*').eq('id', vendorId).single().then(({ data }) => {
+      if (!data) return
+      if (data.shop_name) setShopName(data.shop_name)
+      if (data.shop_logo) setShopLogo(data.shop_logo)
+      if (data.shop_phone) setShopPhone(data.shop_phone)
+      if (data.shop_address) setShopAddress(data.shop_address)
+      if (data.shop_hours) setShopHours(data.shop_hours)
+      if (data.shop_maps_link) setShopMapsLink(data.shop_maps_link)
+      if (data.shop_instagram) setShopInstagram(data.shop_instagram)
+      if (data.shop_tiktok) setShopTiktok(data.shop_tiktok)
+      if (data.shop_facebook) setShopFacebook(data.shop_facebook)
+      if (data.shop_youtube) setShopYoutube(data.shop_youtube)
+      if (data.shop_website) setShopWebsite(data.shop_website)
+      if (data.shop_food_type) setShopFoodType(data.shop_food_type)
+      if (data.shop_open !== undefined) setShopOpen(data.shop_open)
+    })
+  }, [vendorId])
 
   /* --- Cart helpers --- */
   const totalItems = cart.reduce((s, c) => s + c.qty, 0)
@@ -518,7 +574,7 @@ export default function App() {
     const msg = encodeURIComponent(lines.join('\n'))
     const phone = shopPhone.replace(/[^0-9]/g, '')
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
-    // Save customer to directory
+    // Save customer to directory (localStorage + Supabase)
     const customers = loadJSON('vendorbasic_customers', [])
     const existing = customers.find(c => c.phone === custPhone)
     if (existing) {
@@ -530,6 +586,22 @@ export default function App() {
       customers.push({ phone: custPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
     }
     saveJSON('vendorbasic_customers', customers)
+    // Sync to Supabase
+    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+      supabase.from('vendor_customers').upsert({
+        vendor_id: vendorId, phone: custPhone, name: custName,
+        orders: existing ? existing.orders : 1,
+        total_spent: existing ? existing.totalSpent : totalPrice,
+        last_order: new Date().toISOString(),
+      }, { onConflict: 'vendor_id,phone' }).then(() => {})
+      // Save order
+      supabase.from('vendor_orders').insert({
+        vendor_id: vendorId, customer_name: custName, customer_phone: custPhone,
+        items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
+        subtotal: totalPrice, delivery_type: payMethod, payment_method: 'cod',
+        note: document.getElementById('orderNote')?.value || '',
+      }).then(() => {})
+    }
     setOrderDone(true)
   }
 
@@ -554,30 +626,15 @@ export default function App() {
       {/* ═══ LANDING PAGE ═══ */}
       {showLanding && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, overflow: 'hidden' }}>
-          {/* Background image */}
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2007_57_10%20AM.png?updatedAt=1777942652258" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none' }} />
+          {/* Background image — language-based */}
+          <img src={{
+            id: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2010_32_18%20AM.png',
+            ms: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2011_56_25%20AM.png',
+            vi: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2011_55_41%20AM.png',
+            th: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2011_57_16%20AM.png',
+            fil: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2012_00_00%20PM.png',
+          }[locale] || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2011_54_58%20AM.png'} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none' }} />
 
-          {/* Header — language + vendor login */}
-          <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* Language selector */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[
-                { code: 'en', label: 'EN', img: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxx-removebg-preview.png?updatedAt=1777592742536' },
-                { code: 'id', label: 'ID', img: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxxcc-removebg-preview.png?updatedAt=1777592820803' },
-              ].map(l => (
-                <button key={l.code} onClick={() => localStorage.setItem('vendorbasic_lang', l.code)} style={{
-                  width: 36, height: 36, borderRadius: '50%', padding: 0,
-                  border: (localStorage.getItem('vendorbasic_lang') || 'en') === l.code ? '2px solid #8DC63F' : '2px solid transparent',
-                  background: 'rgba(0,0,0,0.5)', cursor: 'pointer', overflow: 'hidden',
-                  opacity: (localStorage.getItem('vendorbasic_lang') || 'en') === l.code ? 1 : 0.5,
-                }}>
-                  <img src={l.img} alt={l.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </button>
-              ))}
-            </div>
-            {/* Vendor login */}
-            <button onClick={() => setVendorLogin(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚙️</button>
-          </div>
 
           {/* Content — centered */}
           <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -653,24 +710,17 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          {/* Language picker */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setLangOpen(!langOpen)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#fff', minHeight: 32 }}>
-              {LANGUAGES.find(l => l.code === locale)?.flag || '🇬🇧'} {locale.toUpperCase()}
-            </button>
-            {langOpen && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setLangOpen(false)} />
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#1a1a1a', borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.4)', zIndex: 999, minWidth: 100, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  {LANGUAGES.map(l => (
-                    <button key={l.code} onClick={() => { setLocale(l.code); setLangOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 12px', border: 'none', background: locale === l.code ? 'rgba(141,198,63,0.15)' : 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: locale === l.code ? 800 : 500, color: locale === l.code ? '#8DC63F' : '#fff', textAlign: 'left' }}>
-                      {l.flag} {l.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          {/* Language toggle — native + English */}
+          {nativeLang !== 'en' && (
+            <div style={{ display: 'flex', gap: 0, background: 'rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden' }}>
+              <button onClick={() => setLocale(nativeLang)} style={{ padding: '4px 8px', border: 'none', background: locale === nativeLang ? 'rgba(141,198,63,0.3)' : 'transparent', color: locale === nativeLang ? '#8DC63F' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, cursor: 'pointer', minHeight: 30 }}>
+                {LANGUAGES.find(l => l.code === nativeLang)?.flag} {nativeLang.toUpperCase()}
+              </button>
+              <button onClick={() => setLocale('en')} style={{ padding: '4px 8px', border: 'none', background: locale === 'en' ? 'rgba(141,198,63,0.3)' : 'transparent', color: locale === 'en' ? '#8DC63F' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, cursor: 'pointer', minHeight: 30 }}>
+                🇬🇧 EN
+              </button>
+            </div>
+          )}
           {/* Map/location icon */}
           <button onClick={() => setShowLocation(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="Visit Us" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -696,6 +746,27 @@ export default function App() {
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>Quick access to {shopName} from your phone</div>
           </div>
           <button onClick={() => { setInstallDismissed(true); localStorage.setItem('vendorbasic_installDismissed', 'true') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer', padding: 4, flexShrink: 0 }}>✕</button>
+        </div>
+      )}
+
+      {/* --- Coming Soon overlay for pending vendors (public visitors only) --- */}
+      {!isVendor && publicVendorStatus === 'pending' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          {publicVendorLogo && <img src={publicVendorLogo} alt="" style={{ width: 80, height: 80, borderRadius: 20, objectFit: 'cover', marginBottom: 16 }} />}
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 8, textAlign: 'center' }}>{publicVendorName || shopName}</h1>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#FFD600', marginBottom: 8 }}>{t.comingSoon || 'Coming Soon!'}</h2>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.6, maxWidth: 280, marginBottom: 30 }}>
+            {locale === 'id' ? 'Kami sedang mempersiapkan menu. Kunjungi lagi segera!' : 'We\'re preparing our menu. Check back shortly!'}
+          </p>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, textAlign: 'center', width: '100%', maxWidth: 280 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>Powered by</p>
+            <a href="https://streetlocal.live" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>StreetLocal</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Get your own food ordering software</div>
+              <div style={{ fontSize: 12, color: '#8DC63F', fontWeight: 700, marginTop: 4 }}>from $2.50/month →</div>
+            </a>
+          </div>
         </div>
       )}
 
@@ -830,6 +901,14 @@ export default function App() {
       {/* --- FAB add item (vendor) --- */}
       {isVendor && vendorStatus !== 'expired' && <button style={S.fab} onClick={startAdd}>+</button>}
 
+      {/* --- StreetLocal Footer Link --- */}
+      {!isVendor && (
+        <a href="https://streetlocal.live" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', padding: '16px 0 8px', textDecoration: 'none' }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>Powered by </span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</span>
+        </a>
+      )}
+
       {/* --- Sticky Cart Bar --- */}
       {totalItems > 0 && !isVendor && (
         <div style={S.stickyCart}>
@@ -874,8 +953,6 @@ export default function App() {
             {/* Spacer pushes close to bottom */}
             <div style={{ flex: 1 }} />
 
-            {/* Close button at footer */}
-            <button style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#8B0000', color: '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer', marginTop: 16, marginBottom: 16 }} onClick={() => setItemModal(null)}>Close</button>
           </div>
         </div>
       )}
@@ -883,8 +960,8 @@ export default function App() {
       {/* ═══ LOCATION PAGE ═══ */}
       {showLocation && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: '#0a0a0a', overflowY: 'auto' }}>
-          {/* Background */}
-          <div style={{ position: 'fixed', inset: 0, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none' }} />
+          {/* Background — sticky, full height, content scrolls over */}
+          <div style={{ position: 'sticky', top: 0, width: '100%', height: '100vh', marginBottom: '-100vh', zIndex: 0, pointerEvents: 'none', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png)', backgroundSize: '100% 100%', backgroundPosition: 'center' }} />
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', position: 'relative', zIndex: 1 }}>
@@ -893,7 +970,7 @@ export default function App() {
               <div>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{t.visitUs || 'Visit Us'}</h2>
                 {userDistance !== null && (
-                  <p style={{ fontSize: 16, color: '#8DC63F', fontWeight: 800, margin: '4px 0 0' }}>{userDistance} km away</p>
+                  <p style={{ fontSize: 16, color: '#FFD600', fontWeight: 800, margin: '4px 0 0' }}>{userDistance} km away</p>
                 )}
               </div>
             </div>
@@ -909,7 +986,7 @@ export default function App() {
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 40px', position: 'relative', zIndex: 1 }}>
+          <div style={{ padding: '0 16px 16px', position: 'relative', zIndex: 1 }}>
 
             {/* 1. Location Address */}
             <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 10 }}>

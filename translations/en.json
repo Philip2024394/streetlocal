@@ -14,12 +14,12 @@
   "perYear": "/year",
   "monthly": "Monthly",
   "yearly": "Yearly",
-  "navAbout": "About Us",
+  "navAbout": "About",
   "navFaq": "FAQ",
-  "navServices": "T&C",
+  "navServices": "Terms",
   "tabDetails": "App Details",
   "tabBenefits": "Why Your Own App?",
-  "benefitsIntro": "As a restaurant owner, having your own app presence is no longer a luxury — it's a smart, strategic move.",
+  "benefitsIntro": "As a food business owner, having your own app presence is no longer a luxury — it's a smart, strategic move.",
   "benefitsWithApp": "With your own app, you can:",
   "benefitsClosing": "Owning your own app means owning your customer relationships, your data, and your growth. You're no longer renting space on someone else's platform — you're building your own ecosystem where your brand comes first.",
   "signup": {
@@ -81,10 +81,10 @@
     "step5": "Share Your New Link",
     "step5desc": "Send to customers via WhatsApp, Instagram, QR code",
     "step6": "Ready for Business!",
-    "step6desc": "Your own restaurant food ordering software is live",
+    "step6desc": "Your own food ordering software is live",
     "commission": "0% Commission — 100% Profit Is Yours"
   },
-  "aboutTitle": "About Us",
+  "aboutTitle": "About",
   "aboutBody": "StreetLocal is redefining how local businesses operate in a digital world.\n\nWe empower street food vendors, restaurants, property businesses, laundries, hair salons, and more with their own fully branded mobile apps — giving them the same power as big brands, without the high costs or complicated systems.\n\nAt the price of a coffee, your business can go fully digital.\n\nNo middlemen. No commissions. Just a direct connection between you and your customers.\n\nWe believe every local business deserves to own its customers, its data, and its future. That's why StreetLocal is built to be simple, powerful, and accessible — whether you're running a small warung or scaling a growing brand.\n\nOur platforms don't just look good — they work hard. Taking orders, managing bookings, connecting with customers, and driving growth 24/7… even while you sleep.\n\nThis isn't just about technology.\nIt's about freedom.\n\nFreedom to grow your business your way.\nFreedom to keep more of what you earn.\nFreedom to compete with anyone — no matter your size.\n\nOur mission is simple: to help local businesses thrive in the digital age with tools that are affordable, reliable, and built for real-world success.\n\nStreetLocal isn't just a service.\nIt's a smarter, simpler, more powerful way to do business.",
   "faqTitle": "FAQ",
   "faqs": [

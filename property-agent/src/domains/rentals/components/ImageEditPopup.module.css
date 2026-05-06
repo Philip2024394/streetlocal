@@ -1,0 +1,306 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   IMAGE EDIT POPUP — Crop window with pan/zoom controls
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ─────────────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ── Popup container ─────────────────────────────────────────────────────────── */
+.popup {
+  width: 100%;
+  max-width: 420px;
+  background: #111;
+  background-image: url('https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_56_19%20PM.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  border: 1.5px solid rgba(141, 198, 63, 0.35);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 20px rgba(141, 198, 63, 0.2), 0 0 40px rgba(141, 198, 63, 0.1), inset 0 1px 0 rgba(141, 198, 63, 0.1);
+  touch-action: none;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  z-index: 1;
+}
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.headerIcon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.headerText {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+.closeBtn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #8DC63F;
+  border: none;
+  color: #000;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(141, 198, 63, 0.3);
+}
+.closeBtn:hover {
+  background: #7ab832;
+}
+
+/* ── Frame area ──────────────────────────────────────────────────────────────── */
+.frameArea {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Crop frame — EXACT bike card size (16:9) ────────────────────────────────── */
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  background: #000;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.frame:active {
+  cursor: grabbing;
+}
+
+.frameImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  display: block;
+  max-width: none;
+  max-height: none;
+}
+
+/* ── Corner brackets ─────────────────────────────────────────────────────────── */
+.cornerTL, .cornerTR, .cornerBL, .cornerBR {
+  position: absolute;
+  width: 16px; height: 16px;
+  pointer-events: none;
+  z-index: 2;
+}
+.cornerTL { top: 0; left: 0; border-top: 3px solid #FFD700; border-left: 3px solid #FFD700; border-top-left-radius: 6px; }
+.cornerTR { top: 0; right: 0; border-top: 3px solid #FFD700; border-right: 3px solid #FFD700; border-top-right-radius: 6px; }
+.cornerBL { bottom: 0; left: 0; border-bottom: 3px solid #FFD700; border-left: 3px solid #FFD700; border-bottom-left-radius: 6px; }
+.cornerBR { bottom: 0; right: 0; border-bottom: 3px solid #FFD700; border-right: 3px solid #FFD700; border-bottom-right-radius: 6px; }
+
+/* ── Controls section ────────────────────────────────────────────────────────── */
+.controls {
+  padding: 12px 16px 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Direction controls — grid ───────────────────────────────────────────────── */
+.dirControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 3px;
+  justify-items: center;
+  align-items: center;
+}
+.zoomBtns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.dirBtn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #FFD700;
+  border: 2px solid #000;
+  color: #000;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.dirBtn:active {
+  transform: scale(0.92);
+  box-shadow: 0 1px 4px rgba(255, 215, 0, 0.2);
+}
+
+.resetBtn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #000;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s;
+}
+.resetBtn:active {
+  transform: scale(0.92);
+}
+
+.zoomBtn {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: #FFD700;
+  border: 2px solid #000;
+  color: #000;
+  font-size: 22px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  transition: transform 0.1s;
+}
+.zoomBtn:active {
+  transform: scale(0.92);
+}
+.zoomBtnDisabled {
+  background: rgba(255, 215, 0, 0.15);
+  color: rgba(0, 0, 0, 0.2);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.zoomLabel {
+  font-size: 12px;
+  font-weight: 900;
+  color: #FFD700;
+  text-align: center;
+  min-width: 40px;
+}
+
+/* ── Info row ────────────────────────────────────────────────────────────────── */
+.infoRow {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+.infoItem {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.2);
+}
+.infoValue {
+  color: rgba(255, 215, 0, 0.5);
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+/* ── Footer buttons ──────────────────────────────────────────────────────────── */
+.footer {
+  padding: 8px 16px 16px;
+  display: flex;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+.cancelBtn {
+  flex: 0 0 auto;
+  padding: 13px 24px;
+  border-radius: 12px;
+  background: #EF4444;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+.cancelBtn:hover {
+  background: #dc2626;
+}
+.saveBtn {
+  flex: 1;
+  padding: 13px 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #8DC63F;
+  border: none;
+  color: #000;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(141, 198, 63, 0.3);
+  transition: transform 0.1s;
+  letter-spacing: 0.02em;
+}
+.saveBtn:active {
+  transform: scale(0.98);
+}

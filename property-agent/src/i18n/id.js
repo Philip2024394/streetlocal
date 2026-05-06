@@ -1,0 +1,116 @@
+export default {
+  // Landing
+  'landing.tagline':     '🇮🇩 INDOO',
+  'landing.headline':    'Indonesia',
+  'landing.sub':         'Di Ujung Jari Anda',
+  'landing.getStarted':  'Mulai — gratis!',
+  'landing.signIn':      'Sudah punya akun? Masuk',
+  'landing.browse':      'Jelajahi dulu, tanpa daftar →',
+  'landing.legal':       'Dengan melanjutkan, kamu setuju dengan Syarat & Kebijakan Privasi kami',
+
+  // Join / Onboarding
+  'join.phone.title':       'Gabung INDOO',
+  'join.phone.sub':         'Kami akan kirim kode — tanpa spam.',
+  'join.phone.placeholder': '812 3456 7890',
+  'join.phone.send':        'Kirim kode →',
+  'join.phone.sending':     'Mengirim…',
+  'join.otp.title':         'Masukkan kodenya',
+  'join.otp.sentTo':        'Dikirim ke',
+  'join.otp.verify':        'Verifikasi',
+  'join.otp.verifying':     'Memverifikasi…',
+  'join.otp.change':        '← Ganti nomor',
+  'join.profile.title':     'Hampir selesai!',
+  'join.profile.sub':       'Tambah nama agar orang lain bisa mengenalmu.',
+  'join.profile.name':      'Nama kamu',
+  'join.profile.save':      'Ayo mulai! →',
+  'join.profile.saving':    'Menyimpan…',
+  'join.profile.skip':      'Lewati dulu',
+  'join.profile.addPhoto':  '📷 Tambah foto',
+  'join.profile.changePhoto': 'Ganti foto',
+  'join.google':            'Lanjut dengan Google',
+  'join.google.loading':    'Menghubungkan…',
+
+  // Bottom navigation
+  'nav.home':    'Beranda',
+  'nav.alerts':  'Notifikasi',
+  'nav.chat':    'Chat',
+  'nav.profile': 'Profil',
+
+  // Floating icon dock
+  'icons.ride':    'Ride On',
+  'icons.street':  'The Street',
+  'icons.dating':  'Kencan',
+  'icons.car':     'Drive On',
+  'icons.andong':  'Andong',
+  'icons.shop':    'Beli',
+  'icons.massage': 'Pijat',
+  'icons.rentals': 'Sewa',
+
+  'icons.deals':   'Deal Hunt',
+  'icons.sellrent': 'Jual / Sewa',
+  'icons.places': 'Tempat',
+
+  // Deal Hunt
+  'dealhunt.landing.title': 'Indonesia',
+  'dealhunt.landing.sub': 'Di Ujung Jari Anda',
+  'dealhunt.landing.start': 'Mulai Berburu 🔥',
+  'dealhunt.search': 'Cari deals, penjual...',
+  'dealhunt.filter': 'Filter',
+  'dealhunt.getdeal': 'Ambil Deal Ini',
+  'dealhunt.dealends': 'Berakhir',
+  'dealhunt.expired': 'BERAKHIR',
+  'dealhunt.soldout': 'Habis!',
+  'dealhunt.dealended': 'Deal Berakhir',
+  'dealhunt.claimed': 'diklaim',
+  'dealhunt.remaining': 'tersisa',
+  'dealhunt.chat': 'Chat',
+  'dealhunt.reviews': 'Ulasan',
+  'dealhunt.share': 'Bagikan',
+  'dealhunt.deals': 'Deals',
+  'dealhunt.home': 'Beranda',
+  'dealhunt.confirm': 'Konfirmasi Deal?',
+  'dealhunt.nodeal': 'Tidak',
+  'dealhunt.yesdeal': 'Ya Deal! 🔥',
+  'dealhunt.send': 'Kirim Pesan',
+  'dealhunt.ask': 'Tanya tentang deal ini...',
+
+  // Sell / Rent
+  'sellrent.title': 'JUAL / SEWA',
+  'sellrent.sub': 'Pilih kategori untuk mulai listing',
+  'sellrent.buy': 'BELI',
+  'sellrent.rent': 'SEWA',
+  'sellrent.join': 'Gabung Jual/Sewa',
+
+  // Rentals marketplace
+  'rental.vehicles': 'Kendaraan',
+  'rental.property': 'Properti',
+  'rental.equipment': 'Peralatan',
+  'rental.fashion': 'Fashion',
+  'rental.electronics': 'Elektronik',
+  'rental.audio': 'Audio & Suara',
+  'rental.events': 'Pesta & Acara',
+  'rental.torent': 'untuk Disewa',
+  'rental.tobuy': 'untuk Dibeli',
+  'rental.forsale': 'Dijual',
+  'rental.forrent': 'Disewakan',
+  'rental.rentals': 'Sewaan',
+  'rental.alllistings': 'Semua Listing',
+  'rental.items': 'item',
+  'rental.select': 'Pilih',
+  'rental.rentorsale': 'Sewa atau Jual',
+  'rental.selectcat': 'Pilih Kategori',
+  'rental.listrentorsale': 'Listing sewa atau jual',
+  'rental.activate': 'Aktifkan Akun',
+  'rental.commission': 'komisi',
+
+  // Map header
+  'header.signIn': 'Masuk',
+  'header.live':   'LIVE',
+
+  // Language toast
+  'lang.choose':   'Pilih bahasa kamu',
+
+  // Common
+  'common.or':    'atau',
+  'common.error': 'Terjadi kesalahan. Coba lagi.',
+}

@@ -1,0 +1,265 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   BIKE SHOWROOM — Ninebot Gokart Pro inspired stage
+   Deep dark + neon green racing lines + spotlight effects + glass badges
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Stage container ─────────────────────────────────────────────────────────── */
+.stage {
+  position: relative; overflow: hidden;
+  margin: 0 -16px; padding: 0;
+  background: transparent;
+  border-bottom: none;
+  min-height: 240px;
+  scrollbar-width: none;
+}
+.stage::-webkit-scrollbar { display: none; }
+
+/* ── Racing lines — SVG neon stripes ─────────────────────────────────────────── */
+.racingLines {
+  position: absolute; top: 0; right: 0;
+  width: 70%; height: 80px; z-index: 1;
+  opacity: 0.8;
+}
+
+/* ── Spotlights ──────────────────────────────────────────────────────────────── */
+.spotlightCenter { display: none; }
+.spotlightLeft { display: none; }
+.spotlightRight { display: none; }
+
+/* ── Carousel ────────────────────────────────────────────────────────────────── */
+.carousel {
+  display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none;
+  position: relative; z-index: 2;
+  padding: 55px 20px 10px;
+}
+.carousel::-webkit-scrollbar { display: none; }
+
+.bikeSlide {
+  flex: 0 0 100%; scroll-snap-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+}
+
+.bikeImg {
+  height: 150px; object-fit: contain;
+  filter: drop-shadow(0 12px 32px rgba(0,0,0,0.6));
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: bikeReveal 0.6s ease both;
+}
+@keyframes bikeReveal {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Floor reflection glow ───────────────────────────────────────────────────── */
+.floorGlow {
+  width: 80%; height: 30px; margin-top: -5px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 70%);
+  filter: blur(8px);
+}
+
+/* ── Stat badges — glassmorphism floating cards ──────────────────────────────── */
+.statBadges {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 3;
+}
+.statBadge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(141,198,63,0.2);
+  border-radius: 10px;
+  animation: badgeFadeIn 0.5s ease 0.3s both;
+}
+@keyframes badgeFadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+.statBadgeValue { font-size: 16px; font-weight: 900; color: #8DC63F; }
+.statBadgeLabel { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); }
+.statBadgeIcon { font-size: 12px; }
+
+/* ── Bike name — split weight ────────────────────────────────────────────────── */
+.bikeName {
+  text-align: center; padding: 8px 20px 4px;
+  position: relative; z-index: 2;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin: 0 20px; border-radius: 10px; padding: 10px 16px;
+}
+.bikeNameBrand { font-size: 22px; font-weight: 400; color: rgba(255,255,255,0.8); margin-right: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.bikeNameModel { font-size: 22px; font-weight: 800; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+
+/* ── Dot indicators ──────────────────────────────────────────────────────────── */
+.dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 14px; position: relative; z-index: 2; }
+.dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); transition: all 0.3s; }
+.dotActive { width: 18px; background: #8DC63F; box-shadow: 0 0 8px rgba(141,198,63,0.5); }
+
+/* ── Match badge ─────────────────────────────────────────────────────────────── */
+.matchBadge {
+  position: absolute; top: 14px; right: 14px; z-index: 3;
+  padding: 5px 14px;
+  background: rgba(141,198,63,0.1);
+  border: 1px solid rgba(141,198,63,0.3);
+  border-radius: 8px;
+  font-size: 10px; font-weight: 800; color: #8DC63F;
+  letter-spacing: 0.06em;
+  animation: badgeFadeIn 0.4s ease 0.5s both;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   INCLUDED BUNDLE — visual cards grid (Ninebot "Extra Bundle" style)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.bundleGrid {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 4px 0; margin-top: 4px;
+  scrollbar-width: none;
+}
+.bundleGrid::-webkit-scrollbar { display: none; }
+
+.bundleCard {
+  flex: 0 0 100px; min-width: 100px;
+  padding: 14px 10px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1.5px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.25s;
+  opacity: 0.5;
+}
+.bundleCardActive {
+  opacity: 1;
+  border-color: rgba(141,198,63,0.15);
+  background: linear-gradient(145deg, rgba(141,198,63,0.04) 0%, rgba(141,198,63,0.01) 100%);
+}
+.bundleIcon { font-size: 22px; }
+.bundleLabel { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); }
+.bundleSub { font-size: 9px; color: rgba(141,198,63,0.5); font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FORM UI ELEMENTS
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Ref & status badges ─────────────────────────────────────────────────────── */
+.refBadge {
+  font-size: 11px; font-weight: 800; color: #8DC63F;
+  background: rgba(141,198,63,0.08);
+  padding: 5px 12px; border-radius: 8px;
+  border: 1px solid rgba(141,198,63,0.15);
+  letter-spacing: 0.04em;
+}
+.statusBadge {
+  font-size: 10px; font-weight: 700; color: rgba(141,198,63,0.6);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+/* ── Dropdowns ───────────────────────────────────────────────────────────────── */
+.dropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(141,198,63,0.2);
+  border-radius: 12px; z-index: 10;
+  max-height: 200px; overflow-y: auto;
+  margin-top: 6px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 15px rgba(141,198,63,0.06);
+  animation: dropdownReveal 0.2s ease;
+}
+@keyframes dropdownReveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.dropdown::-webkit-scrollbar { width: 2px; }
+.dropdown::-webkit-scrollbar-thumb { background: rgba(141,198,63,0.2); border-radius: 2px; }
+
+.dropdownItem {
+  display: block; width: 100%;
+  padding: 12px 16px;
+  background: none; border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: #fff; font-size: 14px; font-weight: 600;
+  text-align: left; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.dropdownItem:hover { background: rgba(141,198,63,0.06); }
+.dropdownItem:last-child { border-bottom: none; }
+.dropdownItemActive { background: rgba(141,198,63,0.08); color: #8DC63F; }
+
+.dropdownItemSplit {
+  composes: dropdownItem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.dropdownBrand { font-size: 11px; color: #8DC63F; font-weight: 600; }
+
+/* ── Input suffix ────────────────────────────────────────────────────────────── */
+.inputSuffix {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.25); font-size: 13px; font-weight: 700;
+  pointer-events: none;
+}
+
+/* ── Location button ─────────────────────────────────────────────────────────── */
+.locationBtn {
+  margin-top: 8px; padding: 12px 16px; width: 100%;
+  background: rgba(141,198,63,0.05);
+  border: 1.5px solid rgba(141,198,63,0.15);
+  border-radius: 12px; color: #8DC63F;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+.locationBtn:hover { background: rgba(141,198,63,0.1); border-color: rgba(141,198,63,0.3); }
+
+/* ── Service card (drop off / buy now) ───────────────────────────────────────── */
+.serviceCard {
+  background: rgba(255,255,255,0.02);
+  border: 1.5px solid rgba(255,255,255,0.04);
+  border-radius: 16px; padding: 4px;
+  transition: all 0.3s;
+}
+.serviceCard[data-active] {
+  border-color: rgba(141,198,63,0.2);
+  background: rgba(141,198,63,0.02);
+  box-shadow: 0 0 20px rgba(141,198,63,0.05);
+}
+.serviceExpand {
+  display: flex; gap: 8px; padding: 12px 12px 8px;
+  animation: expandIn 0.25s ease;
+}
+@keyframes expandIn { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 100px; } }
+
+/* ── Free button ─────────────────────────────────────────────────────────────── */
+.freeBtn {
+  flex: 1; padding: 12px 14px;
+  background: rgba(239,68,68,0.08);
+  border: 1.5px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  color: #EF4444; font-size: 14px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.25s;
+}
+.freeBtnActive {
+  background: rgba(141,198,63,0.12);
+  border-color: #8DC63F;
+  color: #000;
+  box-shadow: 0 0 12px rgba(141,198,63,0.2);
+}
+
+/* ── Price display ───────────────────────────────────────────────────────────── */
+.priceDisplay {
+  display: block; margin-top: 8px; padding: 0 4px;
+  font-size: 15px; font-weight: 800; color: #8DC63F;
+  text-shadow: 0 0 12px rgba(141,198,63,0.2);
+}
+
+/* ── Buy now preview badge ───────────────────────────────────────────────────── */
+.buyNowPreview {
+  margin-top: 10px; padding: 12px 16px;
+  background: rgba(141,198,63,0.06);
+  border: 1px solid rgba(141,198,63,0.15);
+  border-radius: 12px; text-align: center;
+  font-size: 14px; font-weight: 800; color: #8DC63F;
+}

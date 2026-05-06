@@ -868,7 +868,31 @@ export default function Admin({ onClose }) {
               </div>
 
               <div style={s.section}>
-                <h3 style={s.sectionTitle}>🛵 Delivery Estimate Rates</h3>
+                <h3 style={s.sectionTitle}>💲 Country Pricing</h3>
+                <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Prices shown to users based on their country. QR codes uploaded per country/plan.</p>
+                {(() => {
+                  const [prices, setPrices] = useState([])
+                  useEffect(() => { supabase.from('country_pricing').select('*').order('id').then(({ data }) => { if (data) setPrices(data) }) }, [])
+                  return prices.map(p => (
+                    <div key={p.id} style={{ ...s.memberCard, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 14, fontWeight: 800 }}>{p.country_name}</span>
+                        <span style={{ fontSize: 12, color: '#888' }}>{p.currency}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 12 }}>
+                        <div>Basic: <strong>{p.currency_symbol} {p.basic_monthly.toLocaleString()}/mo</strong></div>
+                        <div>Pro: <strong>{p.currency_symbol} {p.pro_monthly.toLocaleString()}/mo</strong></div>
+                        <div>Basic/yr: {p.currency_symbol} {p.basic_yearly.toLocaleString()}</div>
+                        <div>Pro/yr: {p.currency_symbol} {p.pro_yearly.toLocaleString()}</div>
+                      </div>
+                      <div style={{ fontSize: 10, color: p.basic_qr_monthly ? '#22c55e' : '#F59E0B', marginTop: 4 }}>
+                        QR: {p.basic_qr_monthly ? '✅ Uploaded' : '⚠️ No QR codes — shows WhatsApp contact'}
+                      </div>
+                    </div>
+                  ))
+                })()}
+
+                <h3 style={{ ...s.sectionTitle, marginTop: 20 }}>🛵 Delivery Estimate Rates</h3>
                 <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Shown to customers as estimates only. You don't charge delivery — customers arrange their own Gojek/Grab.</p>
                 {[
                   { id: 'delivery_base_fee', label: 'Base Fee', icon: '💰', placeholder: '5000' },

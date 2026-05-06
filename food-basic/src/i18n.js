@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react'
 
 const COUNTRY_TO_LANG = {
-  ID: 'id', MY: 'ms', SG: 'en', TH: 'th', VN: 'vi', PH: 'en',
+  ID: 'id', MY: 'ms', SG: 'en', TH: 'th', VN: 'vi', PH: 'fil',
   FR: 'fr', BE: 'fr', CH: 'fr', CA: 'fr',
   DE: 'de', AT: 'de',
   ES: 'es', MX: 'es', AR: 'es', CO: 'es',
@@ -25,6 +25,7 @@ export const LANGUAGES = [
   { code: 'es', flag: '🇪🇸', label: 'ES' },
   { code: 'zh', flag: '🇨🇳', label: 'CN' },
   { code: 'ar', flag: '🇸🇦', label: 'AR' },
+  { code: 'fil', flag: '🇵🇭', label: 'PH' },
 ]
 
 // Translations loaded from public folder at runtime
@@ -44,6 +45,7 @@ async function loadLang(code) {
 
 export function useAppLocale() {
   const [locale, setLocale] = useState(() => localStorage.getItem('sl_app_locale') || 'en')
+  const [nativeLang, setNativeLang] = useState(() => localStorage.getItem('sl_app_native') || 'en')
   const [t, setT] = useState({})
 
   useEffect(() => {
@@ -54,13 +56,15 @@ export function useAppLocale() {
 
   // Auto-detect on first visit
   useEffect(() => {
-    if (localStorage.getItem('sl_app_locale')) return
+    if (localStorage.getItem('sl_app_native')) return
     fetch('https://ip2c.org/s')
       .then(r => r.text())
       .then(text => {
         const country = text.split(';')[1]
         const lang = COUNTRY_TO_LANG[country] || 'en'
+        localStorage.setItem('sl_app_native', lang)
         localStorage.setItem('sl_app_locale', lang)
+        setNativeLang(lang)
         setLocale(lang)
       })
       .catch(() => {})
@@ -71,5 +75,5 @@ export function useAppLocale() {
     setLocale(lang)
   }
 
-  return { locale, setLocale: setLocaleAndSave, t }
+  return { locale, setLocale: setLocaleAndSave, t, nativeLang }
 }

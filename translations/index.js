@@ -12,7 +12,7 @@ export const COUNTRY_TO_LANG = {
   BN: 'ms', // Brunei
   TH: 'th', // Thailand
   VN: 'vi', // Vietnam
-  PH: 'en', // Philippines
+  PH: 'fil', // Philippines
   KH: 'en', // Cambodia
   MM: 'en', // Myanmar
   LA: 'en', // Laos
@@ -76,6 +76,7 @@ export const LANGUAGES = [
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'zh', label: '中文', flag: '🇨🇳' },
   { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'fil', label: 'Filipino', flag: '🇵🇭' },
 ]
 
 // Get language from country code

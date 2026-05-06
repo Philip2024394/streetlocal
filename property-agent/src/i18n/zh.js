@@ -1,0 +1,91 @@
+export default {
+  // Landing
+  'landing.tagline':     '🇮🇩 印度尼西亚',
+  'landing.headline':    '摩托车。汽车。\n美食配送。',
+  'landing.sub':         '超值优惠 — 触手可及。',
+  'landing.getStarted':  '免费开始',
+  'landing.signIn':      '已有账号？登录',
+  'landing.browse':      '先探索，无需注册 →',
+  'landing.legal':       '继续即表示您同意我们的条款和隐私政策',
+
+  // Join / Onboarding
+  'join.phone.title':       '加入 INDOO',
+  'join.phone.sub':         '我们将发送验证码 — 绝不骚扰。',
+  'join.phone.placeholder': '812 3456 7890',
+  'join.phone.send':        '发送验证码 →',
+  'join.phone.sending':     '发送中…',
+  'join.otp.title':         '输入验证码',
+  'join.otp.sentTo':        '已发送至',
+  'join.otp.verify':        '验证',
+  'join.otp.verifying':     '验证中…',
+  'join.otp.change':        '← 更换号码',
+  'join.profile.title':     '快完成了！',
+  'join.profile.sub':       '添加姓名，让大家认识你。',
+  'join.profile.name':      '您的姓名',
+  'join.profile.save':      '出发 →',
+  'join.profile.saving':    '保存中…',
+  'join.profile.skip':      '暂时跳过',
+  'join.profile.addPhoto':  '📷 添加照片',
+  'join.profile.changePhoto': '更换照片',
+  'join.google':            '用 Google 继续',
+  'join.google.loading':    '连接中…',
+
+  // Bottom navigation
+  'nav.home':    '首页',
+  'nav.alerts':  '通知',
+  'nav.chat':    '聊天',
+  'nav.profile': '我的',
+
+  // Floating icon dock
+  'icons.ride':    '骑行',
+  'icons.street':  '街头',
+  'icons.dating':  '交友',
+  'icons.car':     '打车',
+  'icons.andong':  '马车',
+  'icons.shop':    '购物',
+  'icons.massage': '按摩',
+  'icons.rentals': '租赁',
+  'icons.places': '景点',
+
+  // Deal Hunt
+  'dealhunt.landing.title': '印度尼西亚',
+  'dealhunt.landing.sub': '尽在指尖',
+  'dealhunt.landing.start': '开始寻找 🔥',
+  'dealhunt.search': '搜索优惠、卖家...',
+  'dealhunt.filter': '筛选',
+  'dealhunt.getdeal': '获取此优惠',
+  'dealhunt.dealends': '结束于',
+  'dealhunt.expired': '已过期',
+  'dealhunt.soldout': '已售罄！',
+  'dealhunt.dealended': '优惠已结束',
+  'dealhunt.claimed': '已领取',
+  'dealhunt.remaining': '剩余',
+  'dealhunt.chat': '聊天',
+  'dealhunt.reviews': '评论',
+  'dealhunt.share': '分享',
+  'dealhunt.deals': '优惠',
+  'dealhunt.home': '首页',
+  'dealhunt.confirm': '确认优惠？',
+  'dealhunt.nodeal': '取消',
+  'dealhunt.yesdeal': '确认！🔥',
+  'dealhunt.send': '发送消息',
+  'dealhunt.ask': '询问此优惠...',
+  'sellrent.buy': '购买',
+  'sellrent.rent': '租赁',
+  'rental.forsale': '出售',
+  'rental.forrent': '出租',
+  'rental.rentals': '租赁',
+  'rental.alllistings': '所有列表',
+  'rental.activate': '激活账户',
+
+  // Map header
+  'header.signIn': '登录',
+  'header.live':   '直播',
+
+  // Language toast
+  'lang.choose':   '选择您的语言',
+
+  // Common
+  'common.or':    '或',
+  'common.error': '出现错误，请重试。',
+}
