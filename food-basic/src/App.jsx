@@ -182,7 +182,7 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 /* ─── Demo Menu ─── */
 const DEMO_MENU = [
   // Meals
-  { id: 1, name: 'Nasi Goreng', price: 15000, photo: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300', desc: 'Fried rice with egg, vegetables, and kecap manis', category: 'Meal', available: true },
+  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2008_12_38%20PM.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1 },
   { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
   { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
   { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },
@@ -193,11 +193,19 @@ const DEMO_MENU = [
   { id: 8, name: 'Kopi Hitam', price: 5000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Black coffee, strong Indonesian brew', category: 'Drink', available: true },
   { id: 9, name: 'Es Alpukat', price: 10000, photo: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=300', desc: 'Creamy avocado smoothie with chocolate', category: 'Drink', available: true },
   { id: 10, name: 'Air Mineral', price: 3000, photo: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300', desc: 'Bottled mineral water', category: 'Drink', available: true },
+  { id: 23, name: 'Es Kelapa Muda', price: 8000, photo: 'https://images.unsplash.com/photo-1544252890-c8e1a1080400?w=300', desc: 'Fresh young coconut water with ice', category: 'Drink', available: true },
+  { id: 24, name: 'Jus Mangga', price: 10000, photo: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=300', desc: 'Fresh mango juice blended smooth', category: 'Drink', available: true },
+  { id: 25, name: 'Es Cendol', price: 8000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Pandan jelly with coconut milk and palm sugar', category: 'Drink', available: true },
+  { id: 26, name: 'Teh Tarik', price: 7000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Pulled milk tea, hot or iced', category: 'Drink', available: true },
   // Snacks
   { id: 11, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
   { id: 12, name: 'Kerupuk', price: 3000, photo: 'https://images.unsplash.com/photo-1630384060421-cb20aed56993?w=300', desc: 'Crispy prawn crackers', category: 'Snack', available: true },
   { id: 13, name: 'Pisang Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Fried banana fritters with crispy batter', category: 'Snack', available: true },
   { id: 14, name: 'Tahu Crispy', price: 4000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Crispy fried tofu bites', category: 'Snack', available: true },
+  { id: 19, name: 'Tempe Mendoan', price: 5000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Thinly sliced fried tempeh', category: 'Snack', available: true },
+  { id: 20, name: 'Cireng Isi', price: 6000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Fried tapioca balls with filling', category: 'Snack', available: true },
+  { id: 21, name: 'Lumpia Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Crispy fried spring rolls', category: 'Snack', available: true },
+  { id: 22, name: 'Bakwan Jagung', price: 4000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Corn fritters with vegetables', category: 'Snack', available: true },
   // Extra Sauce
   { id: 15, name: 'Sambal Extra', price: 2000, photo: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=300', desc: 'Extra portion of spicy chili sambal', category: 'Extra Sauce', available: true },
   { id: 16, name: 'Kecap Manis', price: 1000, photo: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300', desc: 'Sweet soy sauce', category: 'Extra Sauce', available: true },
@@ -323,9 +331,9 @@ const S = {
   shopName: { fontSize: 22, fontWeight: 700, flex: 1, textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.5)' },
   gearBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   vendorBar: { background: 'rgba(0,0,0,0.4)', padding: '4px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' },
-  card: { background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'center', position: 'relative', transition: 'all 0.3s ease', height: 104, overflow: 'hidden' },
+  card: { background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'center', position: 'relative', transition: 'all 0.3s ease', minHeight: 104, overflow: 'hidden' },
   cardImg: { width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
-  cardBody: { flex: 1, minWidth: 0, height: 80, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' },
+  cardBody: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' },
   cardName: { fontSize: 16, fontWeight: 600, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   cardDesc: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', paddingRight: 30 },
   cardPrice: { fontSize: 16, fontWeight: 700, color: '#FACC15' },
@@ -377,6 +385,16 @@ export default function App() {
     }
   }, [])
 
+  /* --- Demo page setup --- */
+  useEffect(() => {
+    if (!isDemo || demoPage === 'landing') return
+    if (demoPage === 'menu') { setShowLanding(false) }
+    if (demoPage === 'item') { setShowLanding(false); setTimeout(() => setItemModal(DEMO_MENU[0]), 100) }
+    if (demoPage === 'checkout') { setShowLanding(false); setCart([{ ...DEMO_MENU[0], qty: 2 }, { ...DEMO_MENU[5], qty: 1 }]); setTimeout(() => { setCheckoutOpen(true); setOrderDone(false) }, 100) }
+    if (demoPage === 'sent') { setShowLanding(false); setCart([{ ...DEMO_MENU[0], qty: 1 }]); setTimeout(() => { setCheckoutOpen(true); setOrderDone(true) }, 100) }
+    if (demoPage === 'visit') { setShowLanding(false); setTimeout(() => setShowLocation(true), 100) }
+  }, [])
+
   /* --- i18n --- */
   const { locale, setLocale, t, nativeLang, countryCode, LANG_TO_COUNTRIES } = useAppLocale()
 
@@ -399,13 +417,17 @@ export default function App() {
   }, [])
 
   /* --- State --- */
+  const isDemo = new URLSearchParams(window.location.search).get('demo') === 'true'
+  const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
   const [showLanding, setShowLanding] = useState(() => {
+    if (isDemo) return demoPage === 'landing'
     const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
     return !id
   })
-  const [menuItems, setMenuItems] = useState(() => loadJSON('vendorbasic_menu', DEMO_MENU))
+  const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('vendorbasic_menu', DEMO_MENU))
   const [cart, setCart] = useState([])
   const [isVendor, setIsVendor] = useState(() => {
+    if (isDemo) return false
     const params = new URLSearchParams(window.location.search)
     const urlVendor = params.get('vendor')
     const urlCity = params.get('city')
@@ -440,8 +462,8 @@ export default function App() {
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
-  const [shopTheme, setShopTheme] = useState(() => localStorage.getItem('vendorbasic_theme') || 'default')
-  const [shopAccentColor, setShopAccentColor] = useState(() => localStorage.getItem('vendorbasic_accentColor') || '#8DC63F')
+  const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : (localStorage.getItem('vendorbasic_theme') || 'default'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : (localStorage.getItem('vendorbasic_accentColor') || '#8DC63F'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
@@ -464,7 +486,7 @@ export default function App() {
   const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('vendorbasic_delEnabled') !== 'false')
 
   /* Shop info */
-  const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Chicken Satay')
+  const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Street Noodle')
   const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || 'https://ik.imagekit.io/nepgaxllc/Untitledsadaaaa-removebg-preview.png')
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
@@ -478,7 +500,7 @@ export default function App() {
   const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('vendorbasic_shopFB') || 'lummeenoodles')
   const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('vendorbasic_shopYT') || 'lummeenoodles')
   const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('vendorbasic_shopWeb') || 'www.lummeenoodles.com')
-  const [shopQris, setShopQris] = useState(() => localStorage.getItem('vendorbasic_shopQris') || 'https://ik.imagekit.io/nepgaxllc/Untitledxzxcczdsasdsadads.png')
+  const [shopQris, setShopQris] = useState(() => isDemo ? 'https://ik.imagekit.io/nepgaxllc/Untitledxzxcczdsasdsadads.png' : (localStorage.getItem('vendorbasic_shopQris') || 'https://ik.imagekit.io/nepgaxllc/Untitledxzxcczdsasdsadads.png'))
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('vendorbasic_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('vendorbasic_shopCity') || '')
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('vendorbasic_shopCountry') || '')
@@ -1194,14 +1216,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Preview mode — back to dashboard */}
-      {previewMode && !isVendor && (
-        <div style={{ textAlign: 'center', padding: '12px 16px 24px' }}>
-          <button onClick={() => { setPreviewMode(false); setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-            ← Back to Dashboard
-          </button>
-        </div>
-      )}
 
       {/* ═══ ITEM DETAIL MODAL ═══ */}
       {itemModal && (
@@ -1755,7 +1769,7 @@ export default function App() {
                     </div>
                   )}
 
-                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer' }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
+                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginTop: -30 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
                     Back To Menu
                   </button>
                   <img src="https://ik.imagekit.io/nepgaxllc/Untitledfffddfsdfsdfff-removebg-preview.png" alt="" style={{ position: 'fixed', bottom: 16, right: 16, width: 100, height: 'auto', opacity: 0.8, pointerEvents: 'none' }} />
@@ -2140,60 +2154,155 @@ export default function App() {
       )}
 
 
-      {/* ═══ VENDOR EDIT ITEM MODAL ═══ */}
+      {/* ═══ VENDOR EDIT ITEM PAGE ═══ */}
       {editItem && (
-        <div style={S.overlay} onClick={() => setEditItem(null)}>
-          <div style={S.modal} onClick={(e) => e.stopPropagation()}>
-            <button style={S.closeBtnX} onClick={() => setEditItem(null)}>&times;</button>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Edit Item</h2>
-            <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
-            <input style={S.input} placeholder="Name" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
-            <input style={S.input} placeholder="Price (number)" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
-            <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, appearance: 'auto', fontSize: 13, padding: '10px 12px' }}>
-              {FOOD_TYPE_KEYS.map(cat => (
-                <optgroup key={cat} label={cat} style={{ background: '#1a1a1a' }}>
-                  {FOOD_TYPES[cat].map(item => (
-                    <option key={item} value={item} style={{ background: '#1a1a1a' }}>{item}</option>
-                  ))}
-                </optgroup>
-              ))}
-              <option value="Other" style={{ background: '#1a1a1a' }}>Other (custom)</option>
-            </select>
-            <div style={{ marginBottom: 10 }}>
-              {formPhoto && <img src={formPhoto} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', marginBottom: 6 }} />}
-              <label style={{ display: 'block', padding: '10px 14px', borderRadius: 12, border: '1px dashed rgba(141,198,63,0.4)', background: 'rgba(141,198,63,0.05)', color: '#8DC63F', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>
-                {formPhoto ? 'Change Photo' : '📷 Upload Photo'}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  // Try Supabase storage first
-                  if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-                    const url = await uploadMenuImage(vendorId, file)
-                    if (url) { setFormPhoto(url); return }
-                  }
-                  // Fallback to dataURL
-                  const reader = new FileReader()
-                  reader.onload = () => {
-                    const img = new Image()
-                    img.onload = () => {
-                      const canvas = document.createElement('canvas')
-                      const max = 600
-                      let w = img.width, h = img.height
-                      if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                      canvas.width = w; canvas.height = h
-                      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                      setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
-                    }
-                    img.src = reader.result
-                  }
-                  reader.readAsDataURL(file)
-                }} />
-              </label>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setEditItem(null)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Edit Item</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+              </div>
             </div>
-            <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
-            <input style={S.input} placeholder="Description" maxLength={60} value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
-            <button style={S.btnGreen} onClick={saveEdit}>Save Changes</button>
-            <button style={S.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
+
+            {/* Live card preview */}
+            <div style={{ padding: '0 14px 12px' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
+              <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
+                <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  {formPhoto ? (
+                    <>
+                      <img src={formPhoto} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 19, background: '#8B0000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: 18, lineHeight: 1, display: 'block' }}>📷</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
+                      <span style={{ fontSize: 22 }}>📷</span>
+                      <span style={{ fontSize: 9, fontWeight: 700 }}>Add Photo</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+                      const url = await uploadMenuImage(vendorId, file)
+                      if (url) { setFormPhoto(url); return }
+                    }
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                      const img = new Image()
+                      img.onload = () => {
+                        const canvas = document.createElement('canvas')
+                        const max = 600
+                        let w = img.width, h = img.height
+                        if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
+                        canvas.width = w; canvas.height = h
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+                        setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
+                      }
+                      img.src = reader.result
+                    }
+                    reader.readAsDataURL(file)
+                  }} />
+                </label>
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                <div style={{ ...S.cardBody }}>
+                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
+                  <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {formHalal && <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formPriceMode === 'promo' && formPromoPrice ? (
+                      <>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(Number(formPromoPrice) || 0)}</span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{formPrice ? fmt(Number(formPrice)) : 'Rp 0'}</span>
+                    )}
+                  </div>
+                </div>
+                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+              </div>
+            </div>
+
+            {/* Form card */}
+            <div style={{ margin: '0 14px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+              {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
+
+              {/* Item name */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+              <input style={{ ...S.input, fontSize: 15, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. Nasi Goreng" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
+
+              {/* Category + Spice */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Category</label>
+                  <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
+                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
+                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
+                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
+                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
+                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
+                  <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
+                    <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                    <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
+                    <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
+                    <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Badges */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formPopular ? '2px solid #FACC15' : '1px solid rgba(255,255,255,0.1)', background: formPopular ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.04)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
+              </div>
+
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 14 }} />
+
+              {/* Price toggle */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Normal</button>
+                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Promo</button>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Price</label>
+                  <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. 15000" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
+                  {formPrice && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
+                </div>
+                {formPriceMode === 'promo' && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 12, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
+                    {formPromoPrice && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+              <textarea style={{ ...S.input, minHeight: 60, resize: 'none', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="Short description of the dish" value={formDesc} maxLength={60} onChange={(e) => setFormDesc(e.target.value.slice(0, 60))} />
+            </div>
+
+            {/* Buttons */}
+            <div style={{ padding: '16px 14px 28px', display: 'flex', gap: 10 }}>
+              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditItem(null)}>Cancel</button>
+              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 15, fontWeight: 800, cursor: 'pointer' }} onClick={saveEdit}>Save Changes</button>
+            </div>
           </div>
         </div>
       )}

@@ -21,7 +21,7 @@ const COUNTRIES = [
 ]
 
 const APPS = [
-  { id: 'basic', name: 'Street Vendor', tier: 'Software 1', price: 'Rp 38.000', commission: 'Rp 38.000', color: '#FF6B35', icon: '🍜', desc: 'Simple menu & ordering for street food stalls', url: '/food/basic/' },
+  { id: 'basic', name: 'Street Vendor', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'Simple menu & ordering for street food stalls', url: '/food/basic/' },
   { id: 'pro', name: 'Restaurant', tier: 'Software 2', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant ordering with themes & promos', url: '/food/pro/' },
 ]
 
@@ -55,7 +55,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
     const name = NAMES_ID[Math.floor(Math.random() * NAMES_ID.length)]
     const city = CITIES[Math.floor(Math.random() * CITIES.length)]
     const app = APPS_NAME[Math.floor(Math.random() * APPS_NAME.length)]
-    const amount = [38000, 100000][Math.floor(Math.random() * 2)].toLocaleString()
+    const amount = [35000, 100000][Math.floor(Math.random() * 2)].toLocaleString()
     const clicks = Math.floor(Math.random() * 15 + 3)
     const platform = PLATFORMS[Math.floor(Math.random() * PLATFORMS.length)]
     const text = event.template
@@ -984,7 +984,7 @@ export default function Affiliate({ onClose }) {
       icon: '🍜',
       color: '#FF6B35',
       apps: [
-        { id: 'basic', name: 'Street Vendor', price: 'Rp 38.000', commission: 'Rp 38.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Menu & pemesanan untuk warung kaki lima' : 'Simple menu & ordering for street food stalls', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png', url: '/food/basic/' },
+        { id: 'basic', name: 'Street Vendor', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Menu & pemesanan untuk warung kaki lima' : 'Simple menu & ordering for street food stalls', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png', url: '/food/basic/' },
         { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },

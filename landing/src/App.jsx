@@ -101,7 +101,7 @@ const TRANSLATIONS = {
       pendingMsg: 'We\'re verifying your payment. You\'ll receive a WhatsApp message once your app is activated.',
       backHome: 'Back to Home',
     },
-    ourApps: 'Starting Rp 38.000/Month',
+    ourApps: 'Starting Rp 35.000/Month',
     comingSoon: 'Coming Soon',
     back: '← Back',
     viewDetails: 'View Details →',
@@ -179,16 +179,47 @@ const TRANSLATIONS = {
       food: {
         name: 'Food Ordering Software',
         description: 'Complete food business solutions',
-        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
         apps: {
           basic: {
             name: 'Street Vendor',
             tier: 'Basic',
-            price: 'Rp 38.000',
+            price: 'Rp 35.000',
             yearlyPrice: 'Rp 456.000',
             tagline: 'Simple menu & ordering for street food stalls',
             description: 'Perfect for warung, kaki lima, and small food stalls. Show your menu, take WhatsApp orders, and manage availability — all from your phone.',
-            features: ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
+            features: [
+              'Online in minutes — no coding needed',
+              'Digital menu with photos & descriptions',
+              'WhatsApp ordering — orders sent directly',
+              'Menu categories — Meals, Drinks, Snacks, Extra',
+              'Beautiful app themes — 15+ designs',
+              'Custom accent colors & branding',
+              'Upload your own background image',
+              'Shop logo with accent ring',
+              'Landing page with View Menu button',
+              'Promo prices & daily deals',
+              'Halal & Popular badges on items',
+              'Spice level indicators',
+              'Open/Close shop toggle',
+              'Opening hours with daily schedule',
+              'Visit Us page — location, hours, socials',
+              'Google Maps link integration',
+              'Instagram, TikTok, Facebook, X, Website links',
+              'Delivery rates with per-km pricing',
+              'Collection Only mode',
+              'GPS distance calculation for customers',
+              'QRIS payment QR code on order confirmation',
+              'Multi-language support — 11 languages',
+              'Customer order notes',
+              'Live card preview when adding items',
+              'Item availability toggle per item',
+              'Shop bio — tell your story (350 chars)',
+              'Auto country prefix for WhatsApp',
+              'Government regulated delivery rates (Indonesia)',
+              'Professional theme editor with color picker',
+              'Mobile-first — designed for phones',
+            ],
           },
           pro: {
             name: 'Restaurant',
@@ -241,7 +272,7 @@ const TRANSLATIONS = {
       pendingMsg: 'Kami sedang memverifikasi pembayaran kamu. Kamu akan menerima pesan WhatsApp setelah aplikasi diaktifkan.',
       backHome: 'Kembali ke Beranda',
     },
-    ourApps: 'Mulai Rp 38.000/Bulan',
+    ourApps: 'Mulai Rp 35.000/Bulan',
     comingSoon: 'Segera Hadir',
     back: '← Kembali',
     viewDetails: 'Lihat Detail →',
@@ -319,16 +350,47 @@ const TRANSLATIONS = {
       food: {
         name: 'Software Pemesanan Makanan',
         description: 'Solusi lengkap bisnis makanan',
-        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_13_42%20PM.png?updatedAt=1777886075863',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
         apps: {
           basic: {
             name: 'Pedagang Kaki Lima',
             tier: 'Dasar',
-            price: 'Rp 38.000',
+            price: 'Rp 35.000',
             yearlyPrice: 'Rp 456.000',
             tagline: 'Menu & pemesanan simpel untuk warung makan',
             description: 'Cocok untuk warung, kaki lima, dan kedai kecil. Tampilkan menu, terima pesanan via WhatsApp, dan kelola ketersediaan — semua dari HP.',
-            features: ['Menu digital dengan foto', 'Pemesanan WhatsApp', 'Toggle Buka/Tutup', 'Halaman lokasi & jam buka', 'Berbagi kode QR'],
+            features: [
+              'Online dalam hitungan menit — tanpa coding',
+              'Menu digital dengan foto & deskripsi',
+              'Pemesanan WhatsApp — order langsung masuk',
+              'Kategori menu — Makanan, Minuman, Snack, Extra',
+              'Tema aplikasi cantik — 15+ desain',
+              'Warna aksen & branding kustom',
+              'Upload gambar latar belakang sendiri',
+              'Logo toko dengan ring aksen',
+              'Halaman utama dengan tombol Lihat Menu',
+              'Harga promo & penawaran harian',
+              'Badge Halal & Populer di item',
+              'Indikator level pedas',
+              'Toggle Buka/Tutup toko',
+              'Jam operasional dengan jadwal harian',
+              'Halaman Kunjungi Kami — lokasi, jam, sosmed',
+              'Integrasi link Google Maps',
+              'Link Instagram, TikTok, Facebook, X, Website',
+              'Tarif pengiriman per kilometer',
+              'Mode Ambil Sendiri (Collection Only)',
+              'Kalkulasi jarak GPS untuk pelanggan',
+              'Kode QRIS di halaman konfirmasi order',
+              'Dukungan 11 bahasa',
+              'Catatan pesanan pelanggan',
+              'Preview kartu live saat menambah item',
+              'Toggle ketersediaan per item',
+              'Bio toko — ceritakan kisah Anda (350 huruf)',
+              'Prefix negara otomatis untuk WhatsApp',
+              'Tarif ojol sesuai regulasi pemerintah',
+              'Editor tema profesional dengan pemilih warna',
+              'Mobile-first — didesain untuk HP',
+            ],
           },
           pro: {
             name: 'Restoran',
@@ -387,22 +449,19 @@ function getCategories(t, cp) {
       name: t.foodCategory || 'Food Ordering Software',
       icon: '🍜',
       description: t.foodCategoryDesc || 'Complete food business solutions',
-      bannerImage: (t.categories?.food?.bannerImage) || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+      bannerImage: (t.categories?.food?.bannerImage) || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
       apps: [
         {
           id: 'basic',
           name: t.basicName || 'Street Vendor',
           tier: t.basicTier || 'Software 1',
-          price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 38.000',
+          price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 35.000',
           yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
           tagline: t.basicTagline || 'Simple menu & ordering for street food stalls',
           description: t.basicDesc || '',
-          features: t.basicFeatures || ['Digital menu with photos', 'WhatsApp ordering', 'Open/Close toggle', 'Location & hours page', 'QR code sharing'],
-          screenshots: [
-            'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png',
-            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
-            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_13_42%20PM.png?updatedAt=1777886075863',
-          ],
+          features: t.basicFeatures || ['Online in minutes', 'Digital menu with photos', 'WhatsApp ordering', '15+ app themes', 'Custom branding & colors', 'Promo prices & deals', 'Halal & Popular badges', 'Opening hours management', 'Visit Us page with socials', 'Delivery rates per km', 'QRIS payment QR code', 'Multi-language support', 'Mobile-first design'],
+          screenshots: ['landing', 'menu', 'item', 'checkout', 'sent', 'visit'],
+          liveUrls: ['landing', 'menu', 'item', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
           url: '/food/basic/',
           color: '#FF6B35',
         },
@@ -429,7 +488,7 @@ function getCategories(t, cp) {
 }
 
 /* ─── iPhone Mockup Component ─── */
-function PhoneMockup({ screenshot, color, small }) {
+function PhoneMockup({ screenshot, liveUrl, color, small }) {
   const w = small ? 180 : 280
   const h = small ? 360 : 560
   const r = small ? 28 : 44
@@ -494,7 +553,11 @@ function PhoneMockup({ screenshot, color, small }) {
           borderRadius: 20,
           zIndex: 3,
         }} />
-        {screenshot ? (
+        {liveUrl ? (
+          <div style={{ width: 375, height: 812, transform: `scale(${small ? 180/375 : 280/375})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+            <iframe src={liveUrl} style={{ width: 375, height: 812, border: 'none', pointerEvents: 'none' }} title="Live preview" />
+          </div>
+        ) : screenshot ? (
           <img src={screenshot} alt="App screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
         ) : (
           <span style={{ fontSize: small ? 32 : 48, opacity: 0.3 }}>📱</span>
@@ -518,14 +581,14 @@ function PhoneMockup({ screenshot, color, small }) {
 
 /* ─── Animated Section ─── */
 /* ─── 3D Phone Carousel ─── */
-function Phone3DCarousel({ screenshots, color }) {
+function Phone3DCarousel({ screenshots, color, liveUrl, liveUrls }) {
   const [active, setActive] = useState(0)
   const touchStart = useRef(0)
 
   if (!screenshots || screenshots.length === 0) return null
   if (screenshots.length === 1) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
-      <PhoneMockup screenshot={screenshots[0]} color={color} small />
+      <PhoneMockup screenshot={screenshots[0]} liveUrl={liveUrls?.[0] || liveUrl} color={color} small />
     </div>
   )
 
@@ -573,7 +636,7 @@ function Phone3DCarousel({ screenshots, color }) {
                 filter: isActive ? 'none' : 'brightness(0.7)',
               }}
             >
-              <PhoneMockup screenshot={src} color={color} small />
+              <PhoneMockup screenshot={src} liveUrl={liveUrls?.[i] || (i === 0 ? liveUrl : null)} color={color} small />
             </div>
           )
         })}
@@ -790,7 +853,7 @@ export default function App() {
         </div>
 
         {/* Hero: 3D phone carousel */}
-        <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} />
+        <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} liveUrl={selectedApp.liveUrl} liveUrls={selectedApp.liveUrls} />
 
         <div style={styles.detailContent}>
           <img
@@ -1503,7 +1566,7 @@ export default function App() {
                   onClick={() => { setSelectedApp(app); setDetailTab('details') }}
                 >
                   <div style={styles.appCardPhone}>
-                    <PhoneMockup screenshot={app.screenshots[0]} color={app.color} small />
+                    <PhoneMockup screenshot={app.screenshots[0]} liveUrl={app.liveUrls?.[0] || app.liveUrl} color={app.color} small />
                   </div>
                   <div style={styles.appCardInfo}>
                     <img
@@ -1686,7 +1749,7 @@ export default function App() {
                       customer_phone: fullPhone,
                       app_type: vendorAuthApp?.id || 'basic',
                       app_tier: vendorAuthApp?.id || 'basic',
-                      commission_amount: vendorAuthApp?.id === 'pro' ? 100000 : 38000,
+                      commission_amount: vendorAuthApp?.id === 'pro' ? 100000 : 35000,
                       status: 'pending',
                     })
                     localStorage.removeItem('sl_agent_ref')
