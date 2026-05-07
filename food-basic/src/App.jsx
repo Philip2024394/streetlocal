@@ -206,7 +206,7 @@ const DEMO_MENU = [
 ]
 
 /* ─── Helpers ─── */
-const fmt = (n) => 'Rp ' + n.toLocaleString('id-ID')
+const fmt = (n) => 'Rp ' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 
 function loadJSON(key, fallback) {
   try {
@@ -473,11 +473,12 @@ export default function App() {
   const defaultSchedule = { mon: { open: '17:00', close: '23:00', off: false }, tue: { open: '17:00', close: '23:00', off: false }, wed: { open: '17:00', close: '23:00', off: false }, thu: { open: '17:00', close: '23:00', off: false }, fri: { open: '17:00', close: '23:00', off: false }, sat: { open: '17:00', close: '23:00', off: false }, sun: { open: '17:00', close: '23:00', off: true } }
   const [shopSchedule, setShopSchedule] = useState(() => loadJSON('vendorbasic_shopSchedule', defaultSchedule))
   const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('vendorbasic_shopMaps') || '')
-  const [shopInstagram, setShopInstagram] = useState(() => { const v = localStorage.getItem('vendorbasic_shopIG'); return v !== null ? v : 'chickensatayid' })
-  const [shopTiktok, setShopTiktok] = useState(() => { const v = localStorage.getItem('vendorbasic_shopTT'); return v !== null ? v : 'chickensatay' })
-  const [shopFacebook, setShopFacebook] = useState(() => { const v = localStorage.getItem('vendorbasic_shopFB'); return v !== null ? v : 'https://facebook.com/chickensatay' })
-  const [shopYoutube, setShopYoutube] = useState(() => { const v = localStorage.getItem('vendorbasic_shopYT'); return v !== null ? v : 'https://x.com/chickensatay' })
-  const [shopWebsite, setShopWebsite] = useState(() => { const v = localStorage.getItem('vendorbasic_shopWeb'); return v !== null ? v : 'www.chickensatay.com' })
+  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('vendorbasic_shopIG') || 'lummeenoodles')
+  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('vendorbasic_shopTT') || 'lummeenoodles')
+  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('vendorbasic_shopFB') || 'lummeenoodles')
+  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('vendorbasic_shopYT') || 'lummeenoodles')
+  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('vendorbasic_shopWeb') || 'www.lummeenoodles.com')
+  const [shopQris, setShopQris] = useState(() => localStorage.getItem('vendorbasic_shopQris') || 'https://ik.imagekit.io/nepgaxllc/Untitledxzxcczdsasdsadads.png')
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('vendorbasic_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('vendorbasic_shopCity') || '')
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('vendorbasic_shopCountry') || '')
@@ -572,6 +573,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_shopFB', shopFacebook) }, [shopFacebook])
   useEffect(() => { localStorage.setItem('vendorbasic_shopYT', shopYoutube) }, [shopYoutube])
   useEffect(() => { localStorage.setItem('vendorbasic_shopWeb', shopWebsite) }, [shopWebsite])
+  useEffect(() => { localStorage.setItem('vendorbasic_shopQris', shopQris) }, [shopQris])
   useEffect(() => { localStorage.setItem('vendorbasic_shopFoodType', shopFoodType) }, [shopFoodType])
   useEffect(() => { localStorage.setItem('vendorbasic_shopBio', shopBio) }, [shopBio])
   useEffect(() => { localStorage.setItem('vendorbasic_shopCity', shopCity) }, [shopCity])
@@ -1155,7 +1157,7 @@ export default function App() {
                   )}
                 </div>
                 {isVendor && vendorStatus !== 'expired' && (
-                  <button style={S.smallBtn()} onClick={() => startEdit(item)}>Edit</button>
+                  <button style={S.smallBtn(accent)} onClick={() => startEdit(item)}>Edit</button>
                 )}
               </div>
             </div>
@@ -1336,9 +1338,11 @@ export default function App() {
               {/* Logo + name + status */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
                 {shopLogo ? (
-                  <img src={shopLogo} alt="" style={{ width: 56, height: 56, borderRadius: 28, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                  <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+                    <img src={shopLogo} alt="" style={{ width: 58, height: 58, borderRadius: 29, objectFit: 'cover' }} />
+                  </div>
                 ) : (
-                  <div style={{ width: 56, height: 56, borderRadius: 28, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                  <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{shopName}</div>
@@ -1439,27 +1443,27 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
                     {shopInstagram && (
                       <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                        <img src="https://cdn.simpleicons.org/instagram/white" alt="" style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopFacebook && (
                       <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                        <img src="https://cdn.simpleicons.org/facebook/white" alt="" style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopTiktok && (
                       <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                        <img src="https://cdn.simpleicons.org/tiktok/white" alt="" style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopYoutube && (
                       <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                        <img src="https://cdn.simpleicons.org/x/white" alt="" style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopWebsite && (
                       <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                        <img src="https://api.iconify.design/mdi/web.svg?color=white" alt="" style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                   </div>
@@ -1740,6 +1744,17 @@ export default function App() {
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>
                     {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
                   </p>
+                  {/* QRIS Payment QR — if vendor uploaded */}
+                  {shopQris && (
+                    <div style={{ marginBottom: 24 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Scan to Pay</div>
+                      <div style={{ background: '#fff', borderRadius: 20, padding: 14, display: 'inline-block' }}>
+                        <img src={shopQris} alt="QRIS" style={{ width: 180, height: 180, objectFit: 'contain', borderRadius: 12 }} />
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>QRIS — GoPay, OVO, DANA, ShopeePay, Bank</div>
+                    </div>
+                  )}
+
                   <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer' }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
                     Back To Menu
                   </button>
@@ -1770,42 +1785,62 @@ export default function App() {
       {vendorDrawer && (
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
-          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '85vw', maxWidth: 360, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: '1px solid rgba(255,255,255,0.08)', transform: 'translateX(0)', transition: 'transform 0.25s ease' }}>
-            {/* Header */}
-            <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Dashboard</span>
-                <button onClick={() => setVendorDrawer(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>✕</button>
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#0a0a0a', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: isCustomAccent ? `2px solid ${accent}30` : '1px solid rgba(255,255,255,0.08)' }}>
+            {/* Header with logo */}
+            <div style={{ padding: '20px 16px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {shopLogo ? (
+                  <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+                    <img src={shopLogo} alt="" style={{ width: 36, height: 36, borderRadius: 18, objectFit: 'cover' }} />
+                  </div>
+                ) : (
+                  <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{shopName}</div>
+                  <div style={{ fontSize: 12, color: accent, fontWeight: 600, marginTop: 1 }}>{shopFoodType}</div>
+                </div>
+                <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
-              <span style={{ fontSize: 11, color: '#8DC63F' }}>{shopName}</span>
             </div>
 
-            {/* Preview as Customer */}
-            <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ margin: '12px 16px', padding: '10px 0', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer', width: 'calc(100% - 32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              👁️ Preview as Customer
-            </button>
-
-            {/* Shop Open/Close toggle */}
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {/* Shop status toggle */}
+            <div style={{ margin: '0 16px 12px', padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: shopOpen ? '#8DC63F' : '#EF4444' }}>{shopOpen ? 'Shop Open' : 'Shop Closed'}</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{shopOpen ? 'Accepting orders' : 'Orders paused'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: shopOpen ? '#22c55e' : '#EF4444' }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: shopOpen ? '#22c55e' : '#EF4444' }}>{shopOpen ? 'Shop Open' : 'Shop Closed'}</span>
+                </div>
+                <span style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{shopOpen ? 'Accepting orders' : 'Orders paused'}</span>
               </div>
-              <button style={S.toggle(shopOpen)} onClick={() => setShopOpen(!shopOpen)}>
+              <button style={{ ...S.toggle(shopOpen), background: shopOpen ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setShopOpen(!shopOpen)}>
                 <div style={S.toggleDot(shopOpen)} />
               </button>
             </div>
 
-            {/* Menu items */}
-            {[
-              { icon: '⚙️', label: 'Shop Config', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
-              { icon: '🛵', label: 'Delivery Settings', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
-            ].map(item => (
-              <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', border: 'none', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: 18 }}>{item.icon}</span>
-                {item.label}
+            {/* Preview link */}
+            <div style={{ padding: '0 16px 12px', textAlign: 'center' }}>
+              <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 4 }}>
+                Preview as Customer →
               </button>
-            ))}
+            </div>
+
+            {/* Navigation items */}
+            <div style={{ padding: '0 16px' }}>
+              {[
+                { icon: '⚙️', label: 'Shop Config', desc: 'Name, logo, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
+                { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
+              ].map(item => (
+                <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{item.desc}</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.2)' }}>›</span>
+                </button>
+              ))}
+            </div>
 
             {/* Theme Backgrounds — filtered by country & food type */}
             {(() => {
@@ -1851,7 +1886,7 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
                     {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
                   </div>
                 </button>
@@ -1859,12 +1894,12 @@ export default function App() {
 
               return (
                 <div style={{ padding: '16px' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', marginBottom: 4 }}>🎨 App Theme</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: accent, marginBottom: 4 }}>App Theme</h3>
 
                   {/* Section 1: Recommended for your food type */}
                   {byFoodType.length > 0 && (
                     <>
-                      <p style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Recommended for {shopFoodType}</p>
+                      <p style={{ fontSize: 14, color: accent, fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Recommended for {shopFoodType}</p>
                       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
                         {byFoodType.map(renderThemeCard)}
                       </div>
@@ -1874,7 +1909,7 @@ export default function App() {
                   {/* Section 2: Popular in your region */}
                   {byCountry.length > 0 && (
                     <>
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p>
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p>
                       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
                         {byCountry.filter(t => !byFoodType.some(f => f.id === t.id)).map(renderThemeCard)}
                       </div>
@@ -1884,7 +1919,7 @@ export default function App() {
                   {/* Section 3: More themes */}
                   {rest.length > 0 && (
                     <>
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>More themes</p>
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>More themes</p>
                       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
                         {rest.map(renderThemeCard)}
                       </div>
@@ -1892,8 +1927,9 @@ export default function App() {
                   )}
 
                   {/* Custom upload */}
-                  <label style={{ display: 'block', marginTop: 10, padding: '12px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.15)', textAlign: 'center', cursor: 'pointer', fontSize: 12, color: '#888' }}>
-                    📸 Upload your own background
+                  <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px); } 40% { transform: translateX(3px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }`}</style>
+                  <label style={{ display: 'block', marginTop: 10, padding: '14px', borderRadius: 14, border: 'none', background: '#FFD600', textAlign: 'center', cursor: 'pointer', fontSize: 14, fontWeight: 800, color: '#1a1a1a', animation: 'shake 3s ease-in-out infinite' }}>
+                    Upload your own background
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
                       const file = e.target.files[0]
                       if (!file) return
@@ -1907,42 +1943,43 @@ export default function App() {
                     }} />
                   </label>
 
-                  {/* Custom theme request */}
-                  <div style={{ marginTop: 16, padding: 16, borderRadius: 14, background: 'linear-gradient(135deg, rgba(255,214,0,0.08), rgba(141,198,63,0.08))', border: '1px solid rgba(255,214,0,0.2)' }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 6 }}>🎨 Want a custom theme?</h4>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, marginBottom: 12 }}>
-                      Get a professionally designed theme made exclusively for your business. Your custom theme will be unique to you and won't appear in the public library.
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(0,0,0,0.4)' }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>One-time fee</span>
-                      <span style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>Rp 100.000</span>
+                  {/* Custom services */}
+                  <div style={{ marginTop: 16, padding: 16, borderRadius: 14, background: `${accent}10`, border: `1px solid ${accent}25` }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, color: accent, marginBottom: 12 }}>Professional Services</h4>
+
+                    {/* Custom Theme */}
+                    <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.3)', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Theme</span>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 100.000</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Exclusive background designed for your brand. Not shared with others. Unlimited revisions.</div>
+                      <a href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like a custom theme.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Order Theme — WhatsApp</a>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-                      {['Designed exclusively for your brand', 'Professional food photography style', 'Unlimited revisions until you love it', 'Not shared with other vendors'].map((item, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 10, color: '#8DC63F' }}>✓</span>
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{item}</span>
-                        </div>
-                      ))}
+
+                    {/* Custom Logo */}
+                    <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.3)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Logo</span>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 50.000</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Professional logo designed for your food business. Includes round format optimized for your app.</div>
+                      <a href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like a custom logo.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Order Logo — WhatsApp</a>
                     </div>
-                    <a
-                      href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like to request a custom theme for my app.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}\n\nI'd like a unique theme designed for my business. Please let me know how to proceed with the Rp 100.000 custom theme service.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 12, background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, textDecoration: 'none', cursor: 'pointer' }}
-                    >
-                      Request Custom Theme via WhatsApp
-                    </a>
                   </div>
                 </div>
               )
             })()}
 
             {/* Logout */}
-            <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <button onClick={() => { setIsVendor(false); setVendorDrawer(false) }} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            <div style={{ padding: '16px' }}>
+              <button onClick={() => { setIsVendor(false); setVendorDrawer(false) }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 Logout
               </button>
+              <div style={{ textAlign: 'center', marginTop: 12 }}>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>Powered by </span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>StreetLocal</span>
+              </div>
             </div>
           </div>
         </>
@@ -1950,100 +1987,154 @@ export default function App() {
 
       {/* ═══ DELIVERY SETTINGS ═══ */}
       {showDeliverySettings && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column' }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0, position: 'relative', zIndex: 1 }}>
-            <button onClick={() => setShowDeliverySettings(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-            <div>
-              <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}>{shopName}</span>
-              <span style={{ display: 'block', fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Delivery Rates</span>
-            </div>
-          </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 20px' }}>
-            {/* Enable toggle + Reset */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: delEnabled ? '#8DC63F' : '#F59E0B' }}>{delEnabled ? 'Delivery Available' : 'Collection Only'}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Show estimates to customers</div>
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setShowDeliverySettings(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Delivery Settings</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
-              <button style={S.toggle(delEnabled)} onClick={() => setDelEnabled(!delEnabled)}>
-                <div style={S.toggleDot(delEnabled)} />
-              </button>
             </div>
 
-            {/* Reset to city defaults */}
-            <button onClick={() => {
-              const cc = localStorage.getItem('vendorbasic_shopCountry') ? Object.keys(DELIVERY_DEFAULTS).find(k => DELIVERY_DEFAULTS[k]?.currency && (VENDOR_COUNTRIES || []).find(c => c.code === k)?.name === localStorage.getItem('vendorbasic_shopCountry')) : null
-              const rates = getDeliveryDefaults(cc || 'ID', shopCity)
-              setDelMinCharge(rates.minCharge); setDelMinKm(rates.minKm); setDelPerKm(rates.perKm); setDelMaxKm(rates.maxKm); setDelCurrency(rates.currency)
-            }} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid rgba(250,204,21,0.3)', background: 'rgba(250,204,21,0.1)', color: '#FACC15', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>
-              Reset to {shopCity || 'Default'} Rates
-            </button>
+            {/* Main card */}
+            {(() => {
+              const isIndonesia = shopCountry === 'Indonesia' || shopCountry === '' || delCurrency === 'Rp'
+              return (
+              <>
+              <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+                {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
-            {/* Rate settings in compact containers */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14, marginBottom: 12 }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Currency</label>
-                  <input type="text" value={delCurrency} onChange={e => setDelCurrency(e.target.value)} style={{ ...S.input, marginBottom: 0 }} placeholder="Rp" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Max Distance</label>
-                  <input type="number" value={delMaxKm} onChange={e => setDelMaxKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0 }} placeholder="20" />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Min Fee (flat)</label>
-                  <input type="number" value={delMinCharge} onChange={e => setDelMinCharge(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0 }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Min Distance (km)</label>
-                  <input type="number" value={delMinKm} onChange={e => setDelMinKm(parseInt(e.target.value) || 1)} style={{ ...S.input, marginBottom: 0 }} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Per KM (after {delMinKm}km)</label>
-                  <input type="number" value={delPerKm} onChange={e => setDelPerKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0 }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Free Above (0=off)</label>
-                  <input type="number" value={delFreeAbove} onChange={e => setDelFreeAbove(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0 }} />
-                </div>
-              </div>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>0–{delMinKm}km = {delCurrency} {delMinCharge.toLocaleString()} flat, then +{delCurrency} {delPerKm.toLocaleString()}/km</p>
-            </div>
-
-            {/* Preview */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>Customer Preview</h3>
-              {(() => {
-                const calc = (km) => {
-                  if (km <= delMinKm) return delMinCharge
-                  return Math.ceil((delMinCharge + (km - delMinKm) * delPerKm) / 1000) * 1000
-                }
-                return [
-                  { label: `0–${delMinKm} km`, fee: delMinCharge },
-                  { label: '5 km', fee: calc(5) },
-                  { label: '10 km', fee: calc(10) },
-                  ...(delMaxKm > 10 ? [{ label: '15 km', fee: calc(15) }] : []),
-                  ...(delMaxKm > 15 ? [{ label: '20 km', fee: calc(20) }] : []),
-                ].filter(z => true).map(z => (
-                  <div key={z.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{z.label}</span>
-                    <span style={{ fontWeight: 800, color: '#FACC15' }}>~{delCurrency} {z.fee.toLocaleString()}</span>
+                {/* Toggle */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: delEnabled ? accent : '#F59E0B' }}>{delEnabled ? 'Delivery Available' : 'Collection Only'}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{delEnabled ? 'Customers will see delivery fees' : 'Customers collect from your location'}</div>
                   </div>
-                ))
-              })()}
-              {delFreeAbove > 0 && <p style={{ fontSize: 11, color: '#8DC63F', marginTop: 8 }}>Free delivery for orders above {delCurrency} {delFreeAbove.toLocaleString()}</p>}
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                Based on GoJek/Grab bike rates. Customer arranges their own rider.
-              </p>
-            </div>
+                  <button style={{ ...S.toggle(delEnabled), background: delEnabled ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setDelEnabled(!delEnabled)}>
+                    <div style={S.toggleDot(delEnabled)} />
+                  </button>
+                </div>
+              </div>
+
+              {delEnabled && (
+                <>
+                  {/* Government rates notice — Indonesia only */}
+                  {isIndonesia && (
+                    <div style={{ margin: '0 14px 12px', background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 14, padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', marginBottom: 4 }}>Tarif Ojol Resmi — {shopCity || 'Indonesia'}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                        Rates are pre-set based on Indonesian government regulated ride-hailing tariffs (Kemenhub). You can adjust if needed.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rate settings card */}
+                  <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Delivery Rates</div>
+
+                    {/* Min Fee + Per KM — the two main rates */}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Fare</label>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Starting price for the first km</div>
+                        <input type="number" value={delMinCharge} onChange={e => setDelMinCharge(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 16, fontWeight: 800 }} />
+                        {delMinCharge > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</div>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Per KM</label>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Extra charge for each km after min distance</div>
+                        <input type="number" value={delPerKm} onChange={e => setDelPerKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 16, fontWeight: 800 }} />
+                        {delPerKm > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delPerKm).replace('Rp ', '')}/km</div>}
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 12 }} />
+
+                    {/* Advanced settings */}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Distance (km)</label>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Flat rate covers this distance</div>
+                        <input type="number" value={delMinKm} onChange={e => setDelMinKm(parseInt(e.target.value) || 1)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Max Distance (km)</label>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Furthest you will deliver</div>
+                        <input type="number" value={delMaxKm} onChange={e => setDelMaxKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                      {!isIndonesia && (
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Currency</label>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Your local currency symbol</div>
+                          <input type="text" value={delCurrency} onChange={e => setDelCurrency(e.target.value)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        </div>
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Free Above (0=off)</label>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Free delivery if order exceeds this amount</div>
+                        <input type="number" value={delFreeAbove} onChange={e => setDelFreeAbove(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                        First {delMinKm}km = <strong style={{ color: '#FACC15' }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</strong> flat
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                        After {delMinKm}km = <strong style={{ color: '#FACC15' }}>+{delCurrency} {fmt(delPerKm).replace('Rp ', '')}</strong> per km
+                      </div>
+                      {delFreeAbove > 0 && (
+                        <div style={{ fontSize: 12, color: accent, fontWeight: 700, marginTop: 4 }}>
+                          Free delivery on orders above {delCurrency} {fmt(delFreeAbove).replace('Rp ', '')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Reset button */}
+                  {isIndonesia && (
+                    <div style={{ margin: '0 14px 12px' }}>
+                      <button onClick={() => {
+                        const rates = getDeliveryDefaults('ID', shopCity)
+                        setDelMinCharge(rates.minCharge); setDelMinKm(rates.minKm); setDelPerKm(rates.perKm); setDelMaxKm(rates.maxKm); setDelCurrency(rates.currency)
+                      }} style={{ width: '100%', padding: 12, borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+                        {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 14 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                        <span style={{ position: 'relative', zIndex: 1 }}>Reset to Indonesia Rates</span>
+                      </button>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 6 }}>Based on Kemenhub regulated ojol tariffs</div>
+                    </div>
+                  )}
+
+                  {/* Info for non-Indonesia */}
+                  {!isIndonesia && (
+                    <div style={{ margin: '0 14px 12px', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, textAlign: 'center' }}>
+                        Set your own delivery rates based on local ride-hailing services in your area
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Save button */}
+                  <div style={{ margin: '0 14px 24px' }}>
+                    <button onClick={() => setShowDeliverySettings(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+                      Save Rates
+                    </button>
+                  </div>
+                </>
+              )}
+              </>
+              )
+            })()}
           </div>
         </div>
       )}
@@ -2109,111 +2200,156 @@ export default function App() {
 
       {/* ═══ VENDOR ADD ITEM PAGE ═══ */}
       {addingItem && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column' }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
-            <button onClick={() => setAddingItem(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-            <div>
-              <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</span>
-              <span style={{ display: 'block', fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
-            </div>
-          </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
-          {/* Centered container */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 360 }}>
-              {/* Photo + Spice level row */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'flex-start' }}>
-                <label style={{ display: 'block', width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : '1px dashed rgba(141,198,63,0.4)', background: formPhoto ? 'none' : 'rgba(141,198,63,0.05)', cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setAddingItem(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Add New Item</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+              </div>
+            </div>
+
+            {/* Live card preview — shows exactly how it will look */}
+            <div style={{ padding: '0 14px 12px' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
+              <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
+                <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {formPhoto ? (
                     <img src={formPhoto} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#8DC63F', fontSize: 11, fontWeight: 700 }}>
-                      <span style={{ fontSize: 22, marginBottom: 2 }}>+</span>
-                      Photo
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
+                      <span style={{ fontSize: 22 }}>📷</span>
+                      <span style={{ fontSize: 9, fontWeight: 700 }}>Add Photo</span>
                     </div>
                   )}
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-                      const url = await uploadMenuImage(vendorId, file)
-                      if (url) { setFormPhoto(url); return }
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+                    const url = await uploadMenuImage(vendorId, file)
+                    if (url) { setFormPhoto(url); return }
+                  }
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    const img = new Image()
+                    img.onload = () => {
+                      const canvas = document.createElement('canvas')
+                      const max = 600
+                      let w = img.width, h = img.height
+                      if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
+                      canvas.width = w; canvas.height = h
+                      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+                      setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
                     }
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      const img = new Image()
-                      img.onload = () => {
-                        const canvas = document.createElement('canvas')
-                        const max = 600
-                        let w = img.width, h = img.height
-                        if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                        canvas.width = w; canvas.height = h
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                        setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
-                      }
-                      img.src = reader.result
-                    }
-                    reader.readAsDataURL(file)
-                  }} />
+                    img.src = reader.result
+                  }
+                  reader.readAsDataURL(file)
+                }} />
                 </label>
+                {/* Popular badge on image */}
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                {/* Card body preview */}
+                <div style={{ ...S.cardBody }}>
+                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
+                  <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {formHalal && <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formPriceMode === 'promo' && formPromoPrice ? (
+                      <>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(Number(formPromoPrice) || 0)}</span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{formPrice ? fmt(Number(formPrice)) : 'Rp 0'}</span>
+                    )}
+                  </div>
+                </div>
+                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               </div>
+            </div>
 
-              {/* Dish name */}
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
-              <input style={{ ...S.input, fontSize: 15, padding: '12px' }} placeholder="Dish name" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
+            {/* Form card */}
+            <div style={{ margin: '0 14px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+              {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
-              {/* Spice + Category dropdowns — side by side */}
+              {/* Item name */}
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+              <input style={{ ...S.input, fontSize: 15, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. Nasi Goreng" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
+
+              {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, flex: 1, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
-                  <option value={0} style={{ background: '#1a1a1a' }}>No Spice</option>
-                  <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
-                  <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
-                  <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
-                </select>
-                <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, flex: 1, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto' }}>
-                  <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                  <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                  <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                  <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                  <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
-                </select>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Category</label>
+                  <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
+                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
+                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
+                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
+                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
+                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Spice Level</label>
+                  <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
+                    <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                    <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
+                    <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
+                    <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Halal + Popular toggles */}
+              {/* Badges row */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formPopular ? '2px solid #FACC15' : '1px solid rgba(255,255,255,0.1)', background: formPopular ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.04)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 14 }} />
+
+              {/* Price section */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Normal</button>
+                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Promo</button>
+              </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', background: formHalal ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)', color: formHalal ? '#22C55E' : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
-                <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', background: formPopular ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.06)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Price</label>
+                  <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. 15000" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
+                  {formPrice && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
+                </div>
+                {formPriceMode === 'promo' && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 12, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
+                    {formPromoPrice && <div style={{ fontSize: 11, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
+                  </div>
+                )}
               </div>
 
-              {/* Price mode toggle */}
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', background: formPriceMode === 'normal' ? '#FACC15' : 'rgba(255,255,255,0.08)', color: formPriceMode === 'normal' ? '#000' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Normal Price</button>
-                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', background: formPriceMode === 'promo' ? '#EF4444' : 'rgba(255,255,255,0.08)', color: formPriceMode === 'promo' ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Promo Price</button>
-              </div>
-              {/* Price inputs */}
-              <input style={{ ...S.input, fontSize: 15, padding: '12px' }} placeholder="Price" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
-              {formPriceMode === 'promo' && (
-                <input style={{ ...S.input, fontSize: 15, padding: '12px', borderColor: 'rgba(239,68,68,0.3)' }} placeholder="Promo price" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
-              )}
+              {/* Description */}
+              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+              <textarea
+                style={{ ...S.input, minHeight: 60, resize: 'none', marginBottom: 0, fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                placeholder="Short description of the dish"
+                value={formDesc}
+                maxLength={60}
+                onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
+              />
+            </div>
 
-              {/* Description with character limit */}
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
-              <div style={{ position: 'relative', marginBottom: 12 }}>
-                <textarea
-                  style={{ ...S.input, minHeight: 70, resize: 'vertical', marginBottom: 0, fontSize: 13, padding: '12px' }}
-                  placeholder="Description (max 60 characters)"
-                  value={formDesc}
-                  maxLength={60}
-                  onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
-                />
-                <span style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{formDesc.length}/120</span>
-              </div>
-
-              {/* Add button */}
-              <button style={{ ...S.btnGreen, marginTop: 0, width: '100%' }} onClick={saveAdd}>Add to Menu</button>
+            {/* Add button — sticky bottom */}
+            <div style={{ padding: '16px 14px 28px' }}>
+              <button style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={saveAdd}>
+                {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                <span style={{ position: 'relative', zIndex: 1 }}>Add to Menu</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2221,71 +2357,80 @@ export default function App() {
 
       {/* ═══ SHOP CONFIG PAGE ═══ */}
       {shopConfig && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column' }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
-            <button onClick={() => setShopConfig(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-            <div>
-              <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</span>
-              <span style={{ display: 'block', fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+            <button onClick={() => setShopConfig(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Shop Config</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
             </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 20px' }}>
-            {/* Share link */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14, marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>Your App Link</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input readOnly value={`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} style={{ ...S.input, marginBottom: 0, flex: 1, fontSize: 13 }} />
-                <button onClick={(e) => { navigator.clipboard.writeText(`https://streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`); e.target.textContent = 'Copied!'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#FACC15', color: '#000', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, minWidth: 60 }}>Copy</button>
-              </div>
+          {/* Share link card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 14, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 6, display: 'block' }}>Your App Link</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input readOnly value={`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} style={{ ...S.input, marginBottom: 0, flex: 1, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <button onClick={(e) => { navigator.clipboard.writeText(`https://streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`); e.target.textContent = '✓'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Copy</button>
             </div>
-            {/* Settings form */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: '#fff' }}>Shop Settings</h2>
+          </div>
 
-            {/* Logo upload */}
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          {/* Logo + Basic Info card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
+
+            {/* Logo upload — shows exact landing page preview */}
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <label style={{ cursor: 'pointer', display: 'inline-block' }}>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
                   const file = e.target.files[0]
                   if (!file) return
                   const url = await uploadMenuImage(vendorId, file)
-                  if (url) {
-                    setShopLogo(url)
-                    localStorage.setItem('vendorbasic_shopLogo', url)
-                  }
+                  if (url) { setShopLogo(url); localStorage.setItem('vendorbasic_shopLogo', url) }
                 }} />
                 {shopLogo ? (
-                  <img src={shopLogo} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.2)' }} />
+                  <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
+                    <img src={shopLogo} alt="" style={{ width: 86, height: 86, borderRadius: 43, objectFit: 'cover' }} />
+                  </div>
                 ) : (
-                  <div style={{ width: 80, height: 80, borderRadius: 40, background: 'rgba(255,255,255,0.1)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 24 }}>📷</span>
-                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Add Logo</span>
+                  <div style={{ width: 100, height: 100, borderRadius: 50, background: `${accent}20`, border: `2px dashed ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontSize: 28 }}>📷</span>
+                    <span style={{ fontSize: 10, color: accent, fontWeight: 700 }}>Add Logo</span>
                   </div>
                 )}
               </label>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{shopLogo ? 'Tap to change logo' : 'Tap to upload logo'}</div>
-              {shopLogo && (
-                <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 11, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove logo</button>
-              )}
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
+              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
             </div>
 
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ fontSize: 11, color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
-            <input style={S.input} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number (with country code)</label>
-            <input style={S.input} value={shopPhone} onChange={(e) => setShopPhone(e.target.value)} />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type / Description</label>
-            <input style={S.input} value={shopFoodType} onChange={(e) => setShopFoodType(e.target.value)} placeholder="e.g. Indonesian Street Food" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About Your Business <span style={{ fontSize: 11, color: shopBio.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopBio.length}/350)</span></label>
-            <div style={{ position: 'relative', marginBottom: 10 }}>
-              <textarea style={{ ...S.input, minHeight: 70, resize: 'vertical', marginBottom: 0 }} value={shopBio} maxLength={350} onChange={(e) => setShopBio(e.target.value.slice(0, 350))} placeholder="Tell customers about your food, your story, what makes you special..." />
-              <span style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{shopBio.length}/200</span>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
+            <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
+
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number</label>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+              <div style={{ padding: '12px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{shopCountry === 'Indonesia' || shopCountry === '' ? '+62' : shopCountry === 'Malaysia' ? '+60' : shopCountry === 'Singapore' ? '+65' : shopCountry === 'Thailand' ? '+66' : '+'}</div>
+              <input style={{ ...S.input, marginBottom: 0, flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopPhone.replace(/^\+?\d{1,3}\s?/, '')} onChange={(e) => {
+                const prefix = shopCountry === 'Indonesia' || shopCountry === '' ? '+62' : shopCountry === 'Malaysia' ? '+60' : shopCountry === 'Singapore' ? '+65' : shopCountry === 'Thailand' ? '+66' : '+'
+                setShopPhone(prefix + e.target.value.replace(/[^0-9]/g, ''))
+              }} placeholder="812 3456 7890" type="tel" />
             </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Stall Location</label>
+
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type</label>
+            <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopFoodType} onChange={(e) => setShopFoodType(e.target.value)} placeholder="e.g. Noodles" />
+
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About <span style={{ color: shopBio.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopBio.length}/350)</span></label>
+            <textarea style={{ ...S.input, minHeight: 120, resize: 'vertical', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5 }} value={shopBio} maxLength={350} onChange={(e) => setShopBio(e.target.value.slice(0, 350))} placeholder="Tell customers about your food, your story, what makes you special..." />
+          </div>
+
+          {/* Location card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Location</div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Address</label>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <input style={{ ...S.input, flex: 1, marginBottom: 0 }} value={shopAddress} onChange={async (e) => {
+              <input style={{ ...S.input, flex: 1, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopAddress} onChange={async (e) => {
                 setShopAddress(e.target.value)
                 if (e.target.value.length > 3) {
                   try {
@@ -2312,7 +2457,7 @@ export default function App() {
                     setLocationSuggestions(nearbyData.map(d => d.display_name))
                   } catch { setShopAddress(`${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`) }
                 }, () => alert('Please allow location access'), { enableHighAccuracy: true, timeout: 10000 })
-              }} style={{ padding: '8px 12px', borderRadius: 10, border: 'none', background: '#8DC63F', color: '#000', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>📍</button>
+              }} style={{ padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>📍</button>
             </div>
             {locationSuggestions.length > 0 && (
               <div style={{ marginBottom: 10 }}>
@@ -2327,15 +2472,21 @@ export default function App() {
             )}
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>City</label>
-                <input style={{ ...S.input, marginBottom: 0 }} value={shopCity} onChange={(e) => setShopCity(e.target.value)} placeholder="e.g. Yogyakarta" />
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>City</label>
+                <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCity} onChange={(e) => setShopCity(e.target.value)} placeholder="e.g. Yogyakarta" />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Country</label>
-                <input style={{ ...S.input, marginBottom: 0 }} value={shopCountry} onChange={(e) => setShopCountry(e.target.value)} placeholder="e.g. Indonesia" />
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Country</label>
+                <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCountry} onChange={(e) => setShopCountry(e.target.value)} placeholder="e.g. Indonesia" />
               </div>
             </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, display: 'block' }}>🕐 Opening Hours</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Google Maps Link</label>
+            <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopMapsLink} onChange={(e) => setShopMapsLink(e.target.value)} placeholder="Paste Google Maps link" />
+          </div>
+
+          {/* Hours card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Opening Hours</div>
             {[
               { key: 'mon', label: 'Mon' }, { key: 'tue', label: 'Tue' }, { key: 'wed', label: 'Wed' },
               { key: 'thu', label: 'Thu' }, { key: 'fri', label: 'Fri' }, { key: 'sat', label: 'Sat' }, { key: 'sun', label: 'Sun' },
@@ -2346,55 +2497,76 @@ export default function App() {
                   <span style={{ flex: 1, fontSize: 12, color: '#EF4444', fontWeight: 600 }}>Closed</span>
                 ) : (
                   <>
-                    <input type="time" value={shopSchedule[day.key]?.open || '17:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], open: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12, fontFamily: 'inherit' }} />
+                    <input type="time" value={shopSchedule[day.key]?.open || '17:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], open: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', colorScheme: 'dark' }} />
                     <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>–</span>
-                    <input type="time" value={shopSchedule[day.key]?.close || '23:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], close: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12, fontFamily: 'inherit' }} />
+                    <input type="time" value={shopSchedule[day.key]?.close || '23:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], close: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', colorScheme: 'dark' }} />
                   </>
                 )}
-                <button onClick={() => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], off: !shopSchedule[day.key]?.off } })} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: shopSchedule[day.key]?.off ? 'rgba(239,68,68,0.2)' : 'rgba(141,198,63,0.2)', color: shopSchedule[day.key]?.off ? '#EF4444' : '#8DC63F', fontSize: 10, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                <button onClick={() => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], off: !shopSchedule[day.key]?.off } })} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: shopSchedule[day.key]?.off ? 'rgba(239,68,68,0.2)' : '#FFD600', color: shopSchedule[day.key]?.off ? '#EF4444' : '#1a1a1a', fontSize: 10, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
                   {shopSchedule[day.key]?.off ? 'Off' : 'On'}
                 </button>
               </div>
             ))}
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>📍 Google Maps Link</label>
-            <input style={S.input} value={shopMapsLink} onChange={(e) => setShopMapsLink(e.target.value)} placeholder="Paste Google Maps link" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Instagram</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="Instagram" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
-              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopInstagram} onChange={(e) => setShopInstagram(e.target.value)} placeholder="nasigorengpakjoko" />
+          </div>
+
+          {/* Social Media card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Social Media</div>
+            {[
+              { label: 'Instagram', icon: 'https://cdn.simpleicons.org/instagram/white', value: shopInstagram, set: setShopInstagram, placeholder: 'username' },
+              { label: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/white', value: shopFacebook, set: setShopFacebook, placeholder: 'facebook.com/page' },
+              { label: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/white', value: shopTiktok, set: setShopTiktok, placeholder: 'username' },
+              { label: 'X', icon: 'https://cdn.simpleicons.org/x/white', value: shopYoutube, set: setShopYoutube, placeholder: 'x.com/handle' },
+              { label: 'Website', icon: 'https://api.iconify.design/mdi/web.svg?color=white', value: shopWebsite, set: setShopWebsite, placeholder: 'www.yoursite.com' },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <img src={s.icon} alt="" style={{ width: 20, height: 20 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 2 }}>{s.label}</div>
+                  <input style={{ width: '100%', padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} value={s.value} onChange={(e) => s.set(e.target.value)} placeholder={s.placeholder} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* QRIS Payment QR */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Payment QR Code</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Upload your QRIS or payment QR. Customers see it after placing an order.</div>
+            <div style={{ textAlign: 'center' }}>
+              <label style={{ cursor: 'pointer', display: 'inline-block' }}>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                  const file = e.target.files[0]
+                  if (!file) return
+                  const url = await uploadMenuImage(vendorId, file)
+                  if (url) { setShopQris(url); localStorage.setItem('vendorbasic_shopQris', url) }
+                }} />
+                {shopQris ? (
+                  <img src={shopQris} alt="QRIS" style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 8 }} />
+                ) : (
+                  <div style={{ width: 160, height: 160, borderRadius: 12, background: `${accent}10`, border: `2px dashed ${accent}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 36 }}>📱</span>
+                    <span style={{ fontSize: 12, color: accent, fontWeight: 700 }}>Upload QRIS</span>
+                  </div>
+                )}
+              </label>
+              {shopQris && (
+                <div style={{ marginTop: 8 }}>
+                  <button onClick={() => { setShopQris(''); localStorage.removeItem('vendorbasic_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
+                </div>
+              )}
             </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Facebook</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="Facebook" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
-              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopFacebook} onChange={(e) => setShopFacebook(e.target.value)} placeholder="https://facebook.com/yourpage" />
-            </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>TikTok</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="TikTok" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
-              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopTiktok} onChange={(e) => setShopTiktok(e.target.value)} placeholder="nasigorengpakjoko" />
-            </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>X</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="X" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
-              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopYoutube} onChange={(e) => setShopYoutube(e.target.value)} placeholder="https://x.com/yourhandle" />
-            </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Website</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="Website" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
-              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopWebsite} onChange={(e) => setShopWebsite(e.target.value)} placeholder="www.yoursite.com" />
-            </div>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Status</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <button style={S.toggle(shopOpen)} onClick={() => setShopOpen(!shopOpen)}>
-                <div style={S.toggleDot(shopOpen)} />
-              </button>
-              <span style={{ fontSize: 15, fontWeight: 600 }}>{shopOpen ? 'Open' : 'Closed'}</span>
-            </div>
-            <button style={{ ...S.btnGreen, width: '100%' }} onClick={() => {
+          </div>
+
+          {/* Save button */}
+          <div style={{ padding: '8px 14px 28px' }}>
+            <button onClick={() => {
               if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_open: shopOpen }).catch(() => {})
               setShopConfig(false)
-            }}>{t.done || 'Done'}</button>
-            </div>
+            }} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Save Settings</button>
+          </div>
           </div>
         </div>
       )}
