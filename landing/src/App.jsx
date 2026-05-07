@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 import Admin from './Admin'
+import Affiliate from './Affiliate'
 import { getTranslation, COUNTRY_TO_LANG } from './translations'
 
 /* ─── Translations ─── */
@@ -706,7 +707,7 @@ export default function App() {
   ]
   const [vendorAuthOpen, setVendorAuthOpen] = useState(false)
   const [vendorAuthMode, setVendorAuthMode] = useState('login') // 'login' or 'signup'
-  const [vendorAuthForm, setVendorAuthForm] = useState({ phone: '', password: '', name: '', category: '', country: detectedCountry || '', city: '' })
+  const [vendorAuthForm, setVendorAuthForm] = useState({ phone: '', password: '', name: '', category: '', country: '', city: '' })
   const [vendorAuthError, setVendorAuthError] = useState('')
   const [vendorAuthApp, setVendorAuthApp] = useState(null) // which app they're signing into
   const [slugValue, setSlugValue] = useState('')
@@ -714,6 +715,21 @@ export default function App() {
   const slugTimer = useRef(null)
   const [countryPricing, setCountryPricing] = useState(null)
   const [detectedCountry, setDetectedCountry] = useState(null)
+
+  // Agent referral tracking on landing page
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref) {
+      localStorage.setItem('sl_agent_ref', ref)
+      if (supabase) {
+        supabase.from('affiliate_agents').select('id, total_clicks').eq('agent_code', ref).single().then(({ data }) => {
+          if (data) {
+            supabase.from('affiliate_agents').update({ total_clicks: (data.total_clicks || 0) + 1 }).eq('id', data.id)
+          }
+        })
+      }
+    }
+  }, [])
 
   // Detect country from IP for pricing (before account creation)
   useEffect(() => {
@@ -831,11 +847,11 @@ export default function App() {
             <>
               <p style={styles.detailDesc}>{selectedApp.description}</p>
 
-              <h3 style={styles.featuresTitle}>{t.features}</h3>
-              <ul style={styles.featuresList}>
+              <h3 style={styles.featuresTitle}>{t.features} ({selectedApp.features.length})</h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
                 {selectedApp.features.map((f, i) => (
-                  <li key={i} style={styles.featureItem}>
-                    <span style={{ ...styles.featureCheck, background: '#22c55e', color: '#fff' }}>✓</span>
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 0', fontSize: 14, borderBottom: '1px solid #f5f5f5', color: '#333' }}>
+                    <span style={{ color: '#22c55e', fontSize: 14, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>✓</span>
                     {f}
                   </li>
                 ))}
@@ -984,28 +1000,19 @@ export default function App() {
 
           {selectedApp.url && detailTab !== 'register' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* Try Demo */}
-              {userAccount ? (
-                <a
-                  href={window.location.port === '5173' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/') : selectedApp.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
-                >
-                  {t.openApp}
-                </a>
-              ) : (
-                <button
-                  onClick={() => { setSignupAction('demo'); setSignupOpen(true) }}
-                  style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
-                >
-                  {t.openApp}
-                </button>
-              )}
+              {/* Try Demo — always free, no signup required */}
+              <a
+                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/food/basic/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
+              >
+                {t.openApp}
+              </a>
               {/* Subscribe */}
               <button
                 onClick={() => {
-                  if (!userAccount) { setSignupAction('subscribe'); setSignupOpen(true) }
+                  if (!userAccount) { setSignupAction('subscribe'); setSignupError(''); setSlugCheck(null); setSlugValue(''); setSignupOpen(true) }
                   else { setPaymentOpen(true); setPaymentProof(null); setCopied(false) }
                 }}
                 style={{ ...styles.ctaButton, background: '#FFD600', color: '#1a1a1a', border: 'none' }}
@@ -1066,7 +1073,7 @@ export default function App() {
                   <button onClick={() => setSignupOpen(false)} style={styles.paymentClose}>&times;</button>
                 </div>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 20, lineHeight: 1.5, textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>
-                  {signupAction === 'demo' ? 'Create a free account to try the demo.' : 'Create your account to subscribe.'}
+                  Create your account to subscribe.
                 </p>
 
                 {signupError && <p style={{ fontSize: 13, color: '#EF4444', marginBottom: 12, fontWeight: 700, background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: 8 }}>{signupError}</p>}
@@ -1252,17 +1259,10 @@ export default function App() {
                     localStorage.setItem('sl_user_account', JSON.stringify(account))
                     setUserAccount(account)
                     setSignupOpen(false)
-                    // Perform the action they wanted
-                    if (signupAction === 'demo') {
-                      const demoUrl = window.location.port === '5173'
-                        ? (selectedApp.id === 'basic' ? 'http://localhost:5176/' : 'http://localhost:5174/food/pro/')
-                        : selectedApp.url
-                      window.open(demoUrl, '_blank')
-                    } else if (signupAction === 'subscribe') {
-                      setPaymentOpen(true)
-                      setPaymentProof(null)
-                      setCopied(false)
-                    }
+                    // Account created — open payment
+                    setPaymentOpen(true)
+                    setPaymentProof(null)
+                    setCopied(false)
                   }}
                   style={{
                     ...styles.ctaButton,
@@ -1271,7 +1271,7 @@ export default function App() {
                     border: 'none',
                   }}
                 >
-                  {signupAction === 'demo' ? 'Create Account & Try Demo' : 'Create Account & Subscribe'}
+                  Create Account & Subscribe
                 </button>
               </div>
             </div>
@@ -1566,7 +1566,7 @@ export default function App() {
           {vendorAuthMode === 'signup' && (
             <>
               <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Business Name</label>
-              <input type="text" value={vendorAuthForm.name} onChange={e => setVendorAuthForm({ ...vendorAuthForm, name: e.target.value })} placeholder="Your business name" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
+              <input type="text" value={vendorAuthForm.name} maxLength={20} onChange={e => setVendorAuthForm({ ...vendorAuthForm, name: e.target.value })} placeholder="Your business name (max 20)" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
               <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Country</label>
               <select value={vendorAuthForm.country} onChange={e => {
                 const c = VENDOR_COUNTRIES.find(x => x.code === e.target.value)
@@ -1653,7 +1653,7 @@ export default function App() {
               if (vendorAuthForm.password.length < 4) { setVendorAuthError('Password min 4 characters'); return }
               const countryInfo = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)
               const fullPhone = countryInfo ? countryInfo.prefix.replace('+', '') + phone : phone
-              const slug = vendorAuthForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+              const slug = (vendorAuthForm.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[''`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'my-shop'
               const { data, error } = await supabase.from('vendor_accounts').insert({
                 phone: fullPhone, password_hash: vendorAuthForm.password,
                 shop_name: vendorAuthForm.name, shop_food_type: vendorAuthForm.category,
@@ -1674,6 +1674,25 @@ export default function App() {
                   billing_cycle: 'monthly',
                 })
               } catch (e) { /* ignore */ }
+              // Track affiliate referral if agent link was used
+              try {
+                const agentRef = localStorage.getItem('sl_agent_ref')
+                if (agentRef && supabase) {
+                  const { data: agentData } = await supabase.from('affiliate_agents').select('id').eq('agent_code', agentRef).single()
+                  if (agentData) {
+                    await supabase.from('affiliate_referrals').insert({
+                      agent_id: agentData.id,
+                      customer_name: vendorAuthForm.name,
+                      customer_phone: fullPhone,
+                      app_type: vendorAuthApp?.id || 'basic',
+                      app_tier: vendorAuthApp?.id || 'basic',
+                      commission_amount: vendorAuthApp?.id === 'pro' ? 100000 : 38000,
+                      status: 'pending',
+                    })
+                    localStorage.removeItem('sl_agent_ref')
+                  }
+                }
+              } catch (e) { /* ignore */ }
               localStorage.setItem('indoo_vendor_phone', phone)
               localStorage.setItem('indoo_vendor_pass', vendorAuthForm.password)
               localStorage.setItem('indoo_vendor_id', data.id)
@@ -1683,7 +1702,7 @@ export default function App() {
                 ? (isDev ? 'http://localhost:5176/' : '/food/basic/')
                 : (isDev ? '/food/pro/' : '/food/pro/')
               const countryName = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)?.name || ''
-              const appUrl = `${baseUrl}?vendor=${data.id}&city=${encodeURIComponent(vendorAuthForm.city)}&country=${encodeURIComponent(countryName)}&cc=${vendorAuthForm.country}`
+              const appUrl = `${baseUrl}?vendor=${data.id}&slug=${encodeURIComponent(slug)}&city=${encodeURIComponent(vendorAuthForm.city)}&country=${encodeURIComponent(countryName)}&cc=${vendorAuthForm.country}`
               window.open(appUrl, '_blank')
               setVendorAuthOpen(false)
             }
@@ -1706,6 +1725,10 @@ export default function App() {
 
   if (currentPage === 'admin') {
     return <Admin onClose={() => setCurrentPage(null)} />
+  }
+
+  if (currentPage === 'affiliate') {
+    return <Affiliate onClose={() => setCurrentPage(null)} />
   }
 
   /* ─── Sub Pages (About, FAQ, Services) ─── */
@@ -1887,6 +1910,18 @@ export default function App() {
             </FadeIn>
           ))}
         </div>
+      </div>
+
+      {/* Agent Programme Link */}
+      <div style={{ textAlign: 'center', padding: '0 20px 8px' }}>
+        <img src="https://ik.imagekit.io/nepgaxllc/Untitledfffdd.png" alt="Become an Agent" style={{ width: '100%', maxWidth: 340, borderRadius: 16, marginBottom: 10 }} />
+        <button
+          onClick={() => setCurrentPage('affiliate')}
+          style={{ background: 'linear-gradient(135deg, #FF6B35, #FF8F65)', border: 'none', borderRadius: 14, padding: '14px 24px', cursor: 'pointer', width: '100%', maxWidth: 340 }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>StreetLocal.live/agent</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Earn 100% first-month commission — limited seats</div>
+        </button>
       </div>
 
       {/* Footer */}

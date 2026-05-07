@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import RestaurantBrowseScreen from '@/screens/RestaurantBrowseScreen'
 import DirectoryPage from './pages/DirectoryPage'
 import RestaurantPage from './pages/RestaurantPage'
@@ -8,6 +9,19 @@ import VendorPanel from './pages/VendorPanel'
 export default function App() {
   const [restaurantSlug, setRestaurantSlug] = useState(null)
   const [view, setView] = useState('food') // 'food' | 'directory' | 'restaurant' | 'vendor'
+
+  /* --- Agent referral tracking --- */
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref && supabase) {
+      localStorage.setItem('sl_agent_ref', ref)
+      supabase.from('affiliate_agents').select('id, total_clicks').eq('agent_code', ref).single().then(({ data }) => {
+        if (data) {
+          supabase.from('affiliate_agents').update({ total_clicks: (data.total_clicks || 0) + 1 }).eq('id', data.id)
+        }
+      })
+    }
+  }, [])
 
   useEffect(() => {
     const hostname = window.location.hostname

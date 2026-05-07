@@ -181,14 +181,28 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
 /* ─── Demo Menu ─── */
 const DEMO_MENU = [
+  // Meals
   { id: 1, name: 'Nasi Goreng', price: 15000, photo: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300', desc: 'Fried rice with egg, vegetables, and kecap manis', category: 'Meal', available: true },
   { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
   { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
   { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },
   { id: 5, name: 'Ayam Geprek', price: 20000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Crispy smashed chicken with sambal', category: 'Meal', available: true },
+  // Drinks
   { id: 6, name: 'Es Teh Manis', price: 5000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Sweet iced tea', category: 'Drink', available: true },
   { id: 7, name: 'Es Jeruk', price: 7000, photo: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=300', desc: 'Fresh orange juice', category: 'Drink', available: true },
-  { id: 8, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
+  { id: 8, name: 'Kopi Hitam', price: 5000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Black coffee, strong Indonesian brew', category: 'Drink', available: true },
+  { id: 9, name: 'Es Alpukat', price: 10000, photo: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=300', desc: 'Creamy avocado smoothie with chocolate', category: 'Drink', available: true },
+  { id: 10, name: 'Air Mineral', price: 3000, photo: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300', desc: 'Bottled mineral water', category: 'Drink', available: true },
+  // Snacks
+  { id: 11, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
+  { id: 12, name: 'Kerupuk', price: 3000, photo: 'https://images.unsplash.com/photo-1630384060421-cb20aed56993?w=300', desc: 'Crispy prawn crackers', category: 'Snack', available: true },
+  { id: 13, name: 'Pisang Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Fried banana fritters with crispy batter', category: 'Snack', available: true },
+  { id: 14, name: 'Tahu Crispy', price: 4000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Crispy fried tofu bites', category: 'Snack', available: true },
+  // Extra Sauce
+  { id: 15, name: 'Sambal Extra', price: 2000, photo: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=300', desc: 'Extra portion of spicy chili sambal', category: 'Extra Sauce', available: true },
+  { id: 16, name: 'Kecap Manis', price: 1000, photo: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300', desc: 'Sweet soy sauce', category: 'Extra Sauce', available: true },
+  { id: 17, name: 'Saus Kacang', price: 3000, photo: 'https://images.unsplash.com/photo-1635321593217-40050ad13c74?w=300', desc: 'Creamy peanut sauce for satay and gado-gado', category: 'Extra Sauce', available: true },
+  { id: 18, name: 'Sambal Matah', price: 3000, photo: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=300', desc: 'Fresh Balinese shallot and lemongrass sambal', category: 'Extra Sauce', available: true },
 ]
 
 /* ─── Helpers ─── */
@@ -234,38 +248,62 @@ const PLACEHOLDER_SM = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/200
 const PLACEHOLDER_LG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect width=%27300%27 height=%27300%27 fill=%27%23222%27/%3E%3C/svg%3E"
 
 const THEME_PRESETS = [
-  { id: 'default', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: 'Wood', category: 'Indonesian Street Food' },
-  { id: 'dark', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: 'Dark', category: 'Street Food' },
-  { id: 'bamboo', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: 'Bamboo', category: 'Asian Cuisine' },
-  { id: 'kebab', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: 'Kebab', category: 'Kebabs' },
-  { id: 'burger', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: 'Burgers', category: 'Burgers' },
-  { id: 'donut', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: 'Donuts', category: 'Donuts' },
-  { id: 'asia', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: 'Asia', category: 'Asian Cuisine' },
-  { id: 'satay', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: 'Satay', category: 'Chicken Satay' },
-  { id: 'juice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_03_51%20PM.png', label: 'Juice', category: 'Fresh Juice' },
-  { id: 'friedrice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_07_16%20PM.png', label: 'Fried Rice', category: 'Fried Rice' },
-  { id: 'noodle', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2006_02_12%20PM.png?updatedAt=1778065351273', label: 'Noodle Soup', category: 'Noodle Soup' },
-  { id: 'meatball', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2006_05_19%20PM.png', label: 'Meatball Soup', category: 'Meatball Soup' },
-  { id: 'chicken', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2006_08_26%20PM.png', label: 'Crispy Chicken', category: 'Crispy Chicken' },
-  { id: 'coffee', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2006_11_39%20PM.png', label: 'Coffee', category: 'Coffee' },
+  // Indonesian / Malaysian
+  { id: 'default', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: '#1 Wood', category: 'Indonesian Street Food', countries: ['ID', 'MY'], foodTypes: ['Street Food', 'Indonesian Street Food'] },
+  { id: 'satay', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#2 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
+  { id: 'pecellele', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#3 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'friedrice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#4 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
+  { id: 'noodle', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#5 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'] },
+  { id: 'bakso', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#6 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
+  { id: 'chicken', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#7 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
+  { id: 'juice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#8 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
+  { id: 'coffee', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#9 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
+  // Pan-Asian
+  { id: 'bamboo', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: '#10 Bamboo', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'TW', 'HK'], foodTypes: ['Asian Cuisine', 'Noodle Soup', 'Fried Rice'] },
+  { id: 'asia', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: '#11 Asia', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'ID'], foodTypes: ['Asian Cuisine', 'Street Food'] },
+  // Universal
+  { id: 'dark', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: '#12 Dark', category: 'Street Food', countries: [], foodTypes: ['Street Food'] },
+  { id: 'kebab', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: '#13 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
+  { id: 'burger', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#14 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
+  { id: 'donut', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#15 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
 ]
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
+
+/* Helper: filter themes by country + food type */
+function getFilteredThemes(countryCode, foodType, langCountries) {
+  // Determine user's country list from detected country or language
+  const userCountries = countryCode ? [countryCode] : (langCountries || [])
+
+  // 1. Themes matching the selected food type
+  const byFoodType = foodType ? THEME_PRESETS.filter(t => t.foodTypes.includes(foodType)) : []
+
+  // 2. Themes for user's country (popular in your region)
+  const byCountry = userCountries.length > 0
+    ? THEME_PRESETS.filter(t => t.countries.length === 0 || t.countries.some(c => userCountries.includes(c)))
+    : THEME_PRESETS
+
+  // 3. Everything else
+  const allIds = new Set([...byFoodType.map(t => t.id), ...byCountry.map(t => t.id)])
+  const rest = THEME_PRESETS.filter(t => !allIds.has(t.id))
+
+  return { byFoodType, byCountry, rest }
+}
 
 /* ─── Styles ─── */
 const S = {
   page: { background: 'transparent', minHeight: '100%', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 8px', position: 'sticky', top: 0, zIndex: 10 },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 16px', position: 'sticky', top: 0, zIndex: 10, background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', paddingBottom: 24 },
   shopLogo: { width: 44, height: 44, borderRadius: 12, objectFit: 'cover', marginRight: 12 },
   shopName: { fontSize: 22, fontWeight: 700, flex: 1, textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.5)' },
   gearBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   vendorBar: { background: 'rgba(0,0,0,0.4)', padding: '4px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' },
-  card: { background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: 'none', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'center', position: 'relative', transition: 'all 0.3s ease', height: 104, overflow: 'hidden' },
+  card: { background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'center', position: 'relative', transition: 'all 0.3s ease', height: 104, overflow: 'hidden' },
   cardImg: { width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
   cardBody: { flex: 1, minWidth: 0, height: 80, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' },
   cardName: { fontSize: 16, fontWeight: 600, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  cardDesc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 5 },
+  cardDesc: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', paddingRight: 30 },
   cardPrice: { fontSize: 16, fontWeight: 700, color: '#FACC15' },
-  addBtn: { position: 'absolute', right: 10, bottom: 10, width: 28, height: 28, borderRadius: 14, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  addBtn: { position: 'absolute', right: 10, bottom: 10, width: 28, height: 28, borderRadius: 14, background: '#FFD600', border: 'none', color: '#1a1a1a', fontSize: 18, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   stickyCart: { position: 'fixed', bottom: 0, left: 0, right: 0, background: 'linear-gradient(135deg,#2d7a0e,#8DC63F)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100, minHeight: 56 },
   cartText: { fontSize: 15, fontWeight: 600 },
   checkoutBtn: { background: '#fff', color: '#2d7a0e', border: 'none', borderRadius: 12, padding: '10px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer' },
@@ -298,8 +336,23 @@ export default function App() {
   if (viewMode === 'admin') return <AdminDashboard />
   if (viewMode === 'activate') return <ActivatePage />
 
+  /* --- Agent referral tracking --- */
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref && supabase) {
+      // Store ref for attribution on purchase
+      localStorage.setItem('sl_agent_ref', ref)
+      // Record click
+      supabase.from('affiliate_agents').select('id, total_clicks').eq('agent_code', ref).single().then(({ data }) => {
+        if (data) {
+          supabase.from('affiliate_agents').update({ total_clicks: (data.total_clicks || 0) + 1 }).eq('id', data.id)
+        }
+      })
+    }
+  }, [])
+
   /* --- i18n --- */
-  const { locale, setLocale, t, nativeLang } = useAppLocale()
+  const { locale, setLocale, t, nativeLang, countryCode, LANG_TO_COUNTRIES } = useAppLocale()
 
   /* --- Check vendor activation status for public visitors --- */
   const [publicVendorStatus, setPublicVendorStatus] = useState(null)
@@ -360,6 +413,7 @@ export default function App() {
   const [shopConfig, setShopConfig] = useState(false) // show shop config
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
+  const [previewMode, setPreviewMode] = useState(false)
   const [shopTheme, setShopTheme] = useState(() => localStorage.getItem('vendorbasic_theme') || 'default')
   const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('vendorbasic_delBase')) || 5000)
   const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delPerKm')) || 2500)
@@ -380,11 +434,11 @@ export default function App() {
   const defaultSchedule = { mon: { open: '17:00', close: '23:00', off: false }, tue: { open: '17:00', close: '23:00', off: false }, wed: { open: '17:00', close: '23:00', off: false }, thu: { open: '17:00', close: '23:00', off: false }, fri: { open: '17:00', close: '23:00', off: false }, sat: { open: '17:00', close: '23:00', off: false }, sun: { open: '17:00', close: '23:00', off: true } }
   const [shopSchedule, setShopSchedule] = useState(() => loadJSON('vendorbasic_shopSchedule', defaultSchedule))
   const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('vendorbasic_shopMaps') || '')
-  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('vendorbasic_shopIG') || '')
-  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('vendorbasic_shopTT') || '')
-  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('vendorbasic_shopFB') || '')
-  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('vendorbasic_shopYT') || '')
-  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('vendorbasic_shopWeb') || '')
+  const [shopInstagram, setShopInstagram] = useState(() => { const v = localStorage.getItem('vendorbasic_shopIG'); return v !== null ? v : 'chickensatayid' })
+  const [shopTiktok, setShopTiktok] = useState(() => { const v = localStorage.getItem('vendorbasic_shopTT'); return v !== null ? v : 'chickensatay' })
+  const [shopFacebook, setShopFacebook] = useState(() => { const v = localStorage.getItem('vendorbasic_shopFB'); return v !== null ? v : 'https://facebook.com/chickensatay' })
+  const [shopYoutube, setShopYoutube] = useState(() => { const v = localStorage.getItem('vendorbasic_shopYT'); return v !== null ? v : 'https://x.com/chickensatay' })
+  const [shopWebsite, setShopWebsite] = useState(() => { const v = localStorage.getItem('vendorbasic_shopWeb'); return v !== null ? v : 'www.chickensatay.com' })
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('vendorbasic_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('vendorbasic_shopCity') || '')
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('vendorbasic_shopCountry') || '')
@@ -652,8 +706,8 @@ export default function App() {
         setShopTheme(matchedTheme.id)
         localStorage.setItem('vendorbasic_theme', matchedTheme.id)
         localStorage.setItem('vendorbasic_themeBg', matchedTheme.img)
-        const bg = document.getElementById('app-bg')
-        if (bg) bg.style.backgroundImage = `url(${matchedTheme.img})`
+        const bgImg = document.getElementById('app-bg-img')
+        if (bgImg) bgImg.src = matchedTheme.img
       }
       updateVendorConfig(vendor.id, { shop_food_type: signupCategory })
       setIsVendor(true)
@@ -764,8 +818,12 @@ export default function App() {
     setOrderDone(true)
   }
 
+  /* --- Menu category filter --- */
+  const [menuFilter, setMenuFilter] = useState('All')
+  const MENU_CATEGORIES = ['All', ...new Set(menuItems.map(m => m.category).filter(Boolean))]
+
   /* --- Visible menu --- */
-  const visibleMenu = isVendor ? menuItems : menuItems.filter((m) => m.available)
+  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available)).filter(m => menuFilter === 'All' || m.category === menuFilter)
 
   // Active daily deals — filter by current time
   const activeDeals = dailyDeals.filter(d => {
@@ -783,16 +841,19 @@ export default function App() {
   /* ═══ LANDING PAGE — full screen, no content behind ═══ */
   if (showLanding) {
     return (
-      <div style={{ width: '100%', height: '100vh', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
         {/* Background image — uses vendor's selected theme */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }} />
-        {/* Dark overlay for text readability */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)' }} />
+        <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
 
 
         {/* Language toggle — top right, single flag, tap to switch */}
-        <button onClick={() => setLocale(locale === 'id' ? 'en' : 'id')} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, width: 48, height: 48, borderRadius: 24, border: 'none', background: 'none', padding: 0, cursor: 'pointer', overflow: 'hidden' }}>
-          <img src={locale === 'id' ? 'https://ik.imagekit.io/nepgaxllc/Untitleddddsssfsdf-removebg-preview.png' : 'https://ik.imagekit.io/nepgaxllc/Untitleddddsss-removebg-preview.png'} alt="lang" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <button onClick={() => {
+          const codes = LANGUAGES.map(l => l.code)
+          const idx = codes.indexOf(locale)
+          setLocale(codes[(idx + 1) % codes.length])
+        }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 18 }}>{LANGUAGES.find(l => l.code === locale)?.flag || '🌐'}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
         </button>
 
         {/* Content — centered */}
@@ -801,15 +862,15 @@ export default function App() {
           {shopLogo && <img src={shopLogo} alt="" style={{ width: 90, height: 90, borderRadius: 22, objectFit: 'cover', marginBottom: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }} />}
 
           {/* Shop name */}
-          <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: 50, fontWeight: 700, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.8)', padding: '0 20px', lineHeight: 1.1 }}>{shopName}</h1>
+          <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: 42, fontWeight: 800, color: '#fff', WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
 
           {/* Food category tagline */}
           {shopFoodType && (
-            <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 16, fontWeight: 400, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{shopFoodType}</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1 }}>{shopFoodType}</h2>
           )}
           {/* City, Country */}
           {(shopCity || shopCountry) && (
-            <p style={{ textAlign: 'center', marginBottom: 40, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+            <p style={{ textAlign: 'center', marginBottom: 40, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)' }}>
               {[shopCity, shopCountry].filter(Boolean).join(', ')}
             </p>
           )}
@@ -830,16 +891,22 @@ export default function App() {
               () => setShowLanding(false)
             )
           }} style={{
-            padding: '14px 44px', border: 'none', background: '#FACC15', borderRadius: 12,
-            cursor: 'pointer', color: '#000', fontSize: 15, fontWeight: 700,
+            padding: '14px 44px', border: 'none', borderRadius: 12,
+            cursor: 'pointer', fontSize: 15, fontWeight: 700,
             position: 'relative', overflow: 'hidden',
+            ...(shopTheme === 'noodle' ? { background: '#8B0000', color: '#fff' } : { background: '#FACC15', color: '#000' }),
           }}>
             <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 12 }}>
-              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'landingGlow 3s ease-in-out infinite' }} />
+              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: shopTheme === 'noodle' ? 'linear-gradient(90deg, transparent, rgba(255,100,100,0.2), transparent)' : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'landingGlow 3s ease-in-out infinite' }} />
             </div>
-            <span style={{ position: 'relative', zIndex: 1 }}>{delEnabled ? 'Set Location' : 'Enter'}</span>
+            <span style={{ position: 'relative', zIndex: 1 }}>View Menu</span>
           </button>
           <a href="https://streetlocal.live" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 8, letterSpacing: 1, textDecoration: 'none' }}>streetlocal.live</a>
+
+          {/* DEV: Quick dashboard access */}
+          {!previewMode && <button onClick={() => { setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5 }}>DEV: Dashboard</button>}
+          {/* Preview mode — back to dashboard */}
+          {previewMode && <button onClick={() => { setPreviewMode(false); setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>← Back to Dashboard</button>}
         </div>
       </div>
     )
@@ -867,6 +934,10 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {/* DEV: Quick dashboard toggle */}
+          {!isVendor && (
+            <button onClick={() => { setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 8, fontWeight: 700, cursor: 'pointer' }}>DEV</button>
+          )}
           {/* Hamburger menu (vendor only) */}
           {isVendor && (
             <button onClick={() => setVendorDrawer(true)} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>☰</button>
@@ -936,8 +1007,8 @@ export default function App() {
                 return (
                   <div key={deal.id} style={{ background: 'rgba(255,214,0,0.08)', border: '1px solid rgba(255,214,0,0.2)', borderRadius: 14, padding: 14, display: 'flex', gap: 12, alignItems: 'center' }}>
                     {deal.photo && <img src={deal.photo} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{deal.name}</div>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deal.name}</div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FFD600' }}>{fmt(deal.dealPrice)}</span>
                         <span style={{ fontSize: 12, color: '#888', textDecoration: 'line-through' }}>{fmt(deal.originalPrice)}</span>
@@ -962,15 +1033,42 @@ export default function App() {
       )}
 
       {/* --- Menu --- */}
-      <div style={{ padding: '36px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Menu Items</span>
-        {!isVendor && <button onClick={() => setShowLocation(true)} style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Visit Us</button>}
-      </div>
       <div style={{ paddingBottom: 12 }}>
+        {/* Category text toggles + Visit Us */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '20px 16px 0' }}>
+          <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {[{ label: 'Menu', filter: 'All' },
+            ...(['Snack', 'Drink', 'Extra Sauce'].filter(cat => menuItems.some(m => m.category === cat)).map(cat => ({
+              label: cat === 'Drink' ? 'Drinks' : cat === 'Snack' ? 'Snacks' : 'Extra',
+              filter: cat,
+            })))
+          ].map(tab => {
+            const isActive = menuFilter === tab.filter
+            return (
+              <button key={tab.filter} onClick={() => setMenuFilter(tab.filter)} style={{
+                background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
+                fontSize: 15, fontWeight: 700,
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                borderBottom: isActive ? `2px solid ${shopTheme === 'noodle' ? '#8B0000' : '#fff'}` : '2px solid transparent',
+              }}>
+                {tab.label}
+              </button>
+            )
+          })}
+          </div>
+          {!isVendor && (
+            <button onClick={() => setShowLocation(true)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0, marginLeft: 12, minHeight: 44, ...(shopTheme === 'noodle' ? { background: '#8B0000' } : { background: 'rgba(255,255,255,0.15)' }) }}>
+              {shopTheme === 'noodle' && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 10 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,100,100,0.25), transparent)', animation: 'landingGlow 2.5s ease-in-out infinite' }} /></div>}
+              <span style={{ position: 'relative', zIndex: 1 }}>Visit Us</span>
+            </button>
+          )}
+        </div>
+        <div style={{ height: 12 }} />
+        <div>
         {visibleMenu.map((item) => (
           <div
             key={item.id}
-            style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}) }}
+            style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(shopTheme === 'noodle' ? { borderLeft: '3px solid #8B0000' } : {}) }}
           >
             {/* Toggle — top right (vendor only) */}
             {isVendor && vendorStatus !== 'expired' && (
@@ -995,32 +1093,17 @@ export default function App() {
             {isVendor && vendorStatus !== 'expired' && (
               <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
             )}
-            {/* Price — absolute for customer, in body for vendor */}
-            {!isVendor && (
-              <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
-                {item.promoPrice ? (
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', display: 'block' }}>{fmt(item.price)}</span>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{fmt(item.price)}</span>
-                )}
-              </div>
-            )}
             <div style={S.cardBody}>
               <div style={S.cardName} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
               <div style={S.cardDesc}>{item.desc}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {isVendor ? (
-                  <div>
-                    {item.promoPrice ? (
-                      <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
-                    ) : (
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>
-                    )}
-                  </div>
-                ) : <div />}
+                <div>
+                  {item.promoPrice ? (
+                    <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
+                  ) : (
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>
+                  )}
+                </div>
                 {isVendor && vendorStatus !== 'expired' && (
                   <button style={S.smallBtn()} onClick={() => startEdit(item)}>Edit</button>
                 )}
@@ -1047,29 +1130,45 @@ export default function App() {
           <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</span>
         </a>
       )}
+      </div>
 
       {/* --- Sticky Cart Bar --- */}
       {totalItems > 0 && !isVendor && (
-        <div style={S.stickyCart}>
+        <div style={{ ...S.stickyCart, ...(shopTheme === 'noodle' ? { background: '#8B0000' } : {}) }}>
           <span style={S.cartText}>{totalItems} item{totalItems > 1 ? 's' : ''} &middot; {fmt(totalPrice)}</span>
-          <button style={S.checkoutBtn} onClick={() => { setCheckoutOpen(true); setOrderDone(false); detectDeliveryZone() }}>
+          <button style={{ ...S.checkoutBtn, ...(shopTheme === 'noodle' ? { background: '#fff', color: '#8B0000' } : {}) }} onClick={() => { setCheckoutOpen(true); setOrderDone(false); detectDeliveryZone() }}>
             {t.checkout || 'Checkout'} &rarr;
+          </button>
+        </div>
+      )}
+
+      {/* Preview mode — back to dashboard */}
+      {previewMode && !isVendor && (
+        <div style={{ textAlign: 'center', padding: '12px 16px 24px' }}>
+          <button onClick={() => { setPreviewMode(false); setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+            ← Back to Dashboard
           </button>
         </div>
       )}
 
       {/* ═══ ITEM DETAIL MODAL ═══ */}
       {itemModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, overflowY: 'auto', display: 'flex', justifyContent: 'center' }} onClick={() => setItemModal(null)}>
-          <div style={{ width: '100%', maxWidth: 480, minHeight: '100%', position: 'relative', display: 'flex', flexDirection: 'column', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }} onClick={(e) => e.stopPropagation()}>
-            {/* Header with back arrow + shop name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200 }} onClick={() => setItemModal(null)}>
+          {/* Fixed background + glass — stays in place while content scrolls */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
+
+          {/* Content — scrollable over the fixed glass background */}
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto', height: '100%', paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
               <button onClick={() => setItemModal(null)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</span>
-                <span style={{ display: 'block', fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+                <span style={{ display: 'block', fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
               </div>
-              <button onClick={() => { setItemModal(null); if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+              <button onClick={() => { setItemModal(null); if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
                 <span style={{ fontSize: 20 }}>🛒</span>
                 {cart.length > 0 && (
                   <span style={{ position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1079,21 +1178,21 @@ export default function App() {
               </button>
             </div>
 
-            {/* Food image — taller */}
-            <div style={{ padding: '0 16px', marginTop: 40 }}>
+            {/* Food image */}
+            <div style={{ padding: '16px 16px 0' }}>
               <img
                 src={itemModal.photo || PLACEHOLDER_LG}
                 alt={itemModal.name}
-                style={{ width: '100%', maxHeight: 340, objectFit: 'cover', borderRadius: 16, marginBottom: 16 }}
+                style={{ width: '100%', borderRadius: 16 }}
               />
             </div>
 
-            {/* Dish info container */}
-            <div style={{ margin: '0 16px', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 12, padding: '14px 16px', marginBottom: 12 }}>
+            {/* Dish info */}
+            <div style={{ margin: '12px 16px', background: 'rgba(0,0,0,0.65)', borderRadius: 12, padding: '14px 16px' }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4, color: '#fff' }}>{itemModal.name}</h2>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 10, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{itemModal.desc}</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>{itemModal.desc}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#FACC15' }}>{fmt(itemModal.price)}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#FACC15' }}>{fmt(itemModal.promoPrice || itemModal.price)}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: '#FACC15', color: '#000', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
                   <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', minWidth: 24, textAlign: 'center' }}>{modalQty}</span>
@@ -1102,30 +1201,26 @@ export default function App() {
               </div>
             </div>
 
-            {/* Spacer */}
-            <div style={{ flex: 1 }} />
-
-            {/* Add to Cart button — fixed footer */}
+            {/* Add to Cart button — sticky bottom */}
             {shopOpen && itemModal.available && (
-              <div style={{ padding: '12px 16px 20px', background: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
+              <div style={{ position: 'sticky', bottom: 0, padding: '12px 16px 24px', background: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
                 <button
                   style={{ ...S.btnGreen, marginTop: 0, width: '100%' }}
                   onClick={() => { addToCart(itemModal, modalQty); setItemModal(null) }}
                 >
-                  {t.addToCart || 'Add to Cart'} &middot; {fmt(itemModal.price * modalQty)}
+                  {t.addToCart || 'Add to Cart'} &middot; {fmt((itemModal.promoPrice || itemModal.price) * modalQty)}
                 </button>
               </div>
             )}
-
           </div>
         </div>
       )}
 
       {/* ═══ LOCATION PAGE ═══ */}
       {showLocation && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: '#0a0a0a', overflowY: 'auto' }}>
-          {/* Background — same as menu theme */}
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 250, overflowY: 'auto' }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0, pointerEvents: 'none' }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0, pointerEvents: 'none' }} />
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', position: 'relative', zIndex: 1 }}>
@@ -1213,39 +1308,34 @@ export default function App() {
               </a>
             )}
 
-            {/* Social Links */}
+            {/* Social Links — icon buttons in one row */}
             {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite) && (
-              <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 20, marginBottom: 12 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>{t.followUs || 'Follow Us'}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: '16px 20px', marginBottom: 12 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, textAlign: 'center' }}>{t.followUs || 'Follow Us'}</h3>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 14 }}>
                   {shopInstagram && (
-                    <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                      <span style={{ fontSize: 20 }}>📸</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#E1306C' }}>@{shopInstagram.replace('@', '')}</span>
-                    </a>
-                  )}
-                  {shopTiktok && (
-                    <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                      <span style={{ fontSize: 20 }}>🎵</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>@{shopTiktok.replace('@', '')}</span>
+                    <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="Instagram" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                     </a>
                   )}
                   {shopFacebook && (
-                    <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                      <span style={{ fontSize: 20 }}>👤</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#1877F2' }}>Facebook</span>
+                    <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="Facebook" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                    </a>
+                  )}
+                  {shopTiktok && (
+                    <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="TikTok" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                     </a>
                   )}
                   {shopYoutube && (
-                    <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://youtube.com/@${shopYoutube}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                      <span style={{ fontSize: 20 }}>▶️</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#FF0000' }}>YouTube</span>
+                    <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="X" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                     </a>
                   )}
                   {shopWebsite && (
-                    <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                      <span style={{ fontSize: 20 }}>🌐</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#8DC63F' }}>{shopWebsite}</span>
+                    <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="Website" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                     </a>
                   )}
                 </div>
@@ -1257,7 +1347,9 @@ export default function App() {
 
       {/* ═══ CHECKOUT PAGE ═══ */}
       {checkoutOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, backgroundColor: '#0a0a0a', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
             <div>
@@ -1356,7 +1448,7 @@ export default function App() {
       {vendorDrawer && (
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
-          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 260, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 501, overflowY: 'auto', borderLeft: '1px solid rgba(255,255,255,0.08)', animation: 'slideRight 0.2s ease' }}>
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '85vw', maxWidth: 360, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: '1px solid rgba(255,255,255,0.08)', transform: 'translateX(0)', transition: 'transform 0.25s ease' }}>
             {/* Header */}
             <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1365,6 +1457,11 @@ export default function App() {
               </div>
               <span style={{ fontSize: 11, color: '#8DC63F' }}>{shopName}</span>
             </div>
+
+            {/* Preview as Customer */}
+            <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ margin: '12px 16px', padding: '10px 0', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer', width: 'calc(100% - 32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              👁️ Preview as Customer
+            </button>
 
             {/* Shop Open/Close toggle */}
             <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1388,84 +1485,137 @@ export default function App() {
               </button>
             ))}
 
-            {/* Theme Backgrounds — full page preview */}
-            <div style={{ padding: '16px' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>🎨 App Theme</h3>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Tap a theme to preview how your menu will look</p>
+            {/* Theme Backgrounds — filtered by country & food type */}
+            {(() => {
+              const langCountries = LANG_TO_COUNTRIES[nativeLang] || []
+              const { byFoodType, byCountry, rest } = getFilteredThemes(countryCode, shopFoodType, langCountries)
 
-              {/* Horizontal scroll of full previews */}
-              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
-                {THEME_PRESETS.map(theme => (
-                  <button key={theme.id} onClick={() => {
-                    setShopTheme(theme.id)
-                    localStorage.setItem('vendorbasic_theme', theme.id)
-                    localStorage.setItem('vendorbasic_themeBg', theme.img)
-                    const bg = document.getElementById('app-bg')
-                    if (bg) bg.style.backgroundImage = `url(${theme.img})`
-                    setVendorDrawer(false)
-                    setShowLanding(true)
-                  }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0, width: 180 }}>
-                    {/* Full app preview */}
-                    <div style={{ width: '100%', height: 280, backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                      {/* Mock header */}
-                      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.2)' }} />
+              const renderThemeCard = (theme) => (
+                <button key={theme.id} onClick={() => {
+                  setShopTheme(theme.id)
+                  localStorage.setItem('vendorbasic_theme', theme.id)
+                  localStorage.setItem('vendorbasic_themeBg', theme.img)
+                  const bgImg = document.getElementById('app-bg-img')
+                  if (bgImg) bgImg.src = theme.img
+                  setVendorDrawer(false)
+                  setShowLanding(true)
+                }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0, width: 160 }}>
+                  <div style={{ width: '100%', height: 240, backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                    {/* Mock header */}
+                    <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.2)' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ height: 6, width: '60%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
+                        <div style={{ height: 4, width: '40%', background: 'rgba(255,255,255,0.2)', borderRadius: 2 }} />
+                      </div>
+                    </div>
+                    {/* Mock menu cards */}
+                    {[1, 2, 3].map(i => (
+                      <div key={i} style={{ margin: '3px 10px', padding: 6, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
                         <div style={{ flex: 1 }}>
-                          <div style={{ height: 6, width: '60%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
-                          <div style={{ height: 4, width: '40%', background: 'rgba(255,255,255,0.2)', borderRadius: 2 }} />
+                          <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
+                          <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.7 }} />
                         </div>
                       </div>
-                      {/* Mock category header */}
-                      <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <div style={{ width: 16, height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.15)' }} />
-                        <div style={{ height: 6, width: '30%', background: 'rgba(255,255,255,0.4)', borderRadius: 3 }} />
+                    ))}
+                    {/* Mock cart bar */}
+                    <div style={{ marginTop: 'auto', padding: '6px 10px 8px' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '5px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ height: 5, width: '40%', background: 'rgba(255,255,255,0.3)', borderRadius: 3 }} />
+                        <div style={{ height: 14, width: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 5 }} />
                       </div>
-                      {/* Mock menu cards */}
-                      {[1, 2, 3].map(i => (
-                        <div key={i} style={{ margin: '3px 10px', padding: 8, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 4 }} />
-                            <div style={{ height: 4, width: '50%', background: 'rgba(255,255,255,0.2)', borderRadius: 2, marginBottom: 3 }} />
-                            <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.7 }} />
-                          </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
+                    {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
+                  </div>
+                </button>
+              )
+
+              return (
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', marginBottom: 4 }}>🎨 App Theme</h3>
+
+                  {/* Section 1: Recommended for your food type */}
+                  {byFoodType.length > 0 && (
+                    <>
+                      <p style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Recommended for {shopFoodType}</p>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
+                        {byFoodType.map(renderThemeCard)}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Section 2: Popular in your region */}
+                  {byCountry.length > 0 && (
+                    <>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
+                        {byCountry.filter(t => !byFoodType.some(f => f.id === t.id)).map(renderThemeCard)}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Section 3: More themes */}
+                  {rest.length > 0 && (
+                    <>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>More themes</p>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
+                        {rest.map(renderThemeCard)}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Custom upload */}
+                  <label style={{ display: 'block', marginTop: 10, padding: '12px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.15)', textAlign: 'center', cursor: 'pointer', fontSize: 12, color: '#888' }}>
+                    📸 Upload your own background
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                      const file = e.target.files[0]
+                      if (!file) return
+                      const url = await uploadMenuImage(vendorId, file)
+                      if (url) {
+                        setShopTheme('custom')
+                        localStorage.setItem('vendorbasic_theme', 'custom')
+                        localStorage.setItem('vendorbasic_themeBg', url)
+                        const bgImg = document.getElementById('app-bg-img')
+                        if (bgImg) bgImg.src = url
+                        setVendorDrawer(false)
+                        setShowLanding(true)
+                      }
+                    }} />
+                  </label>
+
+                  {/* Custom theme request */}
+                  <div style={{ marginTop: 16, padding: 16, borderRadius: 14, background: 'linear-gradient(135deg, rgba(255,214,0,0.08), rgba(141,198,63,0.08))', border: '1px solid rgba(255,214,0,0.2)' }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 6 }}>🎨 Want a custom theme?</h4>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, marginBottom: 12 }}>
+                      Get a professionally designed theme made exclusively for your business. Your custom theme will be unique to you and won't appear in the public library.
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(0,0,0,0.4)' }}>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>One-time fee</span>
+                      <span style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>Rp 100.000</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+                      {['Designed exclusively for your brand', 'Professional food photography style', 'Unlimited revisions until you love it', 'Not shared with other vendors'].map((item, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 10, color: '#8DC63F' }}>✓</span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{item}</span>
                         </div>
                       ))}
-                      {/* Mock sticky cart */}
-                      <div style={{ marginTop: 'auto', padding: '6px 10px 8px' }}>
-                        <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ height: 5, width: '40%', background: 'rgba(255,255,255,0.3)', borderRadius: 3 }} />
-                          <div style={{ height: 16, width: 40, background: 'rgba(255,255,255,0.2)', borderRadius: 6 }} />
-                        </div>
-                      </div>
                     </div>
-                    {/* Label */}
-                    <div style={{ fontSize: 11, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
-                      {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom upload */}
-              <label style={{ display: 'block', marginTop: 10, padding: '12px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.15)', textAlign: 'center', cursor: 'pointer', fontSize: 12, color: '#888' }}>
-                📸 Upload Custom Background
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                  const file = e.target.files[0]
-                  if (!file) return
-                  const url = await uploadMenuImage(vendorId, file)
-                  if (url) {
-                    setShopTheme('custom')
-                    localStorage.setItem('vendorbasic_theme', 'custom')
-                    localStorage.setItem('vendorbasic_themeBg', url)
-                    const bg = document.getElementById('app-bg')
-                    if (bg) bg.style.backgroundImage = `url(${url})`
-                    setVendorDrawer(false)
-                    setShowLanding(true)
-                  }
-                }} />
-              </label>
-            </div>
+                    <a
+                      href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like to request a custom theme for my app.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}\n\nI'd like a unique theme designed for my business. Please let me know how to proceed with the Rp 100.000 custom theme service.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 12, background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, textDecoration: 'none', cursor: 'pointer' }}
+                    >
+                      Request Custom Theme via WhatsApp
+                    </a>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Logout */}
             <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1479,9 +1629,11 @@ export default function App() {
 
       {/* ═══ DELIVERY SETTINGS ═══ */}
       {showDeliverySettings && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column' }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0, position: 'relative', zIndex: 1 }}>
             <button onClick={() => setShowDeliverySettings(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
             <div>
               <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}>{shopName}</span>
@@ -1634,7 +1786,9 @@ export default function App() {
 
       {/* ═══ VENDOR ADD ITEM PAGE ═══ */}
       {addingItem && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
             <button onClick={() => setAddingItem(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -1698,8 +1852,9 @@ export default function App() {
                 <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, flex: 1, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto' }}>
                   <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
                   <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                  <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
                   <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
+                  <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
+                  <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
                 </select>
               </div>
 
@@ -1741,7 +1896,9 @@ export default function App() {
 
       {/* ═══ SHOP CONFIG PAGE ═══ */}
       {shopConfig && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', backgroundImage: `url(${localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'})`, backgroundSize: '100% 100%', backgroundPosition: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
             <button onClick={() => setShopConfig(false)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -1762,8 +1919,8 @@ export default function App() {
             {/* Settings form */}
             <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: '#fff' }}>Shop Settings</h2>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name</label>
-            <input style={S.input} value={shopName} onChange={(e) => setShopName(e.target.value)} />
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ fontSize: 11, color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
+            <input style={S.input} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number (with country code)</label>
             <input style={S.input} value={shopPhone} onChange={(e) => setShopPhone(e.target.value)} />
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type / Description</label>
@@ -1848,16 +2005,31 @@ export default function App() {
             ))}
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>📍 Google Maps Link</label>
             <input style={S.input} value={shopMapsLink} onChange={(e) => setShopMapsLink(e.target.value)} placeholder="Paste Google Maps link" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>📸 Instagram</label>
-            <input style={S.input} value={shopInstagram} onChange={(e) => setShopInstagram(e.target.value)} placeholder="nasigorengpakjoko" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>🎵 TikTok</label>
-            <input style={S.input} value={shopTiktok} onChange={(e) => setShopTiktok(e.target.value)} placeholder="nasigorengpakjoko" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>📘 Facebook</label>
-            <input style={S.input} value={shopFacebook} onChange={(e) => setShopFacebook(e.target.value)} placeholder="https://facebook.com/yourpage" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>▶️ YouTube</label>
-            <input style={S.input} value={shopYoutube} onChange={(e) => setShopYoutube(e.target.value)} placeholder="https://youtube.com/@yourchannel" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>🌐 Website</label>
-            <input style={S.input} value={shopWebsite} onChange={(e) => setShopWebsite(e.target.value)} placeholder="www.yoursite.com" />
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Instagram</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="Instagram" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
+              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopInstagram} onChange={(e) => setShopInstagram(e.target.value)} placeholder="nasigorengpakjoko" />
+            </div>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Facebook</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="Facebook" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
+              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopFacebook} onChange={(e) => setShopFacebook(e.target.value)} placeholder="https://facebook.com/yourpage" />
+            </div>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>TikTok</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="TikTok" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
+              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopTiktok} onChange={(e) => setShopTiktok(e.target.value)} placeholder="nasigorengpakjoko" />
+            </div>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>X</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="X" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
+              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopYoutube} onChange={(e) => setShopYoutube(e.target.value)} placeholder="https://x.com/yourhandle" />
+            </div>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Website</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', marginBottom: 10 }}>
+              <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="Website" style={{ width: 24, height: 24, objectFit: 'contain', flexShrink: 0 }} />
+              <input style={{ width: '100%', background: 'none', border: 'none', color: '#fff', fontSize: 15, outline: 'none', padding: 0 }} value={shopWebsite} onChange={(e) => setShopWebsite(e.target.value)} placeholder="www.yoursite.com" />
+            </div>
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Status</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <button style={S.toggle(shopOpen)} onClick={() => setShopOpen(!shopOpen)}>

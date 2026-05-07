@@ -14,6 +14,14 @@ const COUNTRY_TO_LANG = {
   US: 'en', GB: 'en', AU: 'en', NZ: 'en', IN: 'en',
 }
 
+// Reverse lookup: lang code → country codes
+const LANG_TO_COUNTRIES = {
+  id: ['ID'], ms: ['MY'], th: ['TH'], vi: ['VN'], fil: ['PH'],
+  fr: ['FR', 'BE', 'CH', 'CA'], de: ['DE', 'AT'],
+  es: ['ES', 'MX', 'AR', 'CO'], zh: ['CN', 'TW', 'HK'],
+  ar: ['AE', 'SA', 'QA', 'KW', 'EG'], en: ['US', 'GB', 'AU', 'NZ', 'SG', 'IN'],
+}
+
 export const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', label: 'EN' },
   { code: 'id', flag: '🇮🇩', label: 'ID' },
@@ -34,7 +42,8 @@ const cache = {}
 async function loadLang(code) {
   if (cache[code]) return cache[code]
   try {
-    const res = await fetch(`/i18n/app-${code}.json`)
+    const base = import.meta.env.BASE_URL || '/'
+    const res = await fetch(`${base}i18n/app-${code}.json`)
     if (!res.ok) throw new Error('not found')
     cache[code] = await res.json()
     return cache[code]
@@ -44,8 +53,18 @@ async function loadLang(code) {
 }
 
 export function useAppLocale() {
-  const [locale, setLocale] = useState(() => localStorage.getItem('sl_app_locale') || 'en')
+  const [locale, setLocale] = useState(() => {
+    // Priority: URL param > localStorage > default
+    const urlLang = new URLSearchParams(window.location.search).get('lang')
+    if (urlLang && LANGUAGES.some(l => l.code === urlLang)) {
+      localStorage.setItem('sl_app_locale', urlLang)
+      localStorage.setItem('sl_app_native', urlLang)
+      return urlLang
+    }
+    return localStorage.getItem('sl_app_locale') || 'en'
+  })
   const [nativeLang, setNativeLang] = useState(() => localStorage.getItem('sl_app_native') || 'en')
+  const [countryCode, setCountryCode] = useState(() => localStorage.getItem('sl_app_country') || null)
   const [t, setT] = useState({})
 
   useEffect(() => {
@@ -54,9 +73,10 @@ export function useAppLocale() {
     })
   }, [locale])
 
-  // Auto-detect on first visit
+  // Auto-detect on first visit (only if no URL param and no saved locale)
   useEffect(() => {
     if (localStorage.getItem('sl_app_native')) return
+    if (new URLSearchParams(window.location.search).get('lang')) return
     fetch('https://ip2c.org/s')
       .then(r => r.text())
       .then(text => {
@@ -64,7 +84,9 @@ export function useAppLocale() {
         const lang = COUNTRY_TO_LANG[country] || 'en'
         localStorage.setItem('sl_app_native', lang)
         localStorage.setItem('sl_app_locale', lang)
+        localStorage.setItem('sl_app_country', country)
         setNativeLang(lang)
+        setCountryCode(country)
         setLocale(lang)
       })
       .catch(() => {})
@@ -75,5 +97,5 @@ export function useAppLocale() {
     setLocale(lang)
   }
 
-  return { locale, setLocale: setLocaleAndSave, t, nativeLang }
+  return { locale, setLocale: setLocaleAndSave, t, nativeLang, countryCode, LANG_TO_COUNTRIES }
 }

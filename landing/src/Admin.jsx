@@ -9,6 +9,7 @@ const PAGES = [
   { id: 'users', label: 'Users', icon: '🧑' },
   { id: 'members', label: 'Subscribers', icon: '👥' },
   { id: 'payments', label: 'Payments', icon: '💰' },
+  { id: 'affiliates', label: 'Affiliates', icon: '🤝' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
@@ -33,18 +34,31 @@ export default function Admin({ onClose }) {
   const [users, setUsers] = useState([])
   const [settingsEditing, setSettingsEditing] = useState(null)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  const [affiliates, setAffiliates] = useState([])
+  const [affReferrals, setAffReferrals] = useState([])
+  const [affFilter, setAffFilter] = useState('all')
+  const [affSearch, setAffSearch] = useState('')
+  const [promoMaterials, setPromoMaterials] = useState([])
+  const [promoForm, setPromoForm] = useState({ category_id: 'food', app_id: '', type: 'image', title: '', url: '', thumbnail_url: '' })
+  const [promoUploading, setPromoUploading] = useState(false)
 
   const load = async () => {
     setLoading(true)
-    const [regsRes, alertsRes, settingsRes, usersRes] = await Promise.all([
+    const [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes] = await Promise.all([
       supabase.from('app_registrations').select('*').order('created_at', { ascending: false }),
       supabase.from('app_alerts').select('*').order('created_at', { ascending: false }),
       supabase.from('admin_settings').select('*'),
       supabase.from('user_accounts').select('*').order('created_at', { ascending: false }),
+      supabase.from('affiliate_agents').select('*').order('created_at', { ascending: false }),
+      supabase.from('affiliate_referrals').select('*').order('created_at', { ascending: false }),
+      supabase.from('affiliate_promo_materials').select('*').order('sort_order'),
     ])
     if (regsRes.data) setRegs(regsRes.data)
     if (alertsRes.data) setAlerts(alertsRes.data)
     if (usersRes.data) setUsers(usersRes.data)
+    if (affRes.data) setAffiliates(affRes.data)
+    if (affRefRes.data) setAffReferrals(affRefRes.data)
+    if (promoRes.data) setPromoMaterials(promoRes.data)
     if (settingsRes.data) {
       const obj = {}
       settingsRes.data.forEach(s => { obj[s.id] = s.value })
@@ -184,11 +198,33 @@ export default function Admin({ onClose }) {
 
   return (
     <div style={s.page}>
+      {/* Sidebar */}
+      <div style={s.sidebar}>
+        <div style={s.sidebarHeader}>
+          <div style={{ fontSize: 18, fontWeight: 900 }}>Street Local</div>
+          <div style={{ fontSize: 11, color: '#FFD600', fontWeight: 700 }}>ADMIN PANEL</div>
+        </div>
+        {PAGES.map(p => (
+          <button key={p.id} onClick={() => setPage(p.id)} style={{ ...s.sidebarItem, ...(page === p.id ? s.sidebarItemActive : {}) }}>
+            <span style={{ fontSize: 16 }}>{p.icon}</span>
+            <span style={{ flex: 1 }}>{p.label}</span>
+            {p.id === 'alerts' && openAlerts.length > 0 && (
+              <span style={{ background: criticalCount > 0 ? '#EF4444' : '#F59E0B', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 10 }}>{openAlerts.length}</span>
+            )}
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
+        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <button onClick={onClose} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 6 }}>Back to Home</button>
+          <button onClick={() => { setAuth(false) }} style={{ width: '100%', ...s.logoutBtn }}>Logout</button>
+          <div style={{ fontSize: 10, color: '#444', marginTop: 8, textAlign: 'center' }}>v1.0 — streetlocal.live</div>
+        </div>
+      </div>
+
+      {/* Main area */}
+      <div style={s.mainArea}>
       {/* Header */}
       <div style={s.header}>
-        <button onClick={() => setDrawer(true)} style={s.menuBtn}>
-          <span style={{ fontSize: 20 }}>☰</span>
-        </button>
         <h1 style={s.headerTitle}>{PAGES.find(p => p.id === page)?.label}</h1>
         {openAlerts.length > 0 && page !== 'alerts' && (
           <button onClick={() => setPage('alerts')} style={{ background: criticalCount > 0 ? '#EF4444' : '#F59E0B', border: 'none', borderRadius: 10, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: '#fff', cursor: 'pointer', animation: criticalCount > 0 ? 'pulse 1.5s infinite' : 'none' }}>
@@ -636,6 +672,283 @@ export default function Admin({ onClose }) {
           </>
         )}
 
+        {/* ── AFFILIATES ── */}
+        {page === 'affiliates' && (() => {
+          const AGENT_STATUS_COLOR = { pending_payment: '#9CA3AF', pending_verification: '#F59E0B', active: '#22c55e', suspended: '#EF4444' }
+          const AGENT_STATUS_LABEL = { pending_payment: 'Awaiting Payment', pending_verification: 'Pending Verify', active: 'Active', suspended: 'Suspended' }
+          const VERIFY_COLOR = { submitted: '#3B82F6', verified: '#22c55e' }
+          const filtered = affiliates.filter(a => {
+            if (affFilter !== 'all' && a.status !== affFilter) return false
+            if (affSearch && !a.name?.toLowerCase().includes(affSearch.toLowerCase()) && !a.agent_code?.toLowerCase().includes(affSearch.toLowerCase()) && !a.whatsapp?.includes(affSearch)) return false
+            return true
+          })
+          const totalActive = affiliates.filter(a => a.status === 'active').length
+          const totalPending = affiliates.filter(a => a.status === 'pending_verification').length
+          const pendingVerify = affiliates.filter(a => a.verification_status === 'submitted' && a.verification_status !== 'verified').length
+          const totalCommissions = affReferrals.reduce((s, r) => s + (r.commission_amount || 0), 0)
+
+          async function updateAgentStatus(id, status) {
+            await supabase.from('affiliate_agents').update({ status }).eq('id', id)
+            setAffiliates(affiliates.map(a => a.id === id ? { ...a, status } : a))
+          }
+          async function verifyAgent(id) {
+            await supabase.from('affiliate_agents').update({ verification_status: 'verified' }).eq('id', id)
+            setAffiliates(affiliates.map(a => a.id === id ? { ...a, verification_status: 'verified' } : a))
+          }
+
+          return (
+            <>
+              {/* Seats remaining */}
+              <div style={{ ...s.section, background: '#1a1a1a', border: 'none', marginBottom: 16, borderRadius: 14, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Indonesia Seats</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#FFD600' }}>{1000 - affiliates.filter(a => a.country === 'ID' && a.status !== 'cancelled').length} / 1,000</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Filled</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#FF6B35' }}>{affiliates.filter(a => a.country === 'ID' && a.status !== 'cancelled').length}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <div style={s.statCard}><div style={s.statNum}>{affiliates.length}</div><div style={s.statLabel}>Total Agents</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#22c55e' }}>{totalActive}</div><div style={s.statLabel}>Active</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#F59E0B' }}>{totalPending}</div><div style={s.statLabel}>Pending Payment</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#3B82F6' }}>{pendingVerify}</div><div style={s.statLabel}>Pending KTP Verify</div></div>
+              </div>
+
+              {/* Total commissions */}
+              <div style={{ ...s.section, background: '#F0FDF4', border: '1px solid #BBF7D0', marginBottom: 16 }}>
+                <div style={{ fontSize: 13, color: '#065F46', fontWeight: 700 }}>Total Commissions Owed</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#22c55e' }}>Rp {totalCommissions.toLocaleString()}</div>
+              </div>
+
+              {/* Filters */}
+              <div style={s.section}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  {['all', 'pending_payment', 'pending_verification', 'active', 'suspended'].map(f => (
+                    <button key={f} onClick={() => setAffFilter(f)} style={{ ...s.filterBtn, background: affFilter === f ? '#1a1a1a' : '#f0f0f0', color: affFilter === f ? '#fff' : '#666' }}>
+                      {f === 'all' ? 'All' : AGENT_STATUS_LABEL[f] || f}
+                    </button>
+                  ))}
+                </div>
+                <input style={{ ...s.input, marginBottom: 0 }} placeholder="Search name, code, or WhatsApp..." value={affSearch} onChange={e => setAffSearch(e.target.value)} />
+              </div>
+
+              {/* Agent List */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>Agents ({filtered.length})</h3>
+                {filtered.map(agent => {
+                  const agentRefs = affReferrals.filter(r => r.agent_id === agent.id)
+                  const agentEarnings = agentRefs.reduce((s, r) => s + (r.commission_amount || 0), 0)
+                  return (
+                    <div key={agent.id} style={{ padding: 14, background: '#FAFAFA', borderRadius: 14, border: '1px solid #f0f0f0', marginBottom: 10 }}>
+                      {/* Agent info */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a' }}>{agent.name}</div>
+                          <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{agent.agent_code} — {agent.country}</div>
+                          <div style={{ fontSize: 12, color: '#888' }}>WA: {agent.whatsapp}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: AGENT_STATUS_COLOR[agent.status] || '#999', padding: '3px 8px', borderRadius: 6 }}>
+                            {AGENT_STATUS_LABEL[agent.status] || agent.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stats row */}
+                      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#666', marginBottom: 8, flexWrap: 'wrap' }}>
+                        <span>Referrals: <strong>{agentRefs.length}</strong></span>
+                        <span>Earnings: <strong style={{ color: '#22c55e' }}>Rp {agentEarnings.toLocaleString()}</strong></span>
+                        <span>Clicks: <strong>{agent.total_clicks || 0}</strong></span>
+                      </div>
+
+                      {/* Verification status */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 10 }}>
+                        <span style={{ fontWeight: 700, color: VERIFY_COLOR[agent.verification_status] || '#999' }}>
+                          KTP: {agent.verification_status === 'verified' ? 'Verified' : agent.verification_status === 'submitted' ? 'Submitted' : 'Not submitted'}
+                        </span>
+                        {agent.bank_name && <span style={{ color: '#888' }}>| Bank: {agent.bank_name} — {agent.bank_account}</span>}
+                      </div>
+
+                      {/* KTP preview */}
+                      {agent.ktp_url && (
+                        <div style={{ marginBottom: 10 }}>
+                          <a href={agent.ktp_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#3B82F6', fontWeight: 700 }}>View KTP Photo</a>
+                        </div>
+                      )}
+
+                      {/* Payment proof */}
+                      {agent.payment_proof && (
+                        <div style={{ marginBottom: 10 }}>
+                          <a href={agent.payment_proof} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#3B82F6', fontWeight: 700 }}>View Payment Proof</a>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {agent.status === 'pending_verification' && (
+                          <button onClick={() => updateAgentStatus(agent.id, 'active')} style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', fontSize: 11 }}>Activate</button>
+                        )}
+                        {agent.status === 'pending_payment' && (
+                          <button onClick={() => updateAgentStatus(agent.id, 'pending_verification')} style={{ ...s.filterBtn, background: '#F59E0B', color: '#fff', fontSize: 11 }}>Mark Paid</button>
+                        )}
+                        {agent.status === 'active' && (
+                          <button onClick={() => updateAgentStatus(agent.id, 'suspended')} style={{ ...s.filterBtn, background: '#EF4444', color: '#fff', fontSize: 11 }}>Suspend</button>
+                        )}
+                        {agent.status === 'suspended' && (
+                          <button onClick={() => updateAgentStatus(agent.id, 'active')} style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', fontSize: 11 }}>Reactivate</button>
+                        )}
+                        {agent.verification_status === 'submitted' && agent.verification_status !== 'verified' && (
+                          <button onClick={() => verifyAgent(agent.id)} style={{ ...s.filterBtn, background: '#3B82F6', color: '#fff', fontSize: 11 }}>Verify KTP</button>
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: 10, color: '#bbb', marginTop: 8 }}>Joined: {new Date(agent.created_at).toLocaleDateString()}</div>
+                    </div>
+                  )
+                })}
+                {filtered.length === 0 && <p style={{ color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>No agents found</p>}
+              </div>
+
+              {/* Recent Referrals */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>Recent Referrals</h3>
+                {affReferrals.slice(0, 20).map((ref, i) => {
+                  const agent = affiliates.find(a => a.id === ref.agent_id)
+                  return (
+                    <div key={i} style={{ padding: 10, background: '#FAFAFA', borderRadius: 10, border: '1px solid #f0f0f0', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{ref.customer_name || 'User'}</div>
+                        <div style={{ fontSize: 11, color: '#888' }}>via {agent?.agent_code || 'unknown'} — {ref.app_type || 'App'}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#22c55e' }}>Rp {(ref.commission_amount || 0).toLocaleString()}</div>
+                        <div style={{ fontSize: 10, color: ref.status === 'paid' ? '#22c55e' : '#F59E0B', fontWeight: 700, textTransform: 'uppercase' }}>{ref.status}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+                {affReferrals.length === 0 && <p style={{ color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>No referrals yet</p>}
+              </div>
+
+              {/* Promo Materials Management */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>Promo Materials (Share Kit)</h3>
+                <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Upload banners and videos that agents can share. Assigned by category or specific app.</p>
+
+                {/* Add new promo form */}
+                <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 14, marginBottom: 16, border: '1px solid #f0f0f0' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Add New Material</div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <select style={{ ...s.input, flex: 1, marginBottom: 0, minWidth: 100 }} value={promoForm.category_id} onChange={e => setPromoForm({ ...promoForm, category_id: e.target.value })}>
+                      <option value="food">Food</option>
+                      <option value="property">Property</option>
+                      <option value="general">General</option>
+                    </select>
+                    <select style={{ ...s.input, flex: 1, marginBottom: 0, minWidth: 100 }} value={promoForm.app_id} onChange={e => setPromoForm({ ...promoForm, app_id: e.target.value })}>
+                      <option value="">All apps in category</option>
+                      <option value="basic">Street Vendor</option>
+                      <option value="pro">Restaurant Pro</option>
+                    </select>
+                    <select style={{ ...s.input, flex: 1, marginBottom: 0, minWidth: 80 }} value={promoForm.type} onChange={e => setPromoForm({ ...promoForm, type: e.target.value })}>
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                  <input style={{ ...s.input, marginBottom: 8 }} placeholder="Title (optional)" value={promoForm.title} onChange={e => setPromoForm({ ...promoForm, title: e.target.value })} />
+                  <input style={{ ...s.input, marginBottom: 8 }} placeholder="File URL (image or video link)" value={promoForm.url} onChange={e => setPromoForm({ ...promoForm, url: e.target.value })} />
+                  {promoForm.type === 'video' && (
+                    <input style={{ ...s.input, marginBottom: 8 }} placeholder="Thumbnail URL (optional)" value={promoForm.thumbnail_url} onChange={e => setPromoForm({ ...promoForm, thumbnail_url: e.target.value })} />
+                  )}
+                  {/* File upload option */}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                    <label style={{ padding: '8px 14px', borderRadius: 8, background: '#e0e0e0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      Upload File
+                      <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files[0]
+                        if (!file) return
+                        setPromoUploading(true)
+                        const ext = file.name.split('.').pop()
+                        const path = `promo-materials/${Date.now()}.${ext}`
+                        const { error: upErr } = await supabase.storage.from('images').upload(path, file, { contentType: file.type })
+                        if (!upErr) {
+                          const { data: urlData } = supabase.storage.from('images').getPublicUrl(path)
+                          setPromoForm({ ...promoForm, url: urlData?.publicUrl || '' })
+                        }
+                        setPromoUploading(false)
+                      }} />
+                    </label>
+                    {promoUploading && <span style={{ fontSize: 12, color: '#888' }}>Uploading...</span>}
+                    {promoForm.url && <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 700 }}>File ready</span>}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!promoForm.url) return
+                      const { data } = await supabase.from('affiliate_promo_materials').insert({
+                        category_id: promoForm.category_id,
+                        app_id: promoForm.app_id || null,
+                        type: promoForm.type,
+                        title: promoForm.title || null,
+                        url: promoForm.url,
+                        thumbnail_url: promoForm.thumbnail_url || null,
+                        sort_order: promoMaterials.length,
+                        active: true,
+                      }).select().single()
+                      if (data) setPromoMaterials([...promoMaterials, data])
+                      setPromoForm({ category_id: 'food', app_id: '', type: 'image', title: '', url: '', thumbnail_url: '' })
+                    }}
+                    style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', width: '100%', padding: 10 }}
+                    disabled={!promoForm.url}
+                  >
+                    Add Material
+                  </button>
+                </div>
+
+                {/* Existing materials list */}
+                <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Current Materials ({promoMaterials.length})</div>
+                {promoMaterials.map(promo => (
+                  <div key={promo.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, background: '#FAFAFA', borderRadius: 12, border: '1px solid #f0f0f0', marginBottom: 8 }}>
+                    {/* Thumbnail */}
+                    {promo.type === 'image' ? (
+                      <img src={promo.url} alt="" style={{ width: 50, height: 50, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 50, height: 50, borderRadius: 8, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: 18 }}>🎬</span>
+                      </div>
+                    )}
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{promo.title || '(No title)'}</div>
+                      <div style={{ fontSize: 11, color: '#888' }}>{promo.category_id}{promo.app_id ? ` > ${promo.app_id}` : ''} — {promo.type}</div>
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={async () => {
+                        await supabase.from('affiliate_promo_materials').update({ active: !promo.active }).eq('id', promo.id)
+                        setPromoMaterials(promoMaterials.map(p => p.id === promo.id ? { ...p, active: !p.active } : p))
+                      }} style={{ ...s.filterBtn, fontSize: 10, padding: '4px 8px', background: promo.active ? '#22c55e' : '#999', color: '#fff' }}>
+                        {promo.active ? 'ON' : 'OFF'}
+                      </button>
+                      <button onClick={async () => {
+                        await supabase.from('affiliate_promo_materials').delete().eq('id', promo.id)
+                        setPromoMaterials(promoMaterials.filter(p => p.id !== promo.id))
+                      }} style={{ ...s.filterBtn, fontSize: 10, padding: '4px 8px', background: '#EF4444', color: '#fff' }}>
+                        Del
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {promoMaterials.length === 0 && <p style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: 16 }}>No materials uploaded yet</p>}
+              </div>
+            </>
+          )
+        })()}
+
         {/* ── ANALYTICS ── */}
         {page === 'analytics' && (
           <>
@@ -973,6 +1286,7 @@ export default function Admin({ onClose }) {
         })()}
 
       </div>
+      </div>
     </div>
   )
 }
@@ -980,20 +1294,63 @@ export default function Admin({ onClose }) {
 /* ─── Styles ─── */
 const s = {
   page: {
-    minHeight: '100vh',
+    position: 'fixed',
+    inset: 0,
+    zIndex: 9999,
     background: '#f5f5f5',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     color: '#1a1a1a',
+    display: 'flex',
+  },
+  sidebar: {
+    width: 220,
+    background: '#1a1a1a',
+    color: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    flexShrink: 0,
+    overflowY: 'auto',
+  },
+  sidebarHeader: {
+    padding: '20px 16px 12px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+  },
+  sidebarItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '12px 16px',
+    border: 'none',
+    background: 'none',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    width: '100%',
+    textAlign: 'left',
+    fontFamily: 'inherit',
+  },
+  sidebarItemActive: {
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    borderLeft: '3px solid #FFD600',
+  },
+  mainArea: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   header: {
     position: 'sticky',
     top: 0,
     zIndex: 100,
-    background: '#1a1a1a',
-    padding: '12px 16px',
+    background: '#fff',
+    padding: '12px 24px',
     display: 'flex',
     alignItems: 'center',
     gap: 12,
+    borderBottom: '1px solid #e0e0e0',
   },
   menuBtn: {
     background: 'rgba(255,255,255,0.1)',
@@ -1010,7 +1367,7 @@ const s = {
   headerTitle: {
     fontSize: 17,
     fontWeight: 800,
-    color: '#fff',
+    color: '#1a1a1a',
     flex: 1,
   },
   logoutBtn: {
@@ -1024,9 +1381,12 @@ const s = {
     cursor: 'pointer',
   },
   content: {
-    padding: '16px',
-    maxWidth: 600,
+    padding: '24px',
+    maxWidth: 900,
     margin: '0 auto',
+    overflowY: 'auto',
+    flex: 1,
+    width: '100%',
   },
 
   // Drawer
