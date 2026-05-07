@@ -23,17 +23,17 @@ const LANG_TO_COUNTRIES = {
 }
 
 export const LANGUAGES = [
-  { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'id', flag: '🇮🇩', label: 'ID' },
-  { code: 'ms', flag: '🇲🇾', label: 'MY' },
-  { code: 'vi', flag: '🇻🇳', label: 'VN' },
-  { code: 'th', flag: '🇹🇭', label: 'TH' },
-  { code: 'fr', flag: '🇫🇷', label: 'FR' },
-  { code: 'de', flag: '🇩🇪', label: 'DE' },
-  { code: 'es', flag: '🇪🇸', label: 'ES' },
-  { code: 'zh', flag: '🇨🇳', label: 'CN' },
-  { code: 'ar', flag: '🇸🇦', label: 'AR' },
-  { code: 'fil', flag: '🇵🇭', label: 'PH' },
+  { code: 'en', flag: 'https://flagcdn.com/w40/gb.png', label: 'EN' },
+  { code: 'id', flag: 'https://flagcdn.com/w40/id.png', label: 'ID' },
+  { code: 'ms', flag: 'https://flagcdn.com/w40/my.png', label: 'MY' },
+  { code: 'vi', flag: 'https://flagcdn.com/w40/vn.png', label: 'VN' },
+  { code: 'th', flag: 'https://flagcdn.com/w40/th.png', label: 'TH' },
+  { code: 'fr', flag: 'https://flagcdn.com/w40/fr.png', label: 'FR' },
+  { code: 'de', flag: 'https://flagcdn.com/w40/de.png', label: 'DE' },
+  { code: 'es', flag: 'https://flagcdn.com/w40/es.png', label: 'ES' },
+  { code: 'zh', flag: 'https://flagcdn.com/w40/cn.png', label: 'CN' },
+  { code: 'ar', flag: 'https://flagcdn.com/w40/sa.png', label: 'AR' },
+  { code: 'fil', flag: 'https://flagcdn.com/w40/ph.png', label: 'PH' },
 ]
 
 // Translations loaded from public folder at runtime

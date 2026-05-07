@@ -247,25 +247,49 @@ function getDeliveryFee(distKm, zones) {
 const PLACEHOLDER_SM = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2780%27 height=%2780%27%3E%3Crect width=%2780%27 height=%2780%27 fill=%27%23222%27/%3E%3C/svg%3E"
 const PLACEHOLDER_LG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect width=%27300%27 height=%27300%27 fill=%27%23222%27/%3E%3C/svg%3E"
 
+const ACCENT_PALETTE = [
+  { color: '#8DC63F', label: 'Green' },
+  { color: '#8B0000', label: 'Dark Red' },
+  { color: '#FF6B35', label: 'Orange' },
+  { color: '#1E40AF', label: 'Blue' },
+  { color: '#7C3AED', label: 'Purple' },
+  { color: '#DB2777', label: 'Pink' },
+  { color: '#B8860B', label: 'Gold' },
+  { color: '#1a1a1a', label: 'Black' },
+  { color: '#0D9488', label: 'Teal' },
+  { color: '#DC2626', label: 'Red' },
+]
+
+// Adjust color brightness: factor > 1 = lighter, < 1 = darker
+function adjustColor(hex, factor) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const nr = Math.min(255, Math.max(0, Math.round(r * factor)))
+  const ng = Math.min(255, Math.max(0, Math.round(g * factor)))
+  const nb = Math.min(255, Math.max(0, Math.round(b * factor)))
+  return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('')
+}
+
 const THEME_PRESETS = [
   // Indonesian / Malaysian
-  { id: 'default', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: '#1 Wood', category: 'Indonesian Street Food', countries: ['ID', 'MY'], foodTypes: ['Street Food', 'Indonesian Street Food'] },
-  { id: 'satay', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#2 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
-  { id: 'pecellele', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#3 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'friedrice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#4 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
-  { id: 'noodle', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#5 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'] },
-  { id: 'bakso', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#6 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
-  { id: 'chicken', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#7 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
-  { id: 'juice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#8 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
-  { id: 'coffee', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#9 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
+  { id: 'default', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: '#1 Wood', category: 'Indonesian Street Food', countries: ['ID', 'MY'], foodTypes: ['Street Food', 'Indonesian Street Food'] },
+  { id: 'satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#2 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
+  { id: 'pecellele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#3 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'friedrice', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#4 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
+  { id: 'noodle', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#5 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'] },
+  { id: 'bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#6 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
+  { id: 'chicken', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#7 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
+  { id: 'juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#8 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
+  { id: 'coffee', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#9 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
   // Pan-Asian
-  { id: 'bamboo', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: '#10 Bamboo', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'TW', 'HK'], foodTypes: ['Asian Cuisine', 'Noodle Soup', 'Fried Rice'] },
-  { id: 'asia', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: '#11 Asia', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'ID'], foodTypes: ['Asian Cuisine', 'Street Food'] },
+  { id: 'bamboo', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: '#10 Bamboo', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'TW', 'HK'], foodTypes: ['Asian Cuisine', 'Noodle Soup', 'Fried Rice'] },
+  { id: 'asia', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: '#11 Asia', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'ID'], foodTypes: ['Asian Cuisine', 'Street Food'] },
   // Universal
-  { id: 'dark', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: '#12 Dark', category: 'Street Food', countries: [], foodTypes: ['Street Food'] },
-  { id: 'kebab', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: '#13 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
-  { id: 'burger', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#14 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
-  { id: 'donut', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#15 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
+  { id: 'dark', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: '#12 Dark', category: 'Street Food', countries: [], foodTypes: ['Street Food'] },
+  { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: '#13 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
+  { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#14 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
+  { id: 'donut', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#15 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
 ]
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
@@ -415,6 +439,18 @@ export default function App() {
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const [shopTheme, setShopTheme] = useState(() => localStorage.getItem('vendorbasic_theme') || 'default')
+  const [shopAccentColor, setShopAccentColor] = useState(() => localStorage.getItem('vendorbasic_accentColor') || '#8DC63F')
+  const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
+  const [editorColor, setEditorColor] = useState('#8DC63F')
+  const [editorPos, setEditorPos] = useState({ x: 50, y: 50 }) // percentage position
+
+  // Derive accent color from theme or custom selection
+  const accent = shopAccentColor
+  const accentLight = accent + '25'
+  const accentBorder = accent + '40'
+  const isCustomAccent = shopAccentColor !== '#8DC63F'
+  const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('vendorbasic_bgPos')) } catch { return null } })()
+  const bgStyle = shopTheme === 'custom' && savedBgPos ? { objectFit: 'cover', objectPosition: `${savedBgPos.x}% ${savedBgPos.y}%` } : { objectFit: 'fill' }
   const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('vendorbasic_delBase')) || 5000)
   const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delPerKm')) || 2500)
   const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMin')) || 7000)
@@ -426,7 +462,7 @@ export default function App() {
 
   /* Shop info */
   const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Chicken Satay')
-  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || '')
+  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || 'https://ik.imagekit.io/nepgaxllc/Untitledsadaaaa-removebg-preview.png')
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
   const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorbasic_shopAddress') || 'Jl. Malioboro, Yogyakarta')
@@ -843,7 +879,7 @@ export default function App() {
     return (
       <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
         {/* Background image — uses vendor's selected theme */}
-        <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+        <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
 
 
         {/* Language toggle — top right, single flag, tap to switch */}
@@ -852,21 +888,27 @@ export default function App() {
           const idx = codes.indexOf(locale)
           setLocale(codes[(idx + 1) % codes.length])
         }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 18 }}>{LANGUAGES.find(l => l.code === locale)?.flag || '🌐'}</span>
+          <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
         </button>
 
         {/* Content — centered */}
         <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           {/* Shop logo */}
-          {shopLogo && <img src={shopLogo} alt="" style={{ width: 90, height: 90, borderRadius: 22, objectFit: 'cover', marginBottom: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }} />}
+          {shopLogo ? (
+            <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
+              <img src={shopLogo} alt="" style={{ width: 160, height: 160, borderRadius: 80, objectFit: 'cover', marginTop: 18 }} />
+            </div>
+          ) : (
+            <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
+          )}
 
           {/* Shop name */}
           <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: 42, fontWeight: 800, color: '#fff', WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
 
           {/* Food category tagline */}
           {shopFoodType && (
-            <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1 }}>{shopFoodType}</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1 }}>{shopFoodType}</h2>
           )}
           {/* City, Country */}
           {(shopCity || shopCountry) && (
@@ -894,10 +936,10 @@ export default function App() {
             padding: '14px 44px', border: 'none', borderRadius: 12,
             cursor: 'pointer', fontSize: 15, fontWeight: 700,
             position: 'relative', overflow: 'hidden',
-            ...(shopTheme === 'noodle' ? { background: '#8B0000', color: '#fff' } : { background: '#FACC15', color: '#000' }),
+            ...(isCustomAccent ? { background: accent, color: '#fff' } : { background: '#FACC15', color: '#000' }),
           }}>
             <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 12 }}>
-              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: shopTheme === 'noodle' ? 'linear-gradient(90deg, transparent, rgba(255,100,100,0.2), transparent)' : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'landingGlow 3s ease-in-out infinite' }} />
+              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: isCustomAccent ? `linear-gradient(90deg, transparent, ${accent}30, transparent)` : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'landingGlow 3s ease-in-out infinite' }} />
             </div>
             <span style={{ position: 'relative', zIndex: 1 }}>View Menu</span>
           </button>
@@ -906,7 +948,6 @@ export default function App() {
           {/* DEV: Quick dashboard access */}
           {!previewMode && <button onClick={() => { setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5 }}>DEV: Dashboard</button>}
           {/* Preview mode — back to dashboard */}
-          {previewMode && <button onClick={() => { setPreviewMode(false); setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>← Back to Dashboard</button>}
         </div>
       </div>
     )
@@ -926,11 +967,17 @@ export default function App() {
 
       {/* --- Header --- */}
       <div style={S.header}>
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          {shopLogo && <img src={shopLogo} alt="" style={S.shopLogo} />}
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: 10 }}>
+          {shopLogo ? (
+            <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+              <img src={shopLogo} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover' }} />
+            </div>
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: 20, background: isCustomAccent ? accent : 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}>{shopName.charAt(0).toUpperCase()}</div>
+          )}
           <div>
             <span style={S.shopName}>{shopName}</span>
-            <span style={{ display: 'block', fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+            <span style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -1049,7 +1096,7 @@ export default function App() {
                 background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
                 fontSize: 15, fontWeight: 700,
                 color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
-                borderBottom: isActive ? `2px solid ${shopTheme === 'noodle' ? '#8B0000' : '#fff'}` : '2px solid transparent',
+                borderBottom: isActive ? `2px solid ${isCustomAccent ? accent : '#fff'}` : '2px solid transparent',
               }}>
                 {tab.label}
               </button>
@@ -1057,8 +1104,8 @@ export default function App() {
           })}
           </div>
           {!isVendor && (
-            <button onClick={() => setShowLocation(true)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0, marginLeft: 12, minHeight: 44, ...(shopTheme === 'noodle' ? { background: '#8B0000' } : { background: 'rgba(255,255,255,0.15)' }) }}>
-              {shopTheme === 'noodle' && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 10 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,100,100,0.25), transparent)', animation: 'landingGlow 2.5s ease-in-out infinite' }} /></div>}
+            <button onClick={() => setShowLocation(true)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0, marginLeft: 12, minHeight: 44, ...(isCustomAccent ? { background: accent } : { background: 'rgba(255,255,255,0.15)' }) }}>
+              {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 10 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 2.5s ease-in-out infinite' }} /></div>}
               <span style={{ position: 'relative', zIndex: 1 }}>Visit Us</span>
             </button>
           )}
@@ -1068,7 +1115,7 @@ export default function App() {
         {visibleMenu.map((item) => (
           <div
             key={item.id}
-            style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(shopTheme === 'noodle' ? { borderLeft: '3px solid #8B0000' } : {}) }}
+            style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}
           >
             {/* Toggle — top right (vendor only) */}
             {isVendor && vendorStatus !== 'expired' && (
@@ -1134,9 +1181,9 @@ export default function App() {
 
       {/* --- Sticky Cart Bar --- */}
       {totalItems > 0 && !isVendor && (
-        <div style={{ ...S.stickyCart, ...(shopTheme === 'noodle' ? { background: '#8B0000' } : {}) }}>
+        <div style={{ ...S.stickyCart, ...(isCustomAccent ? { background: accent } : {}) }}>
           <span style={S.cartText}>{totalItems} item{totalItems > 1 ? 's' : ''} &middot; {fmt(totalPrice)}</span>
-          <button style={{ ...S.checkoutBtn, ...(shopTheme === 'noodle' ? { background: '#fff', color: '#8B0000' } : {}) }} onClick={() => { setCheckoutOpen(true); setOrderDone(false); detectDeliveryZone() }}>
+          <button style={{ ...S.checkoutBtn, ...(isCustomAccent ? { background: '#fff', color: accent } : {}) }} onClick={() => { setCheckoutOpen(true); setOrderDone(false); detectDeliveryZone() }}>
             {t.checkout || 'Checkout'} &rarr;
           </button>
         </div>
@@ -1160,288 +1207,481 @@ export default function App() {
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
 
           {/* Content — scrollable over the fixed glass background */}
-          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto', height: '100%', paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', flexShrink: 0 }}>
-              <button onClick={() => setItemModal(null)} style={{ width: 36, height: 36, borderRadius: 18, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+          {(() => {
+            const priceColor = '#FACC15'
+            const qtyBg = isCustomAccent ? accent : '#FACC15'
+            const qtyColor = isCustomAccent ? '#fff' : '#000'
+            return (
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+
+            {/* Header — company name + cart */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px' }}>
+              <button onClick={() => setItemModal(null)} style={{ width: 38, height: 38, borderRadius: 19, background: isCustomAccent ? accent : 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
               <div style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</span>
-                <span style={{ display: 'block', fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{shopFoodType}</div>
               </div>
-              <button onClick={() => { setItemModal(null); if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+              <button onClick={() => { setItemModal(null); if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 44, minHeight: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
                 <span style={{ fontSize: 20 }}>🛒</span>
                 {cart.length > 0 && (
-                  <span style={{ position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {cart.reduce((s, c) => s + c.qty, 0)}
                   </span>
                 )}
               </button>
             </div>
 
-            {/* Food image */}
-            <div style={{ padding: '16px 16px 0' }}>
+            {/* Hero image — with side padding + rounded */}
+            <div style={{ padding: '0 14px', position: 'relative' }}>
               <img
                 src={itemModal.photo || PLACEHOLDER_LG}
                 alt={itemModal.name}
-                style={{ width: '100%', borderRadius: 16 }}
+                style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
               />
+              {/* Category badge */}
+              {itemModal.category && (
+                <span style={{ position: 'absolute', top: 12, right: 26, fontSize: 11, fontWeight: 700, color: '#fff', background: accent, padding: '4px 10px', borderRadius: 8 }}>{itemModal.category}</span>
+              )}
             </div>
 
-            {/* Dish info */}
-            <div style={{ margin: '12px 16px', background: 'rgba(0,0,0,0.65)', borderRadius: 12, padding: '14px 16px' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4, color: '#fff' }}>{itemModal.name}</h2>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>{itemModal.desc}</p>
+            {/* Info card — pulls up over image */}
+            <div style={{ margin: '-20px 12px 0', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 20, padding: '20px 18px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.08)' }}>
+              {/* Red accent line for noodle theme */}
+              {isCustomAccent && <div style={{ position: 'absolute', top: 20, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
+
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{itemModal.name}</h2>
+              {itemModal.spice > 0 && <span style={{ fontSize: 14 }}>{'🌶️'.repeat(itemModal.spice)}</span>}
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{itemModal.desc}</p>
+
+              {/* Badges */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {itemModal.halal && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>Halal</span>}
+                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>Popular</span>}
+              </div>
+
+              {/* Price + Qty */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#FACC15' }}>{fmt(itemModal.promoPrice || itemModal.price)}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: '#FACC15', color: '#000', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-                  <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', minWidth: 24, textAlign: 'center' }}>{modalQty}</span>
-                  <button onClick={() => setModalQty(modalQty + 1)} style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: '#FACC15', color: '#000', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                <div>
+                  {itemModal.promoPrice ? (
+                    <>
+                      <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', marginRight: 8 }}>{fmt(itemModal.price)}</span>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: '#EF4444' }}>{fmt(itemModal.promoPrice)}</span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 24, fontWeight: 900, color: priceColor }}>{fmt(itemModal.price)}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: qtyBg, color: qtyColor, fontSize: 20, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                  <span style={{ fontSize: 20, fontWeight: 900, color: '#fff', minWidth: 28, textAlign: 'center' }}>{modalQty}</span>
+                  <button onClick={() => setModalQty(modalQty + 1)} style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: qtyBg, color: qtyColor, fontSize: 20, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
             </div>
 
-            {/* Add to Cart button — sticky bottom */}
+            {/* Add to Cart button */}
             {shopOpen && itemModal.available && (
-              <div style={{ position: 'sticky', bottom: 0, padding: '12px 16px 24px', background: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
+              <div style={{ padding: '16px 12px 32px' }}>
                 <button
-                  style={{ ...S.btnGreen, marginTop: 0, width: '100%' }}
+                  style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: isCustomAccent ? accent : '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
                   onClick={() => { addToCart(itemModal, modalQty); setItemModal(null) }}
                 >
-                  {t.addToCart || 'Add to Cart'} &middot; {fmt((itemModal.promoPrice || itemModal.price) * modalQty)}
+                  {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                  <span style={{ position: 'relative', zIndex: 1 }}>{t.addToCart || 'Add to Cart'} &middot; {fmt((itemModal.promoPrice || itemModal.price) * modalQty)}</span>
                 </button>
               </div>
             )}
           </div>
+            )
+          })()}
         </div>
       )}
 
-      {/* ═══ LOCATION PAGE ═══ */}
-      {showLocation && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 250, overflowY: 'auto' }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0, pointerEvents: 'none' }} />
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0, pointerEvents: 'none' }} />
+      {/* ═══ VISIT US PAGE ═══ */}
+      {showLocation && (() => {
+        const DAYS = [
+          { key: 'mon', en: 'Monday' }, { key: 'tue', en: 'Tuesday' }, { key: 'wed', en: 'Wednesday' },
+          { key: 'thu', en: 'Thursday' }, { key: 'fri', en: 'Friday' }, { key: 'sat', en: 'Saturday' }, { key: 'sun', en: 'Sunday' }
+        ]
+        const todayKey = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1].key
+        const todaySched = shopSchedule[todayKey]
+        const closedDays = DAYS.filter(d => shopSchedule[d.key]?.off)
 
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button onClick={() => setShowLocation(false)} style={{ width: 40, height: 40, borderRadius: '50%', background: '#8DC63F', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-              <div>
-                <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</h2>
-                <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+        return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
+
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setShowLocation(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{userDistance !== null ? `Distance ${userDistance} km` : 'Visit Us'}</div>
               </div>
             </div>
-          </div>
 
-          <div style={{ padding: '0 16px', marginTop: 12, marginBottom: 16, position: 'relative', zIndex: 1 }}>
-            <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 16, overflow: 'hidden' }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2028,%202026,%2004_15_21%20AM.png?updatedAt=1777324540335" alt="" style={{ width: '50%', display: 'block', margin: '12px auto 0' }} />
-              <div style={{ padding: '14px 16px' }}>
-              <p style={{ fontSize: 15, color: '#fff', lineHeight: 1.7, marginBottom: 12 }}>
-                {shopBio || `Welcome to ${shopName}! Stop by and experience the taste first-hand. Watch your food being freshly prepared right in front of you — nothing beats eating it straight from the kitchen.`}
-              </p>
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{t.ourLocation || 'Our Location'}</h3>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{shopName}</p>
-                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>{shopAddress}</p>
+            {/* Page title */}
+            <div style={{ padding: '4px 16px 12px' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Visit Us</div>
+            </div>
+
+            {/* Single info card */}
+            <div style={{ margin: '0 14px 24px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: 20, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+
+              {/* Logo + name + status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                {shopLogo ? (
+                  <img src={shopLogo} alt="" style={{ width: 56, height: 56, borderRadius: 28, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 56, height: 56, borderRadius: 28, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{shopName}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{shopFoodType}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 4, background: shopOpen ? '#22c55e' : '#EF4444' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: shopOpen ? '#22c55e' : '#EF4444' }}>{shopOpen ? 'Open Now' : 'Closed'}</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                    <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} />
-                    {delEnabled && userDistance !== null && (
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FFD600' }}>{userDistance} km</span>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                    <img src="https://ik.imagekit.io/nepgaxllc/Untitledbbbbv-removebg-preview.png" alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{shopPhone}</span>
                   </div>
                 </div>
-                {shopMapsLink && (
-                  <a href={shopMapsLink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 10, padding: '10px', borderRadius: 10, background: 'rgba(141,198,63,0.1)', border: '1px solid rgba(141,198,63,0.2)', textAlign: 'center', textDecoration: 'none' }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#8DC63F' }}>{t.openInMaps || 'Open in Google Maps →'}</span>
-                  </a>
-                )}
               </div>
-              </div>
-            </div>
-          </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginBottom: 16 }}>
+                {shopBio || `Welcome to ${shopName}! Fresh food prepared right in front of you.`}
+              </p>
 
-          <div style={{ padding: '0 16px 16px', position: 'relative', zIndex: 1 }}>
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 16 }} />
 
-            {/* 2. Opening Times */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 10 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>🕐 {t.openingHours || 'Opening Hours'}</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {[
-                  { key: 'mon', en: 'Monday' }, { key: 'tue', en: 'Tuesday' }, { key: 'wed', en: 'Wednesday' },
-                  { key: 'thu', en: 'Thursday' }, { key: 'fri', en: 'Friday' }, { key: 'sat', en: 'Saturday' }, { key: 'sun', en: 'Sunday' }
-                ].map(({ key, en }) => {
-                  const day = t[en.toLowerCase()] || en
-                  const sched = shopSchedule[key]
-                  const isClosed = sched?.off
-                  return (
-                    <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{day}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isClosed ? '#EF4444' : '#8DC63F' }}>
-                        {isClosed ? (t.closed || 'Closed') : `${sched?.open || '17:00'} – ${sched?.close || '23:00'}`}
+              {/* Today's hours + countdown */}
+            {(() => {
+              const now = new Date()
+              const openStr = todaySched?.open || '17:00'
+              const closeStr = todaySched?.close || '23:00'
+              const [oh, om] = openStr.split(':').map(Number)
+              const [ch, cm] = closeStr.split(':').map(Number)
+              const openMin = oh * 60 + om
+              const closeMin = ch * 60 + cm
+              const nowMin = now.getHours() * 60 + now.getMinutes()
+              const isOpen = !todaySched?.off && nowMin >= openMin && nowMin < closeMin
+              const minsLeft = isOpen ? closeMin - nowMin : 0
+              const hrsLeft = Math.floor(minsLeft / 60)
+              const mLeft = minsLeft % 60
+              const totalMins = closeMin - openMin
+              const progress = isOpen && totalMins > 0 ? ((nowMin - openMin) / totalMins) : 0
+              const circumference = 2 * Math.PI * 18
+              const dashOffset = circumference * (1 - progress)
+              const ringColor = isCustomAccent ? accent : '#22c55e'
+
+              // Build open days summary (e.g. "Mon–Fri" or "Mon–Sat")
+              const openDays = DAYS.filter(d => !shopSchedule[d.key]?.off)
+              const openDayLabels = openDays.map(d => (t[d.en.toLowerCase()] || d.en).slice(0, 3))
+              const dayRange = openDayLabels.length > 0 ? (openDayLabels.length === 7 ? 'Every day' : `${openDayLabels[0]}–${openDayLabels[openDayLabels.length - 1]}`) : ''
+
+              return (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Open Today Till {closeStr}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>From {openStr} · {dayRange}</div>
+                  </div>
+                  {!todaySched?.off && isOpen && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <div style={{ position: 'relative', width: 32, height: 32, flexShrink: 0 }}>
+                        <svg width="32" height="32" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" />
+                          <circle cx="16" cy="16" r="12" fill="none" stroke={ringColor} strokeWidth="2.5" strokeDasharray={2 * Math.PI * 12} strokeDashoffset={(2 * Math.PI * 12) * (1 - progress)} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
+                        </svg>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: minsLeft <= 30 ? '#EF4444' : 'rgba(255,255,255,0.5)' }}>
+                        {minsLeft <= 30 ? `${mLeft}m left` : `${hrsLeft}h ${mLeft}m`}
                       </span>
                     </div>
-                  )
-                })}
+                  )}
+                </div>
+                {closedDays.length > 0 && (
+                  <div style={{ fontSize: 12, color: '#EF4444', fontWeight: 600, marginTop: 6 }}>
+                    Closed on — {closedDays.map(d => (t[d.en.toLowerCase()] || d.en).slice(0, 3)).join(' / ')}
+                  </div>
+                )}
+              </>
+              )
+            })()}
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '16px 0' }} />
+
+              {/* Location */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{shopAddress || 'Address not set'}</div>
+                  {(shopCity || shopCountry) && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
+                  </div>
+              </div>
+              {shopMapsLink && (
+                <a href={shopMapsLink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: 10, borderRadius: 10, marginTop: 10, background: isCustomAccent ? `${accent}25` : 'rgba(141,198,63,0.1)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(141,198,63,0.2)', textAlign: 'center', textDecoration: 'none' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: isCustomAccent ? '#fff' : '#8DC63F' }}>Open in Google Maps →</span>
+                </a>
+              )}
+
+              {/* Social links */}
+              {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite) && (
+                <>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '10px 0 14px' }} />
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+                    {shopInstagram && (
+                      <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                      </a>
+                    )}
+                    {shopFacebook && (
+                      <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                      </a>
+                    )}
+                    {shopTiktok && (
+                      <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                      </a>
+                    )}
+                    {shopYoutube && (
+                      <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                      </a>
+                    )}
+                    {shopWebsite && (
+                      <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(10)' }} />
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Delivery status */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '14px 0 12px' }} />
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 16, fontWeight: 800, color: isCustomAccent ? accent : (delEnabled ? '#22c55e' : '#F59E0B') }}>{delEnabled ? 'Delivery Available' : 'Collection Only'}</span>
+              </div>
+
+            </div>{/* close single card */}
+          </div>
+        </div>
+        )
+      })()}
+
+      {/* ═══ THEME EDITOR ═══ */}
+      {themeEditor && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+          {/* Preview area — shows how landing page will look */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <img src={themeEditor.url} alt="" style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${editorPos.x}% ${editorPos.y}%` }} />
+            {/* Glass overlay preview */}
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+            {/* Landing page preview */}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+              {shopLogo ? (
+                <img src={shopLogo} alt="" style={{ width: 70, height: 70, borderRadius: 35, objectFit: 'cover', marginBottom: 12, border: '2px solid rgba(255,255,255,0.2)' }} />
+              ) : (
+                <div style={{ width: 70, height: 70, borderRadius: 35, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 900, color: '#fff', marginBottom: 12, border: '2px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
+              )}
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.8)', textAlign: 'center', padding: '0 20px' }}>{shopName}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>{shopFoodType}</div>
+              <button style={{ marginTop: 24, padding: '10px 30px', borderRadius: 12, border: 'none', background: editorColor, color: '#fff', fontSize: 14, fontWeight: 700 }}>View Menu</button>
+            </div>
+            {/* Drag hint */}
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.6)', padding: '6px 14px', borderRadius: 20, zIndex: 2 }}>
+              <span style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>Use arrows to position image</span>
+            </div>
+          </div>
+
+          {/* Controls panel */}
+          <div style={{ background: '#111', padding: '16px', flexShrink: 0 }}>
+            {/* Position arrows */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+              <button onClick={() => setEditorPos(p => ({ ...p, x: Math.max(0, p.x - 10) }))} style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <button onClick={() => setEditorPos(p => ({ ...p, y: Math.max(0, p.y - 10) }))} style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↑</button>
+                <button onClick={() => setEditorPos(p => ({ ...p, y: Math.min(100, p.y + 10) }))} style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↓</button>
+              </div>
+              <button onClick={() => setEditorPos(p => ({ ...p, x: Math.min(100, p.x + 10) }))} style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
+              <button onClick={() => setEditorPos({ x: 50, y: 50 })} style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Reset</button>
+            </div>
+
+            {/* Color palette */}
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Accent Color</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              {ACCENT_PALETTE.map(p => (
+                <button key={p.color} onClick={() => setEditorColor(p.color)} style={{
+                  width: 32, height: 32, borderRadius: 16, border: editorColor === p.color ? '3px solid #fff' : '2px solid rgba(255,255,255,0.15)',
+                  background: p.color, cursor: 'pointer',
+                }} />
+              ))}
+            </div>
+
+            {/* Brightness slider */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Adjust Shade</div>
+              <input type="range" min="50" max="150" defaultValue="100" style={{ width: '100%', accentColor: editorColor }} onChange={(e) => {
+                const base = ACCENT_PALETTE.find(p => p.color === editorColor)?.color || editorColor
+                setEditorColor(adjustColor(base, e.target.value / 100))
+              }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+                <span>Darker</span>
+                <span>Lighter</span>
               </div>
             </div>
 
-            {/* 3. Contact Us */}
-            <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>{t.contactUs || 'Contact Us'}</h3>
-              <a href={`https://wa.me/${shopPhone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', padding: '10px', borderRadius: 12, background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', marginBottom: 8 }}>
-                <img src="https://ik.imagekit.io/nepgaxllc/Untitledddddccc-removebg-preview.png?updatedAt=1777894363133" alt="whatsapp" style={{ width: 36, height: 36, flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#25D366' }}>WhatsApp</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopPhone.replace(/^(\+?62)/, '0')}</div>
-                </div>
-              </a>
+            {/* Save / Cancel */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setThemeEditor(null)} style={{ flex: 1, padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => {
+                setShopTheme('custom')
+                setShopAccentColor(editorColor)
+                localStorage.setItem('vendorbasic_theme', 'custom')
+                localStorage.setItem('vendorbasic_themeBg', themeEditor.url)
+                localStorage.setItem('vendorbasic_accentColor', editorColor)
+                localStorage.setItem('vendorbasic_bgPos', JSON.stringify(editorPos))
+                const bgImg = document.getElementById('app-bg-img')
+                if (bgImg) {
+                  bgImg.src = themeEditor.url
+                  bgImg.style.objectPosition = `${editorPos.x}% ${editorPos.y}%`
+                }
+                setThemeEditor(null)
+                setShowLanding(true)
+              }} style={{ flex: 1, padding: '14px', borderRadius: 14, border: 'none', background: editorColor, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>Save Theme</button>
             </div>
-
-            {/* Google Maps — moved inside location card */}
-            {false && shopMapsLink && (
-              <a href={shopMapsLink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', background: 'rgba(141,198,63,0.08)', border: '1px solid rgba(141,198,63,0.2)', borderRadius: 16, padding: 20, marginBottom: 12, textDecoration: 'none', textAlign: 'center' }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#8DC63F' }}>📍 Open in Google Maps</span>
-              </a>
-            )}
-
-            {/* Social Links — icon buttons in one row */}
-            {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite) && (
-              <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: '16px 20px', marginBottom: 12 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, textAlign: 'center' }}>{t.followUs || 'Follow Us'}</h3>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 14 }}>
-                  {shopInstagram && (
-                    <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvv-removebg-preview.png" alt="Instagram" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
-                    </a>
-                  )}
-                  {shopFacebook && (
-                    <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvv-removebg-preview.png" alt="Facebook" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
-                    </a>
-                  )}
-                  {shopTiktok && (
-                    <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfff-removebg-preview.png" alt="TikTok" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
-                    </a>
-                  )}
-                  {shopYoutube && (
-                    <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvffffff-removebg-preview.png" alt="X" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
-                    </a>
-                  )}
-                  {shopWebsite && (
-                    <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/Untitledssssssvvvvvfffffffsdf-removebg-preview.png" alt="Website" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.1)' }} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
 
       {/* ═══ CHECKOUT PAGE ═══ */}
-      {checkoutOpen && (
+      {checkoutOpen && (() => {
+        const qtyBg = isCustomAccent ? accent : '#FACC15'
+        const qtyColor = isCustomAccent ? '#fff' : '#000'
+        return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
           <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
-            <div>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)' }}>{shopName}</h2>
-              <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
-            </div>
-            <button onClick={() => setCheckoutOpen(false)} style={{ width: 32, height: 32, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
-          </div>
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 10 }}>
-          {!orderDone ? (
-            <div style={{ padding: '12px' }}>
-              {/* Order items — same style as menu cards */}
-              <div style={{ marginBottom: 16 }}>
-                {cart.map((c) => (
-                  <div key={c.id} style={{ ...S.card, margin: '8px 0', alignItems: 'flex-start', position: 'relative' }}>
-                    {/* Delete X — top right corner */}
-                    <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
-                    <img src={c.photo || PLACEHOLDER_SM} alt="" style={S.cardImg} />
-                    <div style={{ ...S.cardBody, display: 'flex', flexDirection: 'column' }}>
-                      <div style={S.cardName}>{c.name}</div>
-                      {c.desc && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.desc}</div>}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#FACC15' }}>{fmt(c.price * c.qty)}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <button onClick={() => { if (c.qty > 1) setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty - 1 } : x)) }} style={{ width: 28, height: 28, borderRadius: 14, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: c.qty <= 1 ? 0.3 : 1 }}>−</button>
-                          <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', minWidth: 20, textAlign: 'center' }}>{c.qty}</span>
-                          <button onClick={() => setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty + 1 } : x))} style={{ width: 28, height: 28, borderRadius: 14, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', flexShrink: 0 }}>
+              <button onClick={() => setCheckoutOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{t.checkout || 'Checkout'}</div>
+              </div>
+              {!orderDone && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{cart.reduce((s, c) => s + c.qty, 0)} items</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice)}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px 0' }}>
+              {!orderDone ? (
+                <>
+                  {/* Cart items */}
+                  {cart.map((c) => (
+                    <div key={c.id} style={{ display: 'flex', gap: 12, padding: 12, marginBottom: 8, background: 'rgba(0,0,0,0.6)', borderRadius: 16, position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)', ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
+                      <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, border: 'none', background: accent, color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
+                      <img src={c.photo || PLACEHOLDER_SM} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 20 }}>{c.name}</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#FACC15', marginTop: 4 }}>{fmt(c.price * c.qty)}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                          <button onClick={() => { if (c.qty > 1) setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty - 1 } : x)) }} style={{ width: 28, height: 28, borderRadius: 14, border: 'none', background: qtyBg, color: qtyColor, fontSize: 15, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: c.qty <= 1 ? 0.3 : 1 }}>−</button>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', minWidth: 18, textAlign: 'center' }}>{c.qty}</span>
+                          <button onClick={() => setCart(cart.map(x => x.id === c.id ? { ...x, qty: x.qty + 1 } : x))} style={{ width: 28, height: 28, borderRadius: 14, border: 'none', background: qtyBg, color: qtyColor, fontSize: 15, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {cart.length === 0 && (
-                  <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 30 }}>{t.cartEmpty || 'Your cart is empty'}</p>
-                )}
-              </div>
+                  ))}
+                  {cart.length === 0 && (
+                    <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>{t.cartEmpty || 'Your cart is empty'}</p>
+                  )}
 
-              {/* Order note — right after items */}
-              {cart.length > 0 && (
-                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 14, padding: 14, marginBottom: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note (optional)</label>
-                  <textarea
-                    placeholder="e.g. Extra spicy, no onions, allergies..."
-                    style={{ ...S.input, minHeight: 60, resize: 'vertical', marginBottom: 0 }}
-                    id="orderNote"
-                  />
+                  {/* Order note */}
+                  {cart.length > 0 && (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note</label>
+                      <textarea
+                        placeholder="Extra spicy, no onions..."
+                        style={{ ...S.input, minHeight: 50, resize: 'none', marginBottom: 0, fontSize: 13 }}
+                        id="orderNote"
+                      />
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {cart.length > 0 && (
+                    <div style={{ background: isCustomAccent ? `${accent}25` : 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)' }}>
+                      {cart.map(c => (
+                        <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                          <span>{c.name} x{c.qty}</span>
+                          <span>{fmt(c.price * c.qty)}</span>
+                        </div>
+                      ))}
+                      {delEnabled ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'rgba(255,255,255,0.5)', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
+                          <span>Delivery ({deliveryZone.label})</span>
+                          <span>{deliveryZone.fee > 0 ? fmt(deliveryZone.fee) : 'Free'}</span>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>Collection Only</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6 }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
+                        <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* Order Confirmation */
+                <div style={{ textAlign: 'center', padding: '60px 16px' }}>
+                  <div style={{ width: 80, height: 80, borderRadius: 40, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <span style={{ fontSize: 36 }}>✓</span>
+                  </div>
+                  <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 4, color: '#fff' }}>{t.orderSent || 'Order Sent!'}</h2>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#FACC15', marginBottom: 10 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>
+                    {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
+                  </p>
+                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer' }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
+                    Back To Menu
+                  </button>
+                  <img src="https://ik.imagekit.io/nepgaxllc/Untitledfffddfsdfsdfff-removebg-preview.png" alt="" style={{ position: 'fixed', bottom: 16, right: 16, width: 100, height: 'auto', opacity: 0.8, pointerEvents: 'none' }} />
                 </div>
               )}
-
-              {/* Total */}
-              {cart.length > 0 && (
-                <>
-                  <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
-                      <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice)}</span>
-                    </div>
-                    {delEnabled && <div style={{ fontSize: 13, fontWeight: 600, color: '#8DC63F' }}>Estimated delivery: {deliveryZone.label}</div>}
-                  </div>
-
-                </>
-              )}
             </div>
-          ) : (
-            /* --- Order Confirmation --- */
-            <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddsssfsdfxxx-removebg-preview.png" alt="" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: 16 }} />
-              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 10, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>{t.orderSent || 'Order Sent!'}</h2>
-              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 16, lineHeight: 1.6, marginBottom: 24, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-                {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
-              </p>
-              <button style={{ ...S.btnGreen, width: 'auto', padding: '14px 40px', display: 'inline-block' }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
-                Done
-              </button>
-            </div>
-          )}
+
+            {/* Order button — fixed bottom */}
+            {!orderDone && cart.length > 0 && (
+              <div style={{ padding: '12px 14px 24px', flexShrink: 0 }}>
+                <button
+                  style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                  onClick={sendWhatsApp}
+                >
+                  {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                  <span style={{ position: 'relative', zIndex: 1 }}>Order WhatsApp — {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                </button>
+              </div>
+            )}
           </div>
-
-          {/* Footer — delivery estimate + order button */}
-          {!orderDone && cart.length > 0 && (
-            <div style={{ padding: '12px 16px 20px', flexShrink: 0 }}>
-              <button
-                style={{ ...S.btnGreen, marginTop: 0, width: '100%' }}
-                onClick={sendWhatsApp}
-              >
-                Order WhatsApp — {fmt(totalPrice)}
-              </button>
-            </div>
-          )}
         </div>
-      )}
+        )
+      })()}
 
 
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
@@ -1493,8 +1733,10 @@ export default function App() {
               const renderThemeCard = (theme) => (
                 <button key={theme.id} onClick={() => {
                   setShopTheme(theme.id)
+                  setShopAccentColor(theme.accent || '#8DC63F')
                   localStorage.setItem('vendorbasic_theme', theme.id)
                   localStorage.setItem('vendorbasic_themeBg', theme.img)
+                  localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
                   const bgImg = document.getElementById('app-bg-img')
                   if (bgImg) bgImg.src = theme.img
                   setVendorDrawer(false)
@@ -1575,13 +1817,10 @@ export default function App() {
                       if (!file) return
                       const url = await uploadMenuImage(vendorId, file)
                       if (url) {
-                        setShopTheme('custom')
-                        localStorage.setItem('vendorbasic_theme', 'custom')
-                        localStorage.setItem('vendorbasic_themeBg', url)
-                        const bgImg = document.getElementById('app-bg-img')
-                        if (bgImg) bgImg.src = url
+                        setEditorColor(shopAccentColor)
+                        setEditorPos({ x: 50, y: 50 })
+                        setThemeEditor({ url })
                         setVendorDrawer(false)
-                        setShowLanding(true)
                       }
                     }} />
                   </label>
@@ -1645,7 +1884,7 @@ export default function App() {
             {/* Enable toggle + Reset */}
             <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: delEnabled ? '#8DC63F' : '#EF4444' }}>{delEnabled ? 'Delivery On' : 'Delivery Off'}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: delEnabled ? '#8DC63F' : '#F59E0B' }}>{delEnabled ? 'Delivery Available' : 'Collection Only'}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Show estimates to customers</div>
               </div>
               <button style={S.toggle(delEnabled)} onClick={() => setDelEnabled(!delEnabled)}>
@@ -1734,7 +1973,8 @@ export default function App() {
           <div style={S.modal} onClick={(e) => e.stopPropagation()}>
             <button style={S.closeBtnX} onClick={() => setEditItem(null)}>&times;</button>
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Edit Item</h2>
-            <input style={S.input} placeholder="Name" value={formName} onChange={(e) => setFormName(e.target.value)} />
+            <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+            <input style={S.input} placeholder="Name" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
             <input style={S.input} placeholder="Price (number)" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
             <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, appearance: 'auto', fontSize: 13, padding: '10px 12px' }}>
               {FOOD_TYPE_KEYS.map(cat => (
@@ -1777,7 +2017,8 @@ export default function App() {
                 }} />
               </label>
             </div>
-            <input style={S.input} placeholder="Description" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+            <input style={S.input} placeholder="Description" maxLength={60} value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
             <button style={S.btnGreen} onClick={saveEdit}>Save Changes</button>
             <button style={S.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
           </div>
@@ -1839,7 +2080,8 @@ export default function App() {
               </div>
 
               {/* Dish name */}
-              <input style={{ ...S.input, fontSize: 15, padding: '12px' }} placeholder="Dish name" value={formName} onChange={(e) => setFormName(e.target.value)} />
+              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+              <input style={{ ...S.input, fontSize: 15, padding: '12px' }} placeholder="Dish name" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
 
               {/* Spice + Category dropdowns — side by side */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -1876,13 +2118,14 @@ export default function App() {
               )}
 
               {/* Description with character limit */}
+              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 2, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
               <div style={{ position: 'relative', marginBottom: 12 }}>
                 <textarea
                   style={{ ...S.input, minHeight: 70, resize: 'vertical', marginBottom: 0, fontSize: 13, padding: '12px' }}
-                  placeholder="Description (max 120 characters)"
+                  placeholder="Description (max 60 characters)"
                   value={formDesc}
-                  maxLength={120}
-                  onChange={(e) => setFormDesc(e.target.value.slice(0, 120))}
+                  maxLength={60}
+                  onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
                 />
                 <span style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{formDesc.length}/120</span>
               </div>
@@ -1919,15 +2162,43 @@ export default function App() {
             {/* Settings form */}
             <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: 14 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: '#fff' }}>Shop Settings</h2>
+
+            {/* Logo upload */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <label style={{ cursor: 'pointer', display: 'inline-block' }}>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                  const file = e.target.files[0]
+                  if (!file) return
+                  const url = await uploadMenuImage(vendorId, file)
+                  if (url) {
+                    setShopLogo(url)
+                    localStorage.setItem('vendorbasic_shopLogo', url)
+                  }
+                }} />
+                {shopLogo ? (
+                  <img src={shopLogo} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.2)' }} />
+                ) : (
+                  <div style={{ width: 80, height: 80, borderRadius: 40, background: 'rgba(255,255,255,0.1)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 24 }}>📷</span>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Add Logo</span>
+                  </div>
+                )}
+              </label>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{shopLogo ? 'Tap to change logo' : 'Tap to upload logo'}</div>
+              {shopLogo && (
+                <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 11, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove logo</button>
+              )}
+            </div>
+
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ fontSize: 11, color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
             <input style={S.input} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number (with country code)</label>
             <input style={S.input} value={shopPhone} onChange={(e) => setShopPhone(e.target.value)} />
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type / Description</label>
             <input style={S.input} value={shopFoodType} onChange={(e) => setShopFoodType(e.target.value)} placeholder="e.g. Indonesian Street Food" />
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About Your Business (max 200 characters)</label>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About Your Business <span style={{ fontSize: 11, color: shopBio.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopBio.length}/350)</span></label>
             <div style={{ position: 'relative', marginBottom: 10 }}>
-              <textarea style={{ ...S.input, minHeight: 70, resize: 'vertical', marginBottom: 0 }} value={shopBio} maxLength={200} onChange={(e) => setShopBio(e.target.value.slice(0, 200))} placeholder="Tell customers about your food, your story, what makes you special..." />
+              <textarea style={{ ...S.input, minHeight: 70, resize: 'vertical', marginBottom: 0 }} value={shopBio} maxLength={350} onChange={(e) => setShopBio(e.target.value.slice(0, 350))} placeholder="Tell customers about your food, your story, what makes you special..." />
               <span style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{shopBio.length}/200</span>
             </div>
             <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Stall Location</label>

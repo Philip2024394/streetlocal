@@ -82,6 +82,19 @@
         var bgImg = document.getElementById('app-bg-img');
         if (bgImg) bgImg.src = savedBg;
       }
+      // Apply saved background position for custom themes
+      var savedTheme = localStorage.getItem('vendorbasic_theme');
+      var savedPos = localStorage.getItem('vendorbasic_bgPos');
+      if (savedTheme === 'custom' && savedPos) {
+        try {
+          var pos = JSON.parse(savedPos);
+          var bgEl = document.getElementById('app-bg-img');
+          if (bgEl) {
+            bgEl.style.objectFit = 'cover';
+            bgEl.style.objectPosition = pos.x + '% ' + pos.y + '%';
+          }
+        } catch(e) {}
+      }
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
