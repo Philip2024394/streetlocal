@@ -282,24 +282,25 @@ function adjustColor(hex, factor) {
 }
 
 const THEME_PRESETS = [
-  // Indonesian / Malaysian
-  { id: 'default', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png', label: '#1 Wood', category: 'Indonesian Street Food', countries: ['ID', 'MY'], foodTypes: ['Street Food', 'Indonesian Street Food'] },
-  { id: 'satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#2 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
-  { id: 'pecellele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#3 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'friedrice', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#4 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
-  { id: 'noodle', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#5 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'] },
-  { id: 'bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#6 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
-  { id: 'chicken', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#7 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
-  { id: 'juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#8 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
-  { id: 'coffee', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#9 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
-  // Pan-Asian
-  { id: 'bamboo', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928', label: '#10 Bamboo', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'TW', 'HK'], foodTypes: ['Asian Cuisine', 'Noodle Soup', 'Fried Rice'] },
-  { id: 'asia', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_03_53%20PM.png', label: '#11 Asia', category: 'Asian Cuisine', countries: ['VN', 'TH', 'MY', 'SG', 'PH', 'CN', 'ID'], foodTypes: ['Asian Cuisine', 'Street Food'] },
-  // Universal
-  { id: 'dark', accent: '#8DC63F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_43_21%20PM.png?updatedAt=1777887818629', label: '#12 Dark', category: 'Street Food', countries: [], foodTypes: ['Street Food'] },
-  { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_46_43%20PM.png', label: '#13 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
-  { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#14 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
-  { id: 'donut', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#15 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
+  // Indonesian
+  { id: 'satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#1 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
+  { id: 'pecellele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#2 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'friedrice', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#3 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
+  { id: 'noodle', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#4 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
+  { id: 'bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#5 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
+  { id: 'chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#6 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
+  { id: 'juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#7 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
+  { id: 'coffee', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
+  { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', label: '#9 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
+  { id: 'martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
+  { id: 'escendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
+  { id: 'ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', label: '#12 Ketoprak', category: 'Ketoprak', countries: ['ID'], foodTypes: ['Ketoprak', 'Street Food', 'Indonesian Street Food'] },
+  { id: 'cilok', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
+  { id: 'ikanbakar', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'] },
+  { id: 'nasiuduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'bebekgoreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
+  { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#17 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
+  { id: 'donut', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#18 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
 ]
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
@@ -369,6 +370,73 @@ export default function App() {
 
   if (viewMode === 'admin') return <AdminDashboard />
   if (viewMode === 'activate') return <ActivatePage />
+
+  /* --- Auto-healing + Health reporting --- */
+  const APP_VERSION = '1.0.0'
+  useEffect(() => {
+    if (isDemo || !supabase) return
+    const vid = localStorage.getItem('vendorbasic_vendorId')
+    if (!vid || String(vid).startsWith('local')) return
+
+    // Auto-heal: detect and fix broken states
+    const errors = []
+    const theme = localStorage.getItem('vendorbasic_theme')
+    const accentColor = localStorage.getItem('vendorbasic_accentColor')
+    const themeBg = localStorage.getItem('vendorbasic_themeBg')
+
+    // Fix invalid accent color
+    if (accentColor && !/^#[0-9A-Fa-f]{6}$/.test(accentColor)) {
+      localStorage.setItem('vendorbasic_accentColor', '#8DC63F')
+      errors.push('Invalid accent color reset')
+    }
+    // Fix missing theme background
+    if (theme && theme !== 'custom' && !themeBg) {
+      const preset = THEME_PRESETS.find(t => t.id === theme)
+      if (preset) { localStorage.setItem('vendorbasic_themeBg', preset.img); errors.push('Missing theme bg restored') }
+    }
+    // Fix NaN prices in menu
+    try {
+      const menu = JSON.parse(localStorage.getItem('vendorbasic_menu') || '[]')
+      let fixed = false
+      menu.forEach(item => { if (isNaN(item.price) || item.price < 0) { item.price = 0; fixed = true } })
+      if (fixed) { localStorage.setItem('vendorbasic_menu', JSON.stringify(menu)); errors.push('NaN prices fixed') }
+    } catch { errors.push('Corrupt menu JSON') }
+
+    // Check for remote config (force reset, maintenance, announcements)
+    supabase.from('vendor_status').select('force_reset, reset_theme, reset_accent').eq('vendor_id', vid).single().then(({ data }) => {
+      if (data?.force_reset) {
+        const newTheme = data.reset_theme || 'noodle'
+        const newAccent = data.reset_accent || '#8B0000'
+        const preset = THEME_PRESETS.find(t => t.id === newTheme)
+        if (preset) {
+          localStorage.setItem('vendorbasic_theme', newTheme)
+          localStorage.setItem('vendorbasic_themeBg', preset.img)
+          localStorage.setItem('vendorbasic_accentColor', newAccent)
+          const bgImg = document.getElementById('app-bg-img')
+          if (bgImg) bgImg.src = preset.img
+          supabase.from('vendor_status').update({ force_reset: false }).eq('vendor_id', vid)
+          window.location.reload()
+        }
+      }
+    })
+
+    // Report health
+    const menuCount = JSON.parse(localStorage.getItem('vendorbasic_menu') || '[]').length
+    const status = errors.length > 0 ? 'warning' : 'healthy'
+    supabase.from('vendor_health_logs').insert({
+      vendor_id: vid, status, app_version: APP_VERSION,
+      theme_id: theme, accent_color: accentColor, menu_count: menuCount,
+      error_message: errors.length > 0 ? errors.join('; ') : null,
+      user_agent: navigator.userAgent, screen_width: window.innerWidth,
+    })
+    // Update vendor status summary
+    supabase.from('vendor_status').upsert({
+      vendor_id: vid, last_health_check: new Date().toISOString(),
+      current_status: status, theme_id: theme, accent_color: accentColor,
+      menu_count: menuCount, app_version: APP_VERSION,
+      error_count: errors.length, needs_attention: errors.length > 0,
+    }, { onConflict: 'vendor_id' })
+  }, [])
 
   /* --- Agent referral tracking --- */
   useEffect(() => {

@@ -10,6 +10,7 @@ const PAGES = [
   { id: 'members', label: 'Subscribers', icon: '👥' },
   { id: 'payments', label: 'Payments', icon: '💰' },
   { id: 'affiliates', label: 'Affiliates', icon: '🤝' },
+  { id: 'fleet', label: 'Fleet Health', icon: '🏥' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
@@ -27,6 +28,7 @@ export default function Admin({ onClose }) {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterApp, setFilterApp] = useState('all')
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(null)
   const [alerts, setAlerts] = useState([])
   const [alertForm, setAlertForm] = useState({ app_type: '', severity: 'warning', title: '', description: '' })
   const [showAlertForm, setShowAlertForm] = useState(false)
@@ -41,24 +43,42 @@ export default function Admin({ onClose }) {
   const [promoMaterials, setPromoMaterials] = useState([])
   const [promoForm, setPromoForm] = useState({ category_id: 'food', app_id: '', type: 'image', title: '', url: '', thumbnail_url: '' })
   const [promoUploading, setPromoUploading] = useState(false)
+  const [fleetStatus, setFleetStatus] = useState([])
+  const [fleetConfig, setFleetConfig] = useState({})
+  const [fleetLogs, setFleetLogs] = useState([])
 
   const load = async () => {
     setLoading(true)
-    const [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes] = await Promise.all([
-      supabase.from('app_registrations').select('*').order('created_at', { ascending: false }),
-      supabase.from('app_alerts').select('*').order('created_at', { ascending: false }),
-      supabase.from('admin_settings').select('*'),
-      supabase.from('user_accounts').select('*').order('created_at', { ascending: false }),
-      supabase.from('affiliate_agents').select('*').order('created_at', { ascending: false }),
-      supabase.from('affiliate_referrals').select('*').order('created_at', { ascending: false }),
-      supabase.from('affiliate_promo_materials').select('*').order('sort_order'),
-    ])
-    if (regsRes.data) setRegs(regsRes.data)
-    if (alertsRes.data) setAlerts(alertsRes.data)
-    if (usersRes.data) setUsers(usersRes.data)
-    if (affRes.data) setAffiliates(affRes.data)
-    if (affRefRes.data) setAffReferrals(affRefRes.data)
-    if (promoRes.data) setPromoMaterials(promoRes.data)
+    setLoadError(null)
+    try {
+      const [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes, configRes, healthRes, resetRes] = await Promise.all([
+        supabase.from('app_registrations').select('*').order('created_at', { ascending: false }),
+        supabase.from('app_alerts').select('*').order('created_at', { ascending: false }),
+        supabase.from('admin_settings').select('*'),
+        supabase.from('user_accounts').select('*').order('created_at', { ascending: false }),
+        supabase.from('affiliate_agents').select('*').order('created_at', { ascending: false }),
+        supabase.from('affiliate_referrals').select('*').order('created_at', { ascending: false }),
+        supabase.from('affiliate_promo_materials').select('*').order('sort_order'),
+        supabase.from('vendor_status').select('*').order('last_health_check', { ascending: false }),
+        supabase.from('vendor_remote_config').select('*').eq('id', 'basic_v1').single(),
+        supabase.from('vendor_health_logs').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('vendor_reset_log').select('*').order('created_at', { ascending: false }).limit(50),
+      ])
+      if (regsRes.data) setRegs(regsRes.data)
+      if (alertsRes.data) setAlerts(alertsRes.data)
+      if (usersRes.data) setUsers(usersRes.data)
+      if (affRes.data) setAffiliates(affRes.data)
+      if (affRefRes.data) setAffReferrals(affRefRes.data)
+      if (promoRes.data) setPromoMaterials(promoRes.data)
+      if (fleetRes.data) setFleetStatus(fleetRes.data)
+      if (configRes.data) setFleetConfig(configRes.data)
+      if (healthRes.data) setFleetLogs(healthRes.data)
+      // Collect errors
+      const errs = [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes].filter(r => r.error).map(r => r.error.message)
+      if (errs.length > 0) setLoadError(errs.join('; '))
+    } catch (err) {
+      setLoadError(err.message || 'Failed to load data')
+    }
     if (settingsRes.data) {
       const obj = {}
       settingsRes.data.forEach(s => { obj[s.id] = s.value })
@@ -268,6 +288,18 @@ export default function Admin({ onClose }) {
       {/* Content */}
       <div style={s.content}>
 
+        {/* Error banner */}
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>Data Load Error</div>
+            <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>{loadError}</div>
+            <button onClick={load} style={{ marginTop: 8, padding: '6px 14px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Retry</button>
+          </div>
+        )}
+
+        {/* Loading indicator */}
+        {loading && <div style={{ textAlign: 'center', padding: 20, color: '#888', fontSize: 13 }}>Loading...</div>}
+
         {/* ── DASHBOARD ── */}
         {page === 'dashboard' && (
           <>
@@ -310,6 +342,67 @@ export default function Admin({ onClose }) {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* MRR + Churn + Export */}
+            <div style={s.section}>
+              <h3 style={s.sectionTitle}>Business Metrics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                <div style={s.statCard}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#22c55e' }}>{fmtRp(monthlyRevenue + Math.round(yearlyRevenue / 12))}</div>
+                  <div style={s.statLabel}>MRR (Monthly)</div>
+                </div>
+                <div style={s.statCard}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#3B82F6' }}>{fmtRp((monthlyRevenue + Math.round(yearlyRevenue / 12)) * 12)}</div>
+                  <div style={s.statLabel}>ARR (Annual)</div>
+                </div>
+                <div style={s.statCard}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: regs.length > 0 ? (deactivated.length / regs.length * 100 > 10 ? '#EF4444' : '#22c55e') : '#888' }}>
+                    {regs.length > 0 ? (deactivated.length / regs.length * 100).toFixed(1) : 0}%
+                  </div>
+                  <div style={s.statLabel}>Churn Rate</div>
+                </div>
+                <div style={s.statCard}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#8B5CF6' }}>
+                    {regs.length > 0 ? fmtRp(Math.round(totalRevenue / Math.max(active.length, 1))) : 'Rp 0'}
+                  </div>
+                  <div style={s.statLabel}>ARPU</div>
+                </div>
+              </div>
+
+              {/* 30-day signups vs churns */}
+              {(() => {
+                const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000)
+                const newSignups = regs.filter(r => new Date(r.created_at) > thirtyDaysAgo).length
+                const recentChurns = regs.filter(r => r.status === 'deactivated' && r.updated_at && new Date(r.updated_at) > thirtyDaysAgo).length
+                return (
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    <div style={{ flex: 1, padding: 10, borderRadius: 10, background: '#F0FDF4', textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#22c55e' }}>+{newSignups}</div>
+                      <div style={{ fontSize: 11, color: '#065F46' }}>New (30 days)</div>
+                    </div>
+                    <div style={{ flex: 1, padding: 10, borderRadius: 10, background: '#FEF2F2', textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#EF4444' }}>-{recentChurns}</div>
+                      <div style={{ fontSize: 11, color: '#991B1B' }}>Churned (30 days)</div>
+                    </div>
+                    <div style={{ flex: 1, padding: 10, borderRadius: 10, background: '#EFF6FF', textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#1E40AF' }}>{newSignups - recentChurns >= 0 ? '+' : ''}{newSignups - recentChurns}</div>
+                      <div style={{ fontSize: 11, color: '#1E40AF' }}>Net Growth</div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* CSV Export */}
+              <button onClick={() => {
+                const headers = 'Business Name,App Type,Status,Billing,Price,WhatsApp,Created\n'
+                const rows = regs.map(r => `"${r.business_name || ''}","${r.app_type || ''}","${r.status || ''}","${r.billing_cycle || ''}","${r.price || ''}","${r.whatsapp || ''}","${r.created_at || ''}"`).join('\n')
+                const blob = new Blob([headers + rows], { type: 'text/csv' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a'); a.href = url; a.download = `streetlocal-vendors-${new Date().toISOString().slice(0,10)}.csv`; a.click()
+              }} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e0e0e0', background: '#fff', color: '#1a1a1a', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                📊 Export Vendors CSV
+              </button>
             </div>
 
             {/* App breakdown */}
@@ -950,6 +1043,131 @@ export default function Admin({ onClose }) {
         })()}
 
         {/* ── ANALYTICS ── */}
+        {/* ── FLEET HEALTH ── */}
+        {page === 'fleet' && (() => {
+          const healthy = fleetStatus.filter(v => v.current_status === 'healthy').length
+          const warning = fleetStatus.filter(v => v.current_status === 'warning').length
+          const errors = fleetStatus.filter(v => v.current_status === 'error' || v.current_status === 'critical').length
+          const needsAttention = fleetStatus.filter(v => v.needs_attention)
+          const total = fleetStatus.length
+
+          async function resetVendorTheme(vendorId, themeId, accentColor) {
+            await supabase.from('vendor_status').upsert({ vendor_id: vendorId, force_reset: true, reset_theme: themeId || 'noodle', reset_accent: accentColor || '#8B0000' }, { onConflict: 'vendor_id' })
+            await supabase.from('vendor_reset_log').insert({ vendor_id: vendorId, reset_type: 'theme', previous_theme: fleetStatus.find(v => v.vendor_id === vendorId)?.theme_id, new_theme: themeId || 'noodle' })
+            setFleetStatus(fleetStatus.map(v => v.vendor_id === vendorId ? { ...v, force_reset: true, needs_attention: false } : v))
+          }
+
+          async function resetAllThemes() {
+            for (const v of fleetStatus) {
+              await supabase.from('vendor_status').update({ force_reset: true, reset_theme: 'noodle', reset_accent: '#8B0000' }).eq('vendor_id', v.vendor_id)
+            }
+            alert('Reset pushed to all vendors. They will update on next app load.')
+            load()
+          }
+
+          async function toggleMaintenance() {
+            const newMode = !fleetConfig.maintenance_mode
+            await supabase.from('vendor_remote_config').update({ maintenance_mode: newMode, updated_at: new Date().toISOString() }).eq('id', 'basic_v1')
+            setFleetConfig({ ...fleetConfig, maintenance_mode: newMode })
+          }
+
+          return (
+            <>
+              {/* Health overview */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+                <div style={s.statCard}><div style={s.statNum}>{total}</div><div style={s.statLabel}>Total</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#22c55e' }}>{healthy}</div><div style={s.statLabel}>Healthy</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#F59E0B' }}>{warning}</div><div style={s.statLabel}>Warning</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#EF4444' }}>{errors}</div><div style={s.statLabel}>Errors</div></div>
+              </div>
+
+              {/* Remote config controls */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>Remote Controls</h3>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <button onClick={toggleMaintenance} style={{ ...s.filterBtn, background: fleetConfig.maintenance_mode ? '#EF4444' : '#22c55e', color: '#fff' }}>
+                    {fleetConfig.maintenance_mode ? '🔴 Maintenance ON' : '🟢 Maintenance OFF'}
+                  </button>
+                  <button onClick={resetAllThemes} style={{ ...s.filterBtn, background: '#F59E0B', color: '#fff' }}>
+                    🔄 Reset All Themes
+                  </button>
+                </div>
+                <div style={{ fontSize: 12, color: '#888' }}>
+                  App Version: <strong>{fleetConfig.app_version || '1.0.0'}</strong> |
+                  Last Config Update: <strong>{fleetConfig.updated_at ? new Date(fleetConfig.updated_at).toLocaleString() : 'Never'}</strong>
+                </div>
+              </div>
+
+              {/* Needs attention */}
+              {needsAttention.length > 0 && (
+                <div style={s.section}>
+                  <h3 style={{ ...s.sectionTitle, color: '#EF4444' }}>⚠️ Needs Attention ({needsAttention.length})</h3>
+                  {needsAttention.map(v => (
+                    <div key={v.vendor_id} style={{ padding: 12, background: '#FEF2F2', borderRadius: 10, border: '1px solid #FECACA', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{v.vendor_id.slice(0, 8)}...</div>
+                          <div style={{ fontSize: 11, color: '#888' }}>Theme: {v.theme_id} | Errors: {v.error_count} | Items: {v.menu_count}</div>
+                        </div>
+                        <button onClick={() => resetVendorTheme(v.vendor_id)} style={{ ...s.filterBtn, background: '#EF4444', color: '#fff', fontSize: 11 }}>Reset Theme</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* All vendors */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>All Vendors ({total})</h3>
+                {fleetStatus.map(v => {
+                  const statusColor = v.current_status === 'healthy' ? '#22c55e' : v.current_status === 'warning' ? '#F59E0B' : '#EF4444'
+                  return (
+                    <div key={v.vendor_id} style={{ padding: 10, background: '#FAFAFA', borderRadius: 10, border: '1px solid #f0f0f0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 5, background: statusColor, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a' }}>{v.vendor_id.slice(0, 12)}...</div>
+                        <div style={{ fontSize: 10, color: '#888' }}>
+                          v{v.app_version} | {v.theme_id} | {v.menu_count} items | {v.last_health_check ? new Date(v.last_health_check).toLocaleString() : 'Never'}
+                        </div>
+                      </div>
+                      {v.force_reset && <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: '#FEF3C7', padding: '2px 6px', borderRadius: 4 }}>Resetting...</span>}
+                      <button onClick={() => resetVendorTheme(v.vendor_id)} style={{ ...s.filterBtn, fontSize: 10, padding: '3px 8px', background: '#f0f0f0', color: '#555' }}>Reset</button>
+                    </div>
+                  )
+                })}
+                {fleetStatus.length === 0 && <p style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: 20 }}>No vendor health data yet</p>}
+              </div>
+
+              {/* Recent Health Logs */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>Recent Health Reports ({fleetLogs.length})</h3>
+                {fleetLogs.slice(0, 20).map((log, i) => (
+                  <div key={i} style={{ padding: 8, background: log.status === 'healthy' ? '#F0FDF4' : log.status === 'warning' ? '#FEF3C7' : '#FEF2F2', borderRadius: 8, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 4, background: log.status === 'healthy' ? '#22c55e' : log.status === 'warning' ? '#F59E0B' : '#EF4444', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a' }}>{log.vendor_id?.slice(0, 8)}... — v{log.app_version}</div>
+                      <div style={{ fontSize: 10, color: '#888' }}>{log.theme_id} | {log.menu_count} items | {log.screen_width}px | {new Date(log.created_at).toLocaleString()}</div>
+                      {log.error_message && <div style={{ fontSize: 10, color: '#DC2626', marginTop: 2 }}>{log.error_message}</div>}
+                    </div>
+                  </div>
+                ))}
+                {fleetLogs.length === 0 && <p style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: 12 }}>No health reports yet</p>}
+              </div>
+
+              {/* Fleet CSV Export */}
+              <button onClick={() => {
+                const headers = 'Vendor ID,Status,Version,Theme,Accent,Menu Count,Last Check,Errors\n'
+                const rows = fleetStatus.map(v => `"${v.vendor_id}","${v.current_status}","${v.app_version}","${v.theme_id}","${v.accent_color}","${v.menu_count}","${v.last_health_check}","${v.error_count}"`).join('\n')
+                const blob = new Blob([headers + rows], { type: 'text/csv' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a'); a.href = url; a.download = `fleet-health-${new Date().toISOString().slice(0,10)}.csv`; a.click()
+              }} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e0e0e0', background: '#fff', color: '#1a1a1a', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>
+                📊 Export Fleet CSV
+              </button>
+            </>
+          )
+        })()}
+
         {page === 'analytics' && (
           <>
             {/* Subscription trend */}
