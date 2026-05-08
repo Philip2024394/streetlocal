@@ -537,6 +537,7 @@ export default function App() {
   const [themePreviewPage, setThemePreviewPage] = useState('landing') // landing | menu
   const [themeCountryDrawer, setThemeCountryDrawer] = useState(false)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
+  const [domainPage, setDomainPage] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
@@ -2353,6 +2354,7 @@ export default function App() {
                 { icon: '🎨', label: 'Design Studio', desc: 'Layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
+                { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
@@ -3622,6 +3624,149 @@ export default function App() {
             {/* Done button */}
             <div style={{ padding: '8px 14px 28px' }}>
               <button onClick={() => setDesignStudio(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Custom Domain Page ─── */}
+      {domainPage && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setDomainPage(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Custom Domain</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</div>
+            </div>
+
+            {/* Current URL Card */}
+            <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Your current app link</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  streetlocal.live/{shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}
+                </div>
+                <button onClick={() => { navigator.clipboard.writeText(`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}`) }} style={{ width: 40, height: 40, borderRadius: 10, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>📋</button>
+              </div>
+            </div>
+
+            {/* Pricing Tiers */}
+            {[
+              {
+                name: 'Subdomain',
+                badge: '#3B82F6',
+                example: `${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}.streetlocal.live`,
+                monthly: 25000,
+                setup: 50000,
+                tagline: 'Best for getting started',
+                features: [
+                  'Auto SSL included',
+                  'Instant activation',
+                  'Professional subdomain URL',
+                  'Minimum commitment: 3 months',
+                ],
+              },
+              {
+                name: 'Custom Domain',
+                badge: '#F59E0B',
+                example: 'menu.yourbrand.com',
+                monthly: 75000,
+                setup: 150000,
+                tagline: 'Most popular for serious vendors',
+                features: [
+                  'Use your own domain (you purchase it)',
+                  'We provide CNAME record instructions',
+                  'SSL auto-provisioned',
+                  'Setup fee includes DNS configuration',
+                  'Minimum commitment: 3 months',
+                ],
+              },
+              {
+                name: 'Full Domain',
+                badge: '#8B5CF6',
+                example: 'yourbrand.com',
+                monthly: 150000,
+                setup: 300000,
+                tagline: 'Premium — we handle everything',
+                features: [
+                  'We buy and manage your domain',
+                  'Setup fee includes domain purchase + 1st year registration',
+                  'Domain renewal included in monthly price',
+                  'Full DNS management, SSL, redirects',
+                  'Minimum commitment: 3 months',
+                ],
+              },
+            ].map((tier, i) => (
+              <div key={tier.name} style={{ margin: '0 16px 16px', padding: 20, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: `1px solid ${tier.badge}40` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 8, background: `${tier.badge}20`, color: tier.badge, fontSize: 12, fontWeight: 800 }}>Tier {i + 1}</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{tier.name}</span>
+                </div>
+                <div style={{ fontFamily: 'monospace', fontSize: 13, color: accent, fontWeight: 700, marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: `${accent}10`, border: `1px solid ${accent}25` }}>{tier.example}</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{fmt(tier.monthly)}<span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>/month</span></div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Setup fee: {fmt(tier.setup)} (one-time)</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tier.badge, marginBottom: 10 }}>{tier.tagline}</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px' }}>
+                  {tier.features.map((f, j) => (
+                    <li key={j} style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', padding: '4px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <span style={{ color: accent, fontSize: 14, lineHeight: '18px' }}>✓</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like the ${tier.name} domain plan for my shop "${shopName}".`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'block', width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 15, fontWeight: 800, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box' }}
+                >
+                  Get Started →
+                </a>
+              </div>
+            ))}
+
+            {/* Important Notes */}
+            <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Important Notes</div>
+              {[
+                'Setup fees are non-refundable and cover the configuration work',
+                'Minimum 3-month commitment required for all plans',
+                'Domain plans are in addition to your app subscription',
+                'Cancel anytime after 3 months with 30 days notice',
+                'Your app content and menu stay on streetlocal.live even if you cancel the domain',
+              ].map((note, i) => (
+                <div key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ color: '#F59E0B', fontSize: 12, lineHeight: '18px' }}>•</span>
+                  <span>{note}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* FAQ */}
+            <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 14 }}>FAQ</div>
+              {[
+                { q: 'Do I need a domain plan?', a: 'No — your app works perfectly at streetlocal.live/yourshop. Domains are optional for vendors who want professional branding.' },
+                { q: 'What if I already have a domain?', a: "Choose the Custom Domain plan. You'll keep ownership of your domain — we just point it to your app." },
+                { q: 'What happens if I cancel?', a: 'Your app stays active at streetlocal.live. Only the custom domain stops working.' },
+              ].map((faq, i) => (
+                <div key={i} style={{ marginBottom: i < 2 ? 14 : 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: accent, marginBottom: 4 }}>{faq.q}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{faq.a}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Done button */}
+            <div style={{ padding: '8px 16px 28px' }}>
+              <button onClick={() => setDomainPage(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Done</button>
             </div>
           </div>
         </div>
