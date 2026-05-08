@@ -884,7 +884,7 @@ const CONTACT_DEPARTMENTS = [
 
 const CONTACT_CHANNELS = [
   { icon: '💬', name: 'WhatsApp', availability: '24/7', responseTime: '< 15 minutes', primary: true, color: '#25D366', href: 'https://wa.me/6281392000050?text=Hi! I need help with StreetLocal.' },
-  { icon: '📧', name: 'Email Support', availability: 'Mon-Sat 09:00-21:00 WIB', responseTime: '< 2 hours', primary: false, color: '#1a73e8', href: 'mailto:support@streetlocal.live' },
+  { icon: '📧', name: 'Email Support', availability: 'Mon-Sat 09:00-21:00 WIB', responseTime: '< 2 hours', primary: false, color: '#1a73e8', href: 'mailto:indootechteam@gmail.com' },
   { icon: '🎫', name: 'Ticket System', availability: '24/7 submission', responseTime: '< 4 hours', primary: false, color: '#FFD600', href: null },
   { icon: '⚡', name: 'Priority Support', availability: 'Enterprise plans', responseTime: '< 30 minutes', primary: false, color: '#ff6b35', href: null },
   { icon: '👨‍💻', name: 'Developer Support', availability: 'Enterprise API users', responseTime: '< 1 hour', primary: false, color: '#6366f1', href: null },
@@ -2510,6 +2510,11 @@ export default function App() {
                             onClick={() => {
                               const tid = 'SL-' + String(Math.floor(10000 + Math.random() * 90000))
                               setContactTicketId(tid)
+                              // Send ticket via email
+                              const d = contactFormData
+                              const subject = encodeURIComponent(`[${tid}] ${d.subject || 'Support Ticket'} — ${d.department || contactCategory}`)
+                              const body = encodeURIComponent(`Ticket: ${tid}\nPriority: ${d.priority}\nDepartment: ${d.department || contactCategory}\n\nName: ${d.name}\nBusiness: ${d.business}\nEmail: ${d.email}\nUsername: ${d.username}\nContact Method: ${d.contactMethod}\n\n${d.description}`)
+                              window.open(`mailto:indootechteam@gmail.com?subject=${subject}&body=${body}`, '_blank')
                               setContactStep('confirmation')
                             }}
                             style={{ flex: 2, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}
@@ -2643,6 +2648,8 @@ export default function App() {
                       <div style={{ width: 44, height: 44, borderRadius: 12, background: ch.primary ? ch.color : '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: ch.primary ? '#fff' : undefined }}>{ch.icon}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 2 }}>{ch.name}</div>
+                        {ch.href && ch.href.startsWith('mailto:') && <div style={{ fontSize: 11, color: ch.color, fontWeight: 600 }}>{ch.href.replace('mailto:', '')}</div>}
+                        {ch.href && ch.href.startsWith('https://wa.me/') && <div style={{ fontSize: 11, color: ch.color, fontWeight: 600 }}>+62 813 9200 0050</div>}
                         <div style={{ fontSize: 11, color: '#888' }}>{ch.availability}</div>
                         <div style={{ fontSize: 11, color: '#666', fontWeight: 600 }}>Response: {ch.responseTime}</div>
                       </div>
