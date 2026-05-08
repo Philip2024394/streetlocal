@@ -882,6 +882,9 @@ export default function App() {
   const [signupAction, setSignupAction] = useState(null) // 'demo' or 'subscribe'
   const [slugCheck, setSlugCheck] = useState(null) // null | 'checking' | 'available' | 'taken'
   const [contactStep, setContactStep] = useState(null)
+  const [themeLibSearch, setThemeLibSearch] = useState('')
+  const [themeLibPreview, setThemeLibPreview] = useState(null)
+  const [themeLibPreviewImg, setThemeLibPreviewImg] = useState(null)
   const [contactCategory, setContactCategory] = useState(null)
   const [contactFaqOpen, setContactFaqOpen] = useState([])
   const [contactFormData, setContactFormData] = useState({ name: '', business: '', email: '', username: '', department: '', priority: 'normal', subject: '', description: '', file: null, contactMethod: 'email' })
@@ -1063,7 +1066,7 @@ export default function App() {
                   { id: 'pecellele', label: 'Pecel Lele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568' },
                   { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png' },
                   { id: 'cilok', label: 'Cilok Cimol', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png' },
-                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png' },
+                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
                   { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png' },
                   { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png' },
                   { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png' },
@@ -1095,7 +1098,7 @@ export default function App() {
               </div>
               <button onClick={() => { const t = [
                 { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433' },
-              ]; setPreviewTheme(t[0]) }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
+              ]; setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
             </div>
           </div>
@@ -2311,6 +2314,152 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* ═══ THEMES LIBRARY PAGE ═══ */}
+          {currentPage === 'themes' && (() => {
+            const allThemes = [
+              { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'], isNew: false },
+              { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'], isNew: false },
+              { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', isNew: false },
+              { id: 'juice', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'], isNew: false },
+              { id: 'chicken', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'], isNew: false },
+              { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'], isNew: false },
+              { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', isNew: false },
+              { id: 'pecellele', label: 'Pecel Lele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', isNew: false },
+              { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', isNew: false },
+              { id: 'martabak', label: 'Martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', isNew: true },
+              { id: 'escendol', label: 'Es Cendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', isNew: true },
+              { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', isNew: true },
+              { id: 'cilok', label: 'Cilok Cimol', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', isNew: true },
+              { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'], isNew: true },
+              { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', isNew: true },
+              { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', isNew: true },
+              { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', isNew: false },
+              { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', isNew: false },
+            ]
+            const filtered = themeLibSearch ? allThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : allThemes
+            const newThemes = filtered.filter(t => t.isNew)
+            const otherThemes = filtered.filter(t => !t.isNew)
+            const previewT = themeLibPreview ? allThemes.find(t => t.id === themeLibPreview) : null
+            const activeImg = themeLibPreviewImg || (previewT ? previewT.img : '')
+            const previewAllImgs = previewT ? [previewT.img, ...(previewT.variants || [])] : []
+
+            return (
+              <div style={{ background: '#fff', margin: '-20px -24px', padding: '0 0 40px', minHeight: '100vh' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, position: 'sticky', top: 0, zIndex: 10, background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a' }}>FoodLocal Themes</div>
+                    <div style={{ fontSize: 11, color: '#999' }}>{allThemes.length} themes available</div>
+                  </div>
+                  <button onClick={() => { setCurrentPage(null); setSelectedApp(null); setSelectedCategory(null) }} style={{ width: 36, height: 36, borderRadius: 18, background: '#1a1a1a', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                  </button>
+                </div>
+
+                {/* Search */}
+                <div style={{ padding: '12px 16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input value={themeLibSearch} onChange={e => setThemeLibSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ccc" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  </div>
+                </div>
+
+                {/* New themes */}
+                {newThemes.length > 0 && !themeLibSearch && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>New</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                      {newThemes.map(theme => (
+                        <div key={theme.id} style={{ textAlign: 'center' }}>
+                          <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
+                            <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
+                            <img src={theme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
+                              <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Street Noodle</div>
+                              <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', marginTop: 1 }}>{theme.label}</div>
+                              <div style={{ marginTop: 6, padding: '2px 10px', borderRadius: 5, background: theme.accent, fontSize: 7, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                            </div>
+                            <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 3 }}>NEW</div>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 6 }}>{theme.label}</div>
+                          <button onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ marginTop: 4, padding: '5px 14px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All themes */}
+                <div style={{ padding: '0 16px' }}>
+                  {newThemes.length > 0 && !themeLibSearch && <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Themes</div>}
+                  {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#999', fontSize: 14 }}>No themes found</div>}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    {(themeLibSearch ? filtered : otherThemes).map(theme => (
+                      <div key={theme.id} style={{ textAlign: 'center' }}>
+                        <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
+                          <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
+                          <img src={theme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
+                            <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Street Noodle</div>
+                            <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', marginTop: 1 }}>{theme.label}</div>
+                            <div style={{ marginTop: 6, padding: '2px 10px', borderRadius: 5, background: theme.accent, fontSize: 7, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                          </div>
+                          {theme.isNew && <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 3 }}>NEW</div>}
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 6 }}>{theme.label}</div>
+                        <button onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ marginTop: 4, padding: '5px 14px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Theme Preview Overlay */}
+                {previewT && (
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 340, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
+                      <div><div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>StreetLocal</div><div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>streetlocal.live</div></div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{previewT.label}</div>
+                    </div>
+                    <div style={{ flex: 1, minHeight: 10 }} />
+                    {/* Live iframe phone */}
+                    {(() => {
+                      const iframeBase = window.location.hostname === 'localhost' ? 'http://localhost:5178/food/basic/' : '/food/basic/'
+                      const iframeSrc = `${iframeBase}?preview=true&demo=true&page=landing&theme=${previewT.id}&bg=${encodeURIComponent(activeImg)}`
+                      const iframeW = 375; const iframeH = 812; const phoneW = 240; const screenW = phoneW - 8; const sf = screenW / iframeW; const phoneH = Math.round(iframeH * sf) + 8
+                      return (
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                          <div style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${previewT.accent}25`, border: '2px solid #333', flexShrink: 0 }}>
+                            <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                            <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                              <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                              <div style={{ position: 'absolute', inset: 0 }}><div style={{ width: iframeW, height: iframeH, transform: `scale(${sf})`, transformOrigin: 'top left' }}><iframe key={themeLibPreview + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" /></div></div>
+                              <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                            </div>
+                          </div>
+                          {previewAllImgs.length > 1 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                              {previewAllImgs.map((img, i) => (
+                                <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${previewT.accent}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
+                    <div style={{ flex: 1, minHeight: 10 }} />
+                    <div style={{ flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }} style={{ padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {currentPage === 'contact' && (
             <div>
