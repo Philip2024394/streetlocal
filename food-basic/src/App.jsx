@@ -3020,84 +3020,199 @@ export default function App() {
               <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
             </button>
 
-            {/* ─── Customization Features Section ─── */}
-            <div style={{ margin: '14px 0', padding: 14, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08` }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Customization</div>
+            {/* ─── Customization Features with iPhone Preview ─── */}
+            {(() => {
+              const [previewTab, setPreviewTab] = useState('landing')
+              const HERO_FONTS_C = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
+              const ffC = HERO_FONTS_C[heroFont] || HERO_FONTS_C.system
+              const btnR = btnShape === 'pill' ? 30 : btnShape === 'square' ? 4 : 12
+              const bColor = btnColor || accent
 
-              {/* Button Style Editor */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Shape</label>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                {['rounded', 'pill', 'square'].map(s => (
-                  <button key={s} onClick={() => setBtnShape(s)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
-                ))}
-              </div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Color</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-                <input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />
-                {btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}
-              </div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label>
-              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu (default)" maxLength={20} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Button Glow</span>
-              </div>
+              return (
+                <div style={{ margin: '14px 0' }}>
+                  {/* Preview Tab Toggle */}
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10, justifyContent: 'center' }}>
+                    <button onClick={() => setPreviewTab('landing')} style={{ padding: '6px 16px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: previewTab === 'landing' ? accent : 'rgba(255,255,255,0.08)', color: previewTab === 'landing' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Landing</button>
+                    <button onClick={() => setPreviewTab('menu')} style={{ padding: '6px 16px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: previewTab === 'menu' ? accent : 'rgba(255,255,255,0.08)', color: previewTab === 'menu' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Menu</button>
+                  </div>
 
-              {/* Background Overlay Opacity */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label>
-              <input type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ width: '100%', marginBottom: 14 }} />
+                  {/* iPhone Frame Preview */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                    <div style={{ width: 180, height: 360, borderRadius: 28, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333' }}>
+                      <div style={{ position: 'absolute', right: -3, top: 70, width: 3, height: 24, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 25, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 44, height: 12, background: '#000', borderRadius: 10, zIndex: 10 }} />
 
-              {/* Landing Layout */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-                {[{ id: 'center', label: 'Center' }, { id: 'left', label: 'Left' }, { id: 'top', label: 'Top' }].map(opt => (
-                  <button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
-                ))}
-              </div>
+                        {/* LANDING PREVIEW */}
+                        {previewTab === 'landing' && (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
+                            {showClosedBanner && !shopOpen && (
+                              <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 10px', borderRadius: 6, fontSize: 7, fontWeight: 800, zIndex: 5 }}>CLOSED</div>
+                            )}
+                            <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 40 : 0, paddingLeft: landingLayout === 'left' ? 12 : 0 }}>
+                              {shopLogoStyle !== 'off' && shopLogo ? (
+                                shopLogoStyle === 'bare' ? <img src={shopLogo} alt="" style={{ width: 36, height: 36, objectFit: 'contain', marginBottom: 4 }} /> :
+                                <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '1px solid rgba(255,255,255,0.15)' }}><img src={shopLogo} alt="" style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover' }} /></div>
+                              ) : shopLogoStyle !== 'off' ? <div style={{ width: 24, height: 24, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{shopName.charAt(0)}</div> : null}
+                              <div style={{ fontSize: 14, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1 }}>{shopName}</div>
+                              <div style={{ fontSize: 7, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 2, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
+                              <div style={{ marginTop: 10, padding: '3px 12px', borderRadius: btnR * 0.5, background: bColor, fontSize: 7, fontWeight: 700, color: '#fff', position: 'relative', overflow: 'hidden' }}>
+                                {btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 8px ${bColor}80`, borderRadius: btnR * 0.5 }} />}
+                                <span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
-              {/* Custom Tagline */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label>
-              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 14 }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} />
+                        {/* MENU PREVIEW */}
+                        {previewTab === 'menu' && (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
+                            <div style={{ position: 'relative', zIndex: 2, padding: '20px 6px 6px' }}>
+                              {/* Mini header */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                                <div style={{ width: 14, height: 14, borderRadius: 7, background: accent }} />
+                                <div style={{ fontSize: 7, fontWeight: 800, color: '#fff' }}>{shopName}</div>
+                              </div>
+                              {/* Promo banner */}
+                              {promoBannerEnabled && promoBanner && (
+                                <div style={{ background: accent, padding: '2px 6px', borderRadius: 4, marginBottom: 4, overflow: 'hidden' }}>
+                                  <div style={{ fontSize: 6, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div>
+                                </div>
+                              )}
+                              {/* Menu banner */}
+                              {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 28, objectFit: 'cover', borderRadius: 4, marginBottom: 4 }} />}
+                              {/* Mock cards */}
+                              {menuCardStyle === 'grid' ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+                                  {[1,2,3,4].map(i => (
+                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: 3 }}>
+                                      <div style={{ width: '100%', height: 24, background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginBottom: 2 }} />
+                                      <div style={{ height: 4, width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                      <div style={{ height: 4, width: '40%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : menuCardStyle === 'fullwidth' ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                  {[1,2].map(i => (
+                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 4, overflow: 'hidden' }}>
+                                      <div style={{ width: '100%', height: 36, background: 'rgba(255,255,255,0.1)' }} />
+                                      <div style={{ padding: 3 }}>
+                                        <div style={{ height: 4, width: '60%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 4, width: '30%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                  {[1,2,3].map(i => (
+                                    <div key={i} style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: 3, borderLeft: `2px solid ${accent}` }}>
+                                      <div style={{ width: 24, height: 24, borderRadius: 4, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ height: 4, width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 3, width: '90%', background: 'rgba(255,255,255,0.15)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 4, width: '35%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-              {/* Menu Card Style */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Card Style</label>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-                {[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (
-                  <button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
-                ))}
-              </div>
+                        <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 44, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                      </div>
+                    </div>
+                  </div>
+                  <style>{`@keyframes promoScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
 
-              {/* Menu Banner */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
-                <label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  Upload
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} />
-                </label>
-                {menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}
-              </div>
-              {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 14 }} />}
+                  {/* Controls */}
+                  <div style={{ padding: 14, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08` }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Customization</div>
 
-              {/* Closed Banner Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => setShowClosedBanner(!showClosedBanner)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: showClosedBanner ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: showClosedBanner ? 19 : 3, transition: 'left 0.2s' }} /></button>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Show "Closed" banner on landing</span>
-              </div>
+                    {/* Button Style */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Shape</label>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                      {['rounded', 'pill', 'square'].map(s => (
+                        <button key={s} onClick={() => setBtnShape(s)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                      ))}
+                    </div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Color</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                      <input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />
+                      {btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}
+                    </div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label>
+                    <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu (default)" maxLength={20} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                      <button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Button Glow</span>
+                    </div>
 
-              {/* Promo Banner */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Promo Banner Text</label>
-              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 }} value={promoBanner} onChange={(e) => setPromoBanner(e.target.value)} placeholder="e.g. Free delivery this week!" maxLength={80} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable Promo Banner</span>
-              </div>
+                    {/* Overlay */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label>
+                    <input type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ width: '100%', marginBottom: 14 }} />
 
-              {/* Splash Screen */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s on load)</span>
-              </div>
-            </div>
+                    {/* Layout */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                      {[{ id: 'center', label: 'Center' }, { id: 'left', label: 'Left' }, { id: 'top', label: 'Top' }].map(opt => (
+                        <button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
+                      ))}
+                    </div>
+
+                    {/* Tagline */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label>
+                    <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 14 }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} />
+
+                    {/* Card Style */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Card Style</label>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                      {[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (
+                        <button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
+                      ))}
+                    </div>
+
+                    {/* Menu Banner */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+                      <label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        Upload
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} />
+                      </label>
+                      {menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}
+                    </div>
+                    {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 50, objectFit: 'cover', borderRadius: 8, marginBottom: 14 }} />}
+
+                    {/* Closed Banner */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                      <button onClick={() => setShowClosedBanner(!showClosedBanner)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: showClosedBanner ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: showClosedBanner ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Show "Closed" banner</span>
+                    </div>
+
+                    {/* Promo Banner */}
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Promo Banner Text</label>
+                    <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 }} value={promoBanner} onChange={(e) => setPromoBanner(e.target.value)} placeholder="e.g. Free delivery this week!" maxLength={80} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                      <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable Promo Banner</span>
+                    </div>
+
+                    {/* Splash Screen */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s on load)</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
