@@ -21,7 +21,7 @@ const COUNTRIES = [
 ]
 
 const APPS = [
-  { id: 'basic', name: 'Street Vendor', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'Simple menu & ordering for street food stalls', url: '/food/basic/' },
+  { id: 'basic', name: 'FoodLocal', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'From street carts to restaurants — your food ordering app', url: '/food/basic/' },
   { id: 'pro', name: 'Restaurant', tier: 'Software 2', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant ordering with themes & promos', url: '/food/pro/' },
 ]
 
@@ -37,7 +37,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
   // Generate realistic-looking live feed
   const NAMES_ID = ['Rina S.', 'Ahmad F.', 'Dewi L.', 'Budi S.', 'Putri A.', 'Rizky P.', 'Siti N.', 'Yoga A.', 'Nisa A.', 'Hendra W.', 'Dian P.', 'Farhan M.', 'Lia K.', 'Agus R.', 'Maya D.', 'Tono W.', 'Fitri H.', 'Deni S.', 'Andi B.', 'Ratna P.']
   const CITIES = ['Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Semarang', 'Yogyakarta', 'Makassar', 'Palembang', 'Denpasar', 'Malang', 'Bekasi', 'Tangerang', 'Bogor', 'Depok']
-  const APPS_NAME = ['Street Vendor', 'Restaurant Pro']
+  const APPS_NAME = ['FoodLocal', 'Restaurant Pro']
 
   const EVENTS = [
     { type: 'join', template: locale === 'id' ? '{name} dari {city} baru bergabung' : '{name} from {city} just joined' },
@@ -984,7 +984,7 @@ export default function Affiliate({ onClose }) {
       icon: '🍜',
       color: '#FF6B35',
       apps: [
-        { id: 'basic', name: 'Street Vendor', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Menu & pemesanan untuk warung kaki lima' : 'Simple menu & ordering for street food stalls', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png', url: '/food/basic/' },
+        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — aplikasi pemesanan makanan' : 'From street carts to restaurants — your food ordering app', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png', url: '/food/basic/' },
         { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },

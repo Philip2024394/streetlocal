@@ -425,7 +425,7 @@ export default function Admin({ onClose }) {
                 return (
                   <div key={type} style={s.appTypeRow}>
                     <div>
-                      <span style={{ fontSize: 14, fontWeight: 800 }}>{type === 'basic' ? 'Food Basic' : type === 'pro' ? 'Food Pro' : type}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800 }}>{type === 'basic' ? 'FoodLocal' : type === 'pro' ? 'Food Pro' : type}</span>
                       <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>{activeCount} active</span>
                     </div>
                     <span style={s.badge}>{count}</span>
@@ -494,7 +494,7 @@ export default function Admin({ onClose }) {
                   style={{ ...s.input, marginBottom: 10 }}
                 >
                   <option value="">Select app...</option>
-                  <option value="food-basic">Food Basic (Street Vendor)</option>
+                  <option value="food-basic">FoodLocal</option>
                   <option value="food-pro">Food Pro (Restaurant)</option>
                   <option value="landing">Landing Page (streetlocal.live)</option>
                   <option value="admin">Admin Dashboard</option>
@@ -687,7 +687,7 @@ export default function Admin({ onClose }) {
               <button onClick={() => setFilterApp('all')} style={{ ...s.filterBtn, ...(filterApp === 'all' ? s.filterBtnActive : {}) }}>All Apps</button>
               {appTypes.map(type => (
                 <button key={type} onClick={() => setFilterApp(type)} style={{ ...s.filterBtn, ...(filterApp === type ? s.filterBtnActive : {}) }}>
-                  {type === 'basic' ? 'Food Basic' : type === 'pro' ? 'Food Pro' : type}
+                  {type === 'basic' ? 'FoodLocal' : type === 'pro' ? 'Food Pro' : type}
                 </button>
               ))}
             </div>
@@ -1083,7 +1083,7 @@ export default function Admin({ onClose }) {
                     </select>
                     <select style={{ ...s.input, flex: 1, marginBottom: 0, minWidth: 100 }} value={promoForm.app_id} onChange={e => setPromoForm({ ...promoForm, app_id: e.target.value })}>
                       <option value="">All apps in category</option>
-                      <option value="basic">Street Vendor</option>
+                      <option value="basic">FoodLocal</option>
                       <option value="pro">Restaurant Pro</option>
                     </select>
                     <select style={{ ...s.input, flex: 1, marginBottom: 0, minWidth: 80 }} value={promoForm.type} onChange={e => setPromoForm({ ...promoForm, type: e.target.value })}>
@@ -1533,7 +1533,7 @@ export default function Admin({ onClose }) {
                 const pend = regs.filter(r => r.app_type === type && r.status === 'pending_verification').length
                 return (
                   <div key={type} style={{ ...s.memberCard, padding: 14 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>{type === 'basic' ? 'Food Basic' : type === 'pro' ? 'Food Pro' : type}</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>{type === 'basic' ? 'FoodLocal' : type === 'pro' ? 'Food Pro' : type}</div>
                     <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
                       <span style={{ color: '#22c55e' }}>{act} active</span>
                       <span style={{ color: '#F59E0B' }}>{pend} pending</span>

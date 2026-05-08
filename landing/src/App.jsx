@@ -188,12 +188,12 @@ const TRANSLATIONS = {
         bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
         apps: {
           basic: {
-            name: 'Street Vendor',
-            tier: 'Basic',
+            name: 'FoodLocal',
+            tier: 'Software 1',
             price: 'Rp 35.000',
             yearlyPrice: 'Rp 456.000',
-            tagline: 'Simple menu & ordering for street food stalls',
-            description: 'Perfect for warung, kaki lima, and small food stalls. Show your menu, take WhatsApp orders, and manage availability — all from your phone.',
+            tagline: 'From street carts to restaurants — your food ordering app',
+            description: 'Perfect for street vendors, restaurants, food courts, and cafes. Show your menu, take WhatsApp orders, and manage your business — all from your phone.',
             features: [
               'Online in minutes — no coding needed',
               'Digital menu with photos & descriptions',
@@ -361,12 +361,12 @@ const TRANSLATIONS = {
         bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
         apps: {
           basic: {
-            name: 'Pedagang Kaki Lima',
-            tier: 'Dasar',
+            name: 'FoodLocal',
+            tier: 'Software 1',
             price: 'Rp 35.000',
             yearlyPrice: 'Rp 456.000',
-            tagline: 'Menu & pemesanan simpel untuk warung makan',
-            description: 'Cocok untuk warung, kaki lima, dan kedai kecil. Tampilkan menu, terima pesanan via WhatsApp, dan kelola ketersediaan — semua dari HP.',
+            tagline: 'Dari gerobak hingga restoran — aplikasi pemesanan makanan Anda',
+            description: 'Cocok untuk pedagang kaki lima, restoran, food court, dan kafe. Tampilkan menu, terima pesanan via WhatsApp, dan kelola bisnis — semua dari HP.',
             features: [
               'Online dalam hitungan menit — tanpa coding',
               'Menu digital dengan foto & deskripsi',
@@ -461,11 +461,11 @@ function getCategories(t, cp) {
       apps: [
         {
           id: 'basic',
-          name: t.basicName || 'Street Vendor',
+          name: t.basicName || 'FoodLocal',
           tier: t.basicTier || 'Software 1',
           price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 35.000',
           yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
-          tagline: t.basicTagline || 'Simple menu & ordering for street food stalls',
+          tagline: t.basicTagline || 'From street carts to restaurants — your food ordering app',
           description: t.basicDesc || '',
           features: t.basicFeatures || ['Online in minutes', 'Digital menu with photos', 'WhatsApp ordering', '15+ app themes', 'Custom branding & colors', 'Promo prices & deals', 'Halal & Popular badges', 'Opening hours management', 'Visit Us page with socials', 'Delivery rates per km', 'QRIS payment QR code', 'Multi-language support', 'Mobile-first design'],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
