@@ -3366,30 +3366,66 @@ export default function App() {
                     <div style={{ flex: 1, minHeight: 10 }} />
 
                     {/* Phone + Variants row */}
-                    {(() => {
-                      const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
-                      const iframeSrc = `${iframeBase}?preview=true&demo=true&page=landing&theme=${theme.id}&bg=${encodeURIComponent(activeImg)}`
-                      const iframeW = 375
-                      const iframeH = 812
-                      const phoneW = 240
-                      const screenW = phoneW - 8
-                      const scaleFactor = screenW / iframeW
-                      const phoneH = Math.round(iframeH * scaleFactor) + 8
-                      return (
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                    {/* Phone — live iframe preview */}
-                    <div style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
-                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                    {/* Phone — static preview with page toggle */}
+                    <div style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                        <div style={{ position: 'absolute', inset: 0 }}>
-                          <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}>
-                            <iframe key={themePreviewId + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
+                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                        {/* Background */}
+                        <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: themePreviewPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themePreviewPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
+
+                        {/* LANDING */}
+                        {themePreviewPage === 'landing' && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
+                            <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
+                              <span style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>S</span>
+                            </div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
+                            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
+                            <button onClick={() => setThemePreviewPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
                           </div>
-                        </div>
-                        <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                        )}
+
+                        {/* MENU */}
+                        {themePreviewPage === 'menu' && (
+                          <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '24px 10px 8px', position: 'sticky', top: 0, zIndex: 5, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
+                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 26, height: 26, borderRadius: 13, background: ac, border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>Your Shop</div>
+                                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 5, padding: '6px 10px 8px' }}>
+                              {['Menu', 'Drinks', 'Snacks'].map((t, i) => (
+                                <div key={t} style={{ padding: '4px 10px', borderRadius: 8, background: i === 0 ? ac : 'rgba(255,255,255,0.08)', fontSize: 10, fontWeight: 700, color: '#fff' }}>{t}</div>
+                              ))}
+                            </div>
+                            <div style={{ padding: '0 8px 8px' }}>
+                              {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 4).map(item => (
+                                <div key={item.id} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: 7, marginBottom: 5, borderLeft: `3px solid ${ac}` }}>
+                                  <img src={item.photo} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{item.desc}</div>
+                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#FACC15', marginTop: 3 }}>{fmt(item.price)}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ margin: '0 8px 10px', background: ac, borderRadius: 10, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>2 items — {fmt(41000)}</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>View Cart</div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
                     {/* Variant thumbnails — right side */}
