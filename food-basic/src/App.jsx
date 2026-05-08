@@ -2715,20 +2715,16 @@ export default function App() {
 
               {/* Color */}
               <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Text Color</div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {['#ffffff', '#FACC15', '#FF6B35', '#EF4444', '#22c55e', '#3B82F6', '#8B5CF6', '#F472B6'].map(c => (
-                  <button key={c} onClick={() => setHeroColor(c)} style={{ width: 28, height: 28, borderRadius: 14, border: heroColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.15)', background: c, cursor: 'pointer', padding: 0, boxShadow: heroColor === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                {['#ffffff', '#f5f5f5', '#FACC15', '#FF6B35', '#EF4444', '#8B0000', '#22c55e', '#3B82F6', '#8B5CF6', '#F472B6', '#000000'].map(c => (
+                  <button key={c} onClick={() => setHeroColor(c)} style={{ width: 26, height: 26, borderRadius: 13, border: heroColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.15)', background: c, cursor: 'pointer', padding: 0, boxShadow: heroColor === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
                 ))}
-                <button onClick={() => {
-                  setThemeEditor({ url: localStorage.getItem('vendorbasic_themeBg') || '' })
-                  setEditorColor(heroColor)
-                  setEditorBaseColor(heroColor)
-                  setVendorDrawer(false)
-                }} style={{ width: 28, height: 28, borderRadius: 14, border: '2px solid rgba(255,255,255,0.15)', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)', cursor: 'pointer', padding: 0 }} />
               </div>
-              {heroColor !== '#ffffff' && (
-                <button onClick={() => setHeroColor('#ffffff')} style={{ marginTop: 8, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Reset to white</button>
-              )}
+              <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
+                <input defaultValue={heroColor} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroColor(v) } }} />
+                <button onClick={(e) => { const input = e.currentTarget.previousSibling; const v = input.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroColor(v) }} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+                {heroColor !== '#ffffff' && <button onClick={() => setHeroColor('#ffffff')} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Reset</button>}
+              </div>
             </div>
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
