@@ -3045,10 +3045,12 @@ export default function App() {
                   {/* Phone + Side Toolbar */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 4px' }}>
                     {/* iPhone Frame */}
-                    <div style={{ width: 170, height: 340, borderRadius: 26, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333', flexShrink: 0 }}>
-                      <div style={{ position: 'absolute', right: -3, top: 66, width: 3, height: 22, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ width: '100%', height: '100%', borderRadius: 23, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 11, background: '#000', borderRadius: 8, zIndex: 10 }} />
+                    <div style={{ width: 220, height: 420, borderRadius: 32, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: 85, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 72, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 96, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 29, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
 
                         {/* LANDING PREVIEW */}
                         {previewTab === 'landing' && (
@@ -3060,13 +3062,13 @@ export default function App() {
                             )}
                             <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 36 : 0, paddingLeft: landingLayout === 'left' ? 10 : 0 }}>
                               {shopLogoStyle !== 'off' && shopLogo ? (
-                                shopLogoStyle === 'bare' ? <img src={shopLogo} alt="" style={{ width: 32, height: 32, objectFit: 'contain', marginBottom: 3 }} /> :
-                                <div style={{ width: 28, height: 28, borderRadius: 14, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 3, border: '1px solid rgba(255,255,255,0.15)' }}><img src={shopLogo} alt="" style={{ width: 24, height: 24, borderRadius: 12, objectFit: 'cover' }} /></div>
-                              ) : shopLogoStyle !== 'off' ? <div style={{ width: 22, height: 22, borderRadius: 11, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#fff', marginBottom: 3 }}>{shopName.charAt(0)}</div> : null}
-                              <div style={{ fontSize: 13, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1, padding: '0 6px' }}>{shopName}</div>
-                              <div style={{ fontSize: 6, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 2, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
-                              <div style={{ marginTop: 8, padding: '3px 10px', borderRadius: btnR * 0.4, background: bColor, fontSize: 6, fontWeight: 700, color: '#fff', position: 'relative', overflow: 'hidden' }}>
-                                {btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 6px ${bColor}80`, borderRadius: btnR * 0.4 }} />}
+                                shopLogoStyle === 'bare' ? <img src={shopLogo} alt="" style={{ width: 44, height: 44, objectFit: 'contain', marginBottom: 6 }} /> :
+                                <div style={{ width: 40, height: 40, borderRadius: 20, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}><img src={shopLogo} alt="" style={{ width: 34, height: 34, borderRadius: 17, objectFit: 'cover' }} /></div>
+                              ) : shopLogoStyle !== 'off' ? <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div> : null}
+                              <div style={{ fontSize: 17, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1, padding: '0 8px' }}>{shopName}</div>
+                              <div style={{ fontSize: 9, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
+                              <div style={{ marginTop: 12, padding: '5px 16px', borderRadius: btnR * 0.5, background: bColor, fontSize: 9, fontWeight: 700, color: '#fff', position: 'relative', overflow: 'hidden' }}>
+                                {btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 8px ${bColor}80`, borderRadius: btnR * 0.5 }} />}
                                 <span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span>
                               </div>
                             </div>
@@ -3078,48 +3080,52 @@ export default function App() {
                           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                             <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
-                            <div style={{ position: 'relative', zIndex: 2, padding: '18px 5px 5px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 3 }}>
-                                <div style={{ width: 12, height: 12, borderRadius: 6, background: accent }} />
-                                <div style={{ fontSize: 6, fontWeight: 800, color: '#fff' }}>{shopName}</div>
+                            <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
+                              {/* Header */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                <div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} />
+                                <div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div>
                               </div>
+                              {/* Promo banner */}
                               {promoBannerEnabled && promoBanner && (
-                                <div style={{ background: accent, padding: '1px 5px', borderRadius: 3, marginBottom: 3, overflow: 'hidden' }}>
-                                  <div style={{ fontSize: 5, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div>
+                                <div style={{ background: accent, padding: '2px 8px', borderRadius: 4, marginBottom: 5, overflow: 'hidden' }}>
+                                  <div style={{ fontSize: 7, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div>
                                 </div>
                               )}
-                              {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 24, objectFit: 'cover', borderRadius: 3, marginBottom: 3 }} />}
+                              {/* Menu banner */}
+                              {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 36, objectFit: 'cover', borderRadius: 5, marginBottom: 5 }} />}
+                              {/* Mock cards */}
                               {menuCardStyle === 'grid' ? (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                                   {[1,2,3,4].map(i => (
-                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 3, padding: 2 }}>
-                                      <div style={{ width: '100%', height: 20, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 1 }} />
-                                      <div style={{ height: 3, width: '65%', background: 'rgba(255,255,255,0.4)', borderRadius: 1, marginBottom: 1 }} />
-                                      <div style={{ height: 3, width: '35%', background: '#FACC15', borderRadius: 1, opacity: 0.7 }} />
+                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: 4 }}>
+                                      <div style={{ width: '100%', height: 32, background: 'rgba(255,255,255,0.1)', borderRadius: 4, marginBottom: 3 }} />
+                                      <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                      <div style={{ height: 5, width: '40%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
                                     </div>
                                   ))}
                                 </div>
                               ) : menuCardStyle === 'fullwidth' ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                   {[1,2].map(i => (
-                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 3, overflow: 'hidden' }}>
-                                      <div style={{ width: '100%', height: 30, background: 'rgba(255,255,255,0.1)' }} />
-                                      <div style={{ padding: 2 }}>
-                                        <div style={{ height: 3, width: '55%', background: 'rgba(255,255,255,0.4)', borderRadius: 1, marginBottom: 1 }} />
-                                        <div style={{ height: 3, width: '28%', background: '#FACC15', borderRadius: 1, opacity: 0.7 }} />
+                                    <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 6, overflow: 'hidden' }}>
+                                      <div style={{ width: '100%', height: 48, background: 'rgba(255,255,255,0.1)' }} />
+                                      <div style={{ padding: 4 }}>
+                                        <div style={{ height: 5, width: '60%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 5, width: '30%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
                                       </div>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                   {[1,2,3].map(i => (
-                                    <div key={i} style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.5)', borderRadius: 3, padding: 2, borderLeft: `2px solid ${accent}` }}>
-                                      <div style={{ width: 20, height: 20, borderRadius: 3, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                                    <div key={i} style={{ display: 'flex', gap: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: 4, borderLeft: `3px solid ${accent}` }}>
+                                      <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
                                       <div style={{ flex: 1 }}>
-                                        <div style={{ height: 3, width: '65%', background: 'rgba(255,255,255,0.4)', borderRadius: 1, marginBottom: 1 }} />
-                                        <div style={{ height: 2, width: '85%', background: 'rgba(255,255,255,0.15)', borderRadius: 1, marginBottom: 1 }} />
-                                        <div style={{ height: 3, width: '30%', background: '#FACC15', borderRadius: 1, opacity: 0.7 }} />
+                                        <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 4, width: '90%', background: 'rgba(255,255,255,0.15)', borderRadius: 2, marginBottom: 2 }} />
+                                        <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
                                       </div>
                                     </div>
                                   ))}
@@ -3129,7 +3135,7 @@ export default function App() {
                           </div>
                         )}
 
-                        <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
 
