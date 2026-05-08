@@ -3337,21 +3337,14 @@ export default function App() {
                 )
               })()}
 
-              {/* Full-screen live theme preview */}
+              {/* Full-screen theme preview — standalone, no iframe */}
               {themePreviewId && (() => {
                 const theme = THEME_PRESETS.find(t => t.id === themePreviewId)
                 if (!theme) return null
                 const activeImg = themePreviewImg || theme.img
                 const allImages = [theme.img, ...(theme.variants || [])]
                 const hasVariants = allImages.length > 1
-                const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
-                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}&bg=${encodeURIComponent(activeImg)}`
-                const iframeW = 375
-                const iframeH = 812
-                const phoneW = 230
-                const screenW = phoneW - 8
-                const scaleFactor = screenW / iframeW
-                const phoneH = Math.round(iframeH * scaleFactor) + 8
+                const ac = theme.accent || '#8DC63F'
 
                 return (
                   <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
@@ -3364,19 +3357,38 @@ export default function App() {
                       <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
                     </div>
 
-                    {/* Live phone */}
-                    <div onClick={e => e.stopPropagation()} style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${theme.accent}25`, border: '2px solid #333', flexShrink: 0 }}>
-                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                    {/* Phone mockup — static preview */}
+                    <div onClick={e => e.stopPropagation()} style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                        <div style={{ position: 'absolute', inset: 0 }}>
-                          <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}>
-                            <iframe key={themePreviewId + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
+                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                        {/* Theme background */}
+                        <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', transition: 'opacity 0.3s' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                        {/* Mock landing page */}
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 16px' }}>
+                          <div style={{ width: 56, height: 56, borderRadius: 28, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, border: '3px solid rgba(255,255,255,0.15)' }}>
+                            <span style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>S</span>
                           </div>
+                          <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
+                          <div style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: ac, fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
                         </div>
-                        <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                        {/* Mock menu page overlay — shows cards */}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 30%)', zIndex: 3, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 10px 20px', gap: 4 }}>
+                          {[1, 2].map(i => (
+                            <div key={i} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 8, padding: 6, borderLeft: `3px solid ${ac}` }}>
+                              <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ height: 5, width: '65%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 3 }} />
+                                <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
 
@@ -3384,7 +3396,7 @@ export default function App() {
                     {hasVariants && (
                       <div style={{ display: 'flex', gap: 8, marginTop: 12, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                         {allImages.map((img, i) => (
-                          <button key={i} onClick={() => setThemePreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${theme.accent || '#FFD600'}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+                          <button key={i} onClick={() => setThemePreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
                             <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </button>
                         ))}
@@ -3392,7 +3404,7 @@ export default function App() {
                     )}
 
                     {/* Footer buttons */}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 12, flexShrink: 0, paddingBottom: 16 }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 14, flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
