@@ -3661,7 +3661,7 @@ export default function App() {
             {[
               {
                 name: 'Subdomain',
-                badge: '#3B82F6',
+                badge: '#FFD600',
                 example: `${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}.streetlocal.live`,
                 monthly: 25000,
                 setup: 50000,
@@ -3675,7 +3675,7 @@ export default function App() {
               },
               {
                 name: 'Custom Domain',
-                badge: '#F59E0B',
+                badge: '#FFD600',
                 example: 'menu.yourbrand.com',
                 monthly: 75000,
                 setup: 150000,
@@ -3690,7 +3690,7 @@ export default function App() {
               },
               {
                 name: 'Full Domain',
-                badge: '#8B5CF6',
+                badge: '#FFD600',
                 example: 'yourbrand.com',
                 monthly: 150000,
                 setup: 300000,
