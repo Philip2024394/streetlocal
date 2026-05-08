@@ -2660,16 +2660,17 @@ export default function App() {
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
               {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
 
-              {/* Logo display style */}
-              <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'center' }}>
-                {[
-                  { id: 'circle', label: 'Circle' },
-                  { id: 'bare', label: 'No Circle' },
-                  { id: 'off', label: 'Off' },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => setShopLogoStyle(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: shopLogoStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: shopLogoStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{opt.label}</button>
-                ))}
-              </div>
+            </div>
+
+            {/* Logo display style — outside the upload card */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'center', marginBottom: 14 }}>
+              {[
+                { id: 'circle', label: 'Circle' },
+                { id: 'bare', label: 'No Circle' },
+                { id: 'off', label: 'Off' },
+              ].map(opt => (
+                <button type="button" key={opt.id} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShopLogoStyle(opt.id) }} style={{ padding: '8px 18px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: shopLogoStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: shopLogoStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 44 }}>{opt.label}</button>
+              ))}
             </div>
 
             {/* Hero Text Style */}
