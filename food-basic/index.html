@@ -76,20 +76,22 @@
       // Clear stale defaults
       var oldFoodType = localStorage.getItem('vendorbasic_shopFoodType');
       if (oldFoodType && oldFoodType.includes('&')) localStorage.removeItem('vendorbasic_shopFoodType');
-      // Demo mode — use theme param or default to noodle
-      var isDemo = new URLSearchParams(window.location.search).get('demo') === 'true';
-      if (isDemo) {
-        var bgImg = document.getElementById('app-bg-img');
-        var customBg = new URLSearchParams(window.location.search).get('bg');
-        if (bgImg && customBg) { bgImg.src = decodeURIComponent(customBg); }
-        else if (bgImg && !new URLSearchParams(window.location.search).get('theme')) { bgImg.src = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433'; }
-      } else {
-        // Load saved theme background on startup
+      // Background: URL param takes priority, then localStorage
+      var params = new URLSearchParams(window.location.search);
+      var isDemo = params.get('demo') === 'true';
+      var bgParam = params.get('bg');
+      var bgImg = document.getElementById('app-bg-img');
+      if (bgParam && bgImg) {
+        // Explicit bg param — always wins (used by theme preview iframes)
+        bgImg.src = decodeURIComponent(bgParam);
+        bgImg.style.objectFit = 'fill';
+      } else if (isDemo && !params.get('theme') && bgImg) {
+        // Demo mode with no theme param — default noodle
+        bgImg.src = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433';
+      } else if (!isDemo) {
+        // Normal mode — load from localStorage
         var savedBg = localStorage.getItem('vendorbasic_themeBg');
-        if (savedBg) {
-          var bgImg = document.getElementById('app-bg-img');
-          if (bgImg) bgImg.src = savedBg;
-        }
+        if (savedBg && bgImg) bgImg.src = savedBg;
       }
       // Apply saved background position for custom themes
       var savedTheme = localStorage.getItem('vendorbasic_theme');

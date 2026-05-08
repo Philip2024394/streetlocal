@@ -546,12 +546,13 @@ export default function App() {
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
   const [editorPos, setEditorPos] = useState({ x: 50, y: 50 }) // percentage position
 
-  // Apply ?theme= param background on mount (supports &bg= for variant)
+  // Apply ?theme= param background on mount (only if index.html didn't already via &bg=)
   useEffect(() => {
+    const hasBgParam = new URLSearchParams(window.location.search).get('bg')
+    if (hasBgParam) return // index.html already set it
     if (urlThemePreset) {
       const bgImg = document.getElementById('app-bg-img')
-      const customBg = new URLSearchParams(window.location.search).get('bg')
-      if (bgImg) { bgImg.src = customBg || urlThemePreset.img; bgImg.style.objectFit = 'fill' }
+      if (bgImg) { bgImg.src = urlThemePreset.img; bgImg.style.objectFit = 'fill' }
     }
   }, [])
 
