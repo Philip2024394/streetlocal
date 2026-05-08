@@ -1095,7 +1095,7 @@ export default function App() {
                   { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png' },
                   { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'] },
                   { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
-                  { id: 'bakso', label: 'Bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278' },
+                  { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'] },
                   { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496' },
                   { id: 'martabak', label: 'Martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png' },
                   { id: 'escendol', label: 'Es Cendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png' },
@@ -1119,6 +1119,23 @@ export default function App() {
                 )
                 return [...themes.map((t, i) => renderCard(t, i)), ...themes.map((t, i) => renderCard(t, i + themes.length))]
               })()}
+            </div>
+            {/* View All + Update Date */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+              <div style={{ fontSize: 10, color: '#999', fontWeight: 600 }}>
+                {(() => {
+                  const now = new Date()
+                  const offsets = [0, 0, 1, 1, 2, 3, 4, 5, 6]
+                  const days = offsets[Math.floor(now.getMinutes() % offsets.length)]
+                  if (days === 0) return 'Updated Today'
+                  if (days === 1) return 'Updated Yesterday'
+                  const d = new Date(now - days * 86400000)
+                  return `Updated ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                })()}
+              </div>
+              <button onClick={() => { const t = [
+                { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433' },
+              ]; setPreviewTheme(t[0]) }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
             </div>
           </div>
