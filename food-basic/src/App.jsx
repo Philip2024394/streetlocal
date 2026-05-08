@@ -657,6 +657,7 @@ export default function App() {
   const [formCategory, setFormCategory] = useState('Meal')
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
+  const [formPrepTime, setFormPrepTime] = useState(0)
 
   /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('vendorbasic_vendorId', vendorId) }, [vendorId])
@@ -758,7 +759,7 @@ export default function App() {
         next[idx] = { ...next[idx], qty: next[idx].qty + qty }
         return next
       }
-      return [...prev, { id: item.id, name: item.name, desc: item.desc, photo: item.photo, price: item.price, qty }]
+      return [...prev, { id: item.id, name: item.name, desc: item.desc, photo: item.photo, price: item.price, promoPrice: item.promoPrice, prepTime: item.prepTime, qty }]
     })
   }, [])
 
@@ -876,6 +877,7 @@ export default function App() {
     setFormPhoto(item.photo)
     setFormDesc(item.desc)
     setFormCategory(item.category || 'Meal')
+    setFormPrepTime(item.prepTime || 0)
     setEditItem(item)
   }
 
@@ -883,10 +885,10 @@ export default function App() {
     if (!formName || !formPrice) return
     setMenuItems((prev) =>
       prev.map((m) =>
-        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory } : m
+        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 } : m
       )
     )
-    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 }).catch(() => {})
     setEditItem(null)
   }
 
@@ -900,6 +902,7 @@ export default function App() {
     setFormPopular(false)
     setFormPhoto('')
     setFormDesc('')
+    setFormPrepTime(0)
     setAddingItem(true)
   }
 
@@ -907,37 +910,77 @@ export default function App() {
     if (!formName || !formPrice) return
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, available: true }
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }
     setMenuItems((prev) => [...prev, item])
-    if (vendorId) saveMenuItem(vendorId, { name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, available: true }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, { name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }).catch(() => {})
     setAddingItem(false)
   }
 
   /* --- WhatsApp order --- */
   const sendWhatsApp = () => {
     const note = document.getElementById('orderNote')?.value?.trim()
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    const orderNum = String(Date.now()).slice(-6)
+    const initials = shopName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+
+    // Calculate max prep time from cart items
+    const maxPrep = Math.max(0, ...cart.map(c => c.prepTime || 0))
+
+    // Check if customer is returning
+    const customers = loadJSON('vendorbasic_customers', [])
+    const returning = customers.find(c => c.phone === custPhone)
+    const orderHistory = returning ? returning.orders || 0 : 0
+
+    const subtotal = totalPrice
+    const deliveryFee = delEnabled && deliveryZone ? (deliveryZone.fee || 0) : 0
+    const grandTotal = subtotal + deliveryFee
+
     const lines = [
-      `📋 *New Order — ${shopName}*`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `*${shopName.toUpperCase()}*`,
+      `Order Receipt`,
+      `━━━━━━━━━━━━━━━━━━`,
       ``,
-      `🍽️ *Items:*`,
-      ...cart.map((c) => `• ${c.qty}x ${c.name} — ${fmt(c.price * c.qty)}`),
+      `${dateStr}  ${timeStr}`,
+      `Order #${initials}-${orderNum}`,
       ``,
-      ...(note ? [`📝 *Note:* ${note}`, ``] : []),
-      `💵 *Total: ${fmt(totalPrice)}*`,
+      ...(custName ? [`*Customer:* ${custName}`] : []),
+      ...(orderHistory > 0 ? [`Returning customer (${orderHistory + 1} orders)`] : []),
       ``,
-      ...(delEnabled && userDistance ? [`📍 Distance: ${userDistance} km`, `Estimated delivery: ${deliveryZone.label}`, ``] : []),
+      `━━━━━━━━━━━━━━━━━━`,
+      `*ORDER ITEMS*`,
+      `━━━━━━━━━━━━━━━━━━`,
+      ``,
+      ...cart.map((c) => {
+        const itemTotal = (c.promoPrice || c.price) * c.qty
+        return `${c.qty}x  ${c.name}\n      ${fmt(itemTotal)}`
+      }),
+      ``,
+      ...(note ? [`━━━━━━━━━━━━━━━━━━`, `*Note:* ${note}`, ``] : []),
+      `━━━━━━━━━━━━━━━━━━`,
+      ...(deliveryFee > 0 ? [
+        `Subtotal:     ${fmt(subtotal)}`,
+        `Delivery:     ${fmt(deliveryFee)}${userDistance ? ` (${userDistance} km)` : ''}`,
+        `━━━━━━━━━━━━━━━━━━`,
+      ] : []),
+      `*TOTAL:  ${fmt(grandTotal)}*`,
+      `━━━━━━━━━━━━━━━━━━`,
+      ``,
+      ...(maxPrep > 0 ? [`Est. prep time: ~${maxPrep} min`, ``] : []),
+      ...(shopAddress ? [`${shopAddress}`, ``] : []),
+      `Placed via StreetLocal.live`,
     ]
     const msg = encodeURIComponent(lines.join('\n'))
     const phone = shopPhone.replace(/[^0-9]/g, '')
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
     // Save customer to directory (localStorage + Supabase)
-    const customers = loadJSON('vendorbasic_customers', [])
-    const existing = customers.find(c => c.phone === custPhone)
-    if (existing) {
-      existing.orders = (existing.orders || 0) + 1
-      existing.totalSpent = (existing.totalSpent || 0) + totalPrice
-      existing.lastOrder = new Date().toISOString()
-      existing.name = custName || existing.name
+    if (returning) {
+      returning.orders = (returning.orders || 0) + 1
+      returning.totalSpent = (returning.totalSpent || 0) + totalPrice
+      returning.lastOrder = new Date().toISOString()
+      returning.name = custName || returning.name
     } else {
       customers.push({ phone: custPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
     }
@@ -1257,7 +1300,7 @@ export default function App() {
             )}
             <div style={S.cardBody}>
               <div style={S.cardName} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-              <div style={S.cardDesc}>{item.desc}</div>
+              <div style={S.cardDesc}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   {item.promoPrice ? (
@@ -2369,6 +2412,14 @@ export default function App() {
               {/* Description */}
               <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
               <textarea style={{ ...S.input, minHeight: 60, resize: 'none', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="Short description of the dish" value={formDesc} maxLength={60} onChange={(e) => setFormDesc(e.target.value.slice(0, 60))} />
+
+              {/* Prep Time */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Prep Time (minutes)</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                {[0, 5, 10, 15, 20, 30].map(t => (
+                  <button key={t} onClick={() => setFormPrepTime(t)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: formPrepTime === t ? accent : 'rgba(255,255,255,0.06)', color: formPrepTime === t ? '#fff' : 'rgba(255,255,255,0.4)' }}>{t === 0 ? '—' : t}</button>
+                ))}
+              </div>
             </div>
 
             {/* Buttons */}
