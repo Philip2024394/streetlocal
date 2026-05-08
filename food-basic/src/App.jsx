@@ -3384,36 +3384,41 @@ export default function App() {
                           </div>
                         )}
 
-                        {/* MENU VIEW */}
+                        {/* MENU VIEW — real data */}
                         {themePreviewPage === 'menu' && (
-                          <div style={{ position: 'absolute', inset: 0, zIndex: 2, padding: '24px 10px 10px', overflowY: 'auto' }}>
+                          <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
                             {/* Header */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 24, height: 24, borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-                              <div style={{ width: 20, height: 20, borderRadius: 10, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
-                              <div style={{ fontSize: 11, fontWeight: 800, color: '#fff' }}>Your Shop</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '22px 8px 6px', position: 'sticky', top: 0, zIndex: 5, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
+                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                              <div style={{ width: 18, height: 18, borderRadius: 9, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>Your Shop</div>
+                                <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
+                              </div>
                             </div>
                             {/* Category tabs */}
-                            <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', gap: 4, padding: '4px 8px 6px' }}>
                               {['Menu', 'Drinks', 'Snacks'].map((t, i) => (
-                                <div key={t} style={{ padding: '3px 10px', borderRadius: 6, background: i === 0 ? ac : 'rgba(255,255,255,0.08)', fontSize: 9, fontWeight: 700, color: '#fff' }}>{t}</div>
+                                <div key={t} style={{ padding: '3px 8px', borderRadius: 6, background: i === 0 ? ac : 'rgba(255,255,255,0.08)', fontSize: 8, fontWeight: 700, color: '#fff' }}>{t}</div>
                               ))}
                             </div>
-                            {/* Mock cards */}
-                            {[1, 2, 3, 4].map(i => (
-                              <div key={i} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: 8, marginBottom: 6, borderLeft: `3px solid ${ac}` }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ height: 6, width: '65%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 4 }} />
-                                  <div style={{ height: 5, width: '90%', background: 'rgba(255,255,255,0.15)', borderRadius: 2, marginBottom: 4 }} />
-                                  <div style={{ height: 6, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.8 }} />
+                            {/* Real menu cards */}
+                            <div style={{ padding: '0 6px 6px' }}>
+                              {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 4).map(item => (
+                                <div key={item.id} style={{ display: 'flex', gap: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 8, padding: 5, marginBottom: 4, borderLeft: `2px solid ${ac}` }}>
+                                  <img src={item.photo} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                                    <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{item.desc}</div>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: '#FACC15', marginTop: 2 }}>{fmt(item.price)}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                             {/* Cart bar */}
-                            <div style={{ marginTop: 8, background: ac, borderRadius: 10, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>2 items</div>
-                              <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>View Cart</div>
+                            <div style={{ margin: '2px 6px 8px', background: ac, borderRadius: 8, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ fontSize: 8, fontWeight: 700, color: '#fff' }}>2 items — {fmt(41000)}</div>
+                              <div style={{ fontSize: 8, fontWeight: 800, color: '#fff' }}>View Cart</div>
                             </div>
                           </div>
                         )}
