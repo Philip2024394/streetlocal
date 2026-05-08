@@ -195,36 +195,12 @@ const TRANSLATIONS = {
             tagline: 'From street carts to restaurants — your food ordering app',
             description: 'Perfect for street vendors, restaurants, food courts, and cafes. Show your menu, take WhatsApp orders, and manage your business — all from your phone.',
             features: [
-              'Online in minutes — no coding needed',
-              'Digital menu with photos & descriptions',
-              'WhatsApp ordering — orders sent directly',
-              'Menu categories — Meals, Drinks, Snacks, Extra',
-              'Beautiful app themes — 15+ designs',
-              'Custom accent colors & branding',
-              'Upload your own background image',
-              'Shop logo with accent ring',
-              'Landing page with View Menu button',
-              'Promo prices & daily deals',
-              'Halal & Popular badges on items',
-              'Spice level indicators',
-              'Open/Close shop toggle',
-              'Opening hours with daily schedule',
-              'Visit Us page — location, hours, socials',
-              'Google Maps link integration',
-              'Instagram, TikTok, Facebook, X, Website links',
-              'Delivery rates with per-km pricing',
-              'Collection Only mode',
-              'GPS distance calculation for customers',
-              'QRIS payment QR code on order confirmation',
-              'Multi-language support — 11 languages',
-              'Customer order notes',
-              'Live card preview when adding items',
-              'Item availability toggle per item',
-              'Shop bio — tell your story (350 chars)',
-              'Auto country prefix for WhatsApp',
-              'Government regulated delivery rates (Indonesia)',
-              'Professional theme editor with color picker',
-              'Mobile-first — designed for phones',
+              { cat: 'Ordering & Menu', items: ['WhatsApp ordering — orders sent directly', 'Digital menu with photos & descriptions', 'Menu categories — Meals, Drinks, Snacks, Extra', 'Promo prices & daily deals', 'Customer order notes', 'Item availability toggle per item', 'Spice level & Halal badges'] },
+              { cat: 'Design & Branding', items: ['15+ beautiful app themes', 'Custom accent colors & branding', 'Upload your own background image', 'Professional theme editor with color picker', 'Shop logo with accent ring', 'Landing page with View Menu button'] },
+              { cat: 'Business Tools', items: ['Open/Close shop toggle', 'Opening hours with daily schedule', 'Shop bio — tell your story', 'Live card preview when adding items', 'QRIS payment QR code'] },
+              { cat: 'Location & Delivery', items: ['Delivery rates with per-km pricing', 'GPS distance calculation', 'Collection Only mode', 'Google Maps integration', 'Government regulated rates (Indonesia)'] },
+              { cat: 'Social & Reach', items: ['Visit Us page — location, hours, socials', 'Instagram, TikTok, Facebook, X, Website links', 'Multi-language support — 11 languages', 'Auto country prefix for WhatsApp'] },
+              { cat: 'Technical', items: ['Online in minutes — no coding needed', 'Mobile-first — designed for phones'] },
             ],
           },
           pro: {
@@ -368,36 +344,12 @@ const TRANSLATIONS = {
             tagline: 'Dari gerobak hingga restoran — aplikasi pemesanan makanan Anda',
             description: 'Cocok untuk pedagang kaki lima, restoran, food court, dan kafe. Tampilkan menu, terima pesanan via WhatsApp, dan kelola bisnis — semua dari HP.',
             features: [
-              'Online dalam hitungan menit — tanpa coding',
-              'Menu digital dengan foto & deskripsi',
-              'Pemesanan WhatsApp — order langsung masuk',
-              'Kategori menu — Makanan, Minuman, Snack, Extra',
-              'Tema aplikasi cantik — 15+ desain',
-              'Warna aksen & branding kustom',
-              'Upload gambar latar belakang sendiri',
-              'Logo toko dengan ring aksen',
-              'Halaman utama dengan tombol Lihat Menu',
-              'Harga promo & penawaran harian',
-              'Badge Halal & Populer di item',
-              'Indikator level pedas',
-              'Toggle Buka/Tutup toko',
-              'Jam operasional dengan jadwal harian',
-              'Halaman Kunjungi Kami — lokasi, jam, sosmed',
-              'Integrasi link Google Maps',
-              'Link Instagram, TikTok, Facebook, X, Website',
-              'Tarif pengiriman per kilometer',
-              'Mode Ambil Sendiri (Collection Only)',
-              'Kalkulasi jarak GPS untuk pelanggan',
-              'Kode QRIS di halaman konfirmasi order',
-              'Dukungan 11 bahasa',
-              'Catatan pesanan pelanggan',
-              'Preview kartu live saat menambah item',
-              'Toggle ketersediaan per item',
-              'Bio toko — ceritakan kisah Anda (350 huruf)',
-              'Prefix negara otomatis untuk WhatsApp',
-              'Tarif ojol sesuai regulasi pemerintah',
-              'Editor tema profesional dengan pemilih warna',
-              'Mobile-first — didesain untuk HP',
+              { cat: 'Pesanan & Menu', items: ['Pemesanan WhatsApp — order langsung masuk', 'Menu digital dengan foto & deskripsi', 'Kategori menu — Makanan, Minuman, Snack, Extra', 'Harga promo & penawaran harian', 'Catatan pesanan pelanggan', 'Toggle ketersediaan per item', 'Indikator pedas & badge Halal'] },
+              { cat: 'Desain & Branding', items: ['15+ tema aplikasi cantik', 'Warna aksen & branding kustom', 'Upload gambar latar belakang sendiri', 'Editor tema profesional dengan pemilih warna', 'Logo toko dengan ring aksen', 'Halaman utama dengan tombol Lihat Menu'] },
+              { cat: 'Alat Bisnis', items: ['Toggle Buka/Tutup toko', 'Jam operasional dengan jadwal harian', 'Bio toko — ceritakan kisah Anda', 'Preview kartu live saat menambah item', 'Kode QRIS pembayaran'] },
+              { cat: 'Lokasi & Pengiriman', items: ['Tarif pengiriman per kilometer', 'Kalkulasi jarak GPS', 'Mode Ambil Sendiri', 'Integrasi Google Maps', 'Tarif ojol sesuai regulasi pemerintah'] },
+              { cat: 'Sosial & Jangkauan', items: ['Halaman Kunjungi Kami — lokasi, jam, sosmed', 'Link Instagram, TikTok, Facebook, X, Website', 'Dukungan 11 bahasa', 'Prefix negara otomatis untuk WhatsApp'] },
+              { cat: 'Teknis', items: ['Online dalam hitungan menit — tanpa coding', 'Mobile-first — didesain untuk HP'] },
             ],
           },
           pro: {
@@ -467,7 +419,14 @@ function getCategories(t, cp) {
           yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
           tagline: t.basicTagline || 'From street carts to restaurants — your food ordering app',
           description: t.basicDesc || '',
-          features: t.basicFeatures || ['Online in minutes', 'Digital menu with photos', 'WhatsApp ordering', '15+ app themes', 'Custom branding & colors', 'Promo prices & deals', 'Halal & Popular badges', 'Opening hours management', 'Visit Us page with socials', 'Delivery rates per km', 'QRIS payment QR code', 'Multi-language support', 'Mobile-first design'],
+          features: t.basicFeatures || [
+            { cat: 'Ordering & Menu', items: ['WhatsApp ordering', 'Digital menu with photos', 'Promo prices & deals', 'Halal & Popular badges'] },
+            { cat: 'Design & Branding', items: ['15+ app themes', 'Custom branding & colors', 'Theme editor'] },
+            { cat: 'Business Tools', items: ['Opening hours management', 'QRIS payment'] },
+            { cat: 'Location & Delivery', items: ['Delivery rates per km', 'GPS distance'] },
+            { cat: 'Social & Reach', items: ['Visit Us page with socials', 'Multi-language support'] },
+            { cat: 'Technical', items: ['Online in minutes', 'Mobile-first design'] },
+          ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
           url: '/food/basic/',
@@ -913,6 +872,7 @@ export default function App() {
   const [regForm, setRegForm] = useState({ name: '', url: '', whatsapp: '', email: '' })
   const [regSubmitted, setRegSubmitted] = useState(false)
   const [billingCycle, setBillingCycle] = useState('monthly')
+  const [featureCatOpen, setFeatureCatOpen] = useState(null)
   const [userAccount, setUserAccount] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sl_user_account')) || null } catch { return null }
   })
@@ -1244,15 +1204,44 @@ export default function App() {
             <>
               <p style={styles.detailDesc}>{selectedApp.description}</p>
 
-              <h3 style={styles.featuresTitle}>{t.features} ({selectedApp.features.length})</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
-                {selectedApp.features.map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 0', fontSize: 14, borderBottom: '1px solid #f5f5f5', color: '#333' }}>
-                    <span style={{ color: '#22c55e', fontSize: 14, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              <h3 style={styles.featuresTitle}>{t.features} ({Array.isArray(selectedApp.features[0]) || typeof selectedApp.features[0] === 'object' ? selectedApp.features.reduce((sum, c) => sum + (c.items?.length || 0), 0) : selectedApp.features.length})</h3>
+              {typeof selectedApp.features[0] === 'object' && selectedApp.features[0].cat ? (
+                <div style={{ margin: '0 0 24px' }}>
+                  {selectedApp.features.map((group, gi) => {
+                    const isOpen = featureCatOpen === gi
+                    return (
+                      <div key={gi} style={{ marginBottom: 6 }}>
+                        <button onClick={() => setFeatureCatOpen(isOpen ? null : gi)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, border: '1px solid #f0f0f0', background: isOpen ? '#1a1a1a' : '#f8f9fa', cursor: 'pointer', transition: 'all 0.2s' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: isOpen ? '#FFD600' : '#1a1a1a' }}>{group.cat}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: isOpen ? 'rgba(255,255,255,0.4)' : '#999', background: isOpen ? 'rgba(255,255,255,0.1)' : '#eee', padding: '1px 8px', borderRadius: 10 }}>{group.items.length}</span>
+                          </div>
+                          <span style={{ fontSize: 14, color: isOpen ? '#FFD600' : '#ccc', transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                        </button>
+                        {isOpen && (
+                          <div style={{ padding: '6px 0 0 14px' }}>
+                            {group.items.map((item, ii) => (
+                              <div key={ii} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0', fontSize: 13, color: '#444', borderBottom: '1px solid #f8f8f8' }}>
+                                <span style={{ color: '#FFD600', fontSize: 8, marginTop: 5, flexShrink: 0 }}>&#9679;</span>
+                                {item}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
+                  {selectedApp.features.map((f, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 0', fontSize: 14, borderBottom: '1px solid #f5f5f5', color: '#333' }}>
+                      <span style={{ color: '#22c55e', fontSize: 14, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {false && selectedApp.screenshots.length > 1 && (
                 <div style={styles.screenshotRow}>
