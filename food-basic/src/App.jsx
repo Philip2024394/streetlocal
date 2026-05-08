@@ -3211,13 +3211,13 @@ export default function App() {
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
                 <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Themes</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{THEME_PRESETS.length} themes available</div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
                   <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 0.5 }}>streetlocal.live</div>
+                </div>
+                <div style={{ flex: 1, textAlign: 'right' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Themes</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{THEME_PRESETS.length} available</div>
                 </div>
               </div>
 
@@ -3347,7 +3347,7 @@ export default function App() {
                 const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}&bg=${encodeURIComponent(activeImg)}`
                 const iframeW = 375
                 const iframeH = 812
-                const phoneW = 260
+                const phoneW = 230
                 const screenW = phoneW - 8
                 const scaleFactor = screenW / iframeW
                 const phoneH = Math.round(iframeH * scaleFactor) + 8
@@ -3355,12 +3355,12 @@ export default function App() {
                 return (
                   <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
                     {/* Header */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 320, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 300, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
                         <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>streetlocal.live</div>
                       </div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
                     </div>
 
                     {/* Live phone */}
