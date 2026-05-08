@@ -288,9 +288,9 @@ const THEME_PRESETS = [
   { id: 'friedrice', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#3 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
   { id: 'noodle', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#4 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
   { id: 'bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#5 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'] },
-  { id: 'chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#6 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'] },
+  { id: 'chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', label: '#6 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
   { id: 'juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#7 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
-  { id: 'coffee', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'] },
+  { id: 'coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
   { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', label: '#9 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
   { id: 'martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
   { id: 'escendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
@@ -530,12 +530,22 @@ export default function App() {
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
-  const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : (localStorage.getItem('vendorbasic_theme') || 'default'))
-  const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : (localStorage.getItem('vendorbasic_accentColor') || '#8DC63F'))
+  const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
+  const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
+  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : isDemo ? 'noodle' : (localStorage.getItem('vendorbasic_theme') || 'default'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : isDemo ? '#8B0000' : (localStorage.getItem('vendorbasic_accentColor') || '#8DC63F'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
   const [editorPos, setEditorPos] = useState({ x: 50, y: 50 }) // percentage position
+
+  // Apply ?theme= param background on mount
+  useEffect(() => {
+    if (urlThemePreset) {
+      const bgImg = document.getElementById('app-bg-img')
+      if (bgImg) { bgImg.src = urlThemePreset.img; bgImg.style.objectFit = 'fill' }
+    }
+  }, [])
 
   // Derive accent color from theme or custom selection
   const accent = shopAccentColor
@@ -556,6 +566,7 @@ export default function App() {
   /* Shop info */
   const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Street Noodle')
   const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || 'https://ik.imagekit.io/nepgaxllc/Untitledsadaaaa-removebg-preview.png')
+  const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('vendorbasic_logoStyle') || 'circle') // circle | bare | off
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
   const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorbasic_shopAddress') || 'Jl. Malioboro, Yogyakarta')
@@ -652,6 +663,7 @@ export default function App() {
   useEffect(() => { saveJSON('vendorbasic_menu', menuItems) }, [menuItems])
   useEffect(() => { localStorage.setItem('vendorbasic_shopName', shopName) }, [shopName])
   useEffect(() => { localStorage.setItem('vendorbasic_shopLogo', shopLogo) }, [shopLogo])
+  useEffect(() => { localStorage.setItem('vendorbasic_logoStyle', shopLogoStyle) }, [shopLogoStyle])
   useEffect(() => { localStorage.setItem('vendorbasic_shopPhone', shopPhone) }, [shopPhone])
   useEffect(() => { saveJSON('vendorbasic_shopOpen', shopOpen) }, [shopOpen])
   useEffect(() => { localStorage.setItem('vendorbasic_shopAddress', shopAddress) }, [shopAddress])
@@ -990,13 +1002,17 @@ export default function App() {
         {/* Content — centered */}
         <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           {/* Shop logo */}
-          {shopLogo ? (
-            <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
-              <img src={shopLogo} alt="" style={{ width: 160, height: 160, borderRadius: 80, objectFit: 'cover', marginTop: 18 }} />
-            </div>
-          ) : (
+          {shopLogoStyle !== 'off' && shopLogo ? (
+            shopLogoStyle === 'bare' ? (
+              <img src={shopLogo} alt="" style={{ width: 200, height: 200, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+            ) : (
+              <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
+                <img src={shopLogo} alt="" style={{ width: 160, height: 160, borderRadius: 80, objectFit: 'cover', marginTop: 18 }} />
+              </div>
+            )
+          ) : shopLogoStyle !== 'off' ? (
             <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
-          )}
+          ) : null}
 
           {/* Shop name */}
           <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: 42, fontWeight: 800, color: '#fff', WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
@@ -1063,13 +1079,17 @@ export default function App() {
       {/* --- Header --- */}
       <div style={S.header}>
         <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: 10 }}>
-          {shopLogo ? (
-            <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-              <img src={shopLogo} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover' }} />
-            </div>
-          ) : (
+          {shopLogoStyle !== 'off' && shopLogo ? (
+            shopLogoStyle === 'bare' ? (
+              <img src={shopLogo} alt="" style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))' }} />
+            ) : (
+              <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+                <img src={shopLogo} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover' }} />
+              </div>
+            )
+          ) : shopLogoStyle !== 'off' ? (
             <div style={{ width: 40, height: 40, borderRadius: 20, background: isCustomAccent ? accent : 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}>{shopName.charAt(0).toUpperCase()}</div>
-          )}
+          ) : null}
           <div>
             <span style={S.shopName}>{shopName}</span>
             <span style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
@@ -1247,7 +1267,7 @@ export default function App() {
                   )}
                 </div>
                 {isVendor && vendorStatus !== 'expired' && (
-                  <button style={S.smallBtn(accent)} onClick={() => startEdit(item)}>Edit</button>
+                  <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>
                 )}
               </div>
             </div>
@@ -1419,13 +1439,17 @@ export default function App() {
 
               {/* Logo + name + status */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-                {shopLogo ? (
-                  <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-                    <img src={shopLogo} alt="" style={{ width: 58, height: 58, borderRadius: 29, objectFit: 'cover' }} />
-                  </div>
-                ) : (
+                {shopLogoStyle !== 'off' && shopLogo ? (
+                  shopLogoStyle === 'bare' ? (
+                    <img src={shopLogo} alt="" style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
+                  ) : (
+                    <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+                      <img src={shopLogo} alt="" style={{ width: 58, height: 58, borderRadius: 29, objectFit: 'cover' }} />
+                    </div>
+                  )
+                ) : shopLogoStyle !== 'off' ? (
                   <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
-                )}
+                ) : null}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{shopName}</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{shopFoodType}</div>
@@ -1930,48 +1954,29 @@ export default function App() {
               const { byFoodType, byCountry, rest } = getFilteredThemes(countryCode, shopFoodType, langCountries)
 
               const renderThemeCard = (theme) => (
-                <button key={theme.id} onClick={() => {
-                  setShopTheme(theme.id)
-                  setShopAccentColor(theme.accent || '#8DC63F')
-                  localStorage.setItem('vendorbasic_theme', theme.id)
-                  localStorage.setItem('vendorbasic_themeBg', theme.img)
-                  localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
-                  const bgImg = document.getElementById('app-bg-img')
-                  if (bgImg) bgImg.src = theme.img
-                  setVendorDrawer(false)
-                  setShowLanding(true)
-                }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0, width: 160 }}>
-                  <div style={{ width: '100%', height: 240, backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                    {/* Mock header */}
-                    <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.2)' }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ height: 6, width: '60%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
-                        <div style={{ height: 4, width: '40%', background: 'rgba(255,255,255,0.2)', borderRadius: 2 }} />
-                      </div>
+                <div key={theme.id} style={{ flexShrink: 0, width: 160, position: 'relative' }}>
+                  <button onClick={() => {
+                    setShopTheme(theme.id)
+                    setShopAccentColor(theme.accent || '#8DC63F')
+                    localStorage.setItem('vendorbasic_theme', theme.id)
+                    localStorage.setItem('vendorbasic_themeBg', theme.img)
+                    localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                    const bgImg = document.getElementById('app-bg-img')
+                    if (bgImg) bgImg.src = theme.img
+                    setVendorDrawer(false)
+                    setShowLanding(true)
+                  }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', width: '100%' }}>
+                    <div style={{ width: '100%', height: 240, position: 'relative' }}>
+                      <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} />
                     </div>
-                    {/* Mock menu cards */}
-                    {[1, 2, 3].map(i => (
-                      <div key={i} style={{ margin: '3px 10px', padding: 6, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 3 }} />
-                          <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.7 }} />
-                        </div>
-                      </div>
-                    ))}
-                    {/* Mock cart bar */}
-                    <div style={{ marginTop: 'auto', padding: '6px 10px 8px' }}>
-                      <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '5px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ height: 5, width: '40%', background: 'rgba(255,255,255,0.3)', borderRadius: 3 }} />
-                        <div style={{ height: 14, width: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 5 }} />
-                      </div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
+                      {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
                     </div>
+                  </button>
+                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
-                    {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
-                  </div>
-                </button>
+                </div>
               )
 
               return (
@@ -2581,6 +2586,17 @@ export default function App() {
               </label>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
               {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
+
+              {/* Logo display style */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'center' }}>
+                {[
+                  { id: 'circle', label: 'Circle' },
+                  { id: 'bare', label: 'No Circle' },
+                  { id: 'off', label: 'Off' },
+                ].map(opt => (
+                  <button key={opt.id} onClick={() => setShopLogoStyle(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: shopLogoStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: shopLogoStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{opt.label}</button>
+                ))}
+              </div>
             </div>
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>

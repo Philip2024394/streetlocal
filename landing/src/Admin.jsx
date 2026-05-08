@@ -11,6 +11,8 @@ const PAGES = [
   { id: 'payments', label: 'Payments', icon: '💰' },
   { id: 'affiliates', label: 'Affiliates', icon: '🤝' },
   { id: 'fleet', label: 'Fleet Health', icon: '🏥' },
+  { id: 'tickets', label: 'Support', icon: '🎫' },
+  { id: 'audit', label: 'Audit Log', icon: '📝' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
@@ -46,12 +48,16 @@ export default function Admin({ onClose }) {
   const [fleetStatus, setFleetStatus] = useState([])
   const [fleetConfig, setFleetConfig] = useState({})
   const [fleetLogs, setFleetLogs] = useState([])
+  const [tickets, setTickets] = useState([])
+  const [auditLogs, setAuditLogs] = useState([])
+  const [ticketReply, setTicketReply] = useState('')
+  const [ticketReplying, setTicketReplying] = useState(null)
 
   const load = async () => {
     setLoading(true)
     setLoadError(null)
     try {
-      const [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes, configRes, healthRes, resetRes] = await Promise.all([
+      const [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes, configRes, healthRes, resetRes, ticketsRes, auditRes] = await Promise.all([
         supabase.from('app_registrations').select('*').order('created_at', { ascending: false }),
         supabase.from('app_alerts').select('*').order('created_at', { ascending: false }),
         supabase.from('admin_settings').select('*'),
@@ -63,6 +69,8 @@ export default function Admin({ onClose }) {
         supabase.from('vendor_remote_config').select('*').eq('id', 'basic_v1').single(),
         supabase.from('vendor_health_logs').select('*').order('created_at', { ascending: false }).limit(100),
         supabase.from('vendor_reset_log').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('vendor_support_tickets').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(200),
       ])
       if (regsRes.data) setRegs(regsRes.data)
       if (alertsRes.data) setAlerts(alertsRes.data)
@@ -73,16 +81,18 @@ export default function Admin({ onClose }) {
       if (fleetRes.data) setFleetStatus(fleetRes.data)
       if (configRes.data) setFleetConfig(configRes.data)
       if (healthRes.data) setFleetLogs(healthRes.data)
+      if (ticketsRes.data) setTickets(ticketsRes.data)
+      if (auditRes.data) setAuditLogs(auditRes.data)
       // Collect errors
-      const errs = [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes].filter(r => r.error).map(r => r.error.message)
+      const errs = [regsRes, alertsRes, settingsRes, usersRes, affRes, affRefRes, promoRes, fleetRes, ticketsRes, auditRes].filter(r => r.error).map(r => r.error.message)
       if (errs.length > 0) setLoadError(errs.join('; '))
+      if (settingsRes.data) {
+        const obj = {}
+        settingsRes.data.forEach(s => { obj[s.id] = s.value })
+        setSettings(obj)
+      }
     } catch (err) {
       setLoadError(err.message || 'Failed to load data')
-    }
-    if (settingsRes.data) {
-      const obj = {}
-      settingsRes.data.forEach(s => { obj[s.id] = s.value })
-      setSettings(obj)
     }
     setLoading(false)
   }
@@ -721,49 +731,177 @@ export default function Admin({ onClose }) {
         )}
 
         {/* ── PAYMENTS ── */}
-        {page === 'payments' && (
-          <>
-            {/* Revenue summary */}
-            <div style={s.statsRow}>
-              <div style={{ ...s.statCard, borderLeft: '4px solid #22c55e' }}>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#22c55e' }}>{fmtRp(totalRevenue)}</div>
-                <div style={s.statLabel}>Total Active Revenue</div>
-              </div>
-            </div>
-            <div style={s.statsRow}>
-              <div style={s.statCard}>
-                <div style={s.statNum}>{monthly.length}</div>
-                <div style={s.statLabel}>Monthly Plans</div>
-              </div>
-              <div style={s.statCard}>
-                <div style={s.statNum}>{yearly.length}</div>
-                <div style={s.statLabel}>Yearly Plans</div>
-              </div>
-            </div>
+        {page === 'payments' && (() => {
+          const pendingPayments = regs.filter(r => r.status === 'pending_verification')
+          const expiringIn7 = regs.filter(r => r.status === 'active' && r.expires_at && new Date(r.expires_at) > new Date() && new Date(r.expires_at) < new Date(Date.now() + 7 * 86400000))
+          const expired = regs.filter(r => r.status === 'active' && r.expires_at && new Date(r.expires_at) < new Date())
 
-            {/* Payment list */}
-            <div style={s.section}>
-              <h3 style={s.sectionTitle}>All Subscriptions</h3>
-              {regs.map(reg => (
-                <div key={reg.id} style={{ ...s.miniCard, flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 14, fontWeight: 800 }}>{reg.business_name}</span>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: reg.status === 'active' ? '#22c55e' : '#F59E0B' }}>{reg.price || 'N/A'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
-                    <span>{reg.app_tier} — {reg.billing_cycle || 'monthly'}</span>
-                    <span>{STATUS_LABEL[reg.status]}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
-                    <span>Registered: {new Date(reg.created_at).toLocaleDateString()}</span>
-                    {reg.expires_at && <span>Expires: {new Date(reg.expires_at).toLocaleDateString()}</span>}
-                  </div>
+          async function verifyPayment(id) {
+            const expiresAt = new Date(Date.now() + 30 * 86400000).toISOString()
+            await supabase.from('app_registrations').update({ status: 'active', verified_at: new Date().toISOString(), expires_at: expiresAt }).eq('id', id)
+            await supabase.from('admin_audit_log').insert({ action: 'payment_verified', target_type: 'vendor', target_id: id, details: { expires_at: expiresAt } })
+            load()
+          }
+
+          async function rejectPayment(id) {
+            await supabase.from('app_registrations').update({ status: 'deactivated' }).eq('id', id)
+            await supabase.from('admin_audit_log').insert({ action: 'payment_rejected', target_type: 'vendor', target_id: id })
+            load()
+          }
+
+          async function renewSubscription(id) {
+            const reg = regs.find(r => r.id === id)
+            const currentExpiry = reg?.expires_at ? new Date(reg.expires_at) : new Date()
+            const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()) + 30 * 86400000).toISOString()
+            await supabase.from('app_registrations').update({ status: 'active', expires_at: newExpiry, verified_at: new Date().toISOString() }).eq('id', id)
+            await supabase.from('admin_audit_log').insert({ action: 'payment_verified', target_type: 'vendor', target_id: id, details: { renewal: true, new_expiry: newExpiry } })
+            load()
+          }
+
+          function sendBillingReminder(reg) {
+            const msg = encodeURIComponent(`Hi ${reg.business_name}! Your Street Local subscription ${reg.expires_at && new Date(reg.expires_at) < new Date() ? 'has expired' : 'is expiring soon'}. Please renew to keep your food ordering app active. Thank you!`)
+            const wa = reg.whatsapp?.replace(/[^0-9]/g, '')
+            if (wa) window.open(`https://wa.me/${wa}?text=${msg}`, '_blank')
+          }
+
+          function bulkSendReminders(list) {
+            list.forEach((reg, i) => {
+              setTimeout(() => sendBillingReminder(reg), i * 1500)
+            })
+            supabase.from('admin_audit_log').insert({ action: 'billing_reminder', target_type: 'bulk', target_id: 'all', details: { count: list.length } })
+          }
+
+          return (
+            <>
+              {/* Revenue summary */}
+              <div style={s.statsRow}>
+                <div style={{ ...s.statCard, borderLeft: '4px solid #22c55e' }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#22c55e' }}>{fmtRp(totalRevenue)}</div>
+                  <div style={s.statLabel}>Total Active Revenue</div>
                 </div>
-              ))}
-              {regs.length === 0 && <p style={{ color: '#999', fontSize: 14 }}>No payments yet</p>}
-            </div>
-          </>
-        )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+                <div style={s.statCard}>
+                  <div style={s.statNum}>{monthly.length}</div>
+                  <div style={s.statLabel}>Monthly</div>
+                </div>
+                <div style={s.statCard}>
+                  <div style={s.statNum}>{yearly.length}</div>
+                  <div style={s.statLabel}>Yearly</div>
+                </div>
+                <div style={{ ...s.statCard, borderLeft: pendingPayments.length > 0 ? '3px solid #F59E0B' : 'none' }}>
+                  <div style={{ ...s.statNum, color: pendingPayments.length > 0 ? '#F59E0B' : '#888' }}>{pendingPayments.length}</div>
+                  <div style={s.statLabel}>Pending</div>
+                </div>
+              </div>
+
+              {/* Pending Payment Verification */}
+              {pendingPayments.length > 0 && (
+                <div style={s.section}>
+                  <h3 style={{ ...s.sectionTitle, color: '#F59E0B' }}>Pending Verification ({pendingPayments.length})</h3>
+                  {pendingPayments.map(reg => (
+                    <div key={reg.id} style={{ ...s.memberCard, borderLeft: '4px solid #F59E0B', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 800 }}>{reg.business_name}</div>
+                          <div style={{ fontSize: 12, color: '#888' }}>{reg.app_tier} — {reg.billing_cycle || 'monthly'} — {reg.price || 'N/A'}</div>
+                          <div style={{ fontSize: 11, color: '#999' }}>Registered {daysAgo(reg.created_at)} | {getCountry(reg.whatsapp)}</div>
+                        </div>
+                      </div>
+                      {reg.payment_proof && (
+                        <div style={{ marginBottom: 8 }}>
+                          <img src={reg.payment_proof} alt="Payment proof" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, border: '1px solid #e0e0e0' }} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => verifyPayment(reg.id)} style={{ ...s.btnGreen, flex: 1 }}>Verify & Activate</button>
+                        <button onClick={() => rejectPayment(reg.id)} style={{ ...s.btnRed, flex: 1 }}>Reject</button>
+                        {reg.whatsapp && (
+                          <a href={`https://wa.me/${reg.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi! We received your payment for Street Local. Can you confirm the amount and date of transfer?')}`} target="_blank" rel="noopener noreferrer" style={{ ...s.btnWhatsApp, flex: 0 }}>💬</a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Billing Reminders — Expiring & Expired */}
+              {(expiringIn7.length > 0 || expired.length > 0) && (
+                <div style={s.section}>
+                  <h3 style={{ ...s.sectionTitle, color: '#EF4444' }}>Billing Reminders</h3>
+
+                  {expired.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#DC2626', marginBottom: 6 }}>Expired ({expired.length})</div>
+                      {expired.map(reg => (
+                        <div key={reg.id} style={{ ...s.miniCard, borderLeft: '3px solid #EF4444', flexDirection: 'column', alignItems: 'stretch', gap: 4 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 13, fontWeight: 800 }}>{reg.business_name}</span>
+                            <span style={{ fontSize: 11, color: '#EF4444', fontWeight: 700 }}>Expired {daysAgo(reg.expires_at)}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button onClick={() => sendBillingReminder(reg)} style={{ ...s.filterBtn, background: '#25D366', color: '#fff', fontSize: 11, flex: 1 }}>Send Reminder</button>
+                            <button onClick={() => renewSubscription(reg.id)} style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', fontSize: 11, flex: 1 }}>Renew +30 days</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {expiringIn7.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#F59E0B', marginBottom: 6 }}>Expiring Soon ({expiringIn7.length})</div>
+                      {expiringIn7.map(reg => {
+                        const daysLeft = Math.ceil((new Date(reg.expires_at) - Date.now()) / 86400000)
+                        return (
+                          <div key={reg.id} style={{ ...s.miniCard, borderLeft: '3px solid #F59E0B', flexDirection: 'column', alignItems: 'stretch', gap: 4 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 13, fontWeight: 800 }}>{reg.business_name}</span>
+                              <span style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700 }}>{daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button onClick={() => sendBillingReminder(reg)} style={{ ...s.filterBtn, background: '#25D366', color: '#fff', fontSize: 11, flex: 1 }}>Send Reminder</button>
+                              <button onClick={() => renewSubscription(reg.id)} style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', fontSize: 11, flex: 1 }}>Renew +30 days</button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Bulk action */}
+                  {(expired.length + expiringIn7.length) > 1 && (
+                    <button onClick={() => { if (confirm(`Send WhatsApp reminder to ${expired.length + expiringIn7.length} vendors?`)) bulkSendReminders([...expired, ...expiringIn7]) }} style={{ width: '100%', padding: 10, borderRadius: 10, border: 'none', background: '#25D366', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      📨 Bulk Send Reminders ({expired.length + expiringIn7.length} vendors)
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* All subscriptions */}
+              <div style={s.section}>
+                <h3 style={s.sectionTitle}>All Subscriptions</h3>
+                {regs.map(reg => (
+                  <div key={reg.id} style={{ ...s.miniCard, flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 14, fontWeight: 800 }}>{reg.business_name}</span>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: reg.status === 'active' ? '#22c55e' : '#F59E0B' }}>{reg.price || 'N/A'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
+                      <span>{reg.app_tier} — {reg.billing_cycle || 'monthly'}</span>
+                      <span>{STATUS_LABEL[reg.status]}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
+                      <span>Registered: {new Date(reg.created_at).toLocaleDateString()}</span>
+                      {reg.expires_at && <span style={{ color: new Date(reg.expires_at) < new Date() ? '#EF4444' : '#888' }}>Expires: {new Date(reg.expires_at).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                ))}
+                {regs.length === 0 && <p style={{ color: '#999', fontSize: 14 }}>No payments yet</p>}
+              </div>
+            </>
+          )
+        })()}
 
         {/* ── AFFILIATES ── */}
         {page === 'affiliates' && (() => {
@@ -1164,6 +1302,192 @@ export default function Admin({ onClose }) {
               }} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e0e0e0', background: '#fff', color: '#1a1a1a', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>
                 📊 Export Fleet CSV
               </button>
+            </>
+          )
+        })()}
+
+        {/* ── SUPPORT TICKETS ── */}
+        {page === 'tickets' && (() => {
+          const TICKET_STATUS = { open: '#F59E0B', in_progress: '#3B82F6', resolved: '#22c55e', closed: '#9CA3AF' }
+          const TICKET_PRIORITY = { low: '#9CA3AF', medium: '#F59E0B', high: '#EF4444', urgent: '#DC2626' }
+          const [ticketFilter, setTicketFilter] = useState('all')
+          const filteredTickets = tickets.filter(t => ticketFilter === 'all' || t.status === ticketFilter)
+          const openCount = tickets.filter(t => t.status === 'open').length
+          const inProgressCount = tickets.filter(t => t.status === 'in_progress').length
+
+          async function updateTicketStatus(id, status) {
+            await supabase.from('vendor_support_tickets').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+            await supabase.from('admin_audit_log').insert({ action: 'ticket_status_change', target_type: 'ticket', target_id: id, details: { new_status: status } })
+            setTickets(tickets.map(t => t.id === id ? { ...t, status } : t))
+          }
+
+          async function replyToTicket(id) {
+            if (!ticketReply.trim()) return
+            const ticket = tickets.find(t => t.id === id)
+            const replies = ticket.admin_replies || []
+            replies.push({ message: ticketReply, timestamp: new Date().toISOString() })
+            await supabase.from('vendor_support_tickets').update({ admin_replies: replies, status: 'in_progress', updated_at: new Date().toISOString() }).eq('id', id)
+            await supabase.from('admin_audit_log').insert({ action: 'ticket_reply', target_type: 'ticket', target_id: id, details: { reply: ticketReply } })
+            setTickets(tickets.map(t => t.id === id ? { ...t, admin_replies: replies, status: 'in_progress' } : t))
+            setTicketReply('')
+            setTicketReplying(null)
+          }
+
+          return (
+            <>
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+                <div style={s.statCard}><div style={s.statNum}>{tickets.length}</div><div style={s.statLabel}>Total</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#F59E0B' }}>{openCount}</div><div style={s.statLabel}>Open</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#3B82F6' }}>{inProgressCount}</div><div style={s.statLabel}>In Progress</div></div>
+                <div style={s.statCard}><div style={{ ...s.statNum, color: '#22c55e' }}>{tickets.filter(t => t.status === 'resolved').length}</div><div style={s.statLabel}>Resolved</div></div>
+              </div>
+
+              {/* Filter */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                {['all', 'open', 'in_progress', 'resolved', 'closed'].map(f => (
+                  <button key={f} onClick={() => setTicketFilter(f)} style={{ ...s.filterBtn, ...(ticketFilter === f ? s.filterBtnActive : {}) }}>
+                    {f === 'all' ? 'All' : f === 'in_progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Ticket list */}
+              {filteredTickets.map(ticket => (
+                <div key={ticket.id} style={{ ...s.memberCard, borderLeft: `4px solid ${TICKET_STATUS[ticket.status] || '#9CA3AF'}`, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>{ticket.subject || 'No subject'}</div>
+                      <div style={{ fontSize: 11, color: '#888' }}>
+                        Vendor: {ticket.vendor_id?.slice(0, 8)}... | {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : ''}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      {ticket.priority && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: TICKET_PRIORITY[ticket.priority] || '#9CA3AF', padding: '2px 6px', borderRadius: 4 }}>
+                          {ticket.priority.toUpperCase()}
+                        </span>
+                      )}
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: TICKET_STATUS[ticket.status] || '#9CA3AF', padding: '2px 6px', borderRadius: 4 }}>
+                        {ticket.status === 'in_progress' ? 'IN PROGRESS' : (ticket.status || 'open').toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {ticket.message && (
+                    <div style={{ fontSize: 13, color: '#444', background: '#f9f9f9', borderRadius: 8, padding: 10, marginBottom: 8, lineHeight: 1.5 }}>
+                      {ticket.message}
+                    </div>
+                  )}
+
+                  {/* Admin replies */}
+                  {ticket.admin_replies && ticket.admin_replies.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      {ticket.admin_replies.map((r, i) => (
+                        <div key={i} style={{ fontSize: 12, color: '#1a1a1a', background: '#EFF6FF', borderRadius: 8, padding: 8, marginBottom: 4, borderLeft: '3px solid #3B82F6' }}>
+                          <div style={{ fontSize: 10, color: '#3B82F6', fontWeight: 700, marginBottom: 2 }}>Admin — {new Date(r.timestamp).toLocaleString()}</div>
+                          {r.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+                      <>
+                        <button onClick={() => setTicketReplying(ticketReplying === ticket.id ? null : ticket.id)} style={{ ...s.filterBtn, background: '#3B82F6', color: '#fff', fontSize: 11 }}>Reply</button>
+                        <button onClick={() => updateTicketStatus(ticket.id, 'resolved')} style={{ ...s.filterBtn, background: '#22c55e', color: '#fff', fontSize: 11 }}>Resolve</button>
+                      </>
+                    )}
+                    {ticket.status === 'resolved' && (
+                      <button onClick={() => updateTicketStatus(ticket.id, 'closed')} style={{ ...s.filterBtn, background: '#9CA3AF', color: '#fff', fontSize: 11 }}>Close</button>
+                    )}
+                    {ticket.status === 'closed' && (
+                      <button onClick={() => updateTicketStatus(ticket.id, 'open')} style={{ ...s.filterBtn, background: '#F59E0B', color: '#fff', fontSize: 11 }}>Reopen</button>
+                    )}
+                    {ticket.whatsapp && (
+                      <a href={`https://wa.me/${ticket.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ ...s.filterBtn, background: '#25D366', color: '#fff', fontSize: 11, textDecoration: 'none' }}>WhatsApp</a>
+                    )}
+                  </div>
+
+                  {/* Reply box */}
+                  {ticketReplying === ticket.id && (
+                    <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                      <input value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply..." style={{ ...s.input, flex: 1, marginBottom: 0 }} onKeyDown={e => { if (e.key === 'Enter') replyToTicket(ticket.id) }} />
+                      <button onClick={() => replyToTicket(ticket.id)} style={{ background: '#3B82F6', color: '#fff', border: 'none', borderRadius: 10, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Send</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {filteredTickets.length === 0 && <p style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: 30 }}>No support tickets {ticketFilter !== 'all' ? `with status "${ticketFilter}"` : 'yet'}</p>}
+            </>
+          )
+        })()}
+
+        {/* ── AUDIT LOG ── */}
+        {page === 'audit' && (() => {
+          const ACTION_COLOR = {
+            ticket_reply: '#3B82F6', ticket_status_change: '#8B5CF6',
+            vendor_reset: '#F59E0B', payment_verified: '#22c55e', payment_rejected: '#EF4444',
+            status_change: '#22c55e', theme_reset: '#F59E0B', bulk_message: '#3B82F6',
+            billing_reminder: '#8B5CF6',
+          }
+          const ACTION_ICON = {
+            ticket_reply: '💬', ticket_status_change: '🎫',
+            vendor_reset: '🔄', payment_verified: '✅', payment_rejected: '❌',
+            status_change: '🔄', theme_reset: '🎨', bulk_message: '📨',
+            billing_reminder: '💰',
+          }
+          const [auditFilter, setAuditFilter] = useState('all')
+          const actionTypes = [...new Set(auditLogs.map(l => l.action))]
+          const filteredLogs = auditLogs.filter(l => auditFilter === 'all' || l.action === auditFilter)
+
+          return (
+            <>
+              <div style={s.section}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <h3 style={{ ...s.sectionTitle, marginBottom: 0 }}>Activity Log ({auditLogs.length})</h3>
+                  <button onClick={() => {
+                    const headers = 'Action,Target,Details,Timestamp\n'
+                    const rows = auditLogs.map(l => `"${l.action}","${l.target_type}:${l.target_id}","${JSON.stringify(l.details || {})}","${l.created_at}"`).join('\n')
+                    const blob = new Blob([headers + rows], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a'); a.href = url; a.download = `audit-log-${new Date().toISOString().slice(0,10)}.csv`; a.click()
+                  }} style={{ ...s.filterBtn, background: '#1a1a1a', color: '#FFD600', fontSize: 11 }}>Export CSV</button>
+                </div>
+
+                {/* Filter by action type */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                  <button onClick={() => setAuditFilter('all')} style={{ ...s.filterBtn, ...(auditFilter === 'all' ? s.filterBtnActive : {}) }}>All</button>
+                  {actionTypes.map(a => (
+                    <button key={a} onClick={() => setAuditFilter(a)} style={{ ...s.filterBtn, ...(auditFilter === a ? s.filterBtnActive : {}) }}>
+                      {(ACTION_ICON[a] || '📋') + ' ' + a.replace(/_/g, ' ')}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Log entries */}
+                {filteredLogs.map((log, i) => (
+                  <div key={log.id || i} style={{ padding: 10, background: '#fff', borderRadius: 10, border: '1px solid #f0f0f0', marginBottom: 6, display: 'flex', alignItems: 'flex-start', gap: 10, borderLeft: `3px solid ${ACTION_COLOR[log.action] || '#9CA3AF'}` }}>
+                    <div style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>{ACTION_ICON[log.action] || '📋'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{log.action?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                        {log.target_type && <span>Target: {log.target_type} {log.target_id?.slice(0, 12)}</span>}
+                        {log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0 && (
+                          <span style={{ marginLeft: 8 }}>
+                            {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>{log.created_at ? new Date(log.created_at).toLocaleString() : ''}</div>
+                    </div>
+                  </div>
+                ))}
+                {filteredLogs.length === 0 && <p style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: 20 }}>No audit log entries {auditFilter !== 'all' ? `for "${auditFilter}"` : 'yet'}</p>}
+              </div>
             </>
           )
         })()}

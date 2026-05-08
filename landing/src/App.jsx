@@ -581,10 +581,14 @@ function PhoneMockup({ screenshot, liveUrl, color, small }) {
 
 /* ─── Animated Section ─── */
 /* ─── Auto-Playing Demo Walkthrough ─── */
-function AutoPlayDemo({ liveUrls, color }) {
+/* ─── 3D Phone Carousel — auto-advance, swipe, preloaded iframes ─── */
+function Phone3DCarousel({ screenshots, color, liveUrl, liveUrls, autoPlay = false }) {
   const [active, setActive] = useState(0)
-  const DURATION = 5000 // ms per slide
-  const total = liveUrls.length
+  const [paused, setPaused] = useState(false)
+  const touchStart = useRef(0)
+  const total = (liveUrls || screenshots || []).length
+  const DURATION = 7000
+
   const LABELS = [
     { title: 'Landing Page', desc: 'Your brand, your style' },
     { title: 'Menu Cards', desc: 'Browse with categories' },
@@ -595,143 +599,122 @@ function AutoPlayDemo({ liveUrls, color }) {
     { title: 'Visit Us', desc: 'Location & socials' },
   ]
 
-  // Simple timer — advance every DURATION ms
+  // Auto-advance
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setActive(a => (a + 1) % total)
-    }, DURATION)
+    if (!autoPlay || paused || total <= 1) return
+    const timer = setTimeout(() => setActive(a => (a + 1) % total), DURATION)
     return () => clearTimeout(timer)
-  }, [active, total])
+  }, [active, autoPlay, paused, total])
 
-  return (
-    <div style={{ padding: '10px 0 20px' }}>
-      {/* Phone mockup — large centered */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-        <div style={{ width: 240, height: 480, borderRadius: 36, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 24px 60px ${color}30, 0 8px 24px rgba(0,0,0,0.2)`, border: '2px solid #333' }}>
-          {/* Side button */}
-          <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 34, borderRadius: '0 2px 2px 0', background: '#333' }} />
-          <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
-          <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
-          {/* Screen */}
-          <div style={{ width: '100%', height: '100%', borderRadius: 32, overflow: 'hidden', position: 'relative', background: '#000' }}>
-            {/* Dynamic island */}
-            <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 60, height: 18, background: '#000', borderRadius: 20, zIndex: 10 }} />
-            {/* Single iframe — switches URL on each step */}
-            <div style={{ position: 'absolute', inset: 0 }}>
-              <div style={{ width: 375, height: 812, transform: `scale(${232/375})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
-                <iframe key={active} src={liveUrls[active]} style={{ width: 375, height: 812, border: 'none', pointerEvents: 'none' }} title="Demo" />
-              </div>
-            </div>
-            {/* Home indicator */}
-            <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 70, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
-          </div>
-        </div>
-      </div>
+  if (!total) return null
 
-      {/* Step label */}
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a' }}>{LABELS[active]?.title}</div>
-        <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{LABELS[active]?.desc}</div>
-      </div>
-
-      {/* Progress dots */}
-      <style>{`@keyframes dotFill { from { width: 0%; } to { width: 100%; } }`}</style>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
-        {liveUrls.map((_, i) => (
-          <button key={i} onClick={() => setActive(i)} style={{
-            width: active === i ? 28 : 8, height: 8, borderRadius: 4, border: 'none', padding: 0, cursor: 'pointer',
-            background: i < active ? color : '#e0e0e0',
-            position: 'relative', overflow: 'hidden', transition: 'width 0.3s ease',
-          }}>
-            {active === i && (
-              <div key={active} style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: color, borderRadius: 4, animation: `dotFill ${DURATION}ms linear` }} />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ─── 3D Phone Carousel ─── */
-function Phone3DCarousel({ screenshots, color, liveUrl, liveUrls }) {
-  const [active, setActive] = useState(0)
-  const touchStart = useRef(0)
-
-  if (!screenshots || screenshots.length === 0) return null
-  if (screenshots.length === 1) return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
-      <PhoneMockup screenshot={screenshots[0]} liveUrl={liveUrls?.[0] || liveUrl} color={color} small />
-    </div>
-  )
-
-  const handleTouchStart = (e) => { touchStart.current = e.touches[0].clientX }
+  const handleTouchStart = (e) => { touchStart.current = e.touches[0].clientX; setPaused(true) }
   const handleTouchEnd = (e) => {
     const diff = touchStart.current - e.changedTouches[0].clientX
-    if (diff > 40) setActive(a => Math.min(screenshots.length - 1, a + 1))
-    if (diff < -40) setActive(a => Math.max(0, a - 1))
+    if (diff > 40) setActive(a => (a + 1) % total)
+    else if (diff < -40) setActive(a => (a - 1 + total) % total)
+    setTimeout(() => setPaused(false), 3000)
+  }
+
+  // Phone frame builder — renders iframe or screenshot
+  const renderPhone = (i, size, showShadow) => {
+    const url = liveUrls?.[i]
+    const img = screenshots?.[i]
+    const w = size === 'large' ? 220 : 140
+    const h = size === 'large' ? 440 : 280
+    const iframeW = 375
+    const iframeH = 812
+    const screenW = w - 8
+    const scaleFactor = screenW / iframeW
+
+    return (
+      <div style={{ width: w, height: h, borderRadius: w * 0.15, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: showShadow ? `0 20px 50px ${color}25, 0 8px 20px rgba(0,0,0,0.2)` : '0 4px 12px rgba(0,0,0,0.15)', border: '2px solid #333', flexShrink: 0 }}>
+        <div style={{ position: 'absolute', right: -3, top: h * 0.22, width: 3, height: h * 0.07, borderRadius: '0 2px 2px 0', background: '#333' }} />
+        <div style={{ width: '100%', height: '100%', borderRadius: w * 0.13, overflow: 'hidden', position: 'relative', background: '#000' }}>
+          <div style={{ position: 'absolute', top: size === 'large' ? 7 : 5, left: '50%', transform: 'translateX(-50%)', width: size === 'large' ? 56 : 36, height: size === 'large' ? 16 : 10, background: '#000', borderRadius: 12, zIndex: 10 }} />
+          {url ? (
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                <iframe src={url} style={{ width: iframeW, height: iframeH, border: 'none', pointerEvents: 'none' }} title={`Demo ${i}`} loading={i === 0 ? 'eager' : 'lazy'} />
+              </div>
+            </div>
+          ) : img ? (
+            <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : null}
+          <div style={{ position: 'absolute', bottom: size === 'large' ? 5 : 3, left: '50%', transform: 'translateX(-50%)', width: size === 'large' ? 60 : 38, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div
-      style={{ perspective: 800, position: 'relative', height: 380, overflow: 'hidden', margin: '0 auto', maxWidth: 400 }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {screenshots.map((src, i) => {
-          const offset = i - active
-          const isActive = offset === 0
-          const isPrev = offset < 0
-          const isNext = offset > 0
-          const absOff = Math.abs(offset)
+    <div style={{ padding: '10px 0 16px' }} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      {/* 3D Carousel */}
+      <div style={{ perspective: 900, position: 'relative', height: autoPlay ? 460 : 380, overflow: 'hidden', margin: '0 auto', maxWidth: 440 }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {Array.from({ length: total }, (_, i) => {
+            const offset = i - active
+            // Wrap around for continuous feel
+            let adjustedOffset = offset
+            if (total > 3) {
+              if (offset > total / 2) adjustedOffset = offset - total
+              if (offset < -total / 2) adjustedOffset = offset + total
+            }
+            const absOff = Math.abs(adjustedOffset)
+            if (absOff > 2) return null
 
-          if (absOff > 2) return null
+            const isCenter = adjustedOffset === 0
+            const translateX = adjustedOffset * (autoPlay ? 110 : 100)
+            const translateZ = isCenter ? 0 : -140 * absOff
+            const rotateY = adjustedOffset * -20
+            const scale = isCenter ? 1 : Math.max(0.5, 1 - absOff * 0.28)
+            const opacity = isCenter ? 1 : Math.max(0.3, 1 - absOff * 0.35)
+            const zIndex = 10 - absOff
 
-          const translateX = offset * 100
-          const translateZ = isActive ? 0 : -120 * absOff
-          const rotateY = offset * -22
-          const scale = isActive ? 1 : Math.max(0.45, 1 - absOff * 0.3)
-          const opacity = isActive ? 1 : Math.max(0.25, 1 - absOff * 0.4)
-          const zIndex = 10 - absOff
-
-          return (
-            <div
-              key={i}
-              onClick={() => setActive(i)}
-              style={{
-                position: 'absolute',
-                transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                opacity,
-                zIndex,
-                transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                cursor: isActive ? 'default' : 'pointer',
-                filter: isActive ? 'none' : 'brightness(0.7)',
-              }}
-            >
-              <PhoneMockup screenshot={src} liveUrl={liveUrls?.[i] || (i === 0 ? liveUrl : null)} color={color} small />
-            </div>
-          )
-        })}
+            return (
+              <div
+                key={i}
+                onClick={() => { setActive(i); setPaused(true); setTimeout(() => setPaused(false), 5000) }}
+                style={{
+                  position: 'absolute',
+                  transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                  opacity,
+                  zIndex,
+                  transition: 'all 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                  cursor: isCenter ? 'default' : 'pointer',
+                  filter: isCenter ? 'none' : 'brightness(0.65) blur(0.5px)',
+                }}
+              >
+                {renderPhone(i, isCenter && autoPlay ? 'large' : 'small', isCenter)}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Dot indicators */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: -10, position: 'relative', zIndex: 20 }}>
-        {screenshots.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            style={{
-              width: i === active ? 20 : 8,
-              height: 8,
-              borderRadius: 4,
-              border: 'none',
-              background: i === active ? color : '#ddd',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              padding: 0,
-            }}
-          />
+      {/* Step label (autoPlay mode) */}
+      {autoPlay && LABELS[active] && (
+        <div style={{ textAlign: 'center', marginBottom: 10, marginTop: -6 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a' }}>{LABELS[active]?.title}</div>
+          <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{LABELS[active]?.desc}</div>
+        </div>
+      )}
+
+      {/* Progress dots */}
+      {autoPlay && <style>{`@keyframes dotFill { from { width: 0%; } to { width: 100%; } }`}</style>}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 5 }}>
+        {Array.from({ length: total }, (_, i) => (
+          <button key={i} onClick={() => { setActive(i); setPaused(true); setTimeout(() => setPaused(false), 5000) }} style={{
+            width: active === i ? (autoPlay ? 26 : 18) : 8, height: 8, borderRadius: 4, border: 'none', padding: 0, cursor: 'pointer',
+            background: i < active ? color : (i === active ? 'transparent' : '#ddd'),
+            position: 'relative', overflow: 'hidden', transition: 'width 0.3s ease',
+          }}>
+            {active === i && autoPlay ? (
+              <div key={`fill-${active}`} style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: color, borderRadius: 4, animation: paused ? 'none' : `dotFill ${DURATION}ms linear` }} />
+            ) : active === i ? (
+              <div style={{ position: 'absolute', inset: 0, background: color, borderRadius: 4 }} />
+            ) : null}
+          </button>
         ))}
       </div>
     </div>
@@ -933,11 +916,7 @@ export default function App() {
             alt={selectedApp.tier}
             style={{ position: 'absolute', top: 10, left: 10, width: 70, height: 70, objectFit: 'contain', zIndex: 5 }}
           />
-          {selectedApp.liveUrls ? (
-            <AutoPlayDemo liveUrls={selectedApp.liveUrls} color={selectedApp.color} />
-          ) : (
-            <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} liveUrl={selectedApp.liveUrl} liveUrls={selectedApp.liveUrls} />
-          )}
+          <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} liveUrl={selectedApp.liveUrl} liveUrls={selectedApp.liveUrls} autoPlay={!!selectedApp.liveUrls} />
         </div>
 
         {/* Theme showcase strip */}
@@ -946,14 +925,14 @@ export default function App() {
             <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Available in 22+ Themes</div>
             <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
             <div style={{ overflow: 'hidden', paddingBottom: 8 }}>
-            <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 20s linear infinite', width: 'max-content' }}>
+            <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 45s linear infinite', width: 'max-content' }}>
               {(() => {
                 const themes = [
                   { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
-                  { id: 'coffee', label: 'Coffee', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318' },
+                  { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
                   { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png' },
                   { id: 'juice', label: 'Juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886' },
-                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121' },
+                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
                   { id: 'bakso', label: 'Bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278' },
                   { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496' },
                   { id: 'martabak', label: 'Martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png' },
@@ -968,10 +947,11 @@ export default function App() {
                   { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png' },
                 ]
                 const renderCard = (theme, i) => (
-                  <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer' }}>
+                  <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
                     <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                       <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
                     </div>
+                    <a href={(window.location.hostname === 'localhost' ? 'http://localhost:5177/food/basic/' : '/food/basic/') + '?demo=true&page=landing&theme=' + theme.id} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
                   </div>
                 )
@@ -1021,7 +1001,16 @@ export default function App() {
               </div>
             )}
 
-            <button onClick={() => setPreviewTheme(null)} style={{ marginTop: 12, padding: '10px 28px', borderRadius: 12, border: 'none', background: '#fff', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Close</button>
+            {/* Accent color display + Editor button */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px' }}>
+                <div style={{ width: 24, height: 24, borderRadius: 6, background: previewTheme.accent || '#8DC63F', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: 'monospace', letterSpacing: 1 }}>{(previewTheme.accent || '#8DC63F').toUpperCase()}</span>
+              </div>
+              <a href={(window.location.hostname === 'localhost' ? 'http://localhost:5177/food/basic/' : '/food/basic/') + '?demo=true&page=landing&theme=' + previewTheme.id} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'block' }}>Edit Theme</a>
+            </div>
+
+            <button onClick={() => setPreviewTheme(null)} style={{ marginTop: 10, padding: '10px 28px', borderRadius: 12, border: 'none', background: '#fff', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Close</button>
           </div>
           )
         })()}
