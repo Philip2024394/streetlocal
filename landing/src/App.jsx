@@ -885,6 +885,7 @@ export default function App() {
   const [themeLibSearch, setThemeLibSearch] = useState('')
   const [themeLibPreview, setThemeLibPreview] = useState(null)
   const [themeLibPreviewImg, setThemeLibPreviewImg] = useState(null)
+  const [themeLibPage, setThemeLibPage] = useState('landing')
   const [contactCategory, setContactCategory] = useState(null)
   const [contactFaqOpen, setContactFaqOpen] = useState([])
   const [contactFormData, setContactFormData] = useState({ name: '', business: '', email: '', username: '', department: '', priority: 'normal', subject: '', description: '', file: null, contactMethod: 'email' })
@@ -2418,45 +2419,90 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Theme Preview Overlay */}
-                {previewT && (
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }}>
+                {/* Theme Preview Overlay — standalone, no iframe */}
+                {previewT && (() => {
+                  const ac = previewT.accent
+                  const SAMPLE_MENU = [
+                    { name: 'Pepper Noodles', price: 'Rp 23.000', desc: 'Fried noodles with peppers', photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2008_12_38%20PM.png', spice: true },
+                    { name: 'Sate Ayam', price: 'Rp 18.000', desc: 'Chicken skewers with peanut sauce', photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300' },
+                    { name: 'Bakso', price: 'Rp 12.000', desc: 'Meatball soup with noodles', photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300' },
+                  ]
+                  return (
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 340, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
                       <div><div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>StreetLocal</div><div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>streetlocal.live</div></div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{previewT.label}</div>
                     </div>
                     <div style={{ flex: 1, minHeight: 10 }} />
-                    {/* Live iframe phone */}
-                    {(() => {
-                      const iframeBase = window.location.hostname === 'localhost' ? 'http://localhost:5178/food/basic/' : '/food/basic/'
-                      const iframeSrc = `${iframeBase}?preview=true&demo=true&page=landing&theme=${previewT.id}&bg=${encodeURIComponent(activeImg)}`
-                      const iframeW = 375; const iframeH = 812; const phoneW = 240; const screenW = phoneW - 8; const sf = screenW / iframeW; const phoneH = Math.round(iframeH * sf) + 8
-                      return (
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                          <div style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${previewT.accent}25`, border: '2px solid #333', flexShrink: 0 }}>
-                            <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                            <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                              <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                              <div style={{ position: 'absolute', inset: 0 }}><div style={{ width: iframeW, height: iframeH, transform: `scale(${sf})`, transformOrigin: 'top left' }}><iframe key={themeLibPreview + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" /></div></div>
-                              <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
-                            </div>
-                          </div>
-                          {previewAllImgs.length > 1 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                              {previewAllImgs.map((img, i) => (
-                                <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${previewT.accent}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
-                              ))}
+                    {/* Phone + Variants */}
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
+                        <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                        <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                          <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                          <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                          <div style={{ position: 'absolute', inset: 0, background: themeLibPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themeLibPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
+
+                          {/* LANDING */}
+                          {themeLibPage === 'landing' && (
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
+                              <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                              <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
+                              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{previewT.label}</div>
+                              <button onClick={() => setThemeLibPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
                             </div>
                           )}
+
+                          {/* MENU */}
+                          {themeLibPage === 'menu' && (
+                            <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', padding: '20px 8px 12px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', position: 'sticky', top: 0, zIndex: 5 }}>
+                                <button onClick={() => setThemeLibPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
+                                <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6 }}><span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                                <div><div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div><div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{previewT.label}</div></div>
+                              </div>
+                              <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>
+                                {['Menu', 'Drinks', 'Snacks'].map((t, i) => (<div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>))}
+                              </div>
+                              <div style={{ padding: '0 6px' }}>
+                                {SAMPLE_MENU.map((item, idx) => (
+                                  <div key={idx} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
+                                    <img src={item.photo} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontSize: 10, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice && ' 🌶️'}</div>
+                                      <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div>
+                                      <div style={{ fontSize: 10, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{item.price}</div>
+                                    </div>
+                                    <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ position: 'absolute', bottom: 10, left: 6, right: 6, background: `linear-gradient(135deg, ${ac}, ${ac}cc)`, borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 5 }}>
+                                <div style={{ fontSize: 9, fontWeight: 600, color: '#fff' }}>2 items · Rp 41.000</div>
+                                <div style={{ background: '#fff', color: ac, borderRadius: 6, padding: '3px 8px', fontSize: 8, fontWeight: 700 }}>Checkout</div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                         </div>
-                      )
-                    })()}
+                      </div>
+                      {/* Variants */}
+                      {previewAllImgs.length > 1 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                          {previewAllImgs.map((img, i) => (
+                            <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div style={{ flex: 1, minHeight: 10 }} />
                     <div style={{ flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }} style={{ padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                      <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }} style={{ padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                     </div>
                   </div>
-                )}
+                  )
+                })()}
               </div>
             )
           })()}
