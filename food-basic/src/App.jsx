@@ -3368,73 +3368,30 @@ export default function App() {
                     <div style={{ flex: 1, minHeight: 10 }} />
 
                     {/* Phone + Variants row */}
+                    {(() => {
+                      const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
+                      const iframeSrc = `${iframeBase}?preview=true&demo=true&page=landing&theme=${theme.id}&bg=${encodeURIComponent(activeImg)}`
+                      const iframeW = 375
+                      const iframeH = 812
+                      const phoneW = 240
+                      const screenW = phoneW - 8
+                      const scaleFactor = screenW / iframeW
+                      const phoneH = Math.round(iframeH * scaleFactor) + 8
+                      return (
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                    {/* Phone — static preview with page toggle */}
-                    <div style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
-                      <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                    {/* Phone — live iframe preview */}
+                    <div style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                        {/* Background */}
-                        <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: themePreviewPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themePreviewPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
-
-                        {/* LANDING */}
-                        {themePreviewPage === 'landing' && (
-                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
-                            <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
-                              <span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span>
-                            </div>
-                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
-                            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
-                            <button onClick={() => setThemePreviewPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
+                        <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                        <div style={{ position: 'absolute', inset: 0 }}>
+                          <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}>
+                            <iframe key={themePreviewId + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
                           </div>
-                        )}
-
-                        {/* MENU */}
-                        {themePreviewPage === 'menu' && (
-                          <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
-                            {/* Header — matches real app gradient header */}
-                            <div style={{ display: 'flex', alignItems: 'center', padding: '20px 8px 12px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', position: 'sticky', top: 0, zIndex: 5 }}>
-                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
-                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6, flexShrink: 0 }}>
-                                <span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>SN</span>
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div>
-                                <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
-                              </div>
-                            </div>
-                            {/* Category tabs — text style like real app */}
-                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>
-                              {['Menu', 'Drinks', 'Snacks'].map((t, i) => (
-                                <div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>
-                              ))}
-                            </div>
-                            {/* Menu cards — matching real app S.card style */}
-                            <div style={{ padding: '0 6px' }}>
-                              {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 3).map(item => (
-                                <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
-                                  <img src={item.photo} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 10, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice > 0 && ' 🌶️'}</div>
-                                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{item.desc}</div>
-                                    <div style={{ fontSize: 10, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{fmt(item.price)}</div>
-                                  </div>
-                                  <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
-                                </div>
-                              ))}
-                            </div>
-                            {/* Sticky cart bar — matches real app gradient */}
-                            <div style={{ position: 'absolute', bottom: 10, left: 6, right: 6, background: `linear-gradient(135deg, ${ac}, ${ac}cc)`, borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 5 }}>
-                              <div style={{ fontSize: 9, fontWeight: 600, color: '#fff' }}>2 items · {fmt(41000)}</div>
-                              <div style={{ background: '#fff', color: ac, borderRadius: 6, padding: '3px 8px', fontSize: 8, fontWeight: 700 }}>Checkout</div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
                     {/* Variant thumbnails — right side */}
