@@ -3376,18 +3376,6 @@ export default function App() {
                           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
                           <div style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: ac, fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
                         </div>
-                        {/* Mock menu page overlay — shows cards */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 30%)', zIndex: 3, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 10px 20px', gap: 4 }}>
-                          {[1, 2].map(i => (
-                            <div key={i} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 8, padding: 6, borderLeft: `3px solid ${ac}` }}>
-                              <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                              <div style={{ flex: 1 }}>
-                                <div style={{ height: 5, width: '65%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 3 }} />
-                                <div style={{ height: 5, width: '35%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
                         <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
