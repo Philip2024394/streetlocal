@@ -2219,7 +2219,7 @@ export default function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Instant deployment', 'Managed SSL security', 'Business-branded URL', 'Rapid activation', 'Zero technical setup'].map((f, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
-                        <span style={{ color: 'rgba(0,0,0,0.2)', fontSize: 11 }}>—</span>
+                        <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
                     ))}
@@ -2239,7 +2239,7 @@ export default function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Full DNS configuration', 'Secure SSL management', 'Seamless domain connection', 'Branded customer experience', 'Managed infrastructure'].map((f, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
-                        <span style={{ color: 'rgba(0,0,0,0.2)', fontSize: 11 }}>—</span>
+                        <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
                     ))}
@@ -2259,7 +2259,7 @@ export default function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Domain acquisition handled', 'Enterprise-grade DNS management', 'SSL & renewal automation', 'Ownership transfer included', 'Fully managed infrastructure lifecycle'].map((f, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
-                        <span style={{ color: 'rgba(0,0,0,0.2)', fontSize: 11 }}>—</span>
+                        <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
                     ))}
@@ -2275,7 +2275,7 @@ export default function App() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
                     {['Global SSL Security', 'DNS Optimization', 'Infrastructure Monitoring', 'Fast Propagation', 'Managed Technical Setup', 'Renewal Assistance', 'Performance Routing', 'Security Best Practices'].map((item, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
-                        <span style={{ color: 'rgba(0,0,0,0.15)', fontSize: 10 }}>—</span>
+                        <span style={{ color: '#FFD600', fontSize: 7 }}>&#9679;</span>
                         {item}
                       </div>
                     ))}
