@@ -3209,28 +3209,26 @@ export default function App() {
         const otherThemes = filtered.filter(t => !t.isNew)
 
         return (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-            <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#fff' }}>
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
-                <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: '#1a1a1a', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
                 <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
-                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 0.5 }}>streetlocal.live</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>StreetLocal</div>
+                  <div style={{ fontSize: 8, color: 'rgba(0,0,0,0.35)', fontWeight: 600, letterSpacing: 0.5 }}>streetlocal.live</div>
                 </div>
                 <div style={{ flex: 1, textAlign: 'right' }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Themes</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{THEME_PRESETS.length} available</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a' }}>Themes</div>
+                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{THEME_PRESETS.length} available</div>
                 </div>
               </div>
 
               {/* Search + Filter button */}
               <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                  <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.03)', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(0,0,0,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
                 </div>
                 <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.08)', color: themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
@@ -3292,7 +3290,7 @@ export default function App() {
                 const renderPhoneCard = (theme) => (
                   <div key={theme.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {/* Theme name header */}
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#1a1a1a', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {theme.label.replace(/^#\d+\s/, '')}
                       {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>NEW</span>}
                       {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>Active</span>}
@@ -3326,7 +3324,7 @@ export default function App() {
                     {/* New themes */}
                     {newThemes.length > 0 && themeSearch === '' && (
                       <div style={{ padding: '0 14px 16px' }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>New</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>New</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                           {newThemes.map(renderPhoneCard)}
                         </div>
@@ -3335,8 +3333,8 @@ export default function App() {
 
                     {/* All themes */}
                     <div style={{ padding: '0 14px 20px' }}>
-                      {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>All Themes</div>}
-                      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>No themes found</div>}
+                      {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Themes</div>}
+                      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(0,0,0,0.35)', fontSize: 14 }}>No themes found</div>}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {(themeSearch ? filtered : otherThemes).map(renderPhoneCard)}
                       </div>
