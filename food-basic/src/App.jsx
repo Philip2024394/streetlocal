@@ -547,6 +547,17 @@ export default function App() {
     }
   }, [])
 
+  // Load Google Font for hero text
+  useEffect(() => {
+    if (heroFont !== 'system') {
+      const fontMap = { nunito: 'Nunito:wght@700;800;900', poppins: 'Poppins:wght@700;800;900', playfair: 'Playfair+Display:wght@700;800;900', caveat: 'Caveat:wght@700', bebas: 'Bebas+Neue' }
+      const fontId = 'hero-font-link'
+      let link = document.getElementById(fontId)
+      if (!link) { link = document.createElement('link'); link.id = fontId; link.rel = 'stylesheet'; document.head.appendChild(link) }
+      link.href = `https://fonts.googleapis.com/css2?family=${fontMap[heroFont]}&display=swap`
+    }
+  }, [heroFont])
+
   // Derive accent color from theme or custom selection
   const accent = shopAccentColor
   const accentLight = accent + '25'
@@ -567,6 +578,9 @@ export default function App() {
   const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Street Noodle')
   const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || 'https://ik.imagekit.io/nepgaxllc/Untitledsadaaaa-removebg-preview.png')
   const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('vendorbasic_logoStyle') || 'circle') // circle | bare | off
+  const [heroSize, setHeroSize] = useState(() => localStorage.getItem('vendorbasic_heroSize') || 'normal') // normal | large | xl
+  const [heroFont, setHeroFont] = useState(() => localStorage.getItem('vendorbasic_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
+  const [heroColor, setHeroColor] = useState(() => localStorage.getItem('vendorbasic_heroColor') || '#ffffff')
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
   const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorbasic_shopAddress') || 'Jl. Malioboro, Yogyakarta')
@@ -665,6 +679,9 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_shopName', shopName) }, [shopName])
   useEffect(() => { localStorage.setItem('vendorbasic_shopLogo', shopLogo) }, [shopLogo])
   useEffect(() => { localStorage.setItem('vendorbasic_logoStyle', shopLogoStyle) }, [shopLogoStyle])
+  useEffect(() => { localStorage.setItem('vendorbasic_heroSize', heroSize) }, [heroSize])
+  useEffect(() => { localStorage.setItem('vendorbasic_heroFont', heroFont) }, [heroFont])
+  useEffect(() => { localStorage.setItem('vendorbasic_heroColor', heroColor) }, [heroColor])
   useEffect(() => { localStorage.setItem('vendorbasic_shopPhone', shopPhone) }, [shopPhone])
   useEffect(() => { saveJSON('vendorbasic_shopOpen', shopOpen) }, [shopOpen])
   useEffect(() => { localStorage.setItem('vendorbasic_shopAddress', shopAddress) }, [shopAddress])
@@ -1058,18 +1075,25 @@ export default function App() {
           ) : null}
 
           {/* Shop name */}
-          <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: 42, fontWeight: 800, color: '#fff', WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
-
-          {/* Food category tagline */}
-          {shopFoodType && (
-            <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1 }}>{shopFoodType}</h2>
-          )}
-          {/* City, Country */}
-          {(shopCity || shopCountry) && (
-            <p style={{ textAlign: 'center', marginBottom: 40, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)' }}>
-              {[shopCity, shopCountry].filter(Boolean).join(', ')}
-            </p>
-          )}
+          {(() => {
+            const HERO_FONTS = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
+            const HERO_SIZES = { normal: { title: 42, sub: 18, city: 12 }, large: { title: 52, sub: 22, city: 14 }, xl: { title: 62, sub: 26, city: 16 } }
+            const sz = HERO_SIZES[heroSize] || HERO_SIZES.normal
+            const ff = HERO_FONTS[heroFont] || HERO_FONTS.system
+            return (
+              <>
+                <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: sz.title, fontWeight: 800, color: heroColor, fontFamily: ff, WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
+                {shopFoodType && (
+                  <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: sz.sub, fontWeight: 600, color: heroColor === '#ffffff' ? 'rgba(255,255,255,0.9)' : heroColor, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1, opacity: heroColor === '#ffffff' ? 1 : 0.85 }}>{shopFoodType}</h2>
+                )}
+                {(shopCity || shopCountry) && (
+                  <p style={{ textAlign: 'center', marginBottom: 40, fontSize: sz.city, fontWeight: 600, color: heroColor === '#ffffff' ? 'rgba(255,255,255,0.7)' : heroColor, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', opacity: heroColor === '#ffffff' ? 1 : 0.7 }}>
+                    {[shopCity, shopCountry].filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </>
+            )
+          })()}
         </div>
 
         {/* Enter button — yellow — bottom */}
@@ -2648,6 +2672,65 @@ export default function App() {
                   <button key={opt.id} onClick={() => setShopLogoStyle(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: shopLogoStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: shopLogoStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{opt.label}</button>
                 ))}
               </div>
+            </div>
+
+            {/* Hero Text Style */}
+            <div style={{ margin: '14px 0', background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 14, border: `1px solid ${accent}20` }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: accent, marginBottom: 10 }}>Hero Text Style</div>
+
+              {/* Live preview */}
+              {(() => {
+                const HERO_FONTS_P = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
+                const HERO_SIZES_P = { normal: { title: 22, sub: 11 }, large: { title: 28, sub: 13 }, xl: { title: 34, sub: 15 } }
+                const szP = HERO_SIZES_P[heroSize] || HERO_SIZES_P.normal
+                const ffP = HERO_FONTS_P[heroFont] || HERO_FONTS_P.system
+                return (
+                  <div style={{ textAlign: 'center', padding: '12px 8px', background: 'rgba(0,0,0,0.4)', borderRadius: 10, marginBottom: 12 }}>
+                    <div style={{ fontSize: szP.title, fontWeight: 800, color: heroColor, fontFamily: ffP, lineHeight: 1.1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName || 'Shop Name'}</div>
+                    {shopFoodType && <div style={{ fontSize: szP.sub, fontWeight: 600, color: heroColor, fontFamily: ffP, opacity: 0.8, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{shopFoodType}</div>}
+                  </div>
+                )
+              })()}
+
+              {/* Size */}
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Size</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                {[{ id: 'normal', label: 'Normal' }, { id: 'large', label: 'Large' }, { id: 'xl', label: 'Extra Large' }].map(s => (
+                  <button key={s.id} onClick={() => setHeroSize(s.id)} style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: heroSize === s.id ? accent : 'rgba(255,255,255,0.06)', color: heroSize === s.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>{s.label}</button>
+                ))}
+              </div>
+
+              {/* Font */}
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Font</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                {[
+                  { id: 'system', label: 'Default', ff: '-apple-system, sans-serif' },
+                  { id: 'nunito', label: 'Rounded', ff: '"Nunito", sans-serif' },
+                  { id: 'poppins', label: 'Bold', ff: '"Poppins", sans-serif' },
+                  { id: 'playfair', label: 'Elegant', ff: '"Playfair Display", serif' },
+                  { id: 'caveat', label: 'Handwritten', ff: '"Caveat", cursive' },
+                  { id: 'bebas', label: 'Street', ff: '"Bebas Neue", sans-serif' },
+                ].map(f => (
+                  <button key={f.id} onClick={() => setHeroFont(f.id)} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: f.ff, background: heroFont === f.id ? accent : 'rgba(255,255,255,0.06)', color: heroFont === f.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{f.label}</button>
+                ))}
+              </div>
+
+              {/* Color */}
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Text Color</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                {['#ffffff', '#FACC15', '#FF6B35', '#EF4444', '#22c55e', '#3B82F6', '#8B5CF6', '#F472B6'].map(c => (
+                  <button key={c} onClick={() => setHeroColor(c)} style={{ width: 28, height: 28, borderRadius: 14, border: heroColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.15)', background: c, cursor: 'pointer', padding: 0, boxShadow: heroColor === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
+                ))}
+                <button onClick={() => {
+                  setThemeEditor({ url: localStorage.getItem('vendorbasic_themeBg') || '' })
+                  setEditorColor(heroColor)
+                  setEditorBaseColor(heroColor)
+                  setVendorDrawer(false)
+                }} style={{ width: 28, height: 28, borderRadius: 14, border: '2px solid rgba(255,255,255,0.15)', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)', cursor: 'pointer', padding: 0 }} />
+              </div>
+              {heroColor !== '#ffffff' && (
+                <button onClick={() => setHeroColor('#ffffff')} style={{ marginTop: 8, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Reset to white</button>
+              )}
             </div>
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
