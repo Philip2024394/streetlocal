@@ -939,7 +939,7 @@ export default function App() {
                   { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
                   { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
                   { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png' },
-                  { id: 'juice', label: 'Juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886' },
+                  { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'] },
                   { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
                   { id: 'bakso', label: 'Bakso', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278' },
                   { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496' },
@@ -2007,6 +2007,153 @@ export default function App() {
             </div>
           )}
 
+          {currentPage === 'domains' && (
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>Custom Domain Names</h1>
+              <p style={{ fontSize: 15, color: '#888', marginBottom: 20, fontWeight: 600 }}>Your brand, your URL</p>
+              <p style={{ fontSize: 15, color: '#444', lineHeight: 1.7, marginBottom: 24 }}>
+                StreetLocal offers custom domain services so your business can have its own branded web address. Whether you want a simple subdomain or a fully managed custom domain, we handle the technical setup so you can focus on your business.
+              </p>
+
+              {/* Subdomain Tier */}
+              <div style={{ background: '#f8f9fa', borderRadius: 20, padding: 24, marginBottom: 16, border: '1px solid #f0f0f0' }}>
+                <div style={{ display: 'inline-block', background: '#e8f5e9', color: '#2e7d32', padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Starter</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', color: '#1a1a1a' }}>Subdomain</h3>
+                <p style={{ fontSize: 14, color: '#888', margin: '0 0 12px', fontFamily: 'monospace' }}>shopname.streetlocal.live</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: '#1a1a1a' }}>Rp 25,000</span>
+                  <span style={{ fontSize: 13, color: '#888' }}>/month</span>
+                </div>
+                <p style={{ fontSize: 13, color: '#888', margin: '0 0 14px' }}>+ Rp 50,000 one-time setup fee</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {['Your business name in the URL', 'SSL certificate included', 'Instant activation after setup', '3-month minimum commitment'].map((f, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', fontSize: 14, color: '#444' }}>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: '#2e7d32', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Custom Domain Tier */}
+              <div style={{ background: '#fffde7', borderRadius: 20, padding: 24, marginBottom: 16, border: '2px solid #FFD600' }}>
+                <div style={{ display: 'inline-block', background: '#FFD600', color: '#1a1a1a', padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Popular</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', color: '#1a1a1a' }}>Custom Domain</h3>
+                <p style={{ fontSize: 14, color: '#888', margin: '0 0 12px', fontFamily: 'monospace' }}>menu.yourbrand.com</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: '#1a1a1a' }}>Rp 75,000</span>
+                  <span style={{ fontSize: 13, color: '#888' }}>/month</span>
+                </div>
+                <p style={{ fontSize: 13, color: '#888', margin: '0 0 14px' }}>+ Rp 150,000 one-time setup fee</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {['Use your own domain name', 'SSL certificate included', 'DNS configuration handled by us', 'Professional branded experience', '3-month minimum commitment'].map((f, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', fontSize: 14, color: '#444' }}>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: '#c8a600', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Full Domain Tier */}
+              <div style={{ background: '#f3e5f5', borderRadius: 20, padding: 24, marginBottom: 20, border: '1px solid #e1bee7' }}>
+                <div style={{ display: 'inline-block', background: '#7b1fa2', color: '#fff', padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Premium</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', color: '#1a1a1a' }}>Full Domain</h3>
+                <p style={{ fontSize: 14, color: '#888', margin: '0 0 12px', fontFamily: 'monospace' }}>yourbrand.com</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: '#1a1a1a' }}>Rp 150,000</span>
+                  <span style={{ fontSize: 13, color: '#888' }}>/month</span>
+                </div>
+                <p style={{ fontSize: 13, color: '#888', margin: '0 0 14px' }}>+ Rp 300,000 one-time setup fee</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {['We purchase and manage the domain for you', 'Full DNS and SSL management', 'Domain ownership transfers to you after 12 months', 'Premium branded experience', 'Renewal fees included', '3-month minimum commitment'].map((f, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', fontSize: 14, color: '#444' }}>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: '#7b1fa2', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <p style={{ fontSize: 13, color: '#999', textAlign: 'center', marginBottom: 20, fontStyle: 'italic' }}>All domain plans require an active app subscription.</p>
+
+              <a
+                href="https://wa.me/6281392000050?text=Hi! I'm interested in a custom domain for my business."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'block', background: '#25D366', color: '#fff', textAlign: 'center', padding: '16px 24px', borderRadius: 14, fontSize: 16, fontWeight: 800, textDecoration: 'none', marginBottom: 10 }}
+              >
+                Discuss Your Options
+              </a>
+            </div>
+          )}
+
+          {currentPage === 'contact' && (
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>Get In Touch</h1>
+              <p style={{ fontSize: 15, color: '#888', marginBottom: 24, fontWeight: 600 }}>We'd love to hear from you</p>
+
+              {/* WhatsApp Card */}
+              <div style={{ background: '#e8f5e9', borderRadius: 20, padding: 24, marginBottom: 16, border: '2px solid #25D366', textAlign: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>💬</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px', color: '#1a1a1a' }}>WhatsApp</h3>
+                <p style={{ fontSize: 15, color: '#444', margin: '0 0 4px', fontWeight: 700 }}>+62 813 9200 0050</p>
+                <p style={{ fontSize: 13, color: '#666', margin: '0 0 16px' }}>Chat with us — we typically reply within minutes</p>
+                <a
+                  href="https://wa.me/6281392000050?text=Hi! I'd like to know more about StreetLocal."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-block', background: '#25D366', color: '#fff', padding: '14px 32px', borderRadius: 14, fontSize: 16, fontWeight: 800, textDecoration: 'none', minWidth: 200 }}
+                >
+                  Chat on WhatsApp
+                </a>
+              </div>
+
+              {/* Email Card */}
+              <div style={{ background: '#f8f9fa', borderRadius: 20, padding: 24, marginBottom: 16, border: '1px solid #f0f0f0', textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 10 }}>📧</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px', color: '#1a1a1a' }}>Email</h3>
+                <a href="mailto:support@streetlocal.live" style={{ fontSize: 15, color: '#1a73e8', fontWeight: 700, textDecoration: 'none' }}>support@streetlocal.live</a>
+                <p style={{ fontSize: 13, color: '#888', marginTop: 6 }}>We aim to respond within 24 hours</p>
+              </div>
+
+              {/* Business Hours & Location */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div style={{ background: '#f8f9fa', borderRadius: 16, padding: 18, border: '1px solid #f0f0f0', textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>🕘</div>
+                  <h4 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 4px', color: '#1a1a1a' }}>Business Hours</h4>
+                  <p style={{ fontSize: 13, color: '#666', margin: 0, lineHeight: 1.5 }}>Mon – Sat<br />09:00 – 21:00<br /><span style={{ fontSize: 11, color: '#999' }}>Jakarta Time (WIB)</span></p>
+                </div>
+                <div style={{ background: '#f8f9fa', borderRadius: 16, padding: 18, border: '1px solid #f0f0f0', textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>📍</div>
+                  <h4 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 4px', color: '#1a1a1a' }}>Location</h4>
+                  <p style={{ fontSize: 13, color: '#666', margin: 0, lineHeight: 1.5 }}>Jakarta<br />Indonesia</p>
+                </div>
+              </div>
+
+              {/* For Vendors */}
+              <div style={{ background: '#fffde7', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid #fff3b0' }}>
+                <h4 style={{ fontSize: 15, fontWeight: 800, margin: '0 0 10px', color: '#1a1a1a' }}>For Vendors</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button onClick={() => setCurrentPage('faq')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#1a73e8', fontWeight: 600, textAlign: 'left', padding: '6px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}>→ Frequently Asked Questions</button>
+                  <button onClick={() => setCurrentPage('domains')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#1a73e8', fontWeight: 600, textAlign: 'left', padding: '6px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}>→ Custom Domain Packages</button>
+                  <button onClick={() => setCurrentPage(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#1a73e8', fontWeight: 600, textAlign: 'left', padding: '6px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}>→ Pricing & Plans</button>
+                </div>
+              </div>
+
+              {/* For Agents */}
+              <div style={{ background: '#fff3e0', borderRadius: 16, padding: 20, marginBottom: 20, border: '1px solid #ffe0b2' }}>
+                <h4 style={{ fontSize: 15, fontWeight: 800, margin: '0 0 10px', color: '#1a1a1a' }}>For Agents</h4>
+                <button onClick={() => setCurrentPage('affiliate')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#1a73e8', fontWeight: 600, textAlign: 'left', padding: '6px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}>→ Affiliate Programme — Earn 100% first-month commission</button>
+              </div>
+
+              {/* Closing line */}
+              <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, textAlign: 'center', fontStyle: 'italic', padding: '0 10px' }}>
+                Whether you're a street vendor looking to go digital, or a business wanting premium branding — we're here to help.
+              </p>
+            </div>
+          )}
+
         </div>
 
         <div style={styles.footer}>
@@ -2069,6 +2216,14 @@ export default function App() {
         <button onClick={() => setCurrentPage('services')} style={styles.navBtn}>
           <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>§</div>
           <span style={styles.navBtnLabel}>{t.navServices}</span>
+        </button>
+        <button onClick={() => setCurrentPage('domains')} style={styles.navBtn}>
+          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>🌐</div>
+          <span style={styles.navBtnLabel}>Domains</span>
+        </button>
+        <button onClick={() => setCurrentPage('contact')} style={styles.navBtn}>
+          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>✉</div>
+          <span style={styles.navBtnLabel}>Contact</span>
         </button>
       </div>
 
@@ -2148,6 +2303,19 @@ export default function App() {
           <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>StreetLocal.live/agent</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Earn 100% first-month commission — limited seats</div>
         </button>
+      </div>
+
+      {/* Footer Links */}
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, padding: '10px 20px 0' }}>
+        {[
+          { label: 'About', page: 'about' },
+          { label: 'FAQ', page: 'faq' },
+          { label: 'Domains', page: 'domains' },
+          { label: 'Terms', page: 'services' },
+          { label: 'Contact', page: 'contact' },
+        ].map(link => (
+          <button key={link.page} onClick={() => setCurrentPage(link.page)} style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#666', cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center' }}>{link.label}</button>
+        ))}
       </div>
 
       {/* Footer */}
