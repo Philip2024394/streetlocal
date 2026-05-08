@@ -292,13 +292,13 @@ const THEME_PRESETS = [
   { id: 'juice', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#7 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'] },
   { id: 'coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
   { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', label: '#9 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
-  { id: 'martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
-  { id: 'escendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
-  { id: 'ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', label: '#12 Ketoprak', category: 'Ketoprak', countries: ['ID'], foodTypes: ['Ketoprak', 'Street Food', 'Indonesian Street Food'] },
-  { id: 'cilok', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
-  { id: 'ikanbakar', accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'] },
-  { id: 'nasiuduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'bebekgoreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
+  { id: 'martabak', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
+  { id: 'escendol', isNew: true, accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
+  { id: 'ketoprak', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', label: '#12 Ketoprak', category: 'Ketoprak', countries: ['ID'], foodTypes: ['Ketoprak', 'Street Food', 'Indonesian Street Food'] },
+  { id: 'cilok', isNew: true, accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
+  { id: 'ikanbakar', isNew: true, accent: '#DC2626', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'] },
+  { id: 'nasiuduk', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'bebekgoreng', isNew: true, accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
   { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#17 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
   { id: 'donut', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#18 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
 ]
@@ -528,6 +528,9 @@ export default function App() {
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
   const [designStudio, setDesignStudio] = useState(false) // show design studio
+  const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
+  const [themeSearch, setThemeSearch] = useState('')
+  const [themeCountry, setThemeCountry] = useState('all')
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
@@ -2340,7 +2343,8 @@ export default function App() {
             <div style={{ padding: '0 16px' }}>
               {[
                 { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
-                { icon: '🎨', label: 'Design Studio', desc: 'Theme, layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
+                { icon: '🎨', label: 'Design Studio', desc: 'Layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
+                { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -3179,6 +3183,95 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ═══ THEME BROWSER PAGE ═══ */}
+      {themeBrowser && (() => {
+        const countries = [...new Set(THEME_PRESETS.flatMap(t => t.countries))]
+        const COUNTRY_LABELS = { ID: 'Indonesia', MY: 'Malaysia', SG: 'Singapore', TH: 'Thailand', VN: 'Vietnam', PH: 'Philippines', US: 'USA', GB: 'UK', AU: 'Australia', NZ: 'New Zealand', CA: 'Canada', DE: 'Germany', FR: 'France', NL: 'Netherlands', AE: 'UAE', SA: 'Saudi', QA: 'Qatar', KW: 'Kuwait', EG: 'Egypt', KR: 'Korea' }
+        const filtered = THEME_PRESETS.filter(t => {
+          if (themeCountry !== 'all' && !t.countries.includes(themeCountry)) return false
+          if (themeSearch && !t.label.toLowerCase().includes(themeSearch.toLowerCase()) && !t.category.toLowerCase().includes(themeSearch.toLowerCase())) return false
+          return true
+        })
+        const newThemes = filtered.filter(t => t.isNew)
+        const otherThemes = filtered.filter(t => !t.isNew)
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+            <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+                <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Themes</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{THEME_PRESETS.length} themes available</div>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div style={{ padding: '0 14px 10px' }}>
+                <div style={{ position: 'relative' }}>
+                  <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                </div>
+              </div>
+
+              {/* Country filter */}
+              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                <button onClick={() => setThemeCountry('all')} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: themeCountry === 'all' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.5)', flexShrink: 0, minHeight: 36 }}>All</button>
+                {countries.map(c => (
+                  <button key={c} onClick={() => setThemeCountry(themeCountry === c ? 'all' : c)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: themeCountry === c ? '#FFD600' : 'rgba(255,255,255,0.06)', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.5)', flexShrink: 0, minHeight: 36 }}>{COUNTRY_LABELS[c] || c}</button>
+                ))}
+              </div>
+
+              {/* New themes section */}
+              {newThemes.length > 0 && themeSearch === '' && (
+                <div style={{ padding: '0 14px 12px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 8 }}>New</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {newThemes.map(theme => (
+                      <button key={theme.id} onClick={() => {
+                        setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
+                        localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                        const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img
+                        setThemeBrowser(false); setShowLanding(true)
+                      }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '2px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>NEW</div>
+                        {shopTheme === theme.id && <div style={{ position: 'absolute', top: 6, right: 6, background: '#22c55e', color: '#fff', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>Active</div>}
+                        <div style={{ width: '100%', height: 180, position: 'relative' }}><img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#fff', padding: '8px 0', textAlign: 'center', background: 'rgba(0,0,0,0.7)' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All themes grid */}
+              <div style={{ padding: '0 14px 14px' }}>
+                {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>All Themes</div>}
+                {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>No themes found</div>}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {(themeSearch ? filtered : otherThemes).map(theme => (
+                    <button key={theme.id} onClick={() => {
+                      setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
+                      localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                      const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img
+                      setThemeBrowser(false); setShowLanding(true)
+                    }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '2px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', position: 'relative' }}>
+                      {theme.isNew && <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>NEW</div>}
+                      {shopTheme === theme.id && <div style={{ position: 'absolute', top: 6, right: 6, background: '#22c55e', color: '#fff', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>Active</div>}
+                      <div style={{ width: '100%', height: 180, position: 'relative' }}><img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#fff', padding: '8px 0', textAlign: 'center', background: 'rgba(0,0,0,0.7)' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
       {designStudio && (
