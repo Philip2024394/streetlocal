@@ -3308,7 +3308,7 @@ export default function App() {
                       </div>
                     </div>
                     {/* View Theme button */}
-                    <button onClick={() => setThemePreviewId(theme.id)} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                    <button onClick={() => { setThemePreviewImg(null); setThemePreviewId(theme.id) }} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
                   </div>
                 )
 
