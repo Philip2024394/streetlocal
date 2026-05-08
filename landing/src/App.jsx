@@ -3081,12 +3081,6 @@ export default function App() {
                     <p style={{ fontSize: 13, color: '#888', marginBottom: 0 }}>Get a personalized solution for your business needs</p>
                   </div>
 
-                  {/* Trust Badges */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-                    {['No commitment required', 'Free consultation', 'Custom pricing available'].map(badge => (
-                      <span key={badge} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700, color: '#15803d' }}>{badge}</span>
-                    ))}
-                  </div>
 
                   {/* What We Offer */}
                   <div style={{ marginBottom: 24 }}>
