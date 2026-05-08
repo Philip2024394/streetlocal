@@ -195,12 +195,12 @@ const TRANSLATIONS = {
             tagline: 'From street carts to restaurants — your food ordering app',
             description: 'Perfect for street vendors, restaurants, food courts, and cafes. Show your menu, take WhatsApp orders, and manage your business — all from your phone.',
             features: [
-              { cat: 'Ordering & Menu', items: ['WhatsApp ordering — orders sent directly', 'Digital menu with photos & descriptions', 'Menu categories — Meals, Drinks, Snacks, Extra', 'Promo prices & daily deals', 'Customer order notes', 'Item availability toggle per item', 'Spice level & Halal badges'] },
-              { cat: 'Design & Branding', items: ['15+ beautiful app themes', 'Custom accent colors & branding', 'Upload your own background image', 'Professional theme editor with color picker', 'Shop logo with accent ring', 'Landing page with View Menu button'] },
-              { cat: 'Business Tools', items: ['Open/Close shop toggle', 'Opening hours with daily schedule', 'Shop bio — tell your story', 'Live card preview when adding items', 'QRIS payment QR code'] },
-              { cat: 'Location & Delivery', items: ['Delivery rates with per-km pricing', 'GPS distance calculation', 'Collection Only mode', 'Google Maps integration', 'Government regulated rates (Indonesia)'] },
-              { cat: 'Social & Reach', items: ['Visit Us page — location, hours, socials', 'Instagram, TikTok, Facebook, X, Website links', 'Multi-language support — 11 languages', 'Auto country prefix for WhatsApp'] },
-              { cat: 'Technical', items: ['Online in minutes — no coding needed', 'Mobile-first — designed for phones'] },
+              { cat: 'Ordering & Menu', items: ['WhatsApp ordering — zero commission', 'Digital menu with photos & descriptions', 'Meal, Snack, Dessert & Drink categories', 'Promo pricing with strikethrough display', 'Halal badge & Popular item badges', 'Spice level indicators on dishes', 'Customer order notes'] },
+              { cat: 'Design & Branding', items: ['Your own branded food ordering app', '15+ theme backgrounds to match your brand', 'Custom logo & business branding', 'Landing page with city & country display'] },
+              { cat: 'Delivery & Location', items: ['GPS delivery estimates with local rates', 'City-based GoJek/Grab rate defaults', 'Multi-currency support (16 countries)'] },
+              { cat: 'Business Management', items: ['Shop open/close toggle — pause orders instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Shop bio & social media links', 'QR code generator for your stall'] },
+              { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)'] },
+              { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link'] },
             ],
           },
           pro: {
@@ -752,6 +752,97 @@ function LangSwitcher({ locale, setLocale }) {
   )
 }
 
+/* ─── Local Search Mock Data ─── */
+const SEARCH_CATEGORIES = []
+
+const MOCK_VENDORS = [
+  {
+    id: 'demo-1', shop_name: 'Warung Pak Joko', shop_food_type: 'Indonesian', slug: 'warung-pak-joko',
+    shop_address: 'Jl. Margonda Raya 12, Depok', shop_open: true, status: 'open',
+    distance_km: 1.2, delivery_enabled: true, delivery_fee: 5000, pickup_time: '15 min', rating: 4.8, reviews: 124,
+    popular: true, has_promo: true, accent: '#FF6B35',
+    menu: [
+      { name: 'Nasi Goreng Spesial', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=200', orders: 312, price: 18000, promoPrice: 14000, prepTime: 15, tags: ['nasi goreng', 'fried rice', 'rice'] },
+      { name: 'Es Teh Manis', img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=200', orders: 180, price: 5000, prepTime: 3, tags: ['drinks', 'tea', 'iced tea'] },
+      { name: 'Ayam Goreng', img: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=200', orders: 95, price: 20000, prepTime: 20, tags: ['chicken', 'ayam', 'fried chicken'] },
+      { name: 'Gorengan', img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200', orders: 67, price: 5000, prepTime: 5, tags: ['snacks', 'gorengan', 'fried'] },
+    ],
+  },
+  {
+    id: 'demo-2', shop_name: 'Kopi Kita', shop_food_type: 'Coffee & Drinks', slug: 'kopi-kita',
+    shop_address: 'Jl. Sawangan 45, Depok', shop_open: true, status: 'open',
+    distance_km: 2.8, delivery_enabled: false, delivery_fee: 0, pickup_time: '10 min', rating: 4.6, reviews: 89,
+    popular: false, has_promo: false, accent: '#8a570f',
+    menu: [
+      { name: 'Kopi Susu Gula Aren', img: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200', orders: 420, price: 18000, promoPrice: 12000, prepTime: 5, tags: ['coffee', 'kopi', 'drinks'] },
+      { name: 'Matcha Latte', img: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=200', orders: 185, price: 22000, prepTime: 5, tags: ['matcha', 'drinks', 'tea'] },
+      { name: 'Jus Mangga', img: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=200', orders: 130, price: 15000, prepTime: 3, tags: ['juice', 'mango', 'drinks'] },
+      { name: 'Roti Bakar', img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200', orders: 88, price: 12000, prepTime: 10, tags: ['snacks', 'toast', 'bread'] },
+    ],
+  },
+  {
+    id: 'demo-3', shop_name: 'Sate Madura Haji Ahmad', shop_food_type: 'Chicken Satay', slug: 'sate-haji-ahmad',
+    shop_address: 'Jl. Raya Bogor KM 30, Cimanggis', shop_open: true, status: 'open',
+    distance_km: 4.5, delivery_enabled: true, delivery_fee: 0, pickup_time: '20 min', rating: 4.9, reviews: 312,
+    popular: true, has_promo: false, accent: '#c15d15',
+    menu: [
+      { name: 'Sate Ayam 10 Tusuk', img: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=200', orders: 890, price: 25000, prepTime: 20, tags: ['satay', 'sate', 'chicken', 'ayam'] },
+      { name: 'Lontong', img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=200', orders: 340, price: 5000, prepTime: 5, tags: ['rice', 'lontong', 'rice cake'] },
+      { name: 'Es Jeruk', img: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=200', orders: 210, price: 8000, prepTime: 3, tags: ['drinks', 'juice', 'orange'] },
+    ],
+  },
+  {
+    id: 'demo-4', shop_name: 'Bakso Solo Mas Budi', shop_food_type: 'Bakso & Mie Ayam', slug: 'bakso-mas-budi',
+    shop_address: 'Jl. Nusantara Raya 8, Beji, Depok', shop_open: false, status: 'closed', opens_at: '9:00 AM',
+    distance_km: 3.1, delivery_enabled: true, delivery_fee: 6000, pickup_time: '15 min', rating: 4.7, reviews: 203,
+    popular: true, has_promo: true, accent: '#e8992c',
+    menu: [
+      { name: 'Bakso Urat Jumbo', img: 'https://images.unsplash.com/photo-1583835746434-cf1534674b41?w=200', orders: 540, price: 15000, promoPrice: 10000, prepTime: 10, tags: ['bakso', 'meatball', 'soup'] },
+      { name: 'Mie Ayam Komplit', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200', orders: 380, price: 15000, prepTime: 10, tags: ['noodle', 'mie ayam', 'chicken noodle'] },
+      { name: 'Es Teh Manis', img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=200', orders: 290, price: 5000, prepTime: 3, tags: ['drinks', 'tea', 'iced tea'] },
+      { name: 'Pangsit Goreng', img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200', orders: 120, price: 8000, prepTime: 8, tags: ['snacks', 'fried', 'wonton'] },
+    ],
+  },
+  {
+    id: 'demo-5', shop_name: 'Martabak San Francisco', shop_food_type: 'Martabak', slug: 'martabak-sf',
+    shop_address: 'Jl. Dewi Sartika 22, Depok', shop_open: true, status: 'open',
+    distance_km: 1.8, delivery_enabled: true, delivery_fee: 0, pickup_time: '20 min', rating: 4.7, reviews: 178,
+    popular: true, has_promo: true, accent: '#8a0f8a',
+    menu: [
+      { name: 'Martabak Manis Coklat', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200', orders: 620, price: 35000, promoPrice: 25000, prepTime: 15, tags: ['martabak', 'chocolate', 'dessert', 'snacks'] },
+      { name: 'Martabak Telur', img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200', orders: 410, price: 30000, prepTime: 15, tags: ['martabak', 'egg', 'savory'] },
+      { name: 'Es Cendol', img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=200', orders: 195, price: 8000, prepTime: 5, tags: ['drinks', 'cendol', 'dessert'] },
+    ],
+  },
+  {
+    id: 'demo-6', shop_name: 'Kebab Turki Baba Rafi', shop_food_type: 'Kebab', slug: 'kebab-baba-rafi',
+    shop_address: 'Jl. Juanda 15, Depok', shop_open: true, status: 'open',
+    distance_km: 2.2, delivery_enabled: false, delivery_fee: 0, pickup_time: '12 min', rating: 4.5, reviews: 156,
+    popular: false, has_promo: false, accent: '#FF6B35',
+    menu: [
+      { name: 'Kebab Original', img: 'https://images.unsplash.com/photo-1561651823-34feb02250e4?w=200', orders: 480, price: 22000, prepTime: 10, tags: ['kebab', 'wrap', 'street food'] },
+      { name: 'Burger Beef', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200', orders: 320, price: 28000, promoPrice: 20000, prepTime: 12, tags: ['burger', 'beef', 'street food'] },
+      { name: 'Es Lemon Tea', img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=200', orders: 150, price: 8000, prepTime: 3, tags: ['drinks', 'tea', 'lemon'] },
+    ],
+  },
+  {
+    id: 'demo-7', shop_name: 'Juice Bar Segar', shop_food_type: 'Fresh Juice', slug: 'juice-bar-segar',
+    shop_address: 'Jl. Kemang Raya 88, Jakarta Selatan', shop_open: true, status: 'open',
+    distance_km: 5.4, delivery_enabled: true, delivery_fee: 10000, pickup_time: '8 min', rating: 4.8, reviews: 94,
+    popular: false, has_promo: true, accent: '#e8b92c',
+    menu: [
+      { name: 'Jus Alpukat', img: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=200', orders: 380, price: 18000, promoPrice: 13000, prepTime: 5, tags: ['juice', 'avocado', 'drinks'] },
+      { name: 'Smoothie Bowl', img: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=200', orders: 260, price: 25000, prepTime: 7, tags: ['smoothie', 'bowl', 'healthy', 'drinks'] },
+      { name: 'Jus Mangga', img: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=200', orders: 210, price: 15000, prepTime: 3, tags: ['juice', 'mango', 'drinks'] },
+    ],
+  },
+]
+
+const VENDOR_STATUS_CONFIG = {
+  open: { color: '#22c55e', dot: '#22c55e' },
+  closed: { color: '#ef4444', dot: '#ef4444' },
+}
+
 /* ─── Contact Page Data ─── */
 const SUPPORT_CATEGORIES = [
   { icon: '🏪', title: 'Store Setup', description: 'Get help setting up your digital storefront', responseTime: '< 2 hours', faqs: [
@@ -869,6 +960,12 @@ export default function App() {
   const [paymentProof, setPaymentProof] = useState(null)
   const [copied, setCopied] = useState(false)
   const [currentPage, setCurrentPage] = useState(null)
+  // Local search
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchFilter, setSearchFilter] = useState('all') // all, free_delivery, open_now, popular, pickup, delivery
+  const [searchActive, setSearchActive] = useState(false)
   const [regForm, setRegForm] = useState({ name: '', url: '', whatsapp: '', email: '' })
   const [regSubmitted, setRegSubmitted] = useState(false)
   const [billingCycle, setBillingCycle] = useState('monthly')
@@ -968,6 +1065,92 @@ export default function App() {
     })
   }, [userAccount?.country_code])
 
+  // Local search — match against menu item tags, return best matching item image
+  useEffect(() => {
+    if (!searchActive) { setSearchResults([]); return }
+    const q = searchQuery.toLowerCase().trim()
+    setSearchLoading(true)
+    const fetchVendors = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vendor_accounts')
+          .select('id, shop_name, shop_food_type, slug, shop_address, shop_open, shop_logo, status')
+          .eq('status', 'active')
+        if (error || !data || data.length === 0) throw new Error('no data')
+        return data.map(v => ({
+          ...v, distance_km: Math.round((Math.random() * 10 + 0.5) * 10) / 10,
+          delivery_fee: Math.floor(Math.random() * 12000), pickup_time: `${Math.floor(Math.random() * 15 + 10)} min`,
+          rating: Math.round((Math.random() * 1.5 + 3.5) * 10) / 10, reviews: Math.floor(Math.random() * 200 + 20),
+          popular: Math.random() > 0.5, has_promo: Math.random() > 0.7, accent: '#FFD600',
+          status: v.shop_open ? 'open' : 'closed', menu: [],
+        }))
+      } catch { return null }
+    }
+    fetchVendors().then(supabaseVendors => {
+      const allVendors = supabaseVendors ? [...supabaseVendors, ...MOCK_VENDORS] : MOCK_VENDORS
+      let results = allVendors.map(v => {
+        // Find best matching menu item for the search query
+        let bestItem = null
+        if (q && v.menu && v.menu.length > 0) {
+          // First try: match on tags
+          const tagged = v.menu.filter(m => m.tags && m.tags.some(t => t.includes(q) || q.includes(t)))
+          if (tagged.length > 0) bestItem = tagged.sort((a, b) => b.orders - a.orders)[0]
+        }
+        // Default: most ordered item
+        if (!bestItem && v.menu && v.menu.length > 0) bestItem = [...v.menu].sort((a, b) => b.orders - a.orders)[0]
+        return { ...v, _matchedItem: bestItem }
+      })
+      // Exclude unfulfilled listings — must have matched item with photo, name, price
+      results = results.filter(v => {
+        const m = v._matchedItem
+        if (!m) return false
+        if (!m.img || !m.name || !m.price) return false
+        if (!v.shop_name || !v.shop_food_type) return false
+        return true
+      })
+      // Filter: vendor matches if shop name/type matches OR any menu tag matches
+      if (q) {
+        results = results.filter(v =>
+          v.shop_name.toLowerCase().includes(q) ||
+          v.shop_food_type.toLowerCase().includes(q) ||
+          (v.menu || []).some(m => m.tags && m.tags.some(t => t.includes(q) || q.includes(t))) ||
+          (v.menu || []).some(m => m.name.toLowerCase().includes(q))
+        )
+      }
+      // Filters
+      if (searchFilter === 'discounted') results = results.filter(v => (v.menu || []).some(m => m.promoPrice))
+      if (searchFilter === 'free_delivery') results = results.filter(v => v.delivery_enabled && v.delivery_fee === 0)
+      if (searchFilter === 'near_me') results = results.filter(v => v.distance_km <= 3)
+      // For discounted filter, pick the discounted item as matched item
+      if (searchFilter === 'discounted') {
+        results = results.map(v => {
+          const discounted = (v.menu || []).filter(m => m.promoPrice).sort((a, b) => b.orders - a.orders)
+          return { ...v, _matchedItem: discounted[0] || v._matchedItem }
+        })
+      }
+      results.sort((a, b) => {
+        // Closed always last
+        if (a.status === 'closed' && b.status !== 'closed') return 1
+        if (a.status !== 'closed' && b.status === 'closed') return -1
+        if (searchFilter === 'near_me') return (a.distance_km || 99) - (b.distance_km || 99)
+        // Free delivery first
+        const aFree = a.delivery_enabled && a.delivery_fee === 0
+        const bFree = b.delivery_enabled && b.delivery_fee === 0
+        if (aFree && !bFree) return -1
+        if (!aFree && bFree) return 1
+        // Then discounted
+        const aDiscount = (a.menu || []).some(m => m.promoPrice)
+        const bDiscount = (b.menu || []).some(m => m.promoPrice)
+        if (aDiscount && !bDiscount) return -1
+        if (!aDiscount && bDiscount) return 1
+        // Then by distance
+        return (a.distance_km || 99) - (b.distance_km || 99)
+      })
+      setSearchResults(results)
+      setSearchLoading(false)
+    })
+  }, [searchQuery, searchFilter, searchActive])
+
   // Contact page counter animation
   useEffect(() => {
     if (currentPage !== 'contact') return
@@ -1056,21 +1239,22 @@ export default function App() {
                 const themes = [
                   { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
                   { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
-                  { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png' },
+                  { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_31_54%20PM.png' },
                   { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'] },
                   { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
                   { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'] },
                   { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496' },
-                  { id: 'martabak', label: 'Martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png' },
-                  { id: 'escendol', label: 'Es Cendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png' },
+                  { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png' },
+                  { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png' },
                   { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png' },
-                  { id: 'pecellele', label: 'Pecel Lele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568' },
+                  { id: 'pecellele', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568' },
                   { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png' },
-                  { id: 'cilok', label: 'Cilok Cimol', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png' },
-                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
-                  { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png' },
-                  { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png' },
-                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png' },
+                  { id: 'cilok', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png' },
+                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
+                  { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png' },
+                  { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png' },
+                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_52_09%20PM.png' },
+                  { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png' },
                 ]
                 const renderCard = (theme, i) => (
                   <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
@@ -1099,7 +1283,7 @@ export default function App() {
               </div>
               <button onClick={() => { const t = [
                 { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433' },
-              ]; setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
+              ]; setSelectedApp(null); setSelectedCategory(null); setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
             </div>
           </div>
@@ -2321,21 +2505,21 @@ export default function App() {
             const allThemes = [
               { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'], isNew: false },
               { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'], isNew: false },
-              { id: 'satay', label: 'Satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', isNew: false },
+              { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_31_54%20PM.png', isNew: false },
               { id: 'juice', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'], isNew: false },
               { id: 'chicken', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'], isNew: false },
               { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'], isNew: false },
               { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', isNew: false },
-              { id: 'pecellele', label: 'Pecel Lele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', isNew: false },
+              { id: 'pecellele', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', isNew: false },
               { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', isNew: false },
-              { id: 'martabak', label: 'Martabak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', isNew: true },
-              { id: 'escendol', label: 'Es Cendol', accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', isNew: true },
+              { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', isNew: true },
+              { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', isNew: true },
               { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', isNew: true },
-              { id: 'cilok', label: 'Cilok Cimol', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', isNew: true },
-              { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'], isNew: true },
-              { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', isNew: true },
-              { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', isNew: true },
-              { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', isNew: false },
+              { id: 'cilok', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', isNew: true },
+              { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'], isNew: true },
+              { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', isNew: true },
+              { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', isNew: true },
+              { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_52_09%20PM.png', isNew: false },
               { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', isNew: false },
             ]
             const filtered = themeLibSearch ? allThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : allThemes
@@ -2558,19 +2742,20 @@ export default function App() {
                 <div style={{ marginBottom: 28, animation: 'fadeSlideIn 0.6s ease-out 0.2s both' }}>
                   <h2 style={{ fontSize: 20, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>How can we help?</h2>
                   <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>Select a category to find answers or submit a ticket</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {SUPPORT_CATEGORIES.map((cat, i) => (
                       <button
                         key={i}
                         onClick={() => { setContactCategory(cat); setContactStep('faq'); setContactFaqOpen([]); }}
-                        style={{ background: '#fff', border: '2px solid #f0f0f0', borderRadius: 16, padding: 16, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', minHeight: 44 }}
+                        style={{ background: '#fff', border: '2px solid #f0f0f0', borderRadius: 16, padding: '14px 18px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#FFD600'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,214,0,0.15)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0f0f0'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                       >
-                        <div style={{ fontSize: 24, marginBottom: 8 }}>{cat.icon}</div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>{cat.title}</div>
-                        <div style={{ fontSize: 11, color: '#888', marginBottom: 8, lineHeight: 1.4 }}>{cat.description}</div>
-                        <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10 }}>{cat.responseTime}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>{cat.title}</div>
+                          <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>{cat.description}</div>
+                        </div>
+                        <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>{cat.responseTime}</span>
                       </button>
                     ))}
                   </div>
@@ -3566,6 +3751,175 @@ export default function App() {
     )
   }
 
+  /* ─── Search Results Page ─── */
+  if (searchActive) {
+    return (
+      <div style={styles.page}>
+        <style>{`@keyframes heartbeat { 0%, 100% { transform: scale(1); opacity: 1; } 15% { transform: scale(1.12); opacity: 1; } 30% { transform: scale(1); opacity: 0.85; } 45% { transform: scale(1.08); opacity: 1; } 60% { transform: scale(1); } }
+@keyframes ping { 0% { transform: scale(1); opacity: 0.8; } 75% { transform: scale(2.5); opacity: 0; } 100% { transform: scale(2.5); opacity: 0; } }
+@keyframes fireFloat { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(-8px) scale(1.2); opacity: 0.8; } 100% { transform: translateY(-16px) scale(0.6); opacity: 0; } }`}</style>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 0' }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', letterSpacing: -0.3 }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
+          <button onClick={() => { setSearchActive(false); setSearchQuery(''); setSearchResults([]); setSearchFilter('all') }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+          </button>
+        </div>
+
+        {/* Search bar */}
+        <div style={{ padding: '8px 16px 0' }}>
+          <div style={{ position: 'relative' }}>
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              autoFocus
+              placeholder="Search food, drinks, services..."
+              style={{ width: '100%', padding: '12px 40px 12px 38px', borderRadius: 14, border: '1.5px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
+              onFocus={e => e.target.style.borderColor = '#FFD600'}
+              onBlur={e => e.target.style.borderColor = '#e8e8e8'}
+            />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#bbb" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: 16, color: '#ccc', cursor: 'pointer', padding: 2 }}>✕</button>
+            )}
+          </div>
+        </div>
+
+
+        {/* Filter toggles */}
+        <div style={{ display: 'flex', padding: '0 16px', borderBottom: '1px solid #f0f0f0' }}>
+          {[{ id: 'all', label: 'Menu Items' }, { id: 'discounted', label: 'Discounted' }, { id: 'free_delivery', label: 'Free Delivery' }, { id: 'near_me', label: 'Near Me' }].map(f => (
+            <button key={f.id} onClick={() => setSearchFilter(f.id)}
+              style={{ flex: 1, padding: '12px 0 9px', background: 'none', border: 'none', borderBottom: searchFilter === f.id ? '2.5px solid #FFD600' : '2.5px solid transparent', color: searchFilter === f.id ? '#1a1a1a' : '#bbb', fontSize: 12, fontWeight: searchFilter === f.id ? 800 : 600, cursor: 'pointer', transition: 'all 0.2s', minHeight: 44 }}
+            >{f.label}</button>
+          ))}
+        </div>
+
+        {/* Spacer */}
+        <div style={{ height: 1, background: '#f0f0f0', margin: '0 16px' }} />
+
+        {/* Results area */}
+        <div style={{ padding: '12px 16px 40px' }}>
+
+
+          {/* Count */}
+          {searchQuery && !searchLoading && (
+            <div style={{ fontSize: 12, color: '#aaa', fontWeight: 500, marginBottom: 10 }}>
+              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+            </div>
+          )}
+
+          {searchLoading && <div style={{ textAlign: 'center', padding: 24, color: '#ccc', fontSize: 13 }}>Searching...</div>}
+
+          {/* Listings */}
+          {!searchLoading && searchResults.map((vendor, idx) => {
+            const st = VENDOR_STATUS_CONFIG[vendor.status] || VENDOR_STATUS_CONFIG.closed
+            const item = vendor._matchedItem
+            return (
+              <div key={vendor.id} style={{ marginBottom: 10 }}>
+                <div
+                  onClick={() => window.open(`${window.location.origin}/food/basic/?vendor=${vendor.slug || vendor.id}`, '_blank')}
+                  style={{ background: '#fff', borderRadius: 14, padding: '12px 12px 10px', cursor: 'pointer', opacity: vendor.status === 'closed' ? 0.5 : 1, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
+                >
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {/* Left: food image */}
+                    <div style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#f0f0f0', position: 'relative' }}>
+                      {item && item.img ? (
+                        <img src={item.img} alt={item.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${vendor.accent || '#FFD600'}30, ${vendor.accent || '#FFD600'}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: 28, opacity: 0.3 }}>🍽</span>
+                        </div>
+                      )}
+                      {/* Star rating on image */}
+                      <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.55)', borderRadius: 6, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <span style={{ color: '#FFD600', fontSize: 10 }}>★</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>{vendor.rating}</span>
+                      </div>
+                      {/* Promo badge with fire */}
+                      {item && item.promoPrice && (
+                        <div style={{ position: 'absolute', bottom: 6, left: 0 }}>
+                          <div style={{ position: 'absolute', top: -12, left: 4 }}>
+                            <span style={{ position: 'absolute', fontSize: 10, animation: 'fireFloat 1.2s ease-out infinite' }}>🔥</span>
+                            <span style={{ position: 'absolute', left: 8, fontSize: 8, animation: 'fireFloat 1.2s ease-out 0.4s infinite' }}>🔥</span>
+                            <span style={{ position: 'absolute', left: 16, fontSize: 10, animation: 'fireFloat 1.2s ease-out 0.8s infinite' }}>🔥</span>
+                          </div>
+                          <div style={{ background: '#FFD600', borderRadius: '0 4px 4px 0', padding: '0px 8px', height: 14, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#1a1a1a', lineHeight: 1 }}>Promo</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Name + distance */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{vendor.shop_name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#777', flexShrink: 0 }}>📍{vendor.distance_km} km</span>
+                      </div>
+                      {/* Type + item name */}
+                      <div style={{ fontSize: 12, color: '#777', marginBottom: 3 }}>{vendor.shop_food_type}</div>
+                      {item && <div style={{ fontSize: 12, fontWeight: 600, color: '#444', marginBottom: 4 }}>{item.name}</div>}
+                      {/* Price */}
+                      {item && item.price && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {item.promoPrice ? (
+                            <>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>Rp {item.promoPrice.toLocaleString()}</span>
+                              <span style={{ fontSize: 12, color: '#dc2626', textDecoration: 'line-through' }}>Rp {item.price.toLocaleString()}</span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>Rp {item.price.toLocaleString()}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Bottom bar — prep + delivery */}
+                  {vendor.status === 'closed' ? (
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#ef4444', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f5f5f5' }}>
+                      Closed {vendor.opens_at ? `· Opens at ${vendor.opens_at}` : ''}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: '#555', display: 'flex', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f5f5f5' }}>
+                      <span>{item && item.prepTime ? `Ready ${item.prepTime} min` : `Ready ${vendor.pickup_time}`}</span>
+                      <span style={{ flex: 1 }} />
+                      {!vendor.delivery_enabled ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Pickup Only</span>
+                      ) : vendor.delivery_fee === 0 ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, animation: 'heartbeat 1.5s ease-in-out infinite' }}>
+                          <img src="https://ik.imagekit.io/nepgaxllc/Untitledwrrssswdqw-removebg-preview.png" alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                          <span style={{ fontSize: 15, fontWeight: 800, color: '#FFD600', textShadow: '0 0 1px #000, 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000' }}>Free Delivery</span>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Delivery Est. Rp {vendor.delivery_fee.toLocaleString()}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Empty */}
+          {!searchLoading && searchQuery && searchResults.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '30px 0' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>No results for "{searchQuery}"</div>
+              <div style={{ fontSize: 12, color: '#999', marginBottom: 12 }}>Try a different search</div>
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {['Nasi Goreng', 'Satay', 'Coffee', 'Bakso'].map(s => (
+                  <button key={s} onClick={() => setSearchQuery(s)} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #eee', background: '#fff', fontSize: 11, fontWeight: 600, color: '#555', cursor: 'pointer' }}>{s}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   /* ─── Home / Landing ─── */
   return (
     <div style={styles.page}>
@@ -3576,6 +3930,25 @@ export default function App() {
           <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
         </div>
         <LangSwitcher locale={locale} setLocale={setLocale} />
+      </div>
+
+      {/* Search bar — under header */}
+      <div style={{ padding: '10px 20px 0' }}>
+        <div style={{ position: 'relative' }}>
+          <input
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); if (!searchActive && e.target.value) setSearchActive(true) }}
+            onFocus={() => setSearchActive(true)}
+            placeholder="What are you craving? 🍜"
+            style={{ width: '100%', padding: '14px 16px 14px 44px', borderRadius: 16, border: '2px solid #f0f0f0', background: '#f8f9fa', color: '#1a1a1a', fontSize: 15, fontWeight: 500, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+            onMouseEnter={e => e.target.style.borderColor = '#FFD600'}
+            onMouseLeave={e => { if (document.activeElement !== e.target) e.target.style.borderColor = '#f0f0f0' }}
+          />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#999" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+          {searchQuery && (
+            <button onClick={() => { setSearchQuery(''); setSearchActive(false); setSearchResults([]); setSearchFilter('all') }} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: 18, color: '#ccc', cursor: 'pointer', padding: 4 }}>✕</button>
+          )}
+        </div>
       </div>
 
       {/* Hero */}

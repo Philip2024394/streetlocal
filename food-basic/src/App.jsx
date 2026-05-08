@@ -283,8 +283,8 @@ function adjustColor(hex, factor) {
 
 const THEME_PRESETS = [
   // Indonesian
-  { id: 'satay', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_02_22%20PM.png', label: '#1 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'] },
-  { id: 'pecellele', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#2 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_31_54%20PM.png', label: '#1 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_37_32%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_37_54%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_38_17%20PM.png'] },
+  { id: 'pecellele', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', label: '#2 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
   { id: 'friedrice', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', label: '#3 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
   { id: 'noodle', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', label: '#4 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
   { id: 'bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', label: '#5 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'] },
@@ -292,14 +292,14 @@ const THEME_PRESETS = [
   { id: 'juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', label: '#7 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'] },
   { id: 'coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
   { id: 'kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', label: '#9 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
-  { id: 'martabak', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
-  { id: 'escendol', isNew: true, accent: '#0D9488', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
+  { id: 'martabak', isNew: true, accent: '#8a0f8a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
+  { id: 'escendol', isNew: true, accent: '#4d8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
   { id: 'ketoprak', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', label: '#12 Ketoprak', category: 'Ketoprak', countries: ['ID'], foodTypes: ['Ketoprak', 'Street Food', 'Indonesian Street Food'] },
-  { id: 'cilok', isNew: true, accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
-  { id: 'ikanbakar', isNew: true, accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
-  { id: 'nasiuduk', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'bebekgoreng', isNew: true, accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
-  { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_47_38%20PM.png', label: '#17 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
+  { id: 'cilok', isNew: true, accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
+  { id: 'ikanbakar', isNew: true, accent: '#e8512c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
+  { id: 'nasiuduk', isNew: true, accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
+  { id: 'bebekgoreng', isNew: true, accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
+  { id: 'burger', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_52_09%20PM.png', label: '#17 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
   { id: 'donut', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', label: '#18 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA'], foodTypes: ['Donuts', 'Coffee'] },
 ]
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
@@ -538,6 +538,7 @@ export default function App() {
   const [themeCountryDrawer, setThemeCountryDrawer] = useState(false)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [domainPage, setDomainPage] = useState(false)
+  const [termsOfListing, setTermsOfListing] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
@@ -1199,7 +1200,7 @@ export default function App() {
         </div>
 
         {/* Enter button — yellow — bottom */}
-        <div style={{ position: 'absolute', bottom: 50, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, gap: 14 }}>
+        <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, gap: 14 }}>
           <style>{`@keyframes landingGlow { 0% { left: -100%; } 100% { left: 200%; } }`}</style>
           {/* Set Location / Enter button */}
           <button onClick={() => {
@@ -1915,7 +1916,7 @@ export default function App() {
                       {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
                       {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
                       {/* Mock View Menu button */}
-                      <div style={{ marginTop: 16, padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 10, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 10, fontWeight: 700, color: '#fff' }}>View Menu</div>
                     </div>
                     {/* Home indicator */}
                     <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
@@ -2063,7 +2064,7 @@ export default function App() {
                   )}
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', textAlign: 'center', padding: '0 10px' }}>{shopName}</div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{shopFoodType}</div>
-                  <div style={{ marginTop: 12, padding: '6px 20px', borderRadius: 8, background: editorColor, fontSize: 9, fontWeight: 700, color: '#fff', transition: 'background 0.2s' }}>View Menu</div>
+                  <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 20px', borderRadius: 8, background: editorColor, fontSize: 9, fontWeight: 700, color: '#fff', transition: 'background 0.2s' }}>View Menu</div>
                 </div>
                 <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
               </div>
@@ -2355,6 +2356,7 @@ export default function App() {
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
                 { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
+                { icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements', onClick: () => { setTermsOfListing(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
@@ -3193,6 +3195,7 @@ export default function App() {
         </div>
       )}
 
+      <style>{`@keyframes newBadgeDance { 0%, 100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.15) rotate(-3deg); } 50% { transform: scale(1) rotate(3deg); } 75% { transform: scale(1.1) rotate(-2deg); } }`}</style>
       {/* ═══ THEME BROWSER PAGE ═══ */}
       {themeBrowser && (() => {
         const countries = [...new Set(THEME_PRESETS.flatMap(t => t.countries))]
@@ -3230,8 +3233,8 @@ export default function App() {
                   <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.03)', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(0,0,0,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
                 </div>
-                <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.08)', color: themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
+                <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#1a1a1a', color: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.4)'}><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
                   {themeCountry !== 'all' && <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, background: '#22c55e', border: '2px solid #1a1a1a' }} />}
                 </button>
               </div>
@@ -3287,12 +3290,13 @@ export default function App() {
 
               {/* Theme card renderer — iPhone frame style */}
               {(() => {
+                const newBadgeDance = { animation: 'newBadgeDance 1.5s ease-in-out infinite' }
                 const renderPhoneCard = (theme) => (
                   <div key={theme.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {/* Theme name header */}
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#1a1a1a', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {theme.label.replace(/^#\d+\s/, '')}
-                      {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>NEW</span>}
+                      {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, display: 'inline-block', ...newBadgeDance }}>NEW</span>}
                       {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>Active</span>}
                     </div>
                     {/* Mini phone frame */}
@@ -3309,7 +3313,7 @@ export default function App() {
                           </div>
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
                           <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)', marginTop: 2, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{theme.category}</div>
-                          <div style={{ marginTop: 8, padding: '3px 12px', borderRadius: 6, background: theme.accent || '#8DC63F', fontSize: 8, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                          <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', padding: '3px 12px', borderRadius: 6, background: theme.accent || '#8DC63F', fontSize: 8, fontWeight: 700, color: '#fff' }}>View Menu</div>
                         </div>
                         <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 30, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
                       </div>
@@ -3381,7 +3385,7 @@ export default function App() {
                             <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span></div>
                             <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
                             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
-                            <button onClick={() => setThemePreviewPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
+                            <button onClick={() => setThemePreviewPage('menu')} style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
                           </div>
                         )}
                         {themePreviewPage === 'menu' && (
@@ -3521,7 +3525,7 @@ export default function App() {
                                 {shopLogoStyle !== 'off' && shopLogo ? (shopLogoStyle === 'bare' ? <img src={shopLogo} alt="" style={{ width: 44, height: 44, objectFit: 'contain', marginBottom: 6 }} /> : <div style={{ width: 40, height: 40, borderRadius: 20, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}><img src={shopLogo} alt="" style={{ width: 34, height: 34, borderRadius: 17, objectFit: 'cover' }} /></div>) : shopLogoStyle !== 'off' ? <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div> : null}
                                 <div style={{ fontSize: 17, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1, padding: '0 8px' }}>{shopName}</div>
                                 <div style={{ fontSize: 9, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
-                                <div style={{ marginTop: 12, padding: '5px 16px', borderRadius: btnR * 0.5, background: bColor, fontSize: 9, fontWeight: 700, color: '#fff', position: 'relative', overflow: 'hidden' }}>{btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 8px ${bColor}80`, borderRadius: btnR * 0.5 }} />}<span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span></div>
+                                <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '5px 16px', borderRadius: 8, background: bColor, fontSize: 9, fontWeight: 700, color: '#fff', overflow: 'hidden' }}>{btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 8px ${bColor}80`, borderRadius: 8 }} />}<span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span></div>
                               </div>
                             </div>
                           )}
@@ -3746,6 +3750,119 @@ export default function App() {
             <div style={{ padding: '8px 16px 28px' }}>
               <button onClick={() => setDomainPage(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Done</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ TERMS OF LISTING PAGE ═══ */}
+      {termsOfListing && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_19_01%20PM.png'} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+          <div style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', padding: '20px 16px 40px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <button onClick={() => setTermsOfListing(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Terms Of Listing</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Search listing requirements & benefits</div>
+              </div>
+            </div>
+
+            {/* Intro */}
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Get Found by Local Customers</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                Your menu items are searchable on StreetLocal.live. When customers search for food near them, your items appear in the results — but only if your listing meets the quality requirements below.
+              </div>
+            </div>
+
+            {/* Required fields */}
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Required For Each Menu Item</div>
+              {[
+                { field: 'Item Photo', desc: 'Clear, appetising photo of the dish. Items without photos will NOT appear in search results.' },
+                { field: 'Item Name', desc: 'Descriptive name that customers can search for (e.g. "Nasi Goreng Spesial" not "Item 1").' },
+                { field: 'Item Price', desc: 'Accurate current price. Promo/discounted items will be highlighted in search.' },
+                { field: 'Item Description', desc: 'Short description of ingredients or what the dish includes.' },
+                { field: 'Category', desc: 'Correct category (Meal, Drink, Snack, Dessert, Extra) for filtering.' },
+                { field: 'Prep Time', desc: 'Estimated preparation time in minutes. Shown to customers before ordering.' },
+              ].map((r, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, marginTop: 1 }}>✓</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.field}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Shop requirements */}
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Shop Profile Requirements</div>
+              {[
+                { field: 'Shop Name', desc: 'Your business name as customers know it.' },
+                { field: 'WhatsApp Number', desc: 'Active WhatsApp for receiving orders.' },
+                { field: 'Shop Address', desc: 'Accurate address for distance calculation and customer directions.' },
+                { field: 'Opening Hours', desc: 'Set your daily schedule so customers know when you are open.' },
+                { field: 'Food Type', desc: 'Your main food category (e.g. Indonesian, Coffee, Satay).' },
+                { field: 'Delivery Settings', desc: 'Configure delivery radius and pricing, or set to Pickup Only.' },
+              ].map((r, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, marginTop: 1 }}>✓</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.field}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* What you get */}
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>What Completed Listings Achieve</div>
+              {[
+                'Your items appear when customers search by food name, type, or category',
+                'Most ordered items are shown first with their photo — the food sells itself',
+                'Promo pricing is highlighted with a flashing animation to attract attention',
+                'Free delivery vendors are listed first and highlighted prominently',
+                'Customers see your prep time, distance, and delivery cost before clicking',
+                'Your listing links directly to your app — one tap to browse your full menu',
+              ].map((b, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 14, color: '#FFD600', marginTop: 1 }}>★</span>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{b}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Customer expectations */}
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Customer Expectations</div>
+              {[
+                'Photos should match the actual food served — misleading images damage trust',
+                'Prices must be current — outdated pricing creates a bad customer experience',
+                'Prep times should be realistic — underestimating leads to negative reviews',
+                'Keep your open/close status accurate — showing "open" when closed frustrates customers',
+                'Respond promptly to WhatsApp orders — customers expect confirmation within minutes',
+              ].map((e, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{e}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Important notice */}
+            <div style={{ background: 'rgba(239,68,68,0.1)', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid rgba(239,68,68,0.2)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Important</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                Menu items missing a photo, name, price, or category will be excluded from search results. Incomplete listings do not qualify for search visibility. Keep your menu complete and up to date to maximise orders.
+              </div>
+            </div>
+
+            <button onClick={() => setTermsOfListing(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Got It</button>
           </div>
         </div>
       )}
