@@ -570,6 +570,9 @@ export default function App() {
   const [heroSize, setHeroSize] = useState(() => localStorage.getItem('vendorbasic_heroSize') || 'normal') // normal | large | xl
   const [heroFont, setHeroFont] = useState(() => localStorage.getItem('vendorbasic_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
   const [heroColor, setHeroColor] = useState(() => localStorage.getItem('vendorbasic_heroColor') || '#ffffff')
+  const [heroSubColor, setHeroSubColor] = useState(() => localStorage.getItem('vendorbasic_heroSubColor') || '') // empty = auto from heroColor
+  const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('vendorbasic_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
+  const [heroEditor, setHeroEditor] = useState(false) // full editor open
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
   const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorbasic_shopAddress') || 'Jl. Malioboro, Yogyakarta')
@@ -680,6 +683,8 @@ export default function App() {
     }
   }, [heroFont])
   useEffect(() => { localStorage.setItem('vendorbasic_heroColor', heroColor) }, [heroColor])
+  useEffect(() => { localStorage.setItem('vendorbasic_heroSubColor', heroSubColor) }, [heroSubColor])
+  useEffect(() => { localStorage.setItem('vendorbasic_heroEffect', heroEffect) }, [heroEffect])
   useEffect(() => { localStorage.setItem('vendorbasic_shopPhone', shopPhone) }, [shopPhone])
   useEffect(() => { saveJSON('vendorbasic_shopOpen', shopOpen) }, [shopOpen])
   useEffect(() => { localStorage.setItem('vendorbasic_shopAddress', shopAddress) }, [shopAddress])
@@ -1072,20 +1077,54 @@ export default function App() {
             <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
           ) : null}
 
-          {/* Shop name */}
+          {/* Shop name + tagline + city */}
           {(() => {
             const HERO_FONTS = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
             const HERO_SIZES = { normal: { title: 42, sub: 18, city: 12 }, large: { title: 52, sub: 22, city: 14 }, xl: { title: 62, sub: 26, city: 16 } }
             const sz = HERO_SIZES[heroSize] || HERO_SIZES.normal
             const ff = HERO_FONTS[heroFont] || HERO_FONTS.system
+            const subC = heroSubColor || (heroColor === '#ffffff' ? 'rgba(255,255,255,0.9)' : heroColor)
+            const cityC = heroSubColor || (heroColor === '#ffffff' ? 'rgba(255,255,255,0.7)' : heroColor)
+            const EFFECTS = {
+              shadow: { textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', WebkitTextStroke: '1px rgba(0,0,0,0.3)' },
+              glow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 0 60px ${heroColor}20, 0 2px 4px rgba(0,0,0,0.9)` },
+              runGlow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9)`, animation: 'heroRunGlow 3s ease-in-out infinite' },
+              outline: { WebkitTextStroke: `2px ${heroColor}`, color: 'transparent', textShadow: '0 2px 8px rgba(0,0,0,0.5)' },
+              neon: { textShadow: `0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80, 0 0 82px ${heroColor}40`, animation: 'heroNeonFlicker 4s ease-in-out infinite' },
+              none: { textShadow: 'none' },
+            }
+            const fx = EFFECTS[heroEffect] || EFFECTS.shadow
+            // Smart word wrapping: split name into lines by word fitting
+            const nameLines = shopName.split(' ')
+            const maxCharsPerLine = sz.title >= 52 ? 10 : 14
+            const lines = []
+            let currentLine = ''
+            nameLines.forEach(word => {
+              if (currentLine && (currentLine + ' ' + word).length > maxCharsPerLine) {
+                lines.push(currentLine)
+                currentLine = word
+              } else {
+                currentLine = currentLine ? currentLine + ' ' + word : word
+              }
+            })
+            if (currentLine) lines.push(currentLine)
+
             return (
               <>
-                <h1 style={{ textAlign: 'center', marginBottom: 8, fontSize: sz.title, fontWeight: 800, color: heroColor, fontFamily: ff, WebkitTextStroke: '1px rgba(0,0,0,0.3)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)', padding: '0 20px', lineHeight: 1.1, letterSpacing: -0.5 }}>{shopName}</h1>
+                <style>{`
+                  @keyframes heroRunGlow { 0%, 100% { text-shadow: 0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 20px ${heroColor}, 0 0 50px ${heroColor}60, 0 0 80px ${heroColor}30, 0 2px 4px rgba(0,0,0,0.9); } }
+                  @keyframes heroNeonFlicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80, 0 0 82px ${heroColor}40; } 20%, 24%, 55% { text-shadow: none; } }
+                `}</style>
+                <div style={{ textAlign: 'center', marginBottom: 8, padding: '0 16px' }}>
+                  {lines.map((line, i) => (
+                    <div key={i} style={{ fontSize: sz.title, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ff, lineHeight: 1.15, letterSpacing: -0.5, ...fx }}>{line}</div>
+                  ))}
+                </div>
                 {shopFoodType && (
-                  <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: sz.sub, fontWeight: 600, color: heroColor === '#ffffff' ? 'rgba(255,255,255,0.9)' : heroColor, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1, opacity: heroColor === '#ffffff' ? 1 : 0.85 }}>{shopFoodType}</h2>
+                  <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: sz.sub, fontWeight: 600, color: subC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1, opacity: heroSubColor ? 1 : 0.85 }}>{shopFoodType}</h2>
                 )}
                 {(shopCity || shopCountry) && (
-                  <p style={{ textAlign: 'center', marginBottom: 40, fontSize: sz.city, fontWeight: 600, color: heroColor === '#ffffff' ? 'rgba(255,255,255,0.7)' : heroColor, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', opacity: heroColor === '#ffffff' ? 1 : 0.7 }}>
+                  <p style={{ textAlign: 'center', marginBottom: 40, fontSize: sz.city, fontWeight: 600, color: cityC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', opacity: heroSubColor ? 1 : 0.7 }}>
                     {[shopCity, shopCountry].filter(Boolean).join(', ')}
                   </p>
                 )}
@@ -1650,6 +1689,166 @@ export default function App() {
             </div>{/* close single card */}
           </div>
         </div>
+        )
+      })()}
+
+      {/* ═══ HERO TEXT EDITOR ═══ */}
+      {heroEditor && (() => {
+        const HERO_FONTS_E = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
+        const HERO_SIZES_E = { normal: { title: 28, sub: 13, city: 9 }, large: { title: 34, sub: 16, city: 10 }, xl: { title: 40, sub: 19, city: 12 } }
+        const szE = HERO_SIZES_E[heroSize] || HERO_SIZES_E.normal
+        const ffE = HERO_FONTS_E[heroFont] || HERO_FONTS_E.system
+        const subC = heroSubColor || (heroColor === '#ffffff' ? 'rgba(255,255,255,0.9)' : heroColor)
+        // Smart line break preview
+        const maxChars = szE.title >= 34 ? 10 : 14
+        const words = shopName.split(' ')
+        const pLines = []
+        let cur = ''
+        words.forEach(w => { if (cur && (cur + ' ' + w).length > maxChars) { pLines.push(cur); cur = w } else { cur = cur ? cur + ' ' + w : w } })
+        if (cur) pLines.push(cur)
+        const lineWarning = pLines.length > 3
+        const charWarning = shopName.length > 20
+
+        const EFFECTS_LIST = [
+          { id: 'shadow', label: 'Shadow', desc: 'Classic drop shadow' },
+          { id: 'glow', label: 'Glow', desc: 'Soft color glow' },
+          { id: 'runGlow', label: 'Pulse Glow', desc: 'Animated breathing glow' },
+          { id: 'outline', label: 'Outline', desc: 'Hollow text with stroke' },
+          { id: 'neon', label: 'Neon', desc: 'Neon sign flicker' },
+          { id: 'none', label: 'None', desc: 'Clean, no effects' },
+        ]
+        const EFFECTS_PREVIEW = {
+          shadow: { textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7)' },
+          glow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40` },
+          runGlow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40`, animation: 'heroRunGlow 3s ease-in-out infinite' },
+          outline: { WebkitTextStroke: `2px ${heroColor}`, color: 'transparent' },
+          neon: { textShadow: `0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}` },
+          none: {},
+        }
+        const fxP = EFFECTS_PREVIEW[heroEffect] || EFFECTS_PREVIEW.shadow
+        const COLOR_SWATCHES = ['#ffffff', '#f5f5f5', '#FACC15', '#FFD600', '#FF6B35', '#EF4444', '#8B0000', '#DC2626', '#22c55e', '#0D9488', '#3B82F6', '#1E40AF', '#8B5CF6', '#A855F7', '#F472B6', '#DB2777', '#000000', '#374151']
+
+        const renderColorPicker = (current, setter, label) => (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
+              {COLOR_SWATCHES.map(c => (
+                <button key={c} onClick={() => setter(c)} style={{ width: 28, height: 28, borderRadius: 14, border: current === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, boxShadow: current === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input key={current} defaultValue={current} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setter(v) } }} />
+              <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setter(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+            </div>
+          </div>
+        )
+
+        return (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 500, background: '#0a0a0a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+              <button onClick={() => setHeroEditor(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Customise your landing page brand</div>
+              </div>
+              <button onClick={() => setHeroEditor(false)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+            </div>
+
+            {/* Live Preview — uses actual theme background */}
+            <div style={{ position: 'relative', height: 220, flexShrink: 0, overflow: 'hidden' }}>
+              <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+              <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}>
+                <style>{`
+                  @keyframes heroRunGlow { 0%, 100% { text-shadow: 0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 20px ${heroColor}, 0 0 50px ${heroColor}60, 0 0 80px ${heroColor}30, 0 2px 4px rgba(0,0,0,0.9); } }
+                  @keyframes heroNeonFlicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80; } 20%, 24%, 55% { text-shadow: none; } }
+                `}</style>
+                {pLines.map((line, i) => (
+                  <div key={i} style={{ fontSize: szE.title, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ffE, lineHeight: 1.15, letterSpacing: -0.5, textAlign: 'center', ...fxP }}>{line}</div>
+                ))}
+                {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
+                {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
+              </div>
+              {/* Line count indicator */}
+              <div style={{ position: 'absolute', bottom: 6, right: 8, zIndex: 3, fontSize: 10, fontWeight: 700, color: lineWarning ? '#EF4444' : '#22c55e', background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: 6 }}>
+                {pLines.length} line{pLines.length !== 1 ? 's' : ''} {lineWarning ? '— too many!' : ''} · {shopName.length}/20 chars
+              </div>
+            </div>
+
+            {/* Controls — scrollable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px', background: '#111' }}>
+
+              {/* Shop Name Input */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Shop Name</span>
+                  <span style={{ fontSize: 11, color: charWarning ? '#EF4444' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{shopName.length}/20</span>
+                </div>
+                <input value={shopName} maxLength={20} onChange={e => setShopName(e.target.value)} placeholder="Your shop name" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: charWarning ? '2px solid #EF4444' : '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 16, fontWeight: 700, outline: 'none', fontFamily: ffE }} />
+                {lineWarning && <div style={{ fontSize: 11, color: '#EF4444', marginTop: 4, fontWeight: 600 }}>Name will stack to {pLines.length} lines. Try shorter words or a smaller size.</div>}
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Preview: {pLines.map((l, i) => (i > 0 ? ' / ' : '') + `"${l}"`)}</div>
+              </div>
+
+              {/* Size */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Size</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {[{ id: 'normal', label: 'Normal', px: '42px' }, { id: 'large', label: 'Large', px: '52px' }, { id: 'xl', label: 'Extra Large', px: '62px' }].map(s => (
+                  <button key={s.id} onClick={() => setHeroSize(s.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: heroSize === s.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: heroSize === s.id ? `${accent}20` : 'rgba(255,255,255,0.04)', color: heroSize === s.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                    <div>{s.label}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{s.px}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Font */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Font</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
+                {[
+                  { id: 'system', label: 'Default', ff: '-apple-system, sans-serif' },
+                  { id: 'nunito', label: 'Rounded', ff: '"Nunito", sans-serif' },
+                  { id: 'poppins', label: 'Bold', ff: '"Poppins", sans-serif' },
+                  { id: 'playfair', label: 'Elegant', ff: '"Playfair Display", serif' },
+                  { id: 'caveat', label: 'Handwritten', ff: '"Caveat", cursive' },
+                  { id: 'bebas', label: 'Street', ff: '"Bebas Neue", sans-serif' },
+                ].map(f => (
+                  <button key={f.id} onClick={() => setHeroFont(f.id)} style={{ padding: '10px 6px', borderRadius: 10, border: heroFont === f.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: f.ff, background: heroFont === f.id ? `${accent}20` : 'rgba(255,255,255,0.04)', color: heroFont === f.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>{f.label}</button>
+                ))}
+              </div>
+
+              {/* Effects */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Effect</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 14 }}>
+                {EFFECTS_LIST.map(fx => (
+                  <button key={fx.id} onClick={() => setHeroEffect(fx.id)} style={{ padding: '10px 8px', borderRadius: 10, border: heroEffect === fx.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: heroEffect === fx.id ? `${accent}20` : 'rgba(255,255,255,0.04)', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: heroEffect === fx.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{fx.label}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{fx.desc}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Title Color */}
+              {renderColorPicker(heroColor, setHeroColor, 'Title Color')}
+
+              {/* Sub-text Color */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Sub-text Color</span>
+                {heroSubColor && <button onClick={() => setHeroSubColor('')} style={{ background: 'none', border: 'none', color: accent, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>Reset to auto</button>}
+              </div>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
+                {COLOR_SWATCHES.map(c => (
+                  <button key={c} onClick={() => setHeroSubColor(c)} style={{ width: 28, height: 28, borderRadius: 14, border: heroSubColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, boxShadow: heroSubColor === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                <input key={heroSubColor} defaultValue={heroSubColor} placeholder="Auto from title" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroSubColor(v) } }} />
+                <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroSubColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+              </div>
+
+              {/* Reset all */}
+              <button onClick={() => { setHeroSize('normal'); setHeroFont('system'); setHeroColor('#ffffff'); setHeroSubColor(''); setHeroEffect('shadow') }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 20 }}>Reset All to Default</button>
+            </div>
+          </div>
         )
       })()}
 
@@ -2673,60 +2872,15 @@ export default function App() {
               ))}
             </div>
 
-            {/* Hero Text Style */}
-            <div style={{ margin: '14px 0', background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 14, border: `1px solid ${accent}20` }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: accent, marginBottom: 10 }}>Hero Text Style</div>
-
-              {/* Live preview */}
-              {(() => {
-                const HERO_FONTS_P = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
-                const HERO_SIZES_P = { normal: { title: 22, sub: 11 }, large: { title: 28, sub: 13 }, xl: { title: 34, sub: 15 } }
-                const szP = HERO_SIZES_P[heroSize] || HERO_SIZES_P.normal
-                const ffP = HERO_FONTS_P[heroFont] || HERO_FONTS_P.system
-                return (
-                  <div style={{ textAlign: 'center', padding: '12px 8px', background: 'rgba(0,0,0,0.4)', borderRadius: 10, marginBottom: 12 }}>
-                    <div style={{ fontSize: szP.title, fontWeight: 800, color: heroColor, fontFamily: ffP, lineHeight: 1.1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName || 'Shop Name'}</div>
-                    {shopFoodType && <div style={{ fontSize: szP.sub, fontWeight: 600, color: heroColor, fontFamily: ffP, opacity: 0.8, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{shopFoodType}</div>}
-                  </div>
-                )
-              })()}
-
-              {/* Size */}
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Size</div>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                {[{ id: 'normal', label: 'Normal' }, { id: 'large', label: 'Large' }, { id: 'xl', label: 'Extra Large' }].map(s => (
-                  <button key={s.id} onClick={() => setHeroSize(s.id)} style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: heroSize === s.id ? accent : 'rgba(255,255,255,0.06)', color: heroSize === s.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>{s.label}</button>
-                ))}
+            {/* Hero Text Editor — open button */}
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeroEditor(true); setVendorDrawer(false); setShopConfig(false) }} style={{ width: '100%', margin: '14px 0', padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}40`, background: `${accent}15`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>T</div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Font, size, color, effects for your landing page</div>
               </div>
-
-              {/* Font */}
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Font</div>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                {[
-                  { id: 'system', label: 'Default', ff: '-apple-system, sans-serif' },
-                  { id: 'nunito', label: 'Rounded', ff: '"Nunito", sans-serif' },
-                  { id: 'poppins', label: 'Bold', ff: '"Poppins", sans-serif' },
-                  { id: 'playfair', label: 'Elegant', ff: '"Playfair Display", serif' },
-                  { id: 'caveat', label: 'Handwritten', ff: '"Caveat", cursive' },
-                  { id: 'bebas', label: 'Street', ff: '"Bebas Neue", sans-serif' },
-                ].map(f => (
-                  <button key={f.id} onClick={() => setHeroFont(f.id)} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: f.ff, background: heroFont === f.id ? accent : 'rgba(255,255,255,0.06)', color: heroFont === f.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{f.label}</button>
-                ))}
-              </div>
-
-              {/* Color */}
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Text Color</div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                {['#ffffff', '#f5f5f5', '#FACC15', '#FF6B35', '#EF4444', '#8B0000', '#22c55e', '#3B82F6', '#8B5CF6', '#F472B6', '#000000'].map(c => (
-                  <button key={c} onClick={() => setHeroColor(c)} style={{ width: 26, height: 26, borderRadius: 13, border: heroColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.15)', background: c, cursor: 'pointer', padding: 0, boxShadow: heroColor === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
-                <input defaultValue={heroColor} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroColor(v) } }} />
-                <button onClick={(e) => { const input = e.currentTarget.previousSibling; const v = input.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroColor(v) }} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
-                {heroColor !== '#ffffff' && <button onClick={() => setHeroColor('#ffffff')} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Reset</button>}
-              </div>
-            </div>
+              <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+            </button>
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
