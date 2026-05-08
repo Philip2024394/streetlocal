@@ -590,6 +590,23 @@ export default function App() {
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('vendorbasic_shopCity') || '')
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('vendorbasic_shopCountry') || '')
   const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('vendorbasic_shopFoodType') || 'Indonesian Street Food')
+
+  /* ─── Customization Features (all optional) ─── */
+  const [btnShape, setBtnShape] = useState(() => localStorage.getItem('vendorbasic_btnShape') || 'rounded')
+  const [btnColor, setBtnColor] = useState(() => localStorage.getItem('vendorbasic_btnColor') || '')
+  const [btnText, setBtnText] = useState(() => localStorage.getItem('vendorbasic_btnText') || '')
+  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('vendorbasic_btnGlow') === 'true')
+  const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('vendorbasic_overlayOpacity')) || 40)
+  const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('vendorbasic_landingLayout') || 'center')
+  const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('vendorbasic_customTagline') || '')
+  const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('vendorbasic_menuCardStyle') || 'horizontal')
+  const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('vendorbasic_menuBanner') || '')
+  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('vendorbasic_showClosedBanner') === 'true')
+  const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('vendorbasic_promoBanner') || '')
+  const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('vendorbasic_promoBannerEnabled') === 'true')
+  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
+  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
+
   const [showLocation, setShowLocation] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
   const [userDistance, setUserDistance] = useState(null)
@@ -709,6 +726,22 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_delCurrency', delCurrency) }, [delCurrency])
   useEffect(() => { localStorage.setItem('vendorbasic_delMinKm', delMinKm) }, [delMinKm])
   useEffect(() => { localStorage.setItem('vendorbasic_delEnabled', delEnabled) }, [delEnabled])
+
+  /* Customization features persistence */
+  useEffect(() => { localStorage.setItem('vendorbasic_btnShape', btnShape) }, [btnShape])
+  useEffect(() => { localStorage.setItem('vendorbasic_btnColor', btnColor) }, [btnColor])
+  useEffect(() => { localStorage.setItem('vendorbasic_btnText', btnText) }, [btnText])
+  useEffect(() => { localStorage.setItem('vendorbasic_btnGlow', btnGlow) }, [btnGlow])
+  useEffect(() => { localStorage.setItem('vendorbasic_overlayOpacity', overlayOpacity) }, [overlayOpacity])
+  useEffect(() => { localStorage.setItem('vendorbasic_landingLayout', landingLayout) }, [landingLayout])
+  useEffect(() => { localStorage.setItem('vendorbasic_customTagline', customTagline) }, [customTagline])
+  useEffect(() => { localStorage.setItem('vendorbasic_menuCardStyle', menuCardStyle) }, [menuCardStyle])
+  useEffect(() => { localStorage.setItem('vendorbasic_menuBanner', menuBanner) }, [menuBanner])
+  useEffect(() => { localStorage.setItem('vendorbasic_showClosedBanner', showClosedBanner) }, [showClosedBanner])
+  useEffect(() => { localStorage.setItem('vendorbasic_promoBanner', promoBanner) }, [promoBanner])
+  useEffect(() => { localStorage.setItem('vendorbasic_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
+  useEffect(() => { localStorage.setItem('vendorbasic_splashEnabled', splashEnabled) }, [splashEnabled])
+  useEffect(() => { if (splashEnabled) { const t = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(t) } else { setShowSplash(false) } }, [splashEnabled])
 
   // Build delivery zones from vendor's own settings
   useEffect(() => {
@@ -1044,6 +1077,16 @@ export default function App() {
 
   /* ═══════════════════════ RENDER ══════════════════��════ */
 
+  /* ═══ SPLASH SCREEN ═══ */
+  if (showSplash && splashEnabled) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        {shopLogo && <img src={shopLogo} alt="" style={{ width: 100, height: 100, objectFit: 'contain', borderRadius: 20 }} />}
+        <div style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>{shopName}</div>
+      </div>
+    )
+  }
+
   /* ═══ LANDING PAGE — full screen, no content behind ═══ */
   if (showLanding) {
     return (
@@ -1062,8 +1105,16 @@ export default function App() {
           <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
         </button>
 
-        {/* Content — centered */}
-        <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Background overlay */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: `rgba(0,0,0,${overlayOpacity / 100})`, zIndex: 1 }} />
+
+        {/* Closed banner overlay */}
+        {showClosedBanner && !shopOpen && (
+          <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: 'rgba(220,38,38,0.9)', color: '#fff', padding: '10px 28px', borderRadius: 10, fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>CLOSED</div>
+        )}
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 80 : 0, paddingLeft: landingLayout === 'left' ? 24 : 0 }}>
           {/* Shop logo */}
           {shopLogoStyle !== 'off' && shopLogo ? (
             shopLogoStyle === 'bare' ? (
@@ -1115,16 +1166,16 @@ export default function App() {
                   @keyframes heroRunGlow { 0%, 100% { text-shadow: 0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 20px ${heroColor}, 0 0 50px ${heroColor}60, 0 0 80px ${heroColor}30, 0 2px 4px rgba(0,0,0,0.9); } }
                   @keyframes heroNeonFlicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80, 0 0 82px ${heroColor}40; } 20%, 24%, 55% { text-shadow: none; } }
                 `}</style>
-                <div style={{ textAlign: 'center', marginBottom: 8, padding: '0 16px' }}>
+                <div style={{ textAlign: landingLayout === 'left' ? 'left' : 'center', marginBottom: 8, padding: '0 16px' }}>
                   {lines.map((line, i) => (
                     <div key={i} style={{ fontSize: sz.title, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ff, lineHeight: 1.15, letterSpacing: -0.5, ...fx }}>{line}</div>
                   ))}
                 </div>
-                {shopFoodType && (
-                  <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: sz.sub, fontWeight: 600, color: subC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1, opacity: heroSubColor ? 1 : 0.85 }}>{shopFoodType}</h2>
+                {(customTagline || shopFoodType) && (
+                  <h2 style={{ textAlign: landingLayout === 'left' ? 'left' : 'center', marginBottom: 6, fontSize: sz.sub, fontWeight: 600, color: subC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', letterSpacing: 1, opacity: heroSubColor ? 1 : 0.85 }}>{customTagline || shopFoodType}</h2>
                 )}
                 {(shopCity || shopCountry) && (
-                  <p style={{ textAlign: 'center', marginBottom: 40, fontSize: sz.city, fontWeight: 600, color: cityC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', opacity: heroSubColor ? 1 : 0.7 }}>
+                  <p style={{ textAlign: landingLayout === 'left' ? 'left' : 'center', marginBottom: 40, fontSize: sz.city, fontWeight: 600, color: cityC, fontFamily: ff, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)', opacity: heroSubColor ? 1 : 0.7 }}>
                     {[shopCity, shopCountry].filter(Boolean).join(', ')}
                   </p>
                 )}
@@ -1148,15 +1199,18 @@ export default function App() {
               () => setShowLanding(false)
             )
           }} style={{
-            padding: '14px 44px', border: 'none', borderRadius: 12,
+            padding: '14px 44px', border: 'none',
+            borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12,
             cursor: 'pointer', fontSize: 15, fontWeight: 700,
             position: 'relative', overflow: 'hidden',
-            ...(isCustomAccent ? { background: accent, color: '#fff' } : { background: '#FACC15', color: '#000' }),
+            background: btnColor || (isCustomAccent ? accent : '#FACC15'),
+            color: (btnColor || (isCustomAccent ? accent : '#FACC15')) === '#FACC15' ? '#000' : '#fff',
+            ...(btnGlow ? { boxShadow: `0 0 16px ${btnColor || accent}80, 0 0 32px ${btnColor || accent}40` } : {}),
           }}>
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 12 }}>
-              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: isCustomAccent ? `linear-gradient(90deg, transparent, ${accent}30, transparent)` : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'landingGlow 3s ease-in-out infinite' }} />
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12 }}>
+              <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} />
             </div>
-            <span style={{ position: 'relative', zIndex: 1 }}>View Menu</span>
+            <span style={{ position: 'relative', zIndex: 1 }}>{btnText || 'View Menu'}</span>
           </button>
           <a href="https://streetlocal.live" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 8, letterSpacing: 1, textDecoration: 'none' }}>streetlocal.live</a>
 
@@ -1239,6 +1293,21 @@ export default function App() {
               <div style={{ fontSize: 12, color: '#8DC63F', fontWeight: 700, marginTop: 4 }}>from $2.50/month →</div>
             </a>
           </div>
+        </div>
+      )}
+
+      {/* --- Promo Banner (marquee) --- */}
+      {promoBannerEnabled && promoBanner && (
+        <div style={{ overflow: 'hidden', background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
+          <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
+          <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 12s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>{promoBanner}</div>
+        </div>
+      )}
+
+      {/* --- Menu Banner Image --- */}
+      {menuBanner && (
+        <div style={{ margin: '0 12px 8px', borderRadius: 14, overflow: 'hidden' }}>
+          <img src={menuBanner} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
         </div>
       )}
 
@@ -1330,57 +1399,93 @@ export default function App() {
           )}
         </div>
         <div style={{ height: 12 }} />
-        <div>
+        <div style={menuCardStyle === 'grid' ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 12px' } : {}}>
         {visibleMenu.map((item) => (
-          <div
-            key={item.id}
-            style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}
-          >
-            {/* Toggle — top right (vendor only) */}
-            {isVendor && vendorStatus !== 'expired' && (
-              <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}>
-                <div style={S.toggleDot(item.available)} />
-              </button>
-            )}
-            <img
-              src={item.photo || PLACEHOLDER_SM}
-              alt={item.name}
-              style={S.cardImg}
-              onClick={() => { setItemModal(item); setModalQty(1) }}
-            />
-            {/* Badges on image */}
-            {item.halal && (
-              <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 10, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
-            )}
-            {item.popular && (
-              <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>⭐ Popular</span>
-            )}
-            {/* Delete — round button on image lower-left corner */}
-            {isVendor && vendorStatus !== 'expired' && (
-              <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
-            )}
-            <div style={S.cardBody}>
-              <div style={S.cardName} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-              <div style={S.cardDesc}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  {item.promoPrice ? (
-                    <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
-                  ) : (
-                    <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>
-                  )}
+          menuCardStyle === 'grid' ? (
+            /* GRID card style — 2 columns, image on top */
+            <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 14, overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+              {isVendor && vendorStatus !== 'expired' && (
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 6, right: 6, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
+              )}
+              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
+              {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: 80, left: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+              <div style={{ padding: '8px 10px 10px' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>{item.promoPrice ? <span style={{ fontSize: 13, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span> : <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>}</div>
+                  {!isVendor && shopOpen && item.available && <button style={{ ...S.addBtn, position: 'static', width: 28, height: 28, borderRadius: 14, fontSize: 16 }} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>}
+                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
                 </div>
-                {isVendor && vendorStatus !== 'expired' && (
-                  <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>
-                )}
               </div>
             </div>
-
-            {/* Add button (customer) — tap card to view */}
-            {!isVendor && shopOpen && item.available && (
-              <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
-            )}
-          </div>
+          ) : menuCardStyle === 'fullwidth' ? (
+            /* FULLWIDTH card style — large image cards */
+            <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+              {isVendor && vendorStatus !== 'expired' && (
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
+              )}
+              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
+              {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {item.halal && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 10, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
+              {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 58, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+              <div style={{ padding: '12px 14px' }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                {item.desc && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{item.desc}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>{item.promoPrice ? <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></> : <span style={{ fontSize: 16, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>}</div>
+                  {!isVendor && shopOpen && item.available && <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>}
+                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* HORIZONTAL card style — default */
+            <div
+              key={item.id}
+              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}
+            >
+              {isVendor && vendorStatus !== 'expired' && (
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}>
+                  <div style={S.toggleDot(item.available)} />
+                </button>
+              )}
+              <img
+                src={item.photo || PLACEHOLDER_SM}
+                alt={item.name}
+                style={S.cardImg}
+                onClick={() => { setItemModal(item); setModalQty(1) }}
+              />
+              {item.halal && (
+                <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 10, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
+              )}
+              {item.popular && (
+                <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>
+              )}
+              {isVendor && vendorStatus !== 'expired' && (
+                <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
+              )}
+              <div style={S.cardBody}>
+                <div style={S.cardName} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                <div style={S.cardDesc}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    {item.promoPrice ? (
+                      <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
+                    ) : (
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>
+                    )}
+                  </div>
+                  {isVendor && vendorStatus !== 'expired' && (
+                    <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>
+                  )}
+                </div>
+              </div>
+              {!isVendor && shopOpen && item.available && (
+                <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
+              )}
+            </div>
+          )
         ))}
 
         {visibleMenu.length === 0 && (
@@ -2914,6 +3019,85 @@ export default function App() {
               </div>
               <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
             </button>
+
+            {/* ─── Customization Features Section ─── */}
+            <div style={{ margin: '14px 0', padding: 14, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08` }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Customization</div>
+
+              {/* Button Style Editor */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Shape</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                {['rounded', 'pill', 'square'].map(s => (
+                  <button key={s} onClick={() => setBtnShape(s)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                ))}
+              </div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Color</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                <input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />
+                {btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}
+              </div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label>
+              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu (default)" maxLength={20} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Button Glow</span>
+              </div>
+
+              {/* Background Overlay Opacity */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label>
+              <input type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ width: '100%', marginBottom: 14 }} />
+
+              {/* Landing Layout */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {[{ id: 'center', label: 'Center' }, { id: 'left', label: 'Left' }, { id: 'top', label: 'Top' }].map(opt => (
+                  <button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
+                ))}
+              </div>
+
+              {/* Custom Tagline */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label>
+              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 14 }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} />
+
+              {/* Menu Card Style */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Card Style</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (
+                  <button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 36 }}>{opt.label}</button>
+                ))}
+              </div>
+
+              {/* Menu Banner */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+                <label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  Upload
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} />
+                </label>
+                {menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}
+              </div>
+              {menuBanner && <img src={menuBanner} alt="" style={{ width: '100%', height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 14 }} />}
+
+              {/* Closed Banner Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setShowClosedBanner(!showClosedBanner)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: showClosedBanner ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: showClosedBanner ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Show "Closed" banner on landing</span>
+              </div>
+
+              {/* Promo Banner */}
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Promo Banner Text</label>
+              <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 }} value={promoBanner} onChange={(e) => setPromoBanner(e.target.value)} placeholder="e.g. Free delivery this week!" maxLength={80} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable Promo Banner</span>
+              </div>
+
+              {/* Splash Screen */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s on load)</span>
+              </div>
+            </div>
 
             <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
