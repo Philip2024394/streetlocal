@@ -403,7 +403,7 @@ export default function App() {
     } catch { errors.push('Corrupt menu JSON') }
 
     // Check for remote config (force reset, maintenance, announcements)
-    supabase.from('vendor_status').select('force_reset, reset_theme, reset_accent').eq('vendor_id', vid).single().then(({ data }) => {
+    supabase.from('vendor_status').select('force_reset, reset_theme, reset_accent').eq('vendor_id', vid).maybeSingle().then(({ data }) => {
       if (data?.force_reset) {
         const newTheme = data.reset_theme || 'noodle'
         const newAccent = data.reset_accent || '#8B0000'
@@ -606,6 +606,7 @@ export default function App() {
   const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('vendorbasic_promoBannerEnabled') === 'true')
   const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
   const [showSplash, setShowSplash] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
+  const [configPreviewTab, setConfigPreviewTab] = useState('landing')
 
   const [showLocation, setShowLocation] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
@@ -3022,11 +3023,12 @@ export default function App() {
 
             {/* ─── Customization Features with iPhone Preview ─── */}
             {(() => {
-              const [previewTab, setPreviewTab] = useState('landing')
               const HERO_FONTS_C = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
               const ffC = HERO_FONTS_C[heroFont] || HERO_FONTS_C.system
               const btnR = btnShape === 'pill' ? 30 : btnShape === 'square' ? 4 : 12
               const bColor = btnColor || accent
+              const previewTab = configPreviewTab
+              const setPreviewTab = setConfigPreviewTab
 
               return (
                 <div style={{ margin: '14px 0' }}>
