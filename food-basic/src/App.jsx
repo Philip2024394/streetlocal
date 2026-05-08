@@ -532,6 +532,7 @@ export default function App() {
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
+  const [themeCountryDrawer, setThemeCountryDrawer] = useState(false)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
@@ -3211,21 +3212,41 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Search */}
-              <div style={{ padding: '0 14px 10px' }}>
-                <div style={{ position: 'relative' }}>
+              {/* Search + Filter button */}
+              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
                   <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
                 </div>
+                <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.08)', color: themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>
+                  {themeCountry !== 'all' && <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, background: '#22c55e', border: '2px solid #1a1a1a' }} />}
+                </button>
               </div>
+              {themeCountry !== 'all' && <div style={{ padding: '0 14px 8px', fontSize: 12, color: '#FFD600', fontWeight: 700 }}>Filtered: {COUNTRY_LABELS[themeCountry] || themeCountry} <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>Clear</button></div>}
 
-              {/* Country filter */}
-              <div style={{ padding: '0 14px 12px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
-                <button onClick={() => setThemeCountry('all')} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: themeCountry === 'all' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.5)', flexShrink: 0, minHeight: 36 }}>All</button>
-                {countries.map(c => (
-                  <button key={c} onClick={() => setThemeCountry(themeCountry === c ? 'all' : c)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: themeCountry === c ? '#FFD600' : 'rgba(255,255,255,0.06)', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.5)', flexShrink: 0, minHeight: 36 }}>{COUNTRY_LABELS[c] || c}</button>
-                ))}
-              </div>
+              {/* Country drawer — slides from left */}
+              {themeCountryDrawer && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 400 }} onClick={() => setThemeCountryDrawer(false)}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
+                  <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 260, background: '#1a1a1a', padding: '20px 0', overflowY: 'auto', animation: 'slideRight 0.2s ease' }}>
+                    <div style={{ padding: '0 16px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Filter by Country</div>
+                      <button onClick={() => setThemeCountryDrawer(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
+                    </div>
+                    <button onClick={() => { setThemeCountry('all'); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '14px 16px', border: 'none', background: themeCountry === 'all' ? '#FFD600' : 'transparent', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 700, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>All Countries</button>
+                    {countries.map(c => {
+                      const count = THEME_PRESETS.filter(t => t.countries.includes(c)).length
+                      return (
+                        <button key={c} onClick={() => { setThemeCountry(c); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '14px 16px', border: 'none', background: themeCountry === c ? '#FFD600' : 'transparent', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>{COUNTRY_LABELS[c] || c}</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Theme card renderer — iPhone frame style */}
               {(() => {
@@ -3281,35 +3302,39 @@ export default function App() {
                 )
               })()}
 
-              {/* Full-screen theme preview overlay */}
+              {/* Full-screen live theme preview */}
               {themePreviewId && (() => {
                 const theme = THEME_PRESETS.find(t => t.id === themePreviewId)
                 if (!theme) return null
+                const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
+                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}`
+                const iframeW = 375
+                const iframeH = 812
+                const phoneW = 280
+                const screenW = phoneW - 8
+                const scaleFactor = screenW / iframeW
+                const phoneH = Math.round(iframeH * scaleFactor) + 8
+
                 return (
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onClick={() => setThemePreviewId(null)}>
-                    {/* Large phone preview */}
-                    <div onClick={e => e.stopPropagation()} style={{ width: 260, height: 520, borderRadius: 36, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 20px 60px rgba(0,0,0,0.5)`, border: '2px solid #333' }}>
-                      <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 32, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: 112, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onClick={() => setThemePreviewId(null)}>
+                    {/* Theme name */}
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 10 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+
+                    {/* Live phone */}
+                    <div onClick={e => e.stopPropagation()} style={{ width: phoneW, height: phoneH, borderRadius: 36, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 20px ${theme.accent}30`, border: '2px solid #333' }}>
+                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 32, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 32, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 60, height: 18, background: '#000', borderRadius: 14, zIndex: 3 }} />
-                        <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
-                          <div style={{ width: 56, height: 56, borderRadius: 28, background: theme.accent || '#8DC63F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}>
-                            <span style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>S</span>
+                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 60, height: 18, background: '#000', borderRadius: 14, zIndex: 10 }} />
+                        <div style={{ position: 'absolute', inset: 0 }}>
+                          <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}>
+                            <iframe key={themePreviewId} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
                           </div>
-                          <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center' }}>Your Shop</div>
-                          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
-                          <div style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: theme.accent || '#8DC63F', fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
                         </div>
-                        <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 60, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
+                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 60, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
-
-                    {/* Theme name */}
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginTop: 14 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
 
                     {/* Footer buttons */}
                     <div style={{ display: 'flex', gap: 10, marginTop: 14 }} onClick={e => e.stopPropagation()}>
