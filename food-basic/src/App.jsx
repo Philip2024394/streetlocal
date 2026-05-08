@@ -3395,34 +3395,41 @@ export default function App() {
                         {/* MENU */}
                         {themePreviewPage === 'menu' && (
                           <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '24px 10px 8px', position: 'sticky', top: 0, zIndex: 5, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 26, height: 26, borderRadius: 13, background: ac, border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>Street Noodle</div>
-                                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
+                            {/* Header — matches real app gradient header */}
+                            <div style={{ display: 'flex', alignItems: 'center', padding: '20px 8px 12px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', position: 'sticky', top: 0, zIndex: 5 }}>
+                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
+                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6, flexShrink: 0 }}>
+                                <span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>SN</span>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div>
+                                <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: 5, padding: '6px 10px 8px' }}>
+                            {/* Category tabs — text style like real app */}
+                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>
                               {['Menu', 'Drinks', 'Snacks'].map((t, i) => (
-                                <div key={t} style={{ padding: '4px 10px', borderRadius: 8, background: i === 0 ? ac : 'rgba(255,255,255,0.08)', fontSize: 10, fontWeight: 700, color: '#fff' }}>{t}</div>
+                                <div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>
                               ))}
                             </div>
-                            <div style={{ padding: '0 8px 8px' }}>
-                              {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 4).map(item => (
-                                <div key={item.id} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: 7, marginBottom: 5, borderLeft: `3px solid ${ac}` }}>
-                                  <img src={item.photo} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                            {/* Menu cards — matching real app S.card style */}
+                            <div style={{ padding: '0 6px' }}>
+                              {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 3).map(item => (
+                                <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
+                                  <img src={item.photo} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{item.desc}</div>
-                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#FACC15', marginTop: 3 }}>{fmt(item.price)}</div>
+                                    <div style={{ fontSize: 10, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice > 0 && ' 🌶️'}</div>
+                                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{item.desc}</div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{fmt(item.price)}</div>
                                   </div>
+                                  <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
                                 </div>
                               ))}
                             </div>
-                            <div style={{ margin: '0 8px 10px', background: ac, borderRadius: 10, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>2 items — {fmt(41000)}</div>
-                              <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>View Cart</div>
+                            {/* Sticky cart bar — matches real app gradient */}
+                            <div style={{ position: 'absolute', bottom: 10, left: 6, right: 6, background: `linear-gradient(135deg, ${ac}, ${ac}cc)`, borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 5 }}>
+                              <div style={{ fontSize: 9, fontWeight: 600, color: '#fff' }}>2 items · {fmt(41000)}</div>
+                              <div style={{ background: '#fff', color: ac, borderRadius: 6, padding: '3px 8px', fontSize: 8, fontWeight: 700 }}>Checkout</div>
                             </div>
                           </div>
                         )}
