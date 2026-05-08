@@ -531,6 +531,7 @@ export default function App() {
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
+  const [themePreviewId, setThemePreviewId] = useState(null)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
@@ -3226,48 +3227,103 @@ export default function App() {
                 ))}
               </div>
 
-              {/* New themes section */}
-              {newThemes.length > 0 && themeSearch === '' && (
-                <div style={{ padding: '0 14px 12px' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 8 }}>New</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {newThemes.map(theme => (
-                      <button key={theme.id} onClick={() => {
+              {/* Theme card renderer — iPhone frame style */}
+              {(() => {
+                const renderPhoneCard = (theme) => (
+                  <div key={theme.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {/* Theme name header */}
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {theme.label.replace(/^#\d+\s/, '')}
+                      {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>NEW</span>}
+                      {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>Active</span>}
+                    </div>
+                    {/* Mini phone frame */}
+                    <div style={{ width: 140, height: 250, borderRadius: 20, background: '#1a1a1a', padding: 2, position: 'relative', border: shopTheme === theme.id ? '2px solid #FFD600' : '2px solid #333', boxShadow: shopTheme === theme.id ? '0 0 12px rgba(255,214,0,0.3)' : '0 4px 12px rgba(0,0,0,0.3)' }}>
+                      <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', width: 32, height: 8, background: '#000', borderRadius: 6, zIndex: 3 }} />
+                        <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                        {/* Mock content */}
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 10, background: theme.accent || '#8DC63F', marginBottom: 4, border: '1px solid rgba(255,255,255,0.2)' }} />
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Your Shop</div>
+                          <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{theme.category}</div>
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 30, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
+                      </div>
+                    </div>
+                    {/* View Theme button */}
+                    <button onClick={() => setThemePreviewId(theme.id)} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                  </div>
+                )
+
+                return (
+                  <>
+                    {/* New themes */}
+                    {newThemes.length > 0 && themeSearch === '' && (
+                      <div style={{ padding: '0 14px 16px' }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>New</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                          {newThemes.map(renderPhoneCard)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* All themes */}
+                    <div style={{ padding: '0 14px 20px' }}>
+                      {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>All Themes</div>}
+                      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>No themes found</div>}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        {(themeSearch ? filtered : otherThemes).map(renderPhoneCard)}
+                      </div>
+                    </div>
+                  </>
+                )
+              })()}
+
+              {/* Full-screen theme preview overlay */}
+              {themePreviewId && (() => {
+                const theme = THEME_PRESETS.find(t => t.id === themePreviewId)
+                if (!theme) return null
+                return (
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onClick={() => setThemePreviewId(null)}>
+                    {/* Large phone preview */}
+                    <div onClick={e => e.stopPropagation()} style={{ width: 260, height: 520, borderRadius: 36, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 20px 60px rgba(0,0,0,0.5)`, border: '2px solid #333' }}>
+                      <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 32, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: 112, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 32, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 60, height: 18, background: '#000', borderRadius: 14, zIndex: 3 }} />
+                        <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
+                          <div style={{ width: 56, height: 56, borderRadius: 28, background: theme.accent || '#8DC63F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}>
+                            <span style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>S</span>
+                          </div>
+                          <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center' }}>Your Shop</div>
+                          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
+                          <div style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: theme.accent || '#8DC63F', fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 60, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
+                      </div>
+                    </div>
+
+                    {/* Theme name */}
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginTop: 14 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+
+                    {/* Footer buttons */}
+                    <div style={{ display: 'flex', gap: 10, marginTop: 14 }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => setThemePreviewId(null)} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                      <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
                         localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
                         const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img
-                        setThemeBrowser(false); setShowLanding(true)
-                      }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '2px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>NEW</div>
-                        {shopTheme === theme.id && <div style={{ position: 'absolute', top: 6, right: 6, background: '#22c55e', color: '#fff', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>Active</div>}
-                        <div style={{ width: '100%', height: 180, position: 'relative' }}><img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#fff', padding: '8px 0', textAlign: 'center', background: 'rgba(0,0,0,0.7)' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
-                      </button>
-                    ))}
+                        setThemePreviewId(null); setThemeBrowser(false); setShowLanding(true)
+                      }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Use Theme</button>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* All themes grid */}
-              <div style={{ padding: '0 14px 14px' }}>
-                {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>All Themes</div>}
-                {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>No themes found</div>}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {(themeSearch ? filtered : otherThemes).map(theme => (
-                    <button key={theme.id} onClick={() => {
-                      setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
-                      localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
-                      const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img
-                      setThemeBrowser(false); setShowLanding(true)
-                    }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '2px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', position: 'relative' }}>
-                      {theme.isNew && <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>NEW</div>}
-                      {shopTheme === theme.id && <div style={{ position: 'absolute', top: 6, right: 6, background: '#22c55e', color: '#fff', padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 800, zIndex: 2 }}>Active</div>}
-                      <div style={{ width: '100%', height: 180, position: 'relative' }}><img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#fff', padding: '8px 0', textAlign: 'center', background: 'rgba(0,0,0,0.7)' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                )
+              })()}
             </div>
           </div>
         )
