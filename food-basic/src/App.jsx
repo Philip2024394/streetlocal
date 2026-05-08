@@ -3030,12 +3030,12 @@ export default function App() {
               const bColor = btnColor || accent
               const previewTab = configPreviewTab
               const TOOLS = [
-                { id: 'layout', icon: '🎯', label: 'Layout', page: 'landing' },
-                { id: 'button', icon: '🔘', label: 'Button', page: 'landing' },
-                { id: 'text', icon: '✏️', label: 'Text', page: 'landing' },
-                { id: 'cards', icon: '📋', label: 'Cards', page: 'menu' },
-                { id: 'promo', icon: '📢', label: 'Promo', page: 'menu' },
-                { id: 'splash', icon: '✨', label: 'More', page: 'landing' },
+                { id: 'layout', svg: 'M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z', label: 'Layout', page: 'landing' },
+                { id: 'button', svg: 'M19 6H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zm0 10H5V8h14v8z', label: 'Button', page: 'landing' },
+                { id: 'text', svg: 'M5 4v3h5.5v12h3V7H19V4H5z', label: 'Text', page: 'landing' },
+                { id: 'cards', svg: 'M4 5h16v2H4zm0 4h16v2H4zm0 4h16v2H4zm0 4h10v2H4z', label: 'Cards', page: 'menu' },
+                { id: 'promo', svg: 'M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 14H5.17L4 17.17V4h16v12z', label: 'Promo', page: 'menu' },
+                { id: 'splash', svg: 'M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z', label: 'More', page: 'landing' },
               ]
 
               return (
@@ -3043,7 +3043,7 @@ export default function App() {
                   <style>{`@keyframes promoScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
 
                   {/* Phone + Side Toolbar */}
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 4px' }}>
                     {/* iPhone Frame */}
                     <div style={{ width: 170, height: 340, borderRadius: 26, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333', flexShrink: 0 }}>
                       <div style={{ position: 'absolute', right: -3, top: 66, width: 3, height: 22, borderRadius: '0 2px 2px 0', background: '#333' }} />
@@ -3133,14 +3133,17 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Side Toolbar */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center' }}>
-                      {TOOLS.map(t => (
-                        <button key={t.id} onClick={() => { setConfigTool(configTool === t.id ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 44, height: 44, borderRadius: 12, border: configTool === t.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: configTool === t.id ? `${accent}25` : 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                          <span style={{ fontSize: 14 }}>{t.icon}</span>
-                          <span style={{ fontSize: 7, fontWeight: 700, color: configTool === t.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>{t.label}</span>
-                        </button>
-                      ))}
+                    {/* Side Toolbar — right edge */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                      {TOOLS.map(t => {
+                        const isActive = configTool === t.id
+                        return (
+                          <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 46, height: 46, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.06)', background: isActive ? '#FFD600' : 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d={t.svg} /></svg>
+                            <span style={{ fontSize: 7, fontWeight: 800, color: isActive ? '#1a1a1a' : 'rgba(255,255,255,0.35)', letterSpacing: 0.3 }}>{t.label}</span>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 
