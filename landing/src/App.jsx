@@ -87,7 +87,7 @@ const TRANSLATIONS = {
       },
       {
         title: '15. Contact',
-        body: 'For questions regarding these Terms & Conditions, contact us via WhatsApp at +62 813 9200 0050 or visit streetlocal.live.'
+        body: 'For questions regarding these Terms & Conditions, contact us via the Support Center at streetlocal.live or email us through the Contact page.'
       },
     ],
     register: {
@@ -883,12 +883,11 @@ const CONTACT_DEPARTMENTS = [
 ]
 
 const CONTACT_CHANNELS = [
-  { icon: '💬', name: 'WhatsApp', availability: '24/7', responseTime: '< 15 minutes', primary: true, color: '#25D366', href: 'https://wa.me/6281392000050?text=Hi! I need help with StreetLocal.' },
-  { icon: '📧', name: 'Email Support', availability: 'Mon-Sat 09:00-21:00 WIB', responseTime: '< 2 hours', primary: false, color: '#1a73e8', href: 'mailto:indootechteam@gmail.com' },
-  { icon: '🎫', name: 'Ticket System', availability: '24/7 submission', responseTime: '< 4 hours', primary: false, color: '#FFD600', href: null },
+  { icon: '🎫', name: 'Support Ticket', availability: '24/7 submission', responseTime: '< 4 hours', primary: true, color: '#FFD600', href: null, action: 'ticket' },
+  { icon: '📧', name: 'Email Support', availability: 'Mon-Sat 09:00-21:00 WIB', responseTime: '< 2 hours', primary: false, color: '#1a73e8', href: null, action: 'ticket' },
   { icon: '⚡', name: 'Priority Support', availability: 'Enterprise plans', responseTime: '< 30 minutes', primary: false, color: '#ff6b35', href: null },
   { icon: '👨‍💻', name: 'Developer Support', availability: 'Enterprise API users', responseTime: '< 1 hour', primary: false, color: '#6366f1', href: null },
-  { icon: '💼', name: 'Sales Inquiries', availability: 'Mon-Sat 09:00-18:00 WIB', responseTime: '< 1 hour', primary: false, color: '#1a1a1a', href: 'https://wa.me/6281392000050?text=Hi! I am interested in StreetLocal for my business.' }
+  { icon: '💼', name: 'Sales Consultation', availability: 'Mon-Sat 09:00-18:00 WIB', responseTime: '< 1 hour', primary: false, color: '#1a1a1a', href: null, action: 'sales' },
 ]
 
 const CONTACT_COMPANY_STATS = [
@@ -922,13 +921,20 @@ export default function App() {
   const [signupError, setSignupError] = useState('')
   const [signupAction, setSignupAction] = useState(null) // 'demo' or 'subscribe'
   const [slugCheck, setSlugCheck] = useState(null) // null | 'checking' | 'available' | 'taken'
-  const [contactStep, setContactStep] = useState('browse')
+  const [contactStep, setContactStep] = useState(null)
   const [contactCategory, setContactCategory] = useState(null)
   const [contactFaqOpen, setContactFaqOpen] = useState([])
   const [contactFormData, setContactFormData] = useState({ name: '', business: '', email: '', username: '', department: '', priority: 'normal', subject: '', description: '', file: null, contactMethod: 'email' })
   const [contactFormStep, setContactFormStep] = useState(0)
   const [contactTicketId, setContactTicketId] = useState('')
   const [contactCounters, setContactCounters] = useState(CONTACT_COMPANY_STATS.map(() => 0))
+  // New states for enhanced CTA sections
+  const [ticketDept, setTicketDept] = useState(null)
+  const [ticketStep, setTicketStep] = useState(0) // 0=select dept, 1=form, 2=review
+  const [helpSearchQuery, setHelpSearchQuery] = useState('')
+  const [helpExpandedCat, setHelpExpandedCat] = useState(null)
+  const [helpFaqOpen, setHelpFaqOpen] = useState([])
+  const [salesForm, setSalesForm] = useState({ name: '', businessName: '', email: '', whatsapp: '', businessType: '', locations: '', orderVolume: '', interests: [] })
   const VENDOR_COUNTRIES = [
     { code: 'ID', flag: '🇮🇩', name: 'Indonesia', prefix: '+62' },
     { code: 'MY', flag: '🇲🇾', name: 'Malaysia', prefix: '+60' },
@@ -2225,14 +2231,12 @@ export default function App() {
 
               <p style={{ fontSize: 13, color: '#999', textAlign: 'center', marginBottom: 20, fontStyle: 'italic' }}>All domain plans require an active app subscription.</p>
 
-              <a
-                href="https://wa.me/6281392000050?text=Hi! I'm interested in a custom domain for my business."
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ display: 'block', background: '#25D366', color: '#fff', textAlign: 'center', padding: '16px 24px', borderRadius: 14, fontSize: 16, fontWeight: 800, textDecoration: 'none', marginBottom: 10 }}
+              <button
+                onClick={() => setCurrentPage('contact')}
+                style={{ display: 'block', width: '100%', background: '#FFD600', color: '#1a1a1a', textAlign: 'center', padding: '16px 24px', borderRadius: 14, fontSize: 16, fontWeight: 800, border: 'none', cursor: 'pointer', marginBottom: 10 }}
               >
                 Discuss Your Options
-              </a>
+              </button>
             </div>
           )}
 
@@ -2256,9 +2260,9 @@ export default function App() {
                   ))}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-                  <button onClick={() => { setContactStep('form'); setContactFormStep(0); }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Open a Support Ticket</button>
-                  <button onClick={() => setContactStep('browse')} style={{ background: '#f8f9fa', color: '#1a1a1a', border: '1px solid #e8e8e8', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Browse Help Center</button>
-                  <a href="https://wa.me/6281392000050?text=Hi! I am interested in StreetLocal enterprise solutions." target="_blank" rel="noopener noreferrer" style={{ display: 'block', background: '#1a1a1a', color: '#fff', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 700, textDecoration: 'none', textAlign: 'center', minHeight: 44, lineHeight: '16px' }}>Contact Sales</a>
+                  <button onClick={() => { setContactStep('ticket'); setTicketDept(null); setTicketStep(0); setContactFormStep(0); }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Open a Support Ticket</button>
+                  <button onClick={() => { setContactStep('helpCenter'); setHelpSearchQuery(''); setHelpExpandedCat(null); setHelpFaqOpen([]); }} style={{ background: '#f8f9fa', color: '#1a1a1a', border: '1px solid #e8e8e8', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Browse Help Center</button>
+                  <button onClick={() => { setContactStep('sales'); setSalesForm({ name: '', businessName: '', email: '', whatsapp: '', businessType: '', locations: '', orderVolume: '', interests: [] }); }} style={{ background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Contact Sales</button>
                 </div>
               </div>
 
@@ -2604,6 +2608,640 @@ export default function App() {
                 </div>
               )}
 
+              {/* ═══ NEW: Ticket Section ═══ */}
+              {contactStep === 'ticket' && (
+                <div style={{ marginBottom: 28, animation: 'fadeSlideIn 0.5s ease-out' }}>
+                  <button onClick={() => { setContactStep(null); setTicketDept(null); setTicketStep(0); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#1a73e8', marginBottom: 16, padding: 0, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                    ← Back to Support Center
+                  </button>
+
+                  {/* Header */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #FFD600, #ff6b35, #6366f1)', backgroundSize: '200% 100%', animation: 'gradientShift 3s ease infinite', marginBottom: 16 }} />
+                    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Submit a Support Request</h2>
+                    <p style={{ fontSize: 13, color: '#888', marginBottom: 0 }}>Our team will respond based on your selected priority</p>
+                  </div>
+
+                  {/* Progress Stepper */}
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 24, alignItems: 'center' }}>
+                    {['Select Department', 'Describe Issue', 'Review & Submit'].map((step, i) => (
+                      <div key={step} style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
+                          <span style={{ width: 24, height: 24, borderRadius: '50%', background: i <= ticketStep ? '#FFD600' : '#e8e8e8', color: i <= ticketStep ? '#1a1a1a' : '#aaa', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
+                        </div>
+                        <div style={{ height: 3, borderRadius: 2, background: i <= ticketStep ? '#FFD600' : '#e8e8e8', transition: 'background 0.3s', marginBottom: 4 }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: i <= ticketStep ? '#1a1a1a' : '#ccc' }}>{step}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Step 0: Department Selection */}
+                  {ticketStep === 0 && (
+                    <div>
+                      <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Choose a Department</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        {SUPPORT_CATEGORIES.map((cat, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setTicketDept(cat);
+                              setContactFormData(prev => ({ ...prev, department: cat.title }));
+                              setTicketStep(1);
+                              setContactFormStep(0);
+                            }}
+                            style={{
+                              background: ticketDept && ticketDept.title === cat.title ? '#fffde7' : '#fff',
+                              border: ticketDept && ticketDept.title === cat.title ? '2px solid #FFD600' : '2px solid #f0f0f0',
+                              borderRadius: 16, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', minHeight: 44
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#FFD600'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,214,0,0.15)'; }}
+                            onMouseLeave={e => { if (!(ticketDept && ticketDept.title === cat.title)) e.currentTarget.style.borderColor = '#f0f0f0'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                          >
+                            <div style={{ fontSize: 22, marginBottom: 6 }}>{cat.icon}</div>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{cat.title}</div>
+                            <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4, marginBottom: 6 }}>{cat.description}</div>
+                            <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10 }}>{cat.responseTime}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 1: Ticket Form (inline) */}
+                  {ticketStep === 1 && ticketDept && (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, background: '#f8f9fa', borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: 24 }}>{ticketDept.icon}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{ticketDept.title}</div>
+                          <div style={{ fontSize: 11, color: '#888' }}>{ticketDept.responseTime} response</div>
+                        </div>
+                        <button onClick={() => setTicketStep(0)} style={{ background: 'none', border: 'none', fontSize: 12, fontWeight: 700, color: '#1a73e8', cursor: 'pointer', minHeight: 44 }}>Change</button>
+                      </div>
+
+                      <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: 24, border: '1px solid #e8e8e8', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                        {contactFormStep === 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {[
+                              { key: 'name', label: 'Full Name', type: 'text', placeholder: 'Your name' },
+                              { key: 'business', label: 'Business Name', type: 'text', placeholder: 'Your business' },
+                              { key: 'email', label: 'Email Address', type: 'email', placeholder: 'you@example.com' },
+                              { key: 'username', label: 'StreetLocal Username', type: 'text', placeholder: '@username (optional)' }
+                            ].map(field => (
+                              <div key={field.key}>
+                                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>{field.label}</label>
+                                <input
+                                  type={field.type}
+                                  value={contactFormData[field.key]}
+                                  onChange={e => setContactFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                  placeholder={field.placeholder}
+                                  style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44 }}
+                                  onFocus={e => e.currentTarget.style.borderColor = '#FFD600'}
+                                  onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+                                />
+                              </div>
+                            ))}
+
+                            {/* Priority Visualization */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 8 }}>Priority Level</label>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {[
+                                  { key: 'low', label: 'Low', color: '#22c55e', time: '< 24 hours', desc: 'General questions' },
+                                  { key: 'normal', label: 'Normal', color: '#3b82f6', time: '< 4 hours', desc: 'Standard issues' },
+                                  { key: 'high', label: 'High', color: '#f59e0b', time: '< 1 hour', desc: 'Business impacted' },
+                                  { key: 'urgent', label: 'Urgent', color: '#ef4444', time: '< 30 min', desc: 'System down' }
+                                ].map(p => (
+                                  <button
+                                    key={p.key}
+                                    onClick={() => setContactFormData(prev => ({ ...prev, priority: p.key }))}
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
+                                      border: contactFormData.priority === p.key ? `2px solid ${p.color}` : '2px solid #e8e8e8',
+                                      background: contactFormData.priority === p.key ? `${p.color}10` : '#fff',
+                                      cursor: 'pointer', minHeight: 44, textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                                    }}
+                                  >
+                                    <div style={{
+                                      width: 8, height: 32, borderRadius: 4, background: p.color, flexShrink: 0,
+                                      animation: p.key === 'urgent' && contactFormData.priority === 'urgent' ? 'pulseGlow 1.5s ease-in-out infinite' : 'none'
+                                    }} />
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontSize: 13, fontWeight: 800, color: contactFormData.priority === p.key ? p.color : '#444' }}>{p.label}</div>
+                                      <div style={{ fontSize: 11, color: '#888' }}>{p.desc}</div>
+                                    </div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: p.color }}>{p.time}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Estimated Response */}
+                            <div style={{ background: '#f0fdf4', borderRadius: 12, padding: 14, border: '1px solid #bbf7d0', textAlign: 'center' }}>
+                              <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginBottom: 4 }}>Estimated Response Time</div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color: '#15803d' }}>
+                                {contactFormData.priority === 'urgent' ? '< 30 minutes' : contactFormData.priority === 'high' ? '< 1 hour' : contactFormData.priority === 'normal' ? '< 4 hours' : '< 24 hours'}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => setContactFormStep(1)}
+                              disabled={!contactFormData.name || !contactFormData.email}
+                              style={{ background: contactFormData.name && contactFormData.email ? '#FFD600' : '#e8e8e8', color: contactFormData.name && contactFormData.email ? '#1a1a1a' : '#aaa', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: contactFormData.name && contactFormData.email ? 'pointer' : 'not-allowed', marginTop: 6, minHeight: 44 }}
+                            >Continue to Description</button>
+                          </div>
+                        )}
+
+                        {contactFormStep === 1 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Subject</label>
+                              <input
+                                type="text"
+                                value={contactFormData.subject}
+                                onChange={e => setContactFormData(prev => ({ ...prev, subject: e.target.value }))}
+                                placeholder="Brief summary of your issue"
+                                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44 }}
+                                onFocus={e => e.currentTarget.style.borderColor = '#FFD600'}
+                                onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Description</label>
+                              <textarea
+                                value={contactFormData.description}
+                                onChange={e => { if (e.target.value.length <= 1000) setContactFormData(prev => ({ ...prev, description: e.target.value })); }}
+                                placeholder="Describe your issue in detail..."
+                                rows={5}
+                                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                                onFocus={e => e.currentTarget.style.borderColor = '#FFD600'}
+                                onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+                              />
+                              <div style={{ fontSize: 11, color: '#888', textAlign: 'right', marginTop: 4 }}>{contactFormData.description.length}/1000</div>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Attach File (optional)</label>
+                              <div style={{ border: '2px dashed #e0e0e0', borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ fontSize: 13, color: '#888' }}>{contactFormData.file ? contactFormData.file : 'Tap to attach screenshot or document'}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 8 }}>Preferred Contact Method</label>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                {[
+                                  { key: 'email', label: 'Email' },
+                                  { key: 'whatsapp', label: 'WhatsApp' },
+                                  { key: 'any', label: 'Any' }
+                                ].map(m => (
+                                  <button
+                                    key={m.key}
+                                    onClick={() => setContactFormData(prev => ({ ...prev, contactMethod: m.key }))}
+                                    style={{ flex: 1, padding: '10px', borderRadius: 10, border: contactFormData.contactMethod === m.key ? '2px solid #FFD600' : '2px solid #e8e8e8', background: contactFormData.contactMethod === m.key ? '#fffde7' : '#fff', fontSize: 13, fontWeight: 700, color: '#444', cursor: 'pointer', minHeight: 44 }}
+                                  >{m.label}</button>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                              <button onClick={() => setContactFormStep(0)} style={{ flex: 1, background: '#f8f9fa', color: '#444', border: '1px solid #e8e8e8', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Back</button>
+                              <button
+                                onClick={() => { setContactFormStep(2); setTicketStep(2); }}
+                                disabled={!contactFormData.subject || !contactFormData.description}
+                                style={{ flex: 2, background: contactFormData.subject && contactFormData.description ? '#FFD600' : '#e8e8e8', color: contactFormData.subject && contactFormData.description ? '#1a1a1a' : '#aaa', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: contactFormData.subject && contactFormData.description ? 'pointer' : 'not-allowed', minHeight: 44 }}
+                              >Review</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {contactFormStep === 2 && (
+                          <div>
+                            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 16 }}>Review Your Ticket</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                              {[
+                                { label: 'Name', value: contactFormData.name },
+                                { label: 'Business', value: contactFormData.business || '---' },
+                                { label: 'Email', value: contactFormData.email },
+                                { label: 'Department', value: ticketDept ? ticketDept.title : 'General' },
+                                { label: 'Priority', value: contactFormData.priority.charAt(0).toUpperCase() + contactFormData.priority.slice(1) },
+                                { label: 'Subject', value: contactFormData.subject },
+                                { label: 'Contact Method', value: contactFormData.contactMethod.charAt(0).toUpperCase() + contactFormData.contactMethod.slice(1) }
+                              ].map(row => (
+                                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+                                  <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>{row.label}</span>
+                                  <span style={{ fontSize: 13, color: '#1a1a1a', fontWeight: 700, textAlign: 'right', maxWidth: '60%' }}>{row.value}</span>
+                                </div>
+                              ))}
+                              {contactFormData.description && (
+                                <div style={{ padding: '8px 0' }}>
+                                  <span style={{ fontSize: 13, color: '#888', fontWeight: 600, display: 'block', marginBottom: 6 }}>Description</span>
+                                  <p style={{ fontSize: 13, color: '#444', lineHeight: 1.5, margin: 0, background: '#f8f9fa', padding: 12, borderRadius: 8 }}>{contactFormData.description}</p>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                              <button onClick={() => { setContactFormStep(1); setTicketStep(1); }} style={{ flex: 1, background: '#f8f9fa', color: '#444', border: '1px solid #e8e8e8', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Edit</button>
+                              <button
+                                onClick={() => {
+                                  const tid = 'SL-' + String(Math.floor(10000 + Math.random() * 90000))
+                                  setContactTicketId(tid)
+                                  const d = contactFormData
+                                  const subject = encodeURIComponent('[' + tid + '] ' + (d.subject || 'Support Ticket') + ' --- ' + (d.department || (ticketDept ? ticketDept.title : 'General')))
+                                  const body = encodeURIComponent('Ticket: ' + tid + '\nPriority: ' + d.priority + '\nDepartment: ' + (d.department || (ticketDept ? ticketDept.title : 'General')) + '\n\nName: ' + d.name + '\nBusiness: ' + d.business + '\nEmail: ' + d.email + '\nUsername: ' + d.username + '\nContact Method: ' + d.contactMethod + '\n\n' + d.description)
+                                  window.open('mailto:indootechteam@gmail.com?subject=' + subject + '&body=' + body, '_blank')
+                                  setContactStep('confirmation')
+                                }}
+                                style={{ flex: 2, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}
+                              >Submit Ticket</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ═══ NEW: Help Center Section ═══ */}
+              {contactStep === 'helpCenter' && (
+                <div style={{ marginBottom: 28, animation: 'fadeSlideIn 0.5s ease-out' }}>
+                  <button onClick={() => { setContactStep(null); setHelpSearchQuery(''); setHelpExpandedCat(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#1a73e8', marginBottom: 16, padding: 0, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                    ← Back to Support Center
+                  </button>
+
+                  {/* Header */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #6366f1, #3b82f6, #25D366)', backgroundSize: '200% 100%', animation: 'gradientShift 3s ease infinite', marginBottom: 16 }} />
+                    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Help Center & Knowledge Base</h2>
+                    <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>Find answers instantly from our comprehensive resource library</p>
+
+                    {/* Stats bar */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                      {['200+ articles', '14 categories', 'Updated daily'].map(s => (
+                        <span key={s} style={{ background: '#f0f4ff', border: '1px solid #dbeafe', borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700, color: '#3b82f6' }}>{s}</span>
+                      ))}
+                    </div>
+
+                    {/* Search Bar */}
+                    <div style={{ position: 'relative', marginBottom: 20 }}>
+                      <input
+                        type="text"
+                        value={helpSearchQuery}
+                        onChange={e => { setHelpSearchQuery(e.target.value); setHelpExpandedCat(null); setHelpFaqOpen([]); }}
+                        placeholder="Search for answers..."
+                        style={{ width: '100%', padding: '14px 14px 14px 42px', borderRadius: 14, border: '2px solid #e8e8e8', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44, background: '#fff' }}
+                        onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#e8e8e8'}
+                      />
+                      <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: '#888' }}>&#128269;</span>
+                    </div>
+                  </div>
+
+                  {/* Search Results */}
+                  {helpSearchQuery.trim().length > 0 && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Search Results</h3>
+                      {(() => {
+                        const query = helpSearchQuery.toLowerCase().trim();
+                        const results = [];
+                        SUPPORT_CATEGORIES.forEach(cat => {
+                          cat.faqs.forEach((faq, fi) => {
+                            if (faq.q.toLowerCase().includes(query) || faq.a.toLowerCase().includes(query)) {
+                              results.push({ cat, faq, fi });
+                            }
+                          });
+                        });
+                        if (results.length === 0) {
+                          return <p style={{ fontSize: 13, color: '#888', textAlign: 'center', padding: 20 }}>No results found. Try a different search term.</p>;
+                        }
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {results.slice(0, 15).map((r, i) => (
+                              <div key={i} style={{ background: '#f8f9fa', borderRadius: 12, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
+                                <button
+                                  onClick={() => setHelpFaqOpen(prev => prev.includes('s' + i) ? prev.filter(x => x !== 's' + i) : [...prev, 's' + i])}
+                                  style={{ width: '100%', background: 'none', border: 'none', padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 44 }}
+                                >
+                                  <div style={{ flex: 1, paddingRight: 10 }}>
+                                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', display: 'block' }}>{r.faq.q}</span>
+                                    <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>{r.cat.icon} {r.cat.title}</span>
+                                  </div>
+                                  <span style={{ fontSize: 18, color: '#888', transform: helpFaqOpen.includes('s' + i) ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>&#9660;</span>
+                                </button>
+                                {helpFaqOpen.includes('s' + i) && (
+                                  <div style={{ padding: '0 16px 14px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>{r.faq.a}</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Popular Articles */}
+                  {helpSearchQuery.trim().length === 0 && !helpExpandedCat && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Popular Articles</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {[
+                          { cat: SUPPORT_CATEGORIES[0], faq: SUPPORT_CATEGORIES[0].faqs[0] },
+                          { cat: SUPPORT_CATEGORIES[1], faq: SUPPORT_CATEGORIES[1].faqs[0] },
+                          { cat: SUPPORT_CATEGORIES[3], faq: SUPPORT_CATEGORIES[3].faqs[0] },
+                          { cat: SUPPORT_CATEGORIES[10], faq: SUPPORT_CATEGORIES[10].faqs[0] },
+                          { cat: SUPPORT_CATEGORIES[2], faq: SUPPORT_CATEGORIES[2].faqs[0] }
+                        ].map((item, i) => (
+                          <div key={i} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
+                            <button
+                              onClick={() => setHelpFaqOpen(prev => prev.includes('p' + i) ? prev.filter(x => x !== 'p' + i) : [...prev, 'p' + i])}
+                              style={{ width: '100%', background: 'none', border: 'none', padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 44 }}
+                            >
+                              <div style={{ flex: 1, paddingRight: 10 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                  <span style={{ background: '#fffde7', padding: '2px 6px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: '#b8860b' }}>POPULAR</span>
+                                </div>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', display: 'block' }}>{item.faq.q}</span>
+                                <span style={{ fontSize: 11, color: '#888', fontWeight: 600 }}>{item.cat.icon} {item.cat.title}</span>
+                              </div>
+                              <span style={{ fontSize: 18, color: '#888', transform: helpFaqOpen.includes('p' + i) ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>&#9660;</span>
+                            </button>
+                            {helpFaqOpen.includes('p' + i) && (
+                              <div style={{ padding: '0 16px 14px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>{item.faq.a}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Links */}
+                  {helpSearchQuery.trim().length === 0 && !helpExpandedCat && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Quick Links</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {[
+                          { icon: '&#128640;', label: 'Getting Started', catIdx: 0 },
+                          { icon: '&#128100;', label: 'Account Setup', catIdx: 0 },
+                          { icon: '&#128179;', label: 'Billing', catIdx: 1 },
+                          { icon: '&#128187;', label: 'API Docs', catIdx: 11 }
+                        ].map((link, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setHelpExpandedCat(SUPPORT_CATEGORIES[link.catIdx]); setHelpFaqOpen([]); }}
+                            style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '14px 12px', cursor: 'pointer', textAlign: 'left', minHeight: 44, display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.background = '#f0f4ff'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e8e8'; e.currentTarget.style.background = '#fff'; }}
+                          >
+                            <span style={{ fontSize: 18 }} dangerouslySetInnerHTML={{ __html: link.icon }} />
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{link.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category Cards */}
+                  {helpSearchQuery.trim().length === 0 && !helpExpandedCat && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>All Categories</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        {SUPPORT_CATEGORIES.map((cat, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setHelpExpandedCat(cat); setHelpFaqOpen([]); }}
+                            style={{ background: '#fff', border: '2px solid #f0f0f0', borderRadius: 16, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', minHeight: 44, position: 'relative' }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,0.12)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0f0f0'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <span style={{ fontSize: 22, marginBottom: 6, display: 'block' }}>{cat.icon}</span>
+                              <span style={{ background: '#f0f4ff', color: '#6366f1', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10 }}>{cat.faqs.length} FAQs</span>
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{cat.title}</div>
+                            <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>{cat.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expanded Category */}
+                  {helpExpandedCat && helpSearchQuery.trim().length === 0 && (
+                    <div style={{ marginBottom: 24, animation: 'fadeSlideIn 0.3s ease-out' }}>
+                      <button onClick={() => { setHelpExpandedCat(null); setHelpFaqOpen([]); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#6366f1', marginBottom: 12, padding: 0, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                        ← All Categories
+                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <span style={{ fontSize: 28 }}>{helpExpandedCat.icon}</span>
+                        <div>
+                          <h3 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', margin: 0 }}>{helpExpandedCat.title}</h3>
+                          <p style={{ fontSize: 12, color: '#888', margin: 0 }}>{helpExpandedCat.description}</p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {helpExpandedCat.faqs.map((faq, i) => (
+                          <div key={i} style={{ background: '#f8f9fa', borderRadius: 12, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
+                            <button
+                              onClick={() => setHelpFaqOpen(prev => prev.includes('c' + i) ? prev.filter(x => x !== 'c' + i) : [...prev, 'c' + i])}
+                              style={{ width: '100%', background: 'none', border: 'none', padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 44 }}
+                            >
+                              <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', flex: 1, paddingRight: 10 }}>{faq.q}</span>
+                              <span style={{ fontSize: 18, color: '#888', transform: helpFaqOpen.includes('c' + i) ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>&#9660;</span>
+                            </button>
+                            {helpFaqOpen.includes('c' + i) && (
+                              <div style={{ padding: '0 16px 14px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>{faq.a}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Still need help CTA */}
+                  <div style={{ background: '#fffde7', borderRadius: 16, padding: 20, border: '1px solid #fff3b0', textAlign: 'center' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 6 }}>Still need help?</h3>
+                    <p style={{ fontSize: 13, color: '#666', marginBottom: 14 }}>Our support team is ready to assist you personally</p>
+                    <button
+                      onClick={() => { setContactStep('ticket'); setTicketDept(null); setTicketStep(0); setContactFormStep(0); }}
+                      style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44, width: '100%' }}
+                    >Submit a Support Ticket</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ NEW: Sales Section ═══ */}
+              {contactStep === 'sales' && (
+                <div style={{ marginBottom: 28, animation: 'fadeSlideIn 0.5s ease-out' }}>
+                  <button onClick={() => setContactStep(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#1a73e8', marginBottom: 16, padding: 0, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+                    ← Back to Support Center
+                  </button>
+
+                  {/* Header */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #1a1a1a, #444, #888, #1a1a1a)', backgroundSize: '200% 100%', animation: 'gradientShift 3s ease infinite', marginBottom: 16 }} />
+                    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Talk to Our Sales Team</h2>
+                    <p style={{ fontSize: 13, color: '#888', marginBottom: 0 }}>Get a personalized solution for your business needs</p>
+                  </div>
+
+                  {/* Trust Badges */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                    {['No commitment required', 'Free consultation', 'Custom pricing available'].map(badge => (
+                      <span key={badge} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700, color: '#15803d' }}>{badge}</span>
+                    ))}
+                  </div>
+
+                  {/* What We Offer */}
+                  <div style={{ marginBottom: 24 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>What We Offer</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {[
+                        { icon: '&#128241;', title: 'Basic App', desc: 'Perfect for getting started with a mobile-first store', color: '#3b82f6' },
+                        { icon: '&#9889;', title: 'Pro App', desc: 'Advanced features for growing businesses', color: '#f59e0b' },
+                        { icon: '&#127760;', title: 'Custom Domain', desc: 'Your own branded URL for a professional presence', color: '#6366f1' },
+                        { icon: '&#127970;', title: 'Enterprise Solutions', desc: 'White-label, API, and dedicated support', color: '#1a1a1a' }
+                      ].map((offer, i) => (
+                        <div key={i} style={{ background: '#fff', border: '2px solid #f0f0f0', borderRadius: 16, padding: 16, textAlign: 'center' }}>
+                          <span style={{ fontSize: 28, display: 'block', marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: offer.icon }} />
+                          <div style={{ fontSize: 14, fontWeight: 800, color: offer.color, marginBottom: 4 }}>{offer.title}</div>
+                          <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>{offer.desc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Consultation Form */}
+                  <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: 24, border: '1px solid #e8e8e8', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', marginBottom: 20 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 16 }}>Book a Free Consultation</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {[
+                        { key: 'name', label: 'Your Name', type: 'text', placeholder: 'Full name' },
+                        { key: 'businessName', label: 'Business Name', type: 'text', placeholder: 'Your business name' },
+                        { key: 'email', label: 'Email Address', type: 'email', placeholder: 'you@example.com' },
+                        { key: 'whatsapp', label: 'WhatsApp Number', type: 'tel', placeholder: '+62 xxx xxxx xxxx' }
+                      ].map(field => (
+                        <div key={field.key}>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>{field.label}</label>
+                          <input
+                            type={field.type}
+                            value={salesForm[field.key]}
+                            onChange={e => setSalesForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                            placeholder={field.placeholder}
+                            style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44 }}
+                            onFocus={e => e.currentTarget.style.borderColor = '#1a1a1a'}
+                            onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+                          />
+                        </div>
+                      ))}
+
+                      {/* Business Type */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Business Type</label>
+                        <select
+                          value={salesForm.businessType}
+                          onChange={e => setSalesForm(prev => ({ ...prev, businessType: e.target.value }))}
+                          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44, background: '#fff', color: salesForm.businessType ? '#1a1a1a' : '#888' }}
+                        >
+                          <option value="" disabled>Select your business type</option>
+                          {['Restaurant / Food & Beverage', 'Cafe / Coffee Shop', 'Street Food / Food Truck', 'Catering Service', 'Bakery / Desserts', 'Grocery / Minimart', 'Property / Real Estate', 'Salon / Beauty', 'Laundry Service', 'Retail / E-commerce', 'Other'].map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Number of Locations */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Number of Locations</label>
+                        <select
+                          value={salesForm.locations}
+                          onChange={e => setSalesForm(prev => ({ ...prev, locations: e.target.value }))}
+                          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44, background: '#fff', color: salesForm.locations ? '#1a1a1a' : '#888' }}
+                        >
+                          <option value="" disabled>Select</option>
+                          {['1', '2-5', '6-10', '11-25', '25+'].map(v => (
+                            <option key={v} value={v}>{v}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Monthly Order Volume */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 6 }}>Monthly Order Volume</label>
+                        <select
+                          value={salesForm.orderVolume}
+                          onChange={e => setSalesForm(prev => ({ ...prev, orderVolume: e.target.value }))}
+                          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e0e0e0', fontSize: 14, outline: 'none', boxSizing: 'border-box', minHeight: 44, background: '#fff', color: salesForm.orderVolume ? '#1a1a1a' : '#888' }}
+                        >
+                          <option value="" disabled>Select estimated volume</option>
+                          {['Under 100', '100 - 500', '500 - 1,000', '1,000 - 5,000', '5,000+'].map(v => (
+                            <option key={v} value={v}>{v}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Interests checkboxes */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#444', marginBottom: 8 }}>What interests you?</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {['Food App', 'Custom Domain', 'Custom Theme', 'API Access', 'White Label Solution'].map(interest => (
+                            <label key={interest} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '8px 12px', borderRadius: 10, border: salesForm.interests.includes(interest) ? '2px solid #1a1a1a' : '2px solid #e8e8e8', background: salesForm.interests.includes(interest) ? '#f8f9fa' : '#fff', minHeight: 44 }}>
+                              <input
+                                type="checkbox"
+                                checked={salesForm.interests.includes(interest)}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setSalesForm(prev => ({ ...prev, interests: [...prev.interests, interest] }));
+                                  } else {
+                                    setSalesForm(prev => ({ ...prev, interests: prev.interests.filter(x => x !== interest) }));
+                                  }
+                                }}
+                                style={{ width: 18, height: 18, accentColor: '#1a1a1a' }}
+                              />
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{interest}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Submit consultation */}
+                      <button
+                        onClick={() => {
+                          const subject = encodeURIComponent('Sales Inquiry - ' + (salesForm.businessName || 'New Business'))
+                          const body = encodeURIComponent('Name: ' + salesForm.name + '\nBusiness: ' + salesForm.businessName + '\nEmail: ' + salesForm.email + '\nWhatsApp: ' + salesForm.whatsapp + '\nBusiness Type: ' + salesForm.businessType + '\nLocations: ' + salesForm.locations + '\nMonthly Volume: ' + salesForm.orderVolume + '\nInterests: ' + salesForm.interests.join(', '))
+                          window.open('mailto:indootechteam@gmail.com?subject=' + subject + '&body=' + body, '_blank')
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '16px 24px', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 44, width: '100%' }}
+                      >
+                        Submit Consultation Request
+                      </button>
+
+                      {/* Response time notice */}
+                      <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                        <span style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>Our sales team typically responds within 2 hours</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Enterprise Features */}
+                  <div style={{ background: '#f8f9fa', borderRadius: 16, padding: 20, border: '1px solid #e8e8e8' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 14 }}>Enterprise Features</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {[
+                        { icon: '&#128101;', title: 'Dedicated Account Manager', desc: 'A personal point of contact for all your needs' },
+                        { icon: '&#9889;', title: 'Priority Support', desc: 'Under 30-minute response time guaranteed' },
+                        { icon: '&#128295;', title: 'Custom Integration', desc: 'Connect with your existing tools and workflows' },
+                        { icon: '&#128203;', title: 'SLA Guarantee', desc: '99.9% uptime with financial backing' }
+                      ].map((feat, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e8e8e8' }}>
+                          <span style={{ fontSize: 22, flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: feat.icon }} />
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 2 }}>{feat.title}</div>
+                            <div style={{ fontSize: 12, color: '#888', lineHeight: 1.4 }}>{feat.desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Section 7: Department Showcase */}
               <div style={{ marginBottom: 28, animation: 'fadeSlideIn 0.6s ease-out 0.3s both' }}>
                 <h2 style={{ fontSize: 20, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Our Departments</h2>
@@ -2644,19 +3282,17 @@ export default function App() {
                 <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>Choose your preferred communication channel</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {CONTACT_CHANNELS.map((ch, i) => (
-                    <div key={i} style={{ background: ch.primary ? '#e8f5e9' : '#fff', borderRadius: 16, padding: 16, border: ch.primary ? `2px solid ${ch.color}` : '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: ch.primary ? ch.color : '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: ch.primary ? '#fff' : undefined }}>{ch.icon}</div>
+                    <div key={i} style={{ background: ch.primary ? '#fffde7' : '#fff', borderRadius: 16, padding: 16, border: ch.primary ? `2px solid ${ch.color}` : '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: ch.primary ? ch.color : '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: ch.primary ? '#1a1a1a' : undefined }}>{ch.icon}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 2 }}>{ch.name}</div>
-                        {ch.href && ch.href.startsWith('mailto:') && <div style={{ fontSize: 11, color: ch.color, fontWeight: 600 }}>{ch.href.replace('mailto:', '')}</div>}
-                        {ch.href && ch.href.startsWith('https://wa.me/') && <div style={{ fontSize: 11, color: ch.color, fontWeight: 600 }}>+62 813 9200 0050</div>}
                         <div style={{ fontSize: 11, color: '#888' }}>{ch.availability}</div>
                         <div style={{ fontSize: 11, color: '#666', fontWeight: 600 }}>Response: {ch.responseTime}</div>
                       </div>
-                      {ch.href && (
-                        <a href={ch.href} target="_blank" rel="noopener noreferrer" style={{ background: ch.primary ? ch.color : '#f8f9fa', color: ch.primary ? '#fff' : '#444', padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', minHeight: 36, display: 'flex', alignItems: 'center' }}>
-                          {ch.primary ? 'Chat Now' : 'Contact'}
-                        </a>
+                      {ch.action && (
+                        <button onClick={() => setContactStep(ch.action)} style={{ background: ch.primary ? ch.color : '#f8f9fa', color: ch.primary ? '#1a1a1a' : '#444', border: 'none', padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 36 }}>
+                          {ch.action === 'ticket' ? 'Submit' : ch.action === 'sales' ? 'Consult' : 'Open'}
+                        </button>
                       )}
                     </div>
                   ))}
