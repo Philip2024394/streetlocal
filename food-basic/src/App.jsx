@@ -1755,24 +1755,57 @@ export default function App() {
               <button onClick={() => setHeroEditor(false)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
             </div>
 
-            {/* Live Preview — uses actual theme background */}
-            <div style={{ position: 'relative', height: 220, flexShrink: 0, overflow: 'hidden' }}>
-              <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-              <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}>
-                <style>{`
-                  @keyframes heroRunGlow { 0%, 100% { text-shadow: 0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 20px ${heroColor}, 0 0 50px ${heroColor}60, 0 0 80px ${heroColor}30, 0 2px 4px rgba(0,0,0,0.9); } }
-                  @keyframes heroNeonFlicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80; } 20%, 24%, 55% { text-shadow: none; } }
-                `}</style>
-                {pLines.map((line, i) => (
-                  <div key={i} style={{ fontSize: szE.title, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ffE, lineHeight: 1.15, letterSpacing: -0.5, textAlign: 'center', ...fxP }}>{line}</div>
-                ))}
-                {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
-                {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
-              </div>
-              {/* Line count indicator */}
-              <div style={{ position: 'absolute', bottom: 6, right: 8, zIndex: 3, fontSize: 10, fontWeight: 700, color: lineWarning ? '#EF4444' : '#22c55e', background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: 6 }}>
-                {pLines.length} line{pLines.length !== 1 ? 's' : ''} {lineWarning ? '— too many!' : ''} · {shopName.length}/20 chars
+            {/* Live Preview — iPhone mockup */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 10px', flexShrink: 0, background: '#0a0a0a' }}>
+              <div style={{ position: 'relative' }}>
+                {/* iPhone frame */}
+                <div style={{ width: 200, height: 400, borderRadius: 30, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 12px 40px ${accent}20, 0 4px 16px rgba(0,0,0,0.3)`, border: '2px solid #333' }}>
+                  {/* Side buttons */}
+                  <div style={{ position: 'absolute', right: -3, top: 80, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                  <div style={{ position: 'absolute', left: -3, top: 68, width: 3, height: 16, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                  <div style={{ position: 'absolute', left: -3, top: 90, width: 3, height: 16, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                  {/* Screen */}
+                  <div style={{ width: '100%', height: '100%', borderRadius: 27, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                    {/* Dynamic island */}
+                    <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                    {/* Background image */}
+                    <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+                    {/* Content */}
+                    <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
+                      <style>{`
+                        @keyframes heroRunGlow { 0%, 100% { text-shadow: 0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9); } 50% { text-shadow: 0 0 20px ${heroColor}, 0 0 50px ${heroColor}60, 0 0 80px ${heroColor}30, 0 2px 4px rgba(0,0,0,0.9); } }
+                        @keyframes heroNeonFlicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80; } 20%, 24%, 55% { text-shadow: none; } }
+                      `}</style>
+                      {/* Logo */}
+                      {shopLogoStyle !== 'off' && shopLogo ? (
+                        shopLogoStyle === 'bare' ? (
+                          <img src={shopLogo} alt="" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
+                        ) : (
+                          <div style={{ width: 52, height: 52, borderRadius: 26, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>
+                            <img src={shopLogo} alt="" style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover' }} />
+                          </div>
+                        )
+                      ) : shopLogoStyle !== 'off' ? (
+                        <div style={{ width: 36, height: 36, borderRadius: 18, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
+                      ) : null}
+                      {/* Title lines */}
+                      {pLines.map((line, i) => (
+                        <div key={i} style={{ fontSize: szE.title, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ffE, lineHeight: 1.15, letterSpacing: -0.5, textAlign: 'center', ...fxP }}>{line}</div>
+                      ))}
+                      {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
+                      {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
+                      {/* Mock View Menu button */}
+                      <div style={{ marginTop: 16, padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 10, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                    </div>
+                    {/* Home indicator */}
+                    <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                  </div>
+                </div>
+                {/* Line count badge */}
+                <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 700, color: lineWarning ? '#EF4444' : '#22c55e', background: '#1a1a1a', padding: '3px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
+                  {pLines.length} line{pLines.length !== 1 ? 's' : ''}{lineWarning ? ' — too many!' : ''} · {shopName.length}/20
+                </div>
               </div>
             </div>
 
