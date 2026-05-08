@@ -3304,9 +3304,9 @@ export default function App() {
                         {/* Mock landing content — scaled to card */}
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
                           <div style={{ width: 28, height: 28, borderRadius: 14, background: theme.accent || '#8DC63F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>
-                            <span style={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>S</span>
+                            <span style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>SN</span>
                           </div>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
                           <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)', marginTop: 2, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{theme.category}</div>
                           <div style={{ marginTop: 8, padding: '3px 12px', borderRadius: 6, background: theme.accent || '#8DC63F', fontSize: 8, fontWeight: 700, color: '#fff' }}>View Menu</div>
                         </div>
@@ -3382,9 +3382,9 @@ export default function App() {
                         {themePreviewPage === 'landing' && (
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
                             <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
-                              <span style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>S</span>
+                              <span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span>
                             </div>
-                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
                             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
                             <button onClick={() => setThemePreviewPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
                           </div>
@@ -3397,7 +3397,7 @@ export default function App() {
                               <button onClick={() => setThemePreviewPage('landing')} style={{ width: 26, height: 26, borderRadius: 13, background: ac, border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
                               <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
                               <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>Your Shop</div>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>Street Noodle</div>
                                 <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div>
                               </div>
                             </div>
