@@ -2873,12 +2873,6 @@ export default function App() {
                     <h2 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Help Center & Knowledge Base</h2>
                     <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>Find answers instantly from our comprehensive resource library</p>
 
-                    {/* Stats bar */}
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                      {['200+ articles', '14 categories', 'Updated daily'].map(s => (
-                        <span key={s} style={{ background: '#f0f4ff', border: '1px solid #dbeafe', borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700, color: '#3b82f6' }}>{s}</span>
-                      ))}
-                    </div>
 
                     {/* Search Bar */}
                     <div style={{ position: 'relative', marginBottom: 20 }}>
