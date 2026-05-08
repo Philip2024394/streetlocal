@@ -3347,15 +3347,18 @@ export default function App() {
                 const ac = theme.accent || '#8DC63F'
 
                 return (
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
                     {/* Header */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 300, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 340, flexShrink: 0, padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
-                        <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>streetlocal.live</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>StreetLocal</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Business at your finger tips</div>
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
                     </div>
+
+                    {/* Spacer — push phone to center */}
+                    <div style={{ flex: 1, minHeight: 10 }} />
 
                     {/* Phone mockup — static preview */}
                     <div onClick={e => e.stopPropagation()} style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
@@ -3391,8 +3394,11 @@ export default function App() {
                       </div>
                     )}
 
+                    {/* Bottom spacer */}
+                    <div style={{ flex: 1, minHeight: 10 }} />
+
                     {/* Footer buttons */}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 14, flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 10, flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
