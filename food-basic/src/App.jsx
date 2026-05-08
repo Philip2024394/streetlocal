@@ -532,6 +532,7 @@ export default function App() {
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
+  const [themePreviewImg, setThemePreviewImg] = useState(null) // active variant image in preview
   const [themeCountryDrawer, setThemeCountryDrawer] = useState(false)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
@@ -545,11 +546,12 @@ export default function App() {
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
   const [editorPos, setEditorPos] = useState({ x: 50, y: 50 }) // percentage position
 
-  // Apply ?theme= param background on mount
+  // Apply ?theme= param background on mount (supports &bg= for variant)
   useEffect(() => {
     if (urlThemePreset) {
       const bgImg = document.getElementById('app-bg-img')
-      if (bgImg) { bgImg.src = urlThemePreset.img; bgImg.style.objectFit = 'fill' }
+      const customBg = new URLSearchParams(window.location.search).get('bg')
+      if (bgImg) { bgImg.src = customBg || urlThemePreset.img; bgImg.style.objectFit = 'fill' }
     }
   }, [])
 
@@ -3191,7 +3193,10 @@ export default function App() {
         const countries = [...new Set(THEME_PRESETS.flatMap(t => t.countries))]
         const COUNTRY_LABELS = { ID: 'Indonesia', MY: 'Malaysia', SG: 'Singapore', TH: 'Thailand', VN: 'Vietnam', PH: 'Philippines', US: 'USA', GB: 'UK', AU: 'Australia', NZ: 'New Zealand', CA: 'Canada', DE: 'Germany', FR: 'France', NL: 'Netherlands', AE: 'UAE', SA: 'Saudi', QA: 'Qatar', KW: 'Kuwait', EG: 'Egypt', KR: 'Korea' }
         const filtered = THEME_PRESETS.filter(t => {
-          if (themeCountry !== 'all' && !t.countries.includes(themeCountry)) return false
+          if (themeCountry !== 'all') {
+            if (FOOD_CATEGORIES.includes(themeCountry)) { if (t.category !== themeCountry) return false }
+            else { if (!t.countries.includes(themeCountry)) return false }
+          }
           if (themeSearch && !t.label.toLowerCase().includes(themeSearch.toLowerCase()) && !t.category.toLowerCase().includes(themeSearch.toLowerCase())) return false
           return true
         })
@@ -3219,26 +3224,51 @@ export default function App() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
                 </div>
                 <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.08)', color: themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
                   {themeCountry !== 'all' && <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, background: '#22c55e', border: '2px solid #1a1a1a' }} />}
                 </button>
               </div>
-              {themeCountry !== 'all' && <div style={{ padding: '0 14px 8px', fontSize: 12, color: '#FFD600', fontWeight: 700 }}>Filtered: {COUNTRY_LABELS[themeCountry] || themeCountry} <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>Clear</button></div>}
+              {themeCountry !== 'all' && (
+                <div style={{ padding: '0 14px 8px', fontSize: 12, color: '#FFD600', fontWeight: 700 }}>
+                  {FOOD_CATEGORIES.includes(themeCountry) ? themeCountry : (COUNTRY_LABELS[themeCountry] || themeCountry)}
+                  <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer', fontWeight: 600, marginLeft: 6 }}>Clear</button>
+                </div>
+              )}
 
-              {/* Country drawer — slides from left */}
+              {/* Category drawer — slides from left */}
               {themeCountryDrawer && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 400 }} onClick={() => setThemeCountryDrawer(false)}>
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
-                  <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 260, background: '#1a1a1a', padding: '20px 0', overflowY: 'auto', animation: 'slideRight 0.2s ease' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 270, background: '#1a1a1a', padding: '20px 0', overflowY: 'auto', animation: 'slideRight 0.2s ease' }}>
                     <div style={{ padding: '0 16px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Filter by Country</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Categories</div>
                       <button onClick={() => setThemeCountryDrawer(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
                     </div>
-                    <button onClick={() => { setThemeCountry('all'); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '14px 16px', border: 'none', background: themeCountry === 'all' ? '#FFD600' : 'transparent', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 700, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>All Countries</button>
+
+                    {/* All */}
+                    <button onClick={() => { setThemeCountry('all'); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '12px 16px', border: 'none', background: themeCountry === 'all' ? '#FFD600' : 'transparent', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 700, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>All Themes</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{THEME_PRESETS.length}</span>
+                    </button>
+
+                    {/* Food categories */}
+                    <div style={{ padding: '12px 16px 6px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Food Type</div>
+                    {FOOD_CATEGORIES.map(cat => {
+                      const count = THEME_PRESETS.filter(t => t.category === cat).length
+                      return (
+                        <button key={cat} onClick={() => { setThemeCountry(cat); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '11px 16px', border: 'none', background: themeCountry === cat ? '#FFD600' : 'transparent', color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>{cat}</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
+                        </button>
+                      )
+                    })}
+
+                    {/* Countries */}
+                    <div style={{ padding: '12px 16px 6px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Country</div>
                     {countries.map(c => {
                       const count = THEME_PRESETS.filter(t => t.countries.includes(c)).length
                       return (
-                        <button key={c} onClick={() => { setThemeCountry(c); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '14px 16px', border: 'none', background: themeCountry === c ? '#FFD600' : 'transparent', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <button key={c} onClick={() => { setThemeCountry(c); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '11px 16px', border: 'none', background: themeCountry === c ? '#FFD600' : 'transparent', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>{COUNTRY_LABELS[c] || c}</span>
                           <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
                         </button>
@@ -3306,44 +3336,60 @@ export default function App() {
               {themePreviewId && (() => {
                 const theme = THEME_PRESETS.find(t => t.id === themePreviewId)
                 if (!theme) return null
+                const activeImg = themePreviewImg || theme.img
+                const allImages = [theme.img, ...(theme.variants || [])]
+                const hasVariants = allImages.length > 1
                 const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
-                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}`
+                const bgParam = activeImg !== theme.img ? `&bg=${encodeURIComponent(activeImg)}` : ''
+                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}${bgParam}`
                 const iframeW = 375
                 const iframeH = 812
-                const phoneW = 280
+                const phoneW = 260
                 const screenW = phoneW - 8
                 const scaleFactor = screenW / iframeW
                 const phoneH = Math.round(iframeH * scaleFactor) + 8
 
                 return (
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onClick={() => setThemePreviewId(null)}>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
+                    <div style={{ flexShrink: 0, height: 12 }} />
                     {/* Theme name */}
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 10 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 8, flexShrink: 0 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
 
                     {/* Live phone */}
-                    <div onClick={e => e.stopPropagation()} style={{ width: phoneW, height: phoneH, borderRadius: 36, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 20px ${theme.accent}30`, border: '2px solid #333' }}>
-                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 32, borderRadius: '0 2px 2px 0', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
-                      <div style={{ width: '100%', height: '100%', borderRadius: 32, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 60, height: 18, background: '#000', borderRadius: 14, zIndex: 10 }} />
+                    <div onClick={e => e.stopPropagation()} style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${theme.accent}25`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: phoneH * 0.22, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.18, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ position: 'absolute', left: -3, top: phoneH * 0.25, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
                         <div style={{ position: 'absolute', inset: 0 }}>
                           <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}>
-                            <iframe key={themePreviewId} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
+                            <iframe key={themePreviewId + activeImg} src={iframeSrc} style={{ width: iframeW, height: iframeH, border: 'none' }} title="Theme Preview" />
                           </div>
                         </div>
-                        <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 60, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
+                        <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
 
+                    {/* Variant thumbnails */}
+                    {hasVariants && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                        {allImages.map((img, i) => (
+                          <button key={i} onClick={() => setThemePreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${theme.accent || '#FFD600'}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+                            <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Footer buttons */}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 14 }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => setThemePreviewId(null)} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 12, flexShrink: 0, paddingBottom: 16 }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
-                        localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
-                        const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img
-                        setThemePreviewId(null); setThemeBrowser(false); setShowLanding(true)
+                        localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', activeImg); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                        const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = activeImg
+                        setThemePreviewId(null); setThemePreviewImg(null); setThemeBrowser(false); setShowLanding(true)
                       }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Use Theme</button>
                     </div>
                   </div>
