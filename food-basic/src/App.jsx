@@ -547,17 +547,6 @@ export default function App() {
     }
   }, [])
 
-  // Load Google Font for hero text
-  useEffect(() => {
-    if (heroFont !== 'system') {
-      const fontMap = { nunito: 'Nunito:wght@700;800;900', poppins: 'Poppins:wght@700;800;900', playfair: 'Playfair+Display:wght@700;800;900', caveat: 'Caveat:wght@700', bebas: 'Bebas+Neue' }
-      const fontId = 'hero-font-link'
-      let link = document.getElementById(fontId)
-      if (!link) { link = document.createElement('link'); link.id = fontId; link.rel = 'stylesheet'; document.head.appendChild(link) }
-      link.href = `https://fonts.googleapis.com/css2?family=${fontMap[heroFont]}&display=swap`
-    }
-  }, [heroFont])
-
   // Derive accent color from theme or custom selection
   const accent = shopAccentColor
   const accentLight = accent + '25'
@@ -681,6 +670,15 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_logoStyle', shopLogoStyle) }, [shopLogoStyle])
   useEffect(() => { localStorage.setItem('vendorbasic_heroSize', heroSize) }, [heroSize])
   useEffect(() => { localStorage.setItem('vendorbasic_heroFont', heroFont) }, [heroFont])
+  useEffect(() => {
+    if (heroFont !== 'system') {
+      const fontMap = { nunito: 'Nunito:wght@700;800;900', poppins: 'Poppins:wght@700;800;900', playfair: 'Playfair+Display:wght@700;800;900', caveat: 'Caveat:wght@700', bebas: 'Bebas+Neue' }
+      const fontId = 'hero-font-link'
+      let link = document.getElementById(fontId)
+      if (!link) { link = document.createElement('link'); link.id = fontId; link.rel = 'stylesheet'; document.head.appendChild(link) }
+      link.href = `https://fonts.googleapis.com/css2?family=${fontMap[heroFont]}&display=swap`
+    }
+  }, [heroFont])
   useEffect(() => { localStorage.setItem('vendorbasic_heroColor', heroColor) }, [heroColor])
   useEffect(() => { localStorage.setItem('vendorbasic_shopPhone', shopPhone) }, [shopPhone])
   useEffect(() => { saveJSON('vendorbasic_shopOpen', shopOpen) }, [shopOpen])
