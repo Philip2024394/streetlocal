@@ -533,6 +533,7 @@ export default function App() {
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
   const [themePreviewImg, setThemePreviewImg] = useState(null) // active variant image in preview
+  const [themePreviewPage, setThemePreviewPage] = useState('landing') // landing | menu
   const [themeCountryDrawer, setThemeCountryDrawer] = useState(false)
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
@@ -3309,7 +3310,7 @@ export default function App() {
                       </div>
                     </div>
                     {/* View Theme button */}
-                    <button onClick={() => { setThemePreviewImg(null); setThemePreviewId(theme.id) }} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                    <button onClick={() => { setThemePreviewImg(null); setThemePreviewPage('landing'); setThemePreviewId(theme.id) }} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
                   </div>
                 )
 
@@ -3369,16 +3370,53 @@ export default function App() {
                         <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
                         {/* Theme background */}
                         <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', transition: 'opacity 0.3s' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
-                        {/* Mock landing page */}
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 16px' }}>
-                          <div style={{ width: 56, height: 56, borderRadius: 28, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, border: '3px solid rgba(255,255,255,0.15)' }}>
-                            <span style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>S</span>
+                        <div style={{ position: 'absolute', inset: 0, background: themePreviewPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themePreviewPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
+
+                        {/* LANDING VIEW */}
+                        {themePreviewPage === 'landing' && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 16px' }}>
+                            <div style={{ width: 56, height: 56, borderRadius: 28, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, border: '3px solid rgba(255,255,255,0.15)' }}>
+                              <span style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>S</span>
+                            </div>
+                            <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
+                            <button onClick={() => setThemePreviewPage('menu')} style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: ac, fontSize: 13, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}>View Menu</button>
                           </div>
-                          <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Shop</div>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
-                          <div style={{ marginTop: 16, padding: '8px 24px', borderRadius: 10, background: ac, fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
-                        </div>
+                        )}
+
+                        {/* MENU VIEW */}
+                        {themePreviewPage === 'menu' && (
+                          <div style={{ position: 'absolute', inset: 0, zIndex: 2, padding: '24px 10px 10px', overflowY: 'auto' }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 24, height: 24, borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                              <div style={{ width: 20, height: 20, borderRadius: 10, background: ac, border: '1px solid rgba(255,255,255,0.15)' }} />
+                              <div style={{ fontSize: 11, fontWeight: 800, color: '#fff' }}>Your Shop</div>
+                            </div>
+                            {/* Category tabs */}
+                            <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                              {['Menu', 'Drinks', 'Snacks'].map((t, i) => (
+                                <div key={t} style={{ padding: '3px 10px', borderRadius: 6, background: i === 0 ? ac : 'rgba(255,255,255,0.08)', fontSize: 9, fontWeight: 700, color: '#fff' }}>{t}</div>
+                              ))}
+                            </div>
+                            {/* Mock cards */}
+                            {[1, 2, 3, 4].map(i => (
+                              <div key={i} style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: 8, marginBottom: 6, borderLeft: `3px solid ${ac}` }}>
+                                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ height: 6, width: '65%', background: 'rgba(255,255,255,0.5)', borderRadius: 3, marginBottom: 4 }} />
+                                  <div style={{ height: 5, width: '90%', background: 'rgba(255,255,255,0.15)', borderRadius: 2, marginBottom: 4 }} />
+                                  <div style={{ height: 6, width: '35%', background: '#FACC15', borderRadius: 3, opacity: 0.8 }} />
+                                </div>
+                              </div>
+                            ))}
+                            {/* Cart bar */}
+                            <div style={{ marginTop: 8, background: ac, borderRadius: 10, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>2 items</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>View Cart</div>
+                            </div>
+                          </div>
+                        )}
                         <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                       </div>
                     </div>
