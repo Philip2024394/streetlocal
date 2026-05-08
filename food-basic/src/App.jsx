@@ -3207,13 +3207,17 @@ export default function App() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
             <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
                 <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Themes</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{THEME_PRESETS.length} themes available</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 0.5 }}>streetlocal.live</div>
                 </div>
               </div>
 
@@ -3340,8 +3344,7 @@ export default function App() {
                 const allImages = [theme.img, ...(theme.variants || [])]
                 const hasVariants = allImages.length > 1
                 const iframeBase = window.location.hostname === 'localhost' ? `http://localhost:${window.location.port}/food/basic/` : '/food/basic/'
-                const bgParam = activeImg !== theme.img ? `&bg=${encodeURIComponent(activeImg)}` : ''
-                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}${bgParam}`
+                const iframeSrc = `${iframeBase}?demo=true&page=landing&theme=${theme.id}&bg=${encodeURIComponent(activeImg)}`
                 const iframeW = 375
                 const iframeH = 812
                 const phoneW = 260
@@ -3350,10 +3353,15 @@ export default function App() {
                 const phoneH = Math.round(iframeH * scaleFactor) + 8
 
                 return (
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
-                    <div style={{ flexShrink: 0, height: 12 }} />
-                    {/* Theme name */}
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 8, flexShrink: 0 }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingTop: 14 }} onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 320, marginBottom: 10, flexShrink: 0, padding: '0 10px' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: '#FFD600' }}>StreetLocal</div>
+                        <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>streetlocal.live</div>
+                      </div>
+                    </div>
 
                     {/* Live phone */}
                     <div onClick={e => e.stopPropagation()} style={{ width: phoneW, height: phoneH, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${theme.accent}25`, border: '2px solid #333', flexShrink: 0 }}>
