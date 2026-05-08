@@ -2194,10 +2194,10 @@ export default function App() {
                       { domain: 'orders.yourbrand.com', delay: '0.8s', ssl: false },
                       { domain: 'yourbrand.com', delay: '1.6s', ssl: false }
                     ].map((item, i) => (
-                      <div key={i} style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, animation: 'domainFadeIn 0.5s ease-out both', animationDelay: item.delay }}>
+                      <div key={i} style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, animation: 'domainFadeIn 0.5s ease-out both', animationDelay: item.delay }}>
                         {item.ssl && <span style={{ color: '#22c55e', fontSize: 14, flexShrink: 0 }}>&#9679;</span>}
-                        {!item.ssl && <span style={{ color: 'rgba(0,0,0,0.15)', fontSize: 14, flexShrink: 0 }}>&#9679;</span>}
-                        <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#1a1a1a', overflow: 'hidden', whiteSpace: 'nowrap', display: 'inline-block', animation: `domainType 1.5s steps(${item.domain.length}) ${item.delay} both, domainBlink 0.8s step-end infinite`, borderRight: '2px solid rgba(0,0,0,0.3)' }}>{item.domain}</span>
+                        {!item.ssl && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14, flexShrink: 0 }}>&#9679;</span>}
+                        <span style={{ fontFamily: 'monospace', fontSize: 13, color: 'rgba(255,255,255,0.8)', overflow: 'hidden', whiteSpace: 'nowrap', display: 'inline-block', animation: `domainType 1.5s steps(${item.domain.length}) ${item.delay} both, domainBlink 0.8s step-end infinite`, borderRight: '2px solid rgba(255,255,255,0.3)' }}>{item.domain}</span>
                         {item.ssl && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginLeft: 'auto', flexShrink: 0 }}>SSL</span>}
                       </div>
                     ))}
@@ -2208,17 +2208,17 @@ export default function App() {
                 <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '0 0 40px' }} />
 
                 {/* TIER 1 — Branded Subdomain */}
-                <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: '28px 24px', marginBottom: 20 }}>
-                  <h3 style={{ fontSize: 17, fontWeight: 800, color: '#1a1a1a', margin: '0 0 8px' }}>Launch Faster with a Branded Presence</h3>
+                <div style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', padding: '28px 24px', marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Launch Faster with a Branded Presence</h3>
                   <div style={{ fontFamily: 'monospace', fontSize: 13, color: '#3b82f6', marginBottom: 12 }}>shopname.streetlocal.live</div>
-                  <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>Get online instantly with a professionally branded subdomain. No technical setup required — we handle everything so you can start serving customers immediately.</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>Get online instantly with a professionally branded subdomain. No technical setup required — we handle everything so you can start serving customers immediately.</p>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a' }}>Rp 25.000/month</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Rp 25.000/month</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.35)', marginBottom: 20 }}>Rp 50.000 setup</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Rp 50.000 setup</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Instant deployment', 'Managed SSL security', 'Business-branded URL', 'Rapid activation', 'Zero technical setup'].map((f, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                         <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
@@ -2227,18 +2227,18 @@ export default function App() {
                 </div>
 
                 {/* TIER 2 — Custom Domain */}
-                <div style={{ background: 'rgba(0,0,0,0.04)', borderRadius: 16, border: '1px solid rgba(0,0,0,0.08)', padding: '32px 24px', marginBottom: 20 }}>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(0,0,0,0.35)', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>Most Popular for Growing Brands</div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', margin: '0 0 8px' }}>Professional Brand Identity</h3>
+                <div style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', marginBottom: 20 }}>
+                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Most Popular for Growing Brands</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Professional Brand Identity</h3>
                   <div style={{ fontFamily: 'monospace', fontSize: 13, color: '#3b82f6', marginBottom: 12 }}>menu.yourbrand.com</div>
-                  <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>Connect your own domain for a fully professional brand experience. We configure DNS records, provision SSL certificates, and manage the routing infrastructure so your customers see only your brand.</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>Connect your own domain for a fully professional brand experience. We configure DNS records, provision SSL certificates, and manage the routing infrastructure so your customers see only your brand.</p>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a' }}>Rp 75.000/month</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Rp 75.000/month</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.35)', marginBottom: 20 }}>Rp 150.000 onboarding</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Rp 150.000 onboarding</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Full DNS configuration', 'Secure SSL management', 'Seamless domain connection', 'Branded customer experience', 'Managed infrastructure'].map((f, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                         <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
@@ -2247,18 +2247,18 @@ export default function App() {
                 </div>
 
                 {/* TIER 3 — Fully Managed Domain */}
-                <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: 16, border: '1px solid rgba(0,0,0,0.08)', padding: '32px 24px', marginBottom: 40, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', marginBottom: 40, position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent)' }} />
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', margin: '0 0 8px' }}>Fully Managed Brand Infrastructure</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Fully Managed Brand Infrastructure</h3>
                   <div style={{ fontFamily: 'monospace', fontSize: 13, color: '#3b82f6', marginBottom: 12 }}>yourbrand.com</div>
-                  <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>The complete white-glove service. We acquire your domain, configure enterprise-grade DNS, provision and auto-renew SSL certificates, and manage the entire infrastructure lifecycle. Ownership transfers to you.</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>The complete white-glove service. We acquire your domain, configure enterprise-grade DNS, provision and auto-renew SSL certificates, and manage the entire infrastructure lifecycle. Ownership transfers to you.</p>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a' }}>Rp 150.000/month</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Rp 150.000/month</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.35)', marginBottom: 20 }}>Rp 300.000 setup</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Rp 300.000 setup</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {['Domain acquisition handled', 'Enterprise-grade DNS management', 'SSL & renewal automation', 'Ownership transfer included', 'Fully managed infrastructure lifecycle'].map((f, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                         <span style={{ color: '#FFD600', fontSize: 8 }}>&#9679;</span>
                         {f}
                       </div>
