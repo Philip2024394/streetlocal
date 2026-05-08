@@ -3361,8 +3361,10 @@ export default function App() {
                     {/* Spacer — push phone to center */}
                     <div style={{ flex: 1, minHeight: 10 }} />
 
+                    {/* Phone + Variants row */}
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                     {/* Phone mockup — static preview */}
-                    <div onClick={e => e.stopPropagation()} style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
+                    <div style={{ width: 240, height: 480, borderRadius: 34, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333', flexShrink: 0 }}>
                       <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
                       <div style={{ position: 'absolute', left: -3, top: 85, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
@@ -3426,9 +3428,9 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Variant thumbnails */}
+                    {/* Variant thumbnails — right side */}
                     {hasVariants && (
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                         {allImages.map((img, i) => (
                           <button key={i} onClick={() => setThemePreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
                             <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -3436,6 +3438,7 @@ export default function App() {
                         ))}
                       </div>
                     )}
+                    </div>
 
                     {/* Bottom spacer */}
                     <div style={{ flex: 1, minHeight: 10 }} />
