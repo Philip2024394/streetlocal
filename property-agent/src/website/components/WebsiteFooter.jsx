@@ -2,7 +2,7 @@
  * WebsiteFooter — Property website footer with working navigation links.
  */
 
-const LOGO = 'https://ik.imagekit.io/nepgaxllc/Bold%203D%20_INDOO_%20logo%20design.png?updatedAt=1776203769926'
+const LOGO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png'
 
 export default function WebsiteFooter({ onNavigate }) {
   const nav = (page) => { onNavigate?.(page); window.scrollTo({ top: 0, behavior: 'smooth' }) }

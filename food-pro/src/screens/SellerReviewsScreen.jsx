@@ -6,8 +6,9 @@ import { createPortal } from 'react-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import styles from './SellerReviewsScreen.module.css'
+import imgError from '../imgFallback'
 
-const MARKET_LOGO = 'https://ik.imagekit.io/nepgaxllc/Untitledfsdsd-removebg-preview.png'
+const MARKET_LOGO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdsd-removebg-preview.png'
 
 const DEMO_REVIEWS = [
   { id: 'r1', buyer: 'Chloe B.', avatar: 'https://i.pravatar.cc/80?img=5', product: 'Batik Shirt Premium', rating: 5, text: 'Beautiful quality! The fabric is so soft and the pattern is stunning. Will definitely order again.', date: 'Apr 16', reply: null, images: [] },
@@ -60,7 +61,7 @@ export default function SellerReviewsScreen({ open, onClose }) {
         <button className={styles.backBtn} onClick={onClose}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <img src={MARKET_LOGO} alt="Indoo Market" className={styles.headerLogo} />
+        <img src={MARKET_LOGO} alt="Indoo Market" className={styles.headerLogo} onError={imgError('logo')} />
         <h1 className={styles.title}>Reviews</h1>
       </div>
 
@@ -112,7 +113,7 @@ export default function SellerReviewsScreen({ open, onClose }) {
           <div key={review.id} className={`${styles.card} ${!review.reply ? styles.cardUnreplied : ''}`}>
             {/* Buyer info */}
             <div className={styles.cardHeader}>
-              <img src={review.avatar} alt={review.buyer} className={styles.avatar} />
+              <img src={review.avatar} alt={review.buyer} className={styles.avatar} onError={imgError('logo')} />
               <div className={styles.cardMeta}>
                 <span className={styles.buyerName}>{review.buyer}</span>
                 <StarRow rating={review.rating} />

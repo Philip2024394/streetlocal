@@ -470,10 +470,20 @@ export default function Admin({ onClose }) {
               </div>
             </div>
 
-            {/* Create alert button */}
-            <button onClick={() => setShowAlertForm(!showAlertForm)} style={{ ...s.btnYellow, marginBottom: 16 }}>
-              {showAlertForm ? '✕ Cancel' : '+ Log New Issue'}
-            </button>
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <button onClick={() => setShowAlertForm(!showAlertForm)} style={{ ...s.btnYellow, flex: 1 }}>
+                {showAlertForm ? '✕ Cancel' : '+ Log New Issue'}
+              </button>
+              <button onClick={async () => {
+                // Reset search system — resolve all search errors and clear stale alerts
+                const { error } = await supabase.from('app_alerts').update({ status: 'resolved', resolved_at: new Date().toISOString(), resolved_by: 'admin_reset' }).match({ app: 'landing', type: 'search_error', status: 'open' })
+                if (!error) { alert('Search system reset complete. All search errors resolved.'); loadData() }
+                else alert('Reset failed: ' + error.message)
+              }} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #e8e8e8', background: '#fff', fontSize: 13, fontWeight: 700, color: '#555', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                🔄 Reset Search
+              </button>
+            </div>
 
             {/* Alert form */}
             {showAlertForm && (

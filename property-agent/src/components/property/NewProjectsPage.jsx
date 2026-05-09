@@ -8,7 +8,7 @@ import NewProjectDetail from './NewProjectDetail'
 import NewProjectListingForm from './NewProjectListingForm'
 import IndooFooter from '@/components/ui/IndooFooter'
 
-const BG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2007_44_48%20PM.png'
+const BG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-30-2026-07_44_48-pm.png'
 const glass = { background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16 }
 
 export default function NewProjectsPage({ open, onClose }) {

@@ -5,6 +5,7 @@
  * Includes "Request Safe Trade" when seller hasn't enabled it.
  */
 import { useState } from 'react'
+import imgError from '../../imgFallback'
 import { createPortal } from 'react-dom'
 import styles from './SafeTradeModal.module.css'
 
@@ -38,7 +39,7 @@ export default function SafeTradeModal({ open, onClose, product, sellerName, onR
 
           {/* Header */}
           <div className={styles.header}>
-            <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2015,%202026,%2007_26_42%20PM.png" alt="Safe Trade" className={styles.safeTradeLogo} />
+            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-15-2026-07_26_42-pm.png" alt="Safe Trade" className={styles.safeTradeLogo} onError={imgError('logo')} />
             <h2 className={styles.title}>Safe Trade</h2>
             <p className={styles.subtitle}>Your money is protected until you receive your item</p>
           </div>
@@ -96,7 +97,7 @@ export default function SafeTradeModal({ open, onClose, product, sellerName, onR
           <div className={styles.section}>
             <div className={styles.methodExplain}>
               <div className={styles.methodLogoWrap}>
-                <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfs-removebg-preview.png" alt="PayPal" className={styles.methodLogo} />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfsdfs-removebg-preview.png" alt="PayPal" className={styles.methodLogo} onError={imgError('payment')} />
               </div>
               <div className={styles.methodDetail}>
                 <span className={styles.methodName}>What is PayPal?</span>
@@ -112,7 +113,7 @@ export default function SafeTradeModal({ open, onClose, product, sellerName, onR
           <div className={styles.section}>
             <div className={styles.methodExplain}>
               <div className={styles.methodLogoWrap}>
-                <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsdasd-removebg-preview.png" alt="Escrow" className={styles.methodLogo} />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfsdfsdasd-removebg-preview.png" alt="Escrow" className={styles.methodLogo} onError={imgError('payment')} />
               </div>
               <div className={styles.methodDetail}>
                 <span className={styles.methodName}>What is Escrow?</span>
@@ -182,7 +183,7 @@ export default function SafeTradeModal({ open, onClose, product, sellerName, onR
                   {paypal && (
                     <div className={styles.methodCard}>
                       <div className={styles.methodLogoWrap}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfs-removebg-preview.png" alt="PayPal" className={styles.methodLogo} />
+                        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfsdfs-removebg-preview.png" alt="PayPal" className={styles.methodLogo} onError={imgError('payment')} />
                       </div>
                       <span className={styles.methodCardLabel}>Available</span>
                     </div>
@@ -190,7 +191,7 @@ export default function SafeTradeModal({ open, onClose, product, sellerName, onR
                   {escrow && (
                     <div className={styles.methodCard}>
                       <div className={styles.methodLogoWrap}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdfsdfsdasd-removebg-preview.png" alt="Escrow" className={styles.methodLogo} />
+                        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfsdfsdasd-removebg-preview.png" alt="Escrow" className={styles.methodLogo} onError={imgError('payment')} />
                       </div>
                       <span className={styles.methodCardLabel}>Available</span>
                     </div>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import imgError from '../../imgFallback'
 import styles from './RestaurantMenuSheet.module.css'
 
-const BIRTHDAY_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2024,%202026,%2003_58_16%20PM.png'
-const SEATING_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2024,%202026,%2003_53_13%20PM.png'
-const LIVE_MUSIC_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2024,%202026,%2004_28_23%20PM.png'
-const DJ_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2024,%202026,%2004_36_09%20PM.png'
-const TOUR_IMG = 'https://ik.imagekit.io/nepgaxllc/6789D.png'
+const BIRTHDAY_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-03_58_16-pm.png'
+const SEATING_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-03_53_13-pm.png'
+const LIVE_MUSIC_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-04_28_23-pm.png'
+const DJ_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-04_36_09-pm.png'
+const TOUR_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/6789d.png'
 
 // Full event data — each has detail content for the expanded overlay
 const EVENT_DATA = {
@@ -80,7 +81,7 @@ function EventCard({ data, rating, onOpen }) {
         border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, cursor: 'pointer',
       }}
     >
-      <img src={data.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <img src={data.img} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.1) 100%)' }} />
 
       {rating != null && (
@@ -127,7 +128,7 @@ function EventDetail({ data, restaurant, vendorData, onClose }) {
     }}>
       {/* Hero image */}
       <div style={{ position: 'relative', height: 200, flexShrink: 0 }}>
-        <img src={mainImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={mainImg} alt="" onError={imgError('banner')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0a0a 0%, transparent 50%)' }} />
 
         {/* Close button */}
@@ -166,7 +167,7 @@ function EventDetail({ data, restaurant, vendorData, onClose }) {
                 transition: 'all 0.15s',
               }}
             >
-              <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={img} alt="" onError={imgError('banner')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </button>
           ))}
         </div>

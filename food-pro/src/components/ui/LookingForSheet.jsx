@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import imgError from '../../imgFallback'
 import { createPortal } from 'react-dom'
 import { LOOKING_FOR_GROUPS, LOOKING_FOR_OPTIONS, SUB_CATEGORIES } from '@/utils/lookingForLabels'
 import styles from './LookingForSheet.module.css'
@@ -173,7 +174,7 @@ export default function LookingForSheet({ open, value, subValue, onChange, onClo
                       onClick={() => handleMainSelect(opt.value)}
                     >
                       {opt.img
-                        ? <img src={opt.img} alt={opt.label} className={styles.optionImg} />
+                        ? <img src={opt.img} alt={opt.label} className={styles.optionImg} onError={imgError('generic')} />
                         : <span className={styles.optionEmoji}>{opt.emoji}</span>
                       }
                       <span className={styles.optionLabel}>{opt.label}</span>

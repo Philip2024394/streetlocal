@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import imgError from '../../imgFallback'
 import styles from './CustomizeSheet.module.css'
 import { SPICE_LEVELS, COMMON_EXTRAS, SIZE_OPTIONS, SPECIAL_REQUESTS } from '@/constants/foodCustomizations'
 
@@ -54,7 +55,7 @@ export default function CustomizeSheet({ open, item, onClose, onConfirm }) {
           {/* Header */}
           <div className={styles.header}>
             {item.photo_url ? (
-              <img src={item.photo_url} alt="" className={styles.thumb} />
+              <img src={item.photo_url} alt="" onError={imgError('food')} className={styles.thumb} />
             ) : (
               <div className={styles.thumbFallback}>🍽️</div>
             )}

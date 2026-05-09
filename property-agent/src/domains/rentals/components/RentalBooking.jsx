@@ -97,7 +97,7 @@ export function RentalChat({ listing, onClose, onBook }) {
   if (!listing) return null
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: "#000 url('https://ik.imagekit.io/nepgaxllc/Untitledbbbcdfsdf.png?updatedAt=1776626023030') center / cover no-repeat", display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: "#000 url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbcdfsdf.png') center / cover no-repeat", display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: '50%', background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -214,7 +214,7 @@ export function RentalBookingFlow({ listing, onClose, onConfirm }) {
   const inputStyle = { width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 12, color: '#fff', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/Untitledsadasdadsaa.png?updatedAt=1776480383268)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadasdadsaa.png)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
       <div style={{ width: '100%', maxWidth: 400, maxHeight: '92vh', overflowY: 'auto',
         background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',

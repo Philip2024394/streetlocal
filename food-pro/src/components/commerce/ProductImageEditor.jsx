@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import imgError from '../../imgFallback'
 import styles from './ProductImageEditor.module.css'
 
 const MAX_IMAGES = 5
@@ -144,6 +145,7 @@ export default function ProductImageEditor({ initialUrl = null, initialImages = 
                   transform: `scale(${active.zoom / 100})`,
                   transformOrigin: `${active.offsetX}% ${active.offsetY}%`,
                 }}
+                onError={imgError('food')}
               />
               {watermark.trim() && (
                 <div className={styles.wmOverlay}>
@@ -172,7 +174,7 @@ export default function ProductImageEditor({ initialUrl = null, initialImages = 
                     cursor:'pointer', background:'#111',
                   }}
                 >
-                  <img src={img.src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                  <img src={img.src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} onError={imgError('food')} />
                 </button>
                 <button
                   onClick={() => removeImage(i)}

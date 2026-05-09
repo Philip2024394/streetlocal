@@ -17,7 +17,7 @@ export const DAILY_DEALS = [
     discount: 25,
     color: '#FACC15',
     slogan: 'Start your week with savings',
-    img: 'https://ik.imagekit.io/nepgaxllc/sasf.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sasf.png',
   },
   {
     day: 1,
@@ -26,7 +26,7 @@ export const DAILY_DEALS = [
     discount: 20,
     color: '#A78BFA',
     slogan: 'Monday magic at unreal prices',
-    img: 'https://ik.imagekit.io/nepgaxllc/sssaasssssss.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssaasssssss.png',
   },
   {
     day: 2,
@@ -35,7 +35,7 @@ export const DAILY_DEALS = [
     discount: 15,
     color: '#34D399',
     slogan: 'Groove into tasty Tuesday deals',
-    img: 'https://ik.imagekit.io/nepgaxllc/sssaasssss.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssaasssss.png',
   },
   {
     day: 3,
@@ -44,7 +44,7 @@ export const DAILY_DEALS = [
     discount: 30,
     color: '#F87171',
     slogan: 'Wickedly good mid-week discounts',
-    img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2023,%202026,%2007_50_12%20AM.png?updatedAt=1776905429676',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-23-2026-07_50_12-am.png',
   },
   {
     day: 4,
@@ -53,7 +53,7 @@ export const DAILY_DEALS = [
     discount: 20,
     color: '#60A5FA',
     slogan: 'Quench your cravings for less',
-    img: 'https://ik.imagekit.io/nepgaxllc/sssaasssssssdd.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssaasssssssdd.png',
   },
   {
     day: 5,
@@ -62,7 +62,7 @@ export const DAILY_DEALS = [
     discount: 25,
     color: '#FB923C',
     slogan: 'Crispy deals to end your week right',
-    img: 'https://ik.imagekit.io/nepgaxllc/sssaa.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssaa.png',
   },
   {
     day: 6,
@@ -71,7 +71,7 @@ export const DAILY_DEALS = [
     discount: 35,
     color: '#EF4444',
     slogan: 'Sizzle into the weekend feast',
-    img: 'https://ik.imagekit.io/nepgaxllc/sssaass.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssaass.png',
   },
 ]
 

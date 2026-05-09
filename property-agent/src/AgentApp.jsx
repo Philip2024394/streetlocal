@@ -15,7 +15,7 @@ import InvestorPage from './website/pages/InvestorPage'
 import PropertyListingForm from '@/domains/rentals/forms/PropertyListingForm'
 import { createListing } from '@/services/rentalListingService'
 
-const BG_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2007_33_38%20PM.png'
+const BG_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-07_33_38-pm.png'
 
 const DEMO_AGENT = {
   name: 'Agent Name',

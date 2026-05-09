@@ -9,6 +9,7 @@
  * Distance comes from giftFor.distanceKm (already calculated when profile was viewed).
  */
 import { useState, useRef, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { useAuth } from '@/hooks/useAuth'
 import { placeGiftOrder, getDeliveryTier, DELIVERY_TIERS, formatIDR, hasGiftAddress } from '@/services/giftService'
 import { notifyGiftToSeller, notifyGiftToRecipient, notifyGiftAddressRequired } from '@/services/notificationService'
@@ -205,7 +206,7 @@ export default function GiftOrderSheet({ open, product, seller, giftFor, onClose
       >
         <div className={styles.bubbleRing}>
           {giftFor.photoURL
-            ? <img src={giftFor.photoURL} alt={giftFor.displayName} className={styles.bubblePhoto} />
+            ? <img src={giftFor.photoURL} alt={giftFor.displayName} className={styles.bubblePhoto} onError={imgError('logo')} />
             : <div className={styles.bubblePhotoFallback}>💕</div>
           }
           <span className={styles.bubbleName}>{giftFor.displayName ?? 'Someone'}</span>
@@ -225,6 +226,7 @@ export default function GiftOrderSheet({ open, product, seller, giftFor, onClose
                 src={product.image ?? product.image_url}
                 alt={product.name}
                 className={styles.productImg}
+                onError={imgError('food')}
               />
             : <div className={styles.productImgFallback}>📦</div>
           }

@@ -7,6 +7,7 @@
 import MicroShopEditor from '@/components/ui/MicroShopEditor'
 import EchoCommercePanel from '@/components/commerce/EchoCommercePanel'
 import styles from '../ProfileScreen.module.css'
+import imgError from '../../imgFallback'
 
 export default function ProfileShopSection({
   lookingFor,
@@ -27,7 +28,7 @@ export default function ProfileShopSection({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
           <div style={{ background: 'rgba(141,198,63,0.08)', border: '1px solid rgba(141,198,63,0.2)', borderRadius: 14, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Indoo%20Market%20logo%20design.png?updatedAt=1776203793752" alt="Indoo Market" style={{ height:20, objectFit:'contain' }} />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/indoo-market-logo-design.png" alt="Indoo Market" style={{ height:20, objectFit:'contain' }} onError={imgError('logo')} />
               <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Seller Setup</span>
             </div>
 

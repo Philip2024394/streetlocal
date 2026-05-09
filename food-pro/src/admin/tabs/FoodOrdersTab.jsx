@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import imgError from '../../imgFallback'
 
 const PHASE_IMAGES = {
-  pending:         'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_44_19%20AM.png',
-  confirmed:       'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png',
-  driver_heading:  'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2009_26_49%20PM.png',
-  picked_up:       'https://ik.imagekit.io/nepgaxllc/Motorcycle%20view%20on%20city%20street.png?updatedAt=1776062865270',
-  on_the_way:      'https://ik.imagekit.io/nepgaxllc/Speeding%20through%20the%20vibrant%20city%20streets.png?updatedAt=1776061842808',
-  arrived:         'https://ik.imagekit.io/nepgaxllc/Up%20close%20on%20the%20green%20ride.png?updatedAt=1776062117020',
-  delivered:       'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png',
+  pending:         'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_44_19-am.png',
+  confirmed:       'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png',
+  driver_heading:  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-09_26_49-pm.png',
+  picked_up:       'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/motorcycle-view-on-city-street.png',
+  on_the_way:      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/speeding-through-the-vibrant-city-streets.png',
+  arrived:         'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/up-close-on-the-green-ride.png',
+  delivered:       'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png',
 }
 
 const PHASES = [
@@ -113,7 +114,7 @@ export default function FoodOrdersTab() {
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, borderRadius: 20, overflow: 'hidden', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.08)' }}>
             {/* Phase image */}
             <div style={{ position: 'relative', height: 220 }}>
-              <img src={PHASE_IMAGES[selectedOrder.status] ?? PHASE_IMAGES.pending} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={PHASE_IMAGES[selectedOrder.status] ?? PHASE_IMAGES.pending} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('banner')} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)' }} />
               <div style={{ position: 'absolute', bottom: 12, left: 16, right: 16 }}>
                 <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{selectedOrder.id}</span>

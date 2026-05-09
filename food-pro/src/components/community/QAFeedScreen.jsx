@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import imgError from '../../imgFallback'
 import { createPortal } from 'react-dom'
 import { supabase } from '@/lib/supabase'
 import CategoryDiscoveryScreen from '@/screens/CategoryDiscoveryScreen'
@@ -416,7 +417,7 @@ export default function QAFeedScreen({ open, onClose, user, viewerSession, viewe
 
       {/* Background — profile photo in profile mode, clear */}
       {!isLiveMode && viewerSession?.photoURL && (
-        <img src={viewerSession.photoURL} alt="" className={styles.screenBg} />
+        <img src={viewerSession.photoURL} alt="" className={styles.screenBg} onError={imgError('logo')} />
       )}
       <div className={styles.screenBgOverlay} />
 

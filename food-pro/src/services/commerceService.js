@@ -17,7 +17,7 @@ export const DEMO_PRODUCTS = [
     safeTrade: { enabled: true, paypal: true, escrow: true },
     flashSale: { active: true, discountPercent: 25, endsAt: Date.now() + 6 * 60 * 60 * 1000 },
     video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasaaa.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasaaa.png',
     description: 'Crystal clear sound, 24hr battery, IPX5 waterproof. Compatible with Android & iOS.',
     specs: {
       new_or_used:       'Brand New',
@@ -47,7 +47,7 @@ export const DEMO_PRODUCTS = [
     flashSale: { active: true, discountPercent: 30, endsAt: Date.now() + 8 * 60 * 60 * 1000 },
     safeTrade: { enabled: true, paypal: true, escrow: false },
     custom_branding: 'Yes — Custom packaging',
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasaaasss.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasaaasss.png',
     description: 'Genuine full-grain leather, brass hardware, adjustable strap. Handcrafted in Jakarta.',
     specs: {
       new_or_used:       'Brand New',
@@ -69,10 +69,10 @@ export const DEMO_PRODUCTS = [
     },
     variants: {
       color: [
-        { label: 'Tan',        image: 'https://ik.imagekit.io/nepgaxllc/UntitledxcvzcvzxcvzxcASDASDfasdfsd.png' },
-        { label: 'Black',      image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasd.png' },
-        { label: 'Cognac',     image: 'https://ik.imagekit.io/nepgaxllc/Romantic%20sunset%20lakeside%20embrace.png' },
-        { label: 'Dark Brown', image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasdsdasdaasdasd.png' },
+        { label: 'Tan',        image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxcvzcvzxcvzxcasdasdfasdfsd.png' },
+        { label: 'Black',      image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasd.png' },
+        { label: 'Cognac',     image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/romantic-sunset-lakeside-embrace.png' },
+        { label: 'Dark Brown', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasdsdasdaasdasd.png' },
       ],
     },
   },
@@ -80,7 +80,7 @@ export const DEMO_PRODUCTS = [
     id: 'demo-3', name: 'Leather Tote Bag', price: 850000, currency: 'IDR',
     category: 'bags', stock: 8, active: true, condition: 'like_new', dispatch_time: '3-5 business days', brand_name: 'Kulit Asli',
     flashSale: { active: true, discountPercent: 20, endsAt: Date.now() + 5 * 60 * 60 * 1000 },
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasaaassssdasdcxc.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasaaassssdasdcxc.png',
     description: 'Spacious tote in full-grain leather. Perfect for work or weekend. Handcrafted in Bali.',
     specs: {
       new_or_used:       'Brand New',
@@ -108,7 +108,7 @@ export const DEMO_PRODUCTS = [
     id: 'demo-4', name: 'Slim Card Wallet', price: 320000, currency: 'IDR',
     category: 'bags', stock: 20, active: true, isNew: true, condition: 'new', dispatch_time: 'Same day', brand_name: 'Kulit Asli',
     flashSale: { active: true, discountPercent: 15, endsAt: Date.now() + 3 * 60 * 60 * 1000 },
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasaaassssdasdcxcasdasda.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasaaassssdasdcxcasdasda.png',
     description: 'Slim genuine leather card wallet. Holds 6 cards + cash pocket.',
     specs: {
       new_or_used:       'Brand New',
@@ -129,9 +129,9 @@ export const DEMO_PRODUCTS = [
     },
     variants: {
       color: [
-        { label: 'Black',  image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasd.png' },
-        { label: 'Tan',    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasdsdasdaasdasd.png' },
-        { label: 'Brown',  image: 'https://ik.imagekit.io/nepgaxllc/Romantic%20sunset%20lakeside%20embrace.png' },
+        { label: 'Black',  image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasd.png' },
+        { label: 'Tan',    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasdsdasdaasdasd.png' },
+        { label: 'Brown',  image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/romantic-sunset-lakeside-embrace.png' },
       ],
     },
   },
@@ -139,7 +139,7 @@ export const DEMO_PRODUCTS = [
     id: 'demo-5', name: 'Bifold Leather Wallet', price: 450000, currency: 'IDR',
     category: 'bags', stock: 15, active: true, condition: 'good', dispatch_time: '1 business day', brand_name: 'Kulit Asli',
     flashSale: { active: true, discountPercent: 35, endsAt: Date.now() + 4 * 60 * 60 * 1000 },
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasaaassssdasdcxcasdasdadfssdf.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasaaassssdasdcxcasdasdadfssdf.png',
     description: 'Classic bifold with 8 card slots, ID window and bill compartment.',
     specs: {
       new_or_used:       'Brand New',
@@ -160,8 +160,8 @@ export const DEMO_PRODUCTS = [
     },
     variants: {
       color: [
-        { label: 'Black',  image: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasd.png' },
-        { label: 'Cognac', image: 'https://ik.imagekit.io/nepgaxllc/Romantic%20sunset%20lakeside%20embrace.png' },
+        { label: 'Black',  image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasd.png' },
+        { label: 'Cognac', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/romantic-sunset-lakeside-embrace.png' },
       ],
     },
   },
@@ -170,7 +170,7 @@ export const DEMO_PRODUCTS = [
     category: 'handmade', stock: 40, active: true, condition: 'fair', dispatch_time: '2-4 weeks (made to order)',
     flashSale: { active: true, discountPercent: 40, endsAt: Date.now() + 2 * 60 * 60 * 1000 },
     custom_branding: 'Yes — Logo printing available',
-    image: 'https://ik.imagekit.io/nepgaxllc/Untitledzxczxczxczx.png',
+    image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledzxczxczxczx.png',
     description: 'Hand-stitched leather keychain. Personalised initials available.',
     specs: {
       new_or_used:       'Brand New',

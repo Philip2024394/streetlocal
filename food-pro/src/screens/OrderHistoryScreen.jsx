@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { getMyGiftsSent, formatIDR } from '@/services/giftService'
 import { supabase } from '@/lib/supabase'
 import styles from './OrderHistoryScreen.module.css'
+import imgError from '../imgFallback'
 
 const STATUS_LABELS = {
   pending:    { label: 'Pending',     color: '#FBBF24' },
@@ -137,7 +138,7 @@ export default function OrderHistoryScreen({ onClose }) {
               <div key={order.id} className={styles.card}>
                 <div className={styles.cardLeft}>
                   {order.product_image
-                    ? <img src={order.product_image} alt={order.product_name} className={styles.cardImg} />
+                    ? <img src={order.product_image} alt={order.product_name} className={styles.cardImg} onError={imgError('food')} />
                     : <div className={styles.cardImgFallback}>🎁</div>
                   }
                 </div>

@@ -1,11 +1,11 @@
 export const FREE_ITEM_BADGES = [
-  { id: 'free_delivery', label: 'Free Delivery', image: 'https://ik.imagekit.io/nepgaxllc/free%20delivery.png?updatedAt=1775718354654' },
-  { id: 'free_dessert', label: 'Free Dessert', image: 'https://ik.imagekit.io/nepgaxllc/Untitledddddddddddsfsdfadsfasdfsdfsasdassdasdsfas-removebg-preview.png?updatedAt=1775718615357' },
-  { id: 'free_rice', label: 'Free Rice', image: 'https://ik.imagekit.io/nepgaxllc/Gratis%20ongkir%20dan%20nasi!.png?updatedAt=1775718890176' },
-  { id: 'free_juice', label: 'Free Juice', image: 'https://ik.imagekit.io/nepgaxllc/Gratis%20jus%20dan%20pengiriman!.png?updatedAt=1775720172153' },
-  { id: 'free_fries', label: 'Free Fries', image: 'https://ik.imagekit.io/nepgaxllc/Gratis%20kentang%20goreng%20dan%20pengiriman!.png?updatedAt=1775720511966' },
-  { id: 'free_soda', label: 'Free Soda', image: 'https://ik.imagekit.io/nepgaxllc/Gratis%20soda%20dan%20pengiriman%20cepat.png?updatedAt=1775720679265' },
-  { id: 'buy1get1', label: 'Buy 1 Get 1', image: 'https://ik.imagekit.io/nepgaxllc/Selamat!%20Beli%201%20Gratis%20Sate.png?updatedAt=1775720950150' },
+  { id: 'free_delivery', label: 'Free Delivery', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/free-delivery.png' },
+  { id: 'free_dessert', label: 'Free Dessert', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddddddddsfsdfadsfasdfsdfsasdassdasdsfas-removebg-preview.png' },
+  { id: 'free_rice', label: 'Free Rice', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/gratis-ongkir-dan-nasi.png' },
+  { id: 'free_juice', label: 'Free Juice', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/gratis-jus-dan-pengiriman.png' },
+  { id: 'free_fries', label: 'Free Fries', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/gratis-kentang-goreng-dan-pengiriman.png' },
+  { id: 'free_soda', label: 'Free Soda', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/gratis-soda-dan-pengiriman-cepat.png' },
+  { id: 'buy1get1', label: 'Buy 1 Get 1', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/selamat-beli-1-gratis-sate.png' },
 ]
 
 export const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']

@@ -7,6 +7,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import imgError from '../../imgFallback'
 import { PAYMENT_ICONS } from '@/constants/paymentIcons'
 import { saveVendorExtras as saveExtrasToDb, saveBundleDiscount as saveBundleToDb, saveMenuItem as saveMenuItemToDb, deleteMenuItem as deleteMenuItemFromDb } from '@/services/vendorExtrasService'
 import { getPrepaidWallet, topUpPrepaidWallet } from '@/services/walletService'
@@ -157,7 +158,7 @@ function StatCard({ label, value, color = '#8DC63F', icon }) {
       border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        {icon && (typeof icon === 'string' && icon.startsWith('http') ? <img src={icon} alt="" style={{ width: 41, height: 41, objectFit: 'contain' }} /> : <span style={{ fontSize: 18 }}>{icon}</span>)}
+        {icon && (typeof icon === 'string' && icon.startsWith('http') ? <img src={icon} alt="" onError={imgError('generic')} style={{ width: 41, height: 41, objectFit: 'contain' }} /> : <span style={{ fontSize: 18 }}>{icon}</span>)}
         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase' }}>{label}</span>
       </div>
       <span style={{ fontSize: 22, fontWeight: 900, color }}>{value}</span>
@@ -175,7 +176,7 @@ function MenuCard({ item, onToggle, onEdit, onDelete }) {
       opacity: item.is_available ? 1 : 0.5, transition: 'opacity 0.3s',
     }}>
       {item.photo_url ? (
-        <img src={item.photo_url} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+        <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
       ) : (
         <div style={{ width: 52, height: 52, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>🍽️</div>
       )}
@@ -256,9 +257,9 @@ function saveVendorExtras(data) {
 
 // ── Banner Ad system ────────────────────────────────────────────────────────
 const BANNER_TEMPLATES = [
-  { id: 'fire', label: 'Fire Sale', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2024,%202026,%2006_22_44%20PM.png', color: '#EF4444' },
-  { id: 'juice', label: 'Free Juice', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2025,%202026,%2004_22_55%20AM.png', color: '#8DC63F' },
-  { id: 'fries', label: 'Free Fries', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2025,%202026,%2004_22_09%20AM.png', color: '#FACC15' },
+  { id: 'fire', label: 'Fire Sale', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-06_22_44-pm.png', color: '#EF4444' },
+  { id: 'juice', label: 'Free Juice', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-25-2026-04_22_55-am.png', color: '#8DC63F' },
+  { id: 'fries', label: 'Free Fries', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-25-2026-04_22_09-am.png', color: '#FACC15' },
   { id: 'street', label: 'Street Food', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600', color: '#F59E0B' },
   { id: 'seafood', label: 'Ocean Fresh', img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600', color: '#3B82F6' },
   { id: 'spicy', label: 'Spicy Hot', img: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=600', color: '#DC2626' },
@@ -446,7 +447,7 @@ function TopUpOverlay({ wallet, onClose, onSuccess }) {
                 }} onClick={() => document.getElementById('topup-proof-input')?.click()}>
                   <input id="topup-proof-input" type="file" accept="image/*" onChange={handleProof} style={{ display: 'none' }} />
                   {proofPreview ? (
-                    <img src={proofPreview} alt="Proof" style={{ width: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: 10 }} />
+                    <img src={proofPreview} alt="Proof" onError={imgError('payment')} style={{ width: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: 10 }} />
                   ) : (
                     <>
                       <div style={{ fontSize: 36, marginBottom: 8 }}>📸</div>
@@ -575,7 +576,7 @@ export default function VendorDashboardV2({ onClose }) {
 
   // Demo orders with full details
   const [orders, setOrders] = useState([
-    { id: 'ORD-1001', items: [{ name: 'Nasi Gudeg', qty: 2, prepTime: 10 }, { name: 'Es Teh', qty: 2, prepTime: 2 }], total: 66000, customer: 'Agus Prasetyo', phone: '6281234567890', address: 'Jl. Kaliurang Km 5', status: 'confirmed', time: '2 min ago', driverETA: 8, paymentMethod: 'bank', qrCode: 'INDOO-1001-AGS', paymentProof: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png?updatedAt=1776728649363' },
+    { id: 'ORD-1001', items: [{ name: 'Nasi Gudeg', qty: 2, prepTime: 10 }, { name: 'Es Teh', qty: 2, prepTime: 2 }], total: 66000, customer: 'Agus Prasetyo', phone: '6281234567890', address: 'Jl. Kaliurang Km 5', status: 'confirmed', time: '2 min ago', driverETA: 8, paymentMethod: 'bank', qrCode: 'INDOO-1001-AGS', paymentProof: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png' },
     { id: 'ORD-1002', items: [{ name: 'Bakso Jumbo', qty: 1, prepTime: 8 }, { name: 'Es Jeruk', qty: 1, prepTime: 3 }], total: 33000, customer: 'Siti Rahayu', phone: '6281234567891', address: 'Jl. Malioboro 12', status: 'preparing', time: '8 min ago', driverETA: 4, paymentMethod: 'cod', qrCode: 'INDOO-1002-STI', paymentProof: null },
     { id: 'ORD-1003', items: [{ name: 'Nasi Goreng', qty: 3, prepTime: 12 }, { name: 'Sate Ayam', qty: 1, prepTime: 10 }], total: 119000, customer: 'Budi Wijaya', phone: '6281234567892', address: 'Jl. Parangtritis 45', status: 'ready', time: '15 min ago', driverETA: 1, paymentMethod: 'bank', qrCode: 'INDOO-1003-BDI' },
     { id: 'ORD-1004', items: [{ name: 'Ayam Geprek', qty: 2, prepTime: 12 }], total: 50000, customer: 'Dewi Lestari', phone: '6281234567893', address: 'Jl. Solo Km 3', status: 'completed', time: '32 min ago', driverETA: 0, paymentMethod: 'bank', qrCode: 'INDOO-1004-DWI', qrScanned: true },
@@ -631,7 +632,7 @@ export default function VendorDashboardV2({ onClose }) {
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', flexDirection: 'column',
-      backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png?updatedAt=1776728649363)',
+      backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png)',
       backgroundSize: 'cover', backgroundPosition: 'center top', backgroundColor: '#000',
       isolation: 'isolate',
     }}>
@@ -650,7 +651,7 @@ export default function VendorDashboardV2({ onClose }) {
         padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px',
         background: 'transparent', position: 'relative', zIndex: 1, flexShrink: 0,
       }}>
-        <img src="https://ik.imagekit.io/nepgaxllc/Untitledsssaaa22ss-removebg-preview.png" alt="" style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22ss-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{restaurant?.name ?? 'My Restaurant'}</span>
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, display: 'block' }}>{restaurant?.city ?? ''}{restaurant?.address ? ` · ${restaurant.address}` : ''}</span>
@@ -694,8 +695,8 @@ export default function VendorDashboardV2({ onClose }) {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-              <StatCard label="Sales" value={fmtRp(847000)} color="#FACC15" icon="https://ik.imagekit.io/nepgaxllc/Untitledssscc-removebg-preview.png" />
-              <StatCard label="Orders" value="23" color="#8DC63F" icon="https://ik.imagekit.io/nepgaxllc/Untitledsssaaa22-removebg-preview.png" />
+              <StatCard label="Sales" value={fmtRp(847000)} color="#FACC15" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledssscc-removebg-preview.png" />
+              <StatCard label="Orders" value="23" color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22-removebg-preview.png" />
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
               {/* Live Items — tappable */}
@@ -706,7 +707,7 @@ export default function VendorDashboardV2({ onClose }) {
               }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', marginBottom: 8 }}>🟢 LIVE ITEMS</span>
                 <span style={{ fontSize: 28, fontWeight: 900, color: '#8DC63F' }}>{liveCount}</span>
-                <img src="https://ik.imagekit.io/nepgaxllc/Detailed%20white%20fingerprint%20on%20transparent%20background.png?updatedAt=1775934544111" alt="" style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, opacity: 0.15, objectFit: 'contain' }} />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/detailed-white-fingerprint-on-transparent-background.png" alt="" onError={imgError('generic')} style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, opacity: 0.15, objectFit: 'contain' }} />
               </div>
               {/* Offline Items — tappable */}
               <div onClick={() => setPage('offline')} style={{
@@ -716,7 +717,7 @@ export default function VendorDashboardV2({ onClose }) {
               }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', marginBottom: 8 }}>⚫ OFFLINE</span>
                 <span style={{ fontSize: 28, fontWeight: 900, color: 'rgba(255,255,255,0.3)' }}>{offCount}</span>
-                <img src="https://ik.imagekit.io/nepgaxllc/Detailed%20white%20fingerprint%20on%20transparent%20background.png?updatedAt=1775934544111" alt="" style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, opacity: 0.15, objectFit: 'contain' }} />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/detailed-white-fingerprint-on-transparent-background.png" alt="" onError={imgError('generic')} style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, opacity: 0.15, objectFit: 'contain' }} />
               </div>
             </div>
 
@@ -782,7 +783,7 @@ export default function VendorDashboardV2({ onClose }) {
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{o.address}</span>
                     </div>
                     <button onClick={() => setShowPaymentProof(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, position: 'relative' }}>
-                      <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+                      <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} onError={imgError('payment')} style={{ width: 42, height: 42, objectFit: 'contain' }} />
                       {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#8DC63F', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
                     </button>
                   </div>
@@ -808,7 +809,7 @@ export default function VendorDashboardV2({ onClose }) {
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitlediuooiuoifsdfsdf-removebg-preview.png?updatedAt=1775659748531" alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdf-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 24, height: 24, objectFit: 'contain' }} />
                         <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#8DC63F' : '#FACC15' }}>
                           {o.driverETA === 0 ? 'Delivered' : o.driverETA <= 2 ? 'Arriving now' : `Driver: ${o.driverETA} min`}
                         </span>
@@ -919,7 +920,7 @@ export default function VendorDashboardV2({ onClose }) {
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{o.address}</span>
                     </div>
                     <button onClick={() => setShowPaymentProof(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, position: 'relative' }}>
-                      <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+                      <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} onError={imgError('payment')} style={{ width: 42, height: 42, objectFit: 'contain' }} />
                       {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#8DC63F', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
                     </button>
                   </div>
@@ -936,7 +937,7 @@ export default function VendorDashboardV2({ onClose }) {
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitlediuooiuoifsdfsdf-removebg-preview.png?updatedAt=1775659748531" alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdf-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 24, height: 24, objectFit: 'contain' }} />
                         <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#8DC63F' : '#FACC15' }}>
                           {o.driverETA <= 2 ? 'Arriving now' : `Driver: ${o.driverETA} min`}
                         </span>
@@ -980,8 +981,8 @@ export default function VendorDashboardV2({ onClose }) {
           <>
             <SectionHeader title="Analytics" helpKey="analytics" />
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-              <StatCard label="This Week" value={fmtRp(4250000)} color="#FACC15" icon="https://ik.imagekit.io/nepgaxllc/Untitledsssaaa22sssdsd-removebg-preview.png" />
-              <StatCard label="This Month" value={fmtRp(18700000)} color="#8DC63F" icon="https://ik.imagekit.io/nepgaxllc/Untitledsssaaa22sssdsdddasdasd-removebg-preview.png" />
+              <StatCard label="This Week" value={fmtRp(4250000)} color="#FACC15" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22sssdsd-removebg-preview.png" />
+              <StatCard label="This Month" value={fmtRp(18700000)} color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22sssdsdddasdasd-removebg-preview.png" />
             </div>
 
             <SectionHeader title="Top Selling Items" />
@@ -1029,7 +1030,7 @@ export default function VendorDashboardV2({ onClose }) {
           <>
             <SectionHeader title="Payouts" helpKey="payouts" />
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-              <StatCard label="Balance" value={fmtRp(1250000)} color="#8DC63F" icon="https://ik.imagekit.io/nepgaxllc/mmmass-removebg-preview.png" />
+              <StatCard label="Balance" value={fmtRp(1250000)} color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/mmmass-removebg-preview.png" />
               <StatCard label="Commission Owed" value={fmtRp(187000)} color="#EF4444" icon="📊" />
             </div>
 
@@ -1070,7 +1071,7 @@ export default function VendorDashboardV2({ onClose }) {
                   background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(141,198,63,0.15)',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}>
-                  {item.photo_url ? <img src={item.photo_url} alt="" style={{ width: 50, height: 50, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 50, height: 50, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
+                  {item.photo_url ? <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 50, height: 50, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 50, height: 50, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'block' }}>{item.name}</span>
                     <span style={{ fontSize: 13, fontWeight: 900, color: '#FACC15' }}>{fmtRp(item.price)}</span>
@@ -1102,7 +1103,7 @@ export default function VendorDashboardV2({ onClose }) {
                   background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)', opacity: 0.7,
                 }}>
-                  {item.photo_url ? <img src={item.photo_url} alt="" style={{ width: 50, height: 50, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 50, height: 50, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
+                  {item.photo_url ? <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 50, height: 50, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 50, height: 50, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'block' }}>{item.name}</span>
                     <span style={{ fontSize: 13, fontWeight: 900, color: '#FACC15' }}>{fmtRp(item.price)}</span>
@@ -1234,7 +1235,7 @@ export default function VendorDashboardV2({ onClose }) {
 
               {/* QR Code */}
               <div style={{ padding: 16, borderRadius: 16, background: '#fff', display: 'inline-block', marginBottom: 16 }}>
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${order.qrCode}`} alt="QR" style={{ width: 180, height: 180, display: 'block' }} />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${order.qrCode}`} alt="QR" onError={imgError('qr')} style={{ width: 180, height: 180, display: 'block' }} />
               </div>
 
               {/* Order summary */}
@@ -1285,7 +1286,7 @@ export default function VendorDashboardV2({ onClose }) {
               {order.paymentMethod === 'bank' ? (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <img src={PAYMENT_ICONS.bank} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                    <img src={PAYMENT_ICONS.bank} alt="" onError={imgError('payment')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
                     <div>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#8DC63F', display: 'block' }}>Bank Transfer</span>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{order.customer}</span>
@@ -1294,7 +1295,7 @@ export default function VendorDashboardV2({ onClose }) {
                   </div>
                   {order.paymentProof ? (
                     <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <img src={order.paymentProof} alt="Payment proof" style={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'contain', background: '#000' }} />
+                      <img src={order.paymentProof} alt="Payment proof" onError={imgError('payment')} style={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'contain', background: '#000' }} />
                     </div>
                   ) : (
                     <div style={{ padding: 30, textAlign: 'center', borderRadius: 14, background: 'rgba(255,255,255,0.03)', marginBottom: 12 }}>
@@ -1306,7 +1307,7 @@ export default function VendorDashboardV2({ onClose }) {
               ) : (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <img src={PAYMENT_ICONS.cod} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                    <img src={PAYMENT_ICONS.cod} alt="" onError={imgError('payment')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
                     <div>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15', display: 'block' }}>Cash on Delivery</span>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{order.customer}</span>
@@ -1525,7 +1526,7 @@ function DealsPage({ menuItems, onBack }) {
                   }}>
                     {selected && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
                   </div>
-                  {item.photo_url && <img src={item.photo_url} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />}
+                  {item.photo_url && <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{fmtRp(item.price)}</span>
@@ -1726,7 +1727,7 @@ function DealCardPreview({ deal }) {
       <div style={{ display: 'flex', height: 100, overflow: 'hidden', background: 'rgba(255,255,255,0.03)' }}>
         {deal.items.slice(0, 3).map((item, i) => (
           item.photo_url ? (
-            <img key={i} src={item.photo_url} alt="" style={{ flex: 1, height: '100%', objectFit: 'cover', borderRight: i < 2 ? '1px solid rgba(0,0,0,0.3)' : 'none' }} />
+            <img key={i} src={item.photo_url} alt="" onError={imgError('food')} style={{ flex: 1, height: '100%', objectFit: 'cover', borderRight: i < 2 ? '1px solid rgba(0,0,0,0.3)' : 'none' }} />
           ) : (
             <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.03)', fontSize: 28 }}>🍽️</div>
           )
@@ -2085,7 +2086,7 @@ function BannerAdsPage({ restaurant }) {
                 padding: 0, cursor: 'pointer', background: 'none',
                 boxShadow: selectedTemplate === t.id ? `0 0 16px ${t.color}33` : 'none',
               }}>
-                <img src={t.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={t.img} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%)' }} />
                 {selectedTemplate === t.id && (
                   <div style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2106,7 +2107,7 @@ function BannerAdsPage({ restaurant }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {myBanners.map(b => (
                   <div key={b.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src={b.template_img} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                    <img src={b.template_img} alt="" onError={imgError('banner')} style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'block' }}>{b.template_label}</span>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{new Date(b.created_at).toLocaleDateString()}</span>
@@ -2137,7 +2138,7 @@ function BannerAdsPage({ restaurant }) {
         <>
           {/* Preview */}
           <div style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', height: 160, marginBottom: 16, border: `1.5px solid ${template.color}44` }}>
-            <img src={template.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={template.img} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)' }} />
             <div style={{ position: 'absolute', bottom: 14, left: 14, right: 14 }}>
               <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', display: 'block' }}>{restaurant?.name ?? 'Your Restaurant'}</span>
@@ -2175,7 +2176,7 @@ function BannerAdsPage({ restaurant }) {
           <div style={{ ...cardStyle, marginBottom: 16 }}>
             <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 10, textTransform: 'uppercase' }}>Upload Payment Screenshot</span>
             <button onClick={() => proofRef.current?.click()} style={{ width: '100%', height: 130, borderRadius: 14, border: '1.5px dashed rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {proofPreview ? <img src={proofPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (
+              {proofPreview ? <img src={proofPreview} alt="" onError={imgError('payment')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: 28, display: 'block', marginBottom: 6 }}>📱</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>Tap to upload screenshot</span>
@@ -2265,7 +2266,7 @@ function EventsPage() {
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {(data.images ?? []).map((img, i) => (
             <div key={i} style={{ position: 'relative', width: 72, height: 72, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={img} alt="" onError={imgError('banner')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <button onClick={() => removeImage(editing, i)} style={{
                 position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%',
                 background: 'rgba(0,0,0,0.8)', border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer',
@@ -2454,7 +2455,7 @@ function ItemModal({ item, onSave, onClose }) {
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10002,
-      backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png?updatedAt=1776728649363)',
+      backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png)',
       backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#000',
       display: 'flex', flexDirection: 'column', isolation: 'isolate',
     }}>
@@ -2507,7 +2508,7 @@ function ItemModal({ item, onSave, onClose }) {
 
         {photoUrl && (
           <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', height: 140 }}>
-            <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+            <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
           </div>
         )}
       </div>

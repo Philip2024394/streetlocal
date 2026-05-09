@@ -2,7 +2,7 @@
 .screen {
   position: absolute;
   inset: 0;
-  background: #080808 url('https://ik.imagekit.io/nepgaxllc/Untitlediuooiuoifsdfsdfdasdadasdasdasddd.png') center center / cover no-repeat;
+  background: #080808 url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdfdasdadasdasdasddd.png') center center / cover no-repeat;
   z-index: var(--z-header);
   display: flex;
   flex-direction: column;

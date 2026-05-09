@@ -15,6 +15,7 @@
 import { useRef, useState } from 'react'
 import { clearPhotoViewCount } from '@/services/photoNudgeService'
 import styles from '../ProfileScreen.module.css'
+import imgError from '../../imgFallback'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_MB    = 5
@@ -119,9 +120,10 @@ export default function ProfileHeader({
         {/* Main photo slot */}
         <div className={styles.mainSlot} onClick={() => mainInputRef.current?.click()}>
           <img
-            src={photoURL || 'https://ik.imagekit.io/nepgaxllc/sdfasdfasdf.png'}
+            src={photoURL || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sdfasdfasdf.png'}
             alt="Main"
             className={styles.mainSlotImg}
+            onError={imgError('logo')}
             style={photoURL ? {
               objectPosition: `${photoOffsetX}% ${photoOffsetY}%`,
               transform: `scale(${photoZoom})`,
@@ -160,7 +162,7 @@ export default function ProfileHeader({
             {[0, 1, 2, 3].map(i => (
               <div key={i} className={styles.thumbSlot} onClick={() => extraInputRefs[i].current?.click()}>
                 {extraPhotos[i]
-                  ? <img src={extraPhotos[i]} alt={`Photo ${i + 2}`} className={styles.thumbImg} />
+                  ? <img src={extraPhotos[i]} alt={`Photo ${i + 2}`} className={styles.thumbImg} onError={imgError('logo')} />
                   : <span className={styles.thumbPlus}>+</span>
                 }
                 <input
@@ -202,6 +204,7 @@ export default function ProfileHeader({
               src={photoURL}
               alt="Preview"
               className={styles.photoEditPreviewImg}
+              onError={imgError('logo')}
               style={{
                 objectPosition: `${photoOffsetX}% ${photoOffsetY}%`,
                 transform: `scale(${photoZoom})`,

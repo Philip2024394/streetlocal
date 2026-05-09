@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import imgError from '../imgFallback'
 
 const DEMO_RESTAURANT = {
   id: 'demo-1',
@@ -236,11 +237,12 @@ ${deliveryType === 'deliver' ? customerAddress : customerName}
           src={restaurant.cover_url}
           alt={restaurant.name}
           style={{ width: '100%', height: '220px', objectFit: 'cover' }}
+          onError={imgError('banner')}
         />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', padding: '40px 24px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {restaurant.logo_url && (
-              <img src={restaurant.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
+              <img src={restaurant.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} onError={imgError('logo')} />
             )}
             <div>
               <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>{restaurant.name}</h1>
@@ -291,6 +293,7 @@ ${deliveryType === 'deliver' ? customerAddress : customerName}
                     src={item.photo_url}
                     alt={item.name}
                     style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }}
+                    onError={imgError('food')}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>{item.name}</h3>

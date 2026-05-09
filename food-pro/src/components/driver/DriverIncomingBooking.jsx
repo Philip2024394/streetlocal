@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import imgError from '../../imgFallback'
 import { acceptBooking, declineBooking } from '@/services/bookingService'
 import DriverWarningScreen from './DriverWarningScreen'
 import styles from './DriverIncomingBooking.module.css'
@@ -109,7 +110,7 @@ export default function DriverIncomingBooking({ booking, driverId, onAccepted, o
         <div className={styles.passengerRow}>
           <div className={styles.passengerAvatar}>
             {passenger?.photo_url
-              ? <img src={passenger.photo_url} alt={passenger.display_name} className={styles.avatarImg} />
+              ? <img src={passenger.photo_url} alt={passenger.display_name} className={styles.avatarImg} onError={imgError('logo')} />
               : <span className={styles.avatarInitial}>{passenger?.display_name?.[0]?.toUpperCase() ?? '?'}</span>
             }
           </div>

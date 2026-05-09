@@ -18,6 +18,7 @@ import ProfileMakerFields from './ProfileMakerFields'
 import ProfileStatusSection from './ProfileStatusSection'
 import OnlineToggle from '@/components/driver/OnlineToggle'
 import styles from '../ProfileScreen.module.css'
+import imgError from '../../imgFallback'
 
 // ── Inline help tip (self-contained UI widget) ───────────────────────────────
 import { useState, useCallback, useEffect } from 'react'
@@ -351,7 +352,7 @@ export default function ProfileBioSection({
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {opt.img
-                        ? <img src={opt.img} alt={opt.label} style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                        ? <img src={opt.img} alt={opt.label} style={{ width: 20, height: 20, objectFit: 'contain' }} onError={imgError('generic')} />
                         : <span>{opt.emoji}</span>
                       }
                       <span style={{ fontWeight: 700 }}>{opt.label}</span>

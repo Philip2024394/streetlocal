@@ -2,7 +2,7 @@
  * IndooButton — Standard green action button used across the entire app.
  * Uses the INDOO branded button image as background with text overlay.
  */
-const BTN_IMG = 'https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png'
+const BTN_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png'
 
 export default function IndooButton({ children, onClick, disabled, style }) {
   return (

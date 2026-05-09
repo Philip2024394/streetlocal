@@ -143,7 +143,7 @@ export default function PostDealPublic({ open, onClose, onPosted }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10000,
       backgroundColor: '#000',
-      backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33.png?updatedAt=1775555797749)',
+      backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33.png)',
       backgroundSize: 'cover', backgroundPosition: 'center top',
       display: 'flex', flexDirection: 'column', isolation: 'isolate',
     }}>
@@ -155,7 +155,7 @@ export default function PostDealPublic({ open, onClose, onPosted }) {
         <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         </button>
-        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2019,%202026,%2012_07_28%20AM.png?updatedAt=1776532065659" alt="" style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-19-2026-12_07_28-am.png" alt="" style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', display: 'block' }}>Post a Deal</span>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Sell locally — buyers collect from you</span>

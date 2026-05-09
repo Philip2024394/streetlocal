@@ -68,8 +68,8 @@ export function usePushNotifications() {
     navigator.serviceWorker.ready
       .then(reg => {
         reg.showNotification(title, {
-          icon:     'https://ik.imagekit.io/dateme/Logo%20with%20green%20map%20pin%20element.png',
-          badge:    'https://ik.imagekit.io/dateme/Logo%20with%20green%20map%20pin%20element.png',
+          icon:     'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/logo-with-green-map-pin-element.png',
+          badge:    'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/logo-with-green-map-pin-element.png',
           vibrate:  [200, 100, 200],
           ...options,
         })

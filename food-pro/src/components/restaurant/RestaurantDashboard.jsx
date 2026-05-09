@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import imgError from '../../imgFallback'
 import { supabase } from '@/lib/supabase'
 import { QRCodeCanvas } from 'qrcode.react'
 import { getOrCreateQRHash, buildQRPayload } from '@/services/qrCodeService'
@@ -615,7 +616,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
               <Section title="QRIS Payment Code" hint="Upload your QRIS code so customers can pay you directly via any payment app">
                 {qrisImage ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <img src={qrisImage} alt="QRIS Code" style={{ width: 200, height: 200, objectFit: 'contain', borderRadius: 16, border: '2px solid rgba(141,198,63,0.3)', background: '#fff', padding: 8 }} />
+                    <img src={qrisImage} alt="QRIS Code" onError={imgError('qr')} style={{ width: 200, height: 200, objectFit: 'contain', borderRadius: 16, border: '2px solid rgba(141,198,63,0.3)', background: '#fff', padding: 8 }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => setQrisImage(null)} style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Remove</button>
                       <label style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(141,198,63,0.12)', border: '1px solid rgba(141,198,63,0.3)', color: '#8DC63F', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
@@ -749,7 +750,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
           <div className={styles.photosSection}>
             <div className={styles.currentCover}>
               {restaurant?.cover_url
-                ? <img src={restaurant.cover_url} alt="Current cover" className={styles.currentCoverImg} />
+                ? <img src={restaurant.cover_url} alt="Current cover" onError={imgError('banner')} className={styles.currentCoverImg} />
                 : <div className={styles.currentCoverEmpty}>
                     <span>No cover photo yet</span>
                     <span className={styles.currentCoverSub}>Your listing uses a plain background</span>
@@ -776,7 +777,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
                   <div key={photo.id} className={`${styles.photoCard} ${isTaken ? styles.photoCardTaken : ''} ${isMine ? styles.photoCardMine : ''}`}>
                     <div className={styles.photoThumb}>
                       {photo.image_url
-                        ? <img src={photo.image_url} alt={photo.style_tag} className={styles.photoThumbImg} />
+                        ? <img src={photo.image_url} alt={photo.style_tag} onError={imgError('food')} className={styles.photoThumbImg} />
                         : <div className={styles.photoThumbPlaceholder}><span className={styles.photoThumbIcon}>🖼</span></div>
                       }
                       {isTaken && <div className={styles.soldOverlay}><span className={styles.soldText}>Sold</span></div>}
@@ -969,10 +970,10 @@ export default function RestaurantDashboard({ userId, onClose }) {
               <label className={styles.label}>Select discount tier</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {[
-                  { pct: 10, img: 'https://ik.imagekit.io/nepgaxllc/Untitledcccc-removebg-preview.png?updatedAt=1775721239226' },
-                  { pct: 15, img: 'https://ik.imagekit.io/nepgaxllc/dsasdasdasdasaaaaaa-removebg-preview.png?updatedAt=1775721303992' },
-                  { pct: 20, img: 'https://ik.imagekit.io/nepgaxllc/Untitledbbbbbbbbbbb-removebg-preview.png?updatedAt=1775721392211' },
-                  { pct: 25, img: 'https://ik.imagekit.io/nepgaxllc/Untitledxcvzcvzxcvzxc-removebg-preview.png?updatedAt=1775721470030' },
+                  { pct: 10, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledcccc-removebg-preview.png' },
+                  { pct: 15, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dsasdasdasdasaaaaaa-removebg-preview.png' },
+                  { pct: 20, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbbbbbbbb-removebg-preview.png' },
+                  { pct: 25, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxcvzcvzxcvzxc-removebg-preview.png' },
                 ].map(tier => (
                   <button
                     key={tier.pct}
@@ -987,7 +988,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
                       transition: 'border-color 0.2s',
                     }}
                   >
-                    <img src={tier.img} alt={`${tier.pct}% off`} style={{ width: '100%', height: 100, objectFit: 'contain', borderRadius: 10 }} />
+                    <img src={tier.img} alt={`${tier.pct}% off`} onError={imgError('generic')} style={{ width: '100%', height: 100, objectFit: 'contain', borderRadius: 10 }} />
                     <span style={{ fontSize: 15, fontWeight: 900, color: rewardDiscount === tier.pct ? '#8DC63F' : 'rgba(255,255,255,0.6)' }}>{tier.pct}% Off</span>
                   </button>
                 ))}
@@ -1015,12 +1016,13 @@ export default function RestaurantDashboard({ userId, onClose }) {
               </div>
               <img
                 src={{
-                  10: 'https://ik.imagekit.io/nepgaxllc/Untitledcccc-removebg-preview.png?updatedAt=1775721239226',
-                  15: 'https://ik.imagekit.io/nepgaxllc/dsasdasdasdasaaaaaa-removebg-preview.png?updatedAt=1775721303992',
-                  20: 'https://ik.imagekit.io/nepgaxllc/Untitledbbbbbbbbbbb-removebg-preview.png?updatedAt=1775721392211',
-                  25: 'https://ik.imagekit.io/nepgaxllc/Untitledxcvzcvzxcvzxc-removebg-preview.png?updatedAt=1775721470030',
+                  10: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledcccc-removebg-preview.png',
+                  15: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dsasdasdasdasaaaaaa-removebg-preview.png',
+                  20: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbbbbbbbb-removebg-preview.png',
+                  25: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxcvzcvzxcvzxc-removebg-preview.png',
                 }[rewardDiscount]}
                 alt={`${rewardDiscount}% off`}
+                onError={imgError('generic')}
                 style={{ width: '85%', maxWidth: 260, borderRadius: 14, objectFit: 'contain' }}
               />
               <div style={{
@@ -1125,7 +1127,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
                     transition: 'border-color 0.2s',
                   }}
                 >
-                  <img src={badge.image} alt={badge.label} style={{ width: '100%', height: 70, objectFit: 'contain', borderRadius: 10 }} />
+                  <img src={badge.image} alt={badge.label} onError={imgError('generic')} style={{ width: '100%', height: 70, objectFit: 'contain', borderRadius: 10 }} />
                   <span style={{ fontSize: 11, fontWeight: 700, color: selectedBadgeId === badge.id ? '#8DC63F' : 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{badge.label}</span>
                 </button>
               ))}
@@ -1173,7 +1175,7 @@ export default function RestaurantDashboard({ userId, onClose }) {
                   }}>
                     <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{entry.dishName}</span>
                     <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>→</span>
-                    {badge && <img src={badge.image} alt={badge.label} style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6 }} />}
+                    {badge && <img src={badge.image} alt={badge.label} onError={imgError('generic')} style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6 }} />}
                     <button
                       onClick={() => {
                         const next = dishBadges.filter((_, i) => i !== idx)

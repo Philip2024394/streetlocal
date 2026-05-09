@@ -5,10 +5,10 @@ import ar from './ar'
 import zh from './zh'
 
 export const LANGUAGES = [
-  { code: 'id', label: 'Bahasa',   flag: '🇮🇩', dir: 'ltr', image: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxxcc-removebg-preview.png?updatedAt=1777592820803' },
-  { code: 'en', label: 'English',  flag: '🇬🇧', dir: 'ltr', image: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxx-removebg-preview.png?updatedAt=1777592742536' },
-  { code: 'zh', label: '中文',     flag: '🇨🇳', dir: 'ltr', image: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxxcccc-removebg-preview.png?updatedAt=1777592894702' },
-  { code: 'ar', label: 'عربي',     flag: '🇸🇦', dir: 'rtl', image: 'https://ik.imagekit.io/nepgaxllc/Untitledxxxxcccccc-removebg-preview.png?updatedAt=1777592959431' },
+  { code: 'id', label: 'Bahasa',   flag: '🇮🇩', dir: 'ltr', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxxxxcc-removebg-preview.png' },
+  { code: 'en', label: 'English',  flag: '🇬🇧', dir: 'ltr', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxxxx-removebg-preview.png' },
+  { code: 'zh', label: '中文',     flag: '🇨🇳', dir: 'ltr', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxxxxcccc-removebg-preview.png' },
+  { code: 'ar', label: 'عربي',     flag: '🇸🇦', dir: 'rtl', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxxxxcccccc-removebg-preview.png' },
 ]
 
 const TRANSLATIONS = { en, id, ar, zh }

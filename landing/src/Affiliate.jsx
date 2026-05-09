@@ -543,13 +543,13 @@ export default function Affiliate({ onClose }) {
             localStorage.setItem('sl_affiliate_agent', JSON.stringify(devAgent))
             setStep('dashboard')
           }} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 8, fontWeight: 700, cursor: 'pointer', marginRight: 6 }}>DEV</button>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         <div style={s.content}>
           {/* Hero */}
           <div style={s.hero}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitledfffddfsdfsd-removebg-preview.png" alt="Become an Agent" style={{ width: 180, height: 'auto', marginBottom: 12 }} />
+            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfffddfsdfsd-removebg-preview.png" alt="Become an Agent" style={{ width: 180, height: 'auto', marginBottom: 12 }} />
             <h1 style={s.heroTitle}>Become an Agent</h1>
             <p style={s.heroSub}>Earn 100% commission on every first-month subscription you refer</p>
           </div>
@@ -984,8 +984,8 @@ export default function Affiliate({ onClose }) {
       icon: '🍜',
       color: '#FF6B35',
       apps: [
-        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — aplikasi pemesanan makanan' : 'From street carts to restaurants — your food ordering app', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaa.png', url: '/food/basic/' },
-        { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png', url: '/food/pro/' },
+        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — aplikasi pemesanan makanan' : 'From street carts to restaurants — your food ordering app', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/basic/' },
+        { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },
     // Future categories will auto-appear here

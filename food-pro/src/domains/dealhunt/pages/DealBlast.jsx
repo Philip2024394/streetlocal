@@ -83,7 +83,7 @@ export default function DealBlast({ open, onClose, deal }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10000,
       backgroundColor: '#000',
-      backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33.png?updatedAt=1775555797749)',
+      backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33.png)',
       backgroundSize: 'cover', backgroundPosition: 'center top',
       display: 'flex', flexDirection: 'column', isolation: 'isolate',
     }}>

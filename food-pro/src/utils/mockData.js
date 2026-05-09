@@ -77,8 +77,8 @@ const wayanListings = [
     price_month: 1500000,
     condition: 'like_new',
     images: [
-      'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
-      'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
+      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
+      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
     ],
     extra_fields: {
       cc: 125,
@@ -113,8 +113,8 @@ const wayanListings = [
     price_month: 2500000,
     condition: 'good',
     images: [
-      'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
-      'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
+      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
+      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
     ],
     extra_fields: {
       cc: 155,
@@ -149,7 +149,7 @@ const wayanListings = [
     price_month: 3000000,
     condition: 'new',
     images: [
-      'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
+      'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
       'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=600',
     ],
     extra_fields: {
@@ -355,7 +355,7 @@ const MOCK_BOOKINGS = [
     id: 'booking-001',
     listing_id: 'mock-moto-001',
     listing_title: 'Honda Vario 125 2023 - Putih Bersih',
-    listing_image: 'https://ik.imagekit.io/nepgaxllc/Untitledasdadaa.png',
+    listing_image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdadaa.png',
     renter_id: BUYERS.sarah.id,
     renter_name: BUYERS.sarah.name,
     renter_phone: BUYERS.sarah.phone,

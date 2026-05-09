@@ -17,7 +17,7 @@
   background: linear-gradient(160deg, #180d18 0%, #110a14 100%) !important;
 }
 .windowDating .bubbleMine   { border-color: rgba(255,107,163,0.35); background: rgba(255,107,163,0.08); }
-.windowDating .messages     { background-image: url('https://ik.imagekit.io/nepgaxllc/Romantic%20chat%20and%20love%20symbols.png'); }
+.windowDating .messages     { background-image: url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/romantic-chat-and-love-symbols.png'); }
 
 /* ── Theme: Market (gold) ── */
 .windowMarket { background: #0d0c08; }
@@ -27,7 +27,7 @@
   background: linear-gradient(160deg, #1a1600 0%, #120f00 100%) !important;
 }
 .windowMarket .bubbleMine   { border-color: rgba(245,197,24,0.35); background: rgba(245,197,24,0.07); }
-.windowMarket .messages     { background-image: url('https://ik.imagekit.io/nepgaxllc/Untitledsadasdasdasdasddfssdfasdasdfsasdfsdffasdfadasdas.png'); }
+.windowMarket .messages     { background-image: url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadasdasdasdasddfssdfasdasdfsasdfsdffasdfadasdas.png'); }
 
 /* ── Theme: Food (orange) ── */
 .windowFood { background: #0d0900; }
@@ -37,7 +37,7 @@
   background: linear-gradient(160deg, #1a0d00 0%, #110800 100%) !important;
 }
 .windowFood .bubbleMine   { border-color: rgba(249,115,22,0.35); background: rgba(249,115,22,0.07); }
-.windowFood .messages     { background-image: url('https://ik.imagekit.io/nepgaxllc/Yellow%20chat%20bubble%20with%20chef%27s%20hat%20(1).png'); }
+.windowFood .messages     { background-image: url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png'); }
 
 /* Shared header icon */
 .headerThemeIcon {
@@ -562,7 +562,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-image: url('https://ik.imagekit.io/nepgaxllc/Untitledsdfasdf.png');
+  background-image: url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfasdf.png');
   background-size: cover;
   background-position: center;
   background-attachment: local;

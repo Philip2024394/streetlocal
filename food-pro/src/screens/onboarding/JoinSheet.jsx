@@ -5,12 +5,13 @@ import { sendPhoneOTP, verifyOTP } from '@/services/authService'
 import { saveAddress } from '@/services/addressService'
 import { useLanguage } from '@/i18n'
 import styles from './JoinSheet.module.css'
+import imgError from '../../imgFallback'
 
 // ── Same time-based background as home & location screens ──
 const BG_IMAGES = {
-  sunrise: 'https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33dsdsd.png?updatedAt=1775555858291',
-  day:     'https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33dsdsd.png?updatedAt=1775555858291',
-  night:   'https://ik.imagekit.io/nepgaxllc/Untitledfsdf.png?updatedAt=1775555383465',
+  sunrise: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33dsdsd.png',
+  day:     'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33dsdsd.png',
+  night:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdf.png',
 }
 
 function getWIBHour() {
@@ -197,6 +198,7 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
         alt=""
         className={`${styles.bgLayer} ${imgLoaded[bgSrc] ? styles.bgLayerVisible : ''}`}
         onLoad={() => markBgLoaded(bgSrc)}
+        onError={imgError('banner')}
         draggable={false}
       />
       {bgIsSunset && (
@@ -205,6 +207,7 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
           alt=""
           className={styles.bgLayer}
           style={{ opacity: bgNightFade, transition: 'opacity 4s ease' }}
+          onError={imgError('banner')}
           draggable={false}
         />
       )}
@@ -216,9 +219,10 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
       {/* Logo — hero area centered */}
       <div className={styles.heroLogo}>
         <img
-          src="https://ik.imagekit.io/nepgaxllc/Bold%203D%20_INDOO_%20logo%20design.png?updatedAt=1776203769926"
+          src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png"
           alt="INDOO"
           className={styles.headerLogo}
+          onError={imgError('logo')}
           draggable={false}
         />
         <span className={styles.heroSlogan}>Indonesia's Superapp</span>
@@ -267,10 +271,11 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
         {step === 'otp' && (
           <div className={styles.content}>
             <img
-              src="https://ik.imagekit.io/nepgaxllc/Futuristic%20biker%20in%20sleek%20gear.png"
+              src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/futuristic-biker-in-sleek-gear.png"
               alt=""
               className={styles.otpBikerImg}
               aria-hidden="true"
+              onError={imgError('generic')}
             />
             <h2 className={styles.title}>{t('join.otp.title')}</h2>
             <p className={styles.sub}>{t('join.otp.sentTo')} {fullPhone}</p>
@@ -314,10 +319,11 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
           <div className={styles.content}>
             {/* Right-side decorative image */}
             <img
-              src="https://ik.imagekit.io/nepgaxllc/Untitlediuooiuoifsdfsdfdasdadasd-removebg-preview.png?updatedAt=1775663126206"
+              src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdfdasdadasd-removebg-preview.png"
               alt=""
               className={styles.profileStepImg}
               aria-hidden="true"
+              onError={imgError('generic')}
             />
 
             <h2 className={`${styles.title} ${styles.titleShine}`}>{t('join.profile.title')}</h2>
@@ -332,7 +338,7 @@ export default function JoinSheet({ open, onClose, initialStep = 'phone' }) {
                 type="button"
               >
                 {photoPreview
-                  ? <img src={photoPreview} alt="Preview" className={styles.photoImg} />
+                  ? <img src={photoPreview} alt="Preview" className={styles.photoImg} onError={imgError('logo')} />
                   : <span className={styles.cameraIcon}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>

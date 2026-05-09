@@ -8,6 +8,7 @@
  * Flow: countdown → upload screenshot → submit → restaurant confirms in their dashboard
  */
 import { useState, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { submitPaymentProof } from '@/services/foodOrderService'
 import styles from './PaymentTransferScreen.module.css'
 
@@ -131,7 +132,7 @@ export default function PaymentTransferScreen({ order, onSubmitted, onExpired })
 
           {preview ? (
             <div className={styles.previewWrap}>
-              <img src={preview} alt="Transfer proof" className={styles.previewImg} />
+              <img src={preview} alt="Transfer proof" className={styles.previewImg} onError={imgError('payment')} />
               <button className={styles.changeBtn} onClick={() => { setScreenshot(null); setPreview(null) }}>
                 Change photo
               </button>

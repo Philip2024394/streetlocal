@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import s from './MyDeals.module.css';
+import imgError from '../../../imgFallback';
 
 /* -------------------------------------------------- */
 /*  Demo data                                          */
@@ -183,6 +184,7 @@ function DealCard({ claim, copiedId, onCopy, onUseDeal }) {
           src={deal.images?.[0] || ''}
           alt={deal.title}
           loading="lazy"
+          onError={imgError('food')}
         />
         <div className={s.cardInfo}>
           <p className={s.dealTitle}>{deal.title}</p>

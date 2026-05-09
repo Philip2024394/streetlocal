@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import imgError from '../../imgFallback';
 
 const SERVICE_LABELS = {
   ride_bike: 'Ojek Ride',
@@ -195,7 +196,7 @@ export default function RatingPopup({
   const bgImage = {
     position: 'absolute',
     inset: 0,
-    backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2009_57_52%20AM.png)',
+    backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-30-2026-09_57_52-am.png)',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     zIndex: 0,
@@ -425,7 +426,7 @@ export default function RatingPopup({
               src={driverPhoto}
               alt={driverName}
               style={photoStyle}
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              onError={imgError('logo')}
             />
             <div style={{ textAlign: 'center' }}>
               <p style={nameStyle}>{driverName}</p>

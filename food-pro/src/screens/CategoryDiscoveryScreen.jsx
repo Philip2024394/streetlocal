@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from './CategoryDiscoveryScreen.module.css'
 import { FOOD_CATEGORIES } from './foodCategories'
+import imgError from '../imgFallback'
 
 // ── Demo avatars — replaced by real users when live ──────────────────────────
 const DEMO_AVATARS = [
@@ -284,10 +285,10 @@ function NowInKitchen({ viewerCount }) {
         {visibleSet.map(u => (
           <div key={u.id} className={styles.kitchenAvatar}>
             <img
-              src={u.photo_url || 'https://ik.imagekit.io/nepgaxllc/sdfasdfasdf.png'}
+              src={u.photo_url || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sdfasdfasdf.png'}
               alt={u.name}
               className={styles.kitchenAvatarImg}
-              onError={e => { e.target.src = 'https://ik.imagekit.io/nepgaxllc/sdfasdfasdf.png' }}
+              onError={imgError('logo')}
             />
           </div>
         ))}

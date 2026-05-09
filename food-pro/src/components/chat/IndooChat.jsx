@@ -4,11 +4,12 @@
  * Features: INDOO HQ ↔ Driver dispatch comms, customer can message
  */
 import { useState, useEffect, useRef } from 'react'
+import imgError from '../../imgFallback'
 import { createPortal } from 'react-dom'
 
-const BG_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2006_12_16%20AM.png?updatedAt=1777245159090'
-const INDOO_LOGO = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2012_04_23%20PM.png'
-const BIKE_ICON = 'https://ik.imagekit.io/nepgaxllc/Untitleddsddaa-removebg-preview.png?updatedAt=1776781020066'
+const BG_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-06_12_16-am.png?updatedAt=1777245159090'
+const INDOO_LOGO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-12_04_23-pm.png'
+const BIKE_ICON = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsddaa-removebg-preview.png'
 
 export default function IndooChat({ driverName, chatKey, initialMessages = [], onClose }) {
   const [messages, setMessages] = useState(initialMessages.length > 0 ? initialMessages : [])
@@ -49,12 +50,12 @@ export default function IndooChat({ driverName, chatKey, initialMessages = [], o
 
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 10010, backgroundColor: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
-      <img src={BG_IMG} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
+      <img src={BG_IMG} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} onError={imgError('banner')} />
 
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, position: 'relative', zIndex: 1 }}>
         <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #8DC63F', overflow: 'hidden', flexShrink: 0 }}>
-          <img src={`https://i.pravatar.cc/100?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={`https://i.pravatar.cc/100?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
         </div>
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', display: 'block' }}>{driverName}</span>
@@ -85,12 +86,12 @@ export default function IndooChat({ driverName, chatKey, initialMessages = [], o
               {/* Avatar */}
               {isDriver && (
                 <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1.5px solid #991B1B' }}>
-                  <img src={`https://i.pravatar.cc/60?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={`https://i.pravatar.cc/60?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
                 </div>
               )}
               {isSystem && (
                 <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(141,198,63,0.4)', background: '#111' }}>
-                  <img src={INDOO_LOGO} alt="INDOO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={INDOO_LOGO} alt="INDOO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
                 </div>
               )}
               {/* Bubble */}
@@ -102,15 +103,15 @@ export default function IndooChat({ driverName, chatKey, initialMessages = [], o
                 borderBottomLeftRadius: isCustomer ? 16 : 4,
               }}>
                 {isSystem && <span style={{ fontSize: 10, fontWeight: 900, color: '#8DC63F', display: 'block', marginBottom: 4, letterSpacing: '0.05em', padding: (msg.image || msg.imageLeft || msg.imageRight) ? '6px 10px 0' : 0 }}>INDOO HQ</span>}
-                {isDriver && <span style={{ fontSize: 10, fontWeight: 900, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, letterSpacing: '0.05em' }}><img src={BIKE_ICON} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} /> {msg.callsign ?? 'DRIVER'}</span>}
+                {isDriver && <span style={{ fontSize: 10, fontWeight: 900, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, letterSpacing: '0.05em' }}><img src={BIKE_ICON} alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} onError={imgError('generic')} /> {msg.callsign ?? 'DRIVER'}</span>}
                 {msg.image && (
-                  <img src={msg.image} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 6 }} />
+                  <img src={msg.image} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 6 }} onError={imgError('generic')} />
                 )}
                 {(msg.imageLeft || msg.imageRight) ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 6px' }}>
-                    {msg.imageLeft && <img src={msg.imageLeft} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
+                    {msg.imageLeft && <img src={msg.imageLeft} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} onError={imgError('generic')} />}
                     <span style={{ fontSize: 14, color: '#fff', flex: 1, lineHeight: 1.4, whiteSpace: 'pre-line' }}>{msg.text}</span>
-                    {msg.imageRight && <img src={msg.imageRight} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
+                    {msg.imageRight && <img src={msg.imageRight} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} onError={imgError('generic')} />}
                   </div>
                 ) : !msg.image && (
                   <span style={{ fontSize: 14, color: isCustomer ? '#000' : '#fff', display: 'block', lineHeight: 1.4, whiteSpace: 'pre-line', padding: msg.image ? '0 10px' : 0 }}>{msg.text}</span>

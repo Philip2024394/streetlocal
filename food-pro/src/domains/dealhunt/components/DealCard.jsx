@@ -6,6 +6,7 @@
 import styles from './DealCard.module.css'
 import CountdownTimer from './CountdownTimer'
 import ClaimProgressBar from './ClaimProgressBar'
+import imgError from '../../../imgFallback'
 
 const DOMAIN_COLORS = {
   food: { bg: 'rgba(249,115,22,0.15)', border: 'rgba(249,115,22,0.3)', text: '#F97316', label: '🍜 Food' },
@@ -45,7 +46,7 @@ export default function DealCard({ deal, onTap, compact = false }) {
           alt={deal.title}
           className={styles.image}
           loading="lazy"
-          onError={(e) => { e.target.src = '/placeholder-deal.jpg' }}
+          onError={imgError('food')}
         />
 
         {/* Discount badge — top right */}

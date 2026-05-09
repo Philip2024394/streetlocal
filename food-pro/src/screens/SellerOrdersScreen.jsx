@@ -6,8 +6,9 @@ import { createPortal } from 'react-dom'
 import { fetchOrders, updateOrderStatus } from '@/services/commerceService'
 import { useAuth } from '@/hooks/useAuth'
 import styles from './SellerOrdersScreen.module.css'
+import imgError from '../imgFallback'
 
-const MARKET_LOGO = 'https://ik.imagekit.io/nepgaxllc/Untitledfsdsd-removebg-preview.png'
+const MARKET_LOGO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdsd-removebg-preview.png'
 
 const STATUS_FLOW = ['awaiting_payment', 'pending', 'confirmed', 'shipped', 'delivered']
 const STATUS_COLORS = {
@@ -22,12 +23,12 @@ const STATUS_COLORS = {
 }
 
 const CARRIERS = [
-  { id: 'jne',     label: 'JNE',           logo: 'https://ik.imagekit.io/nepgaxllc/sssss-removebg-preview.png' },
-  { id: 'jnt',     label: 'J&T Express',   logo: 'https://ik.imagekit.io/nepgaxllc/Untitledsdds-removebg-preview.png' },
-  { id: 'sicepat', label: 'SiCepat',       logo: 'https://ik.imagekit.io/nepgaxllc/Untitleddfsfsd-removebg-preview.png' },
-  { id: 'ninja',   label: 'Ninja Xpress',  logo: 'https://ik.imagekit.io/nepgaxllc/Untitledddddddss-removebg-preview.png' },
-  { id: 'pos',     label: 'Pos Indonesia', logo: 'https://ik.imagekit.io/nepgaxllc/Untitledfffffddsdsdsdfsddasdassdfsdfsdfsd.png' },
-  { id: 'anteraja',label: 'Anteraja',      logo: 'https://ik.imagekit.io/nepgaxllc/Untitledvvdasa-removebg-preview.png' },
+  { id: 'jne',     label: 'JNE',           logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sssss-removebg-preview.png' },
+  { id: 'jnt',     label: 'J&T Express',   logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdds-removebg-preview.png' },
+  { id: 'sicepat', label: 'SiCepat',       logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsfsd-removebg-preview.png' },
+  { id: 'ninja',   label: 'Ninja Xpress',  logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddddss-removebg-preview.png' },
+  { id: 'pos',     label: 'Pos Indonesia', logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfffffddsdsdsdfsddasdassdfsdfsdfsd.png' },
+  { id: 'anteraja',label: 'Anteraja',      logo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledvvdasa-removebg-preview.png' },
   { id: 'grab',    label: 'GrabExpress',   logo: null },
   { id: 'gosend',  label: 'GoSend',        logo: null },
   { id: 'indoo',   label: 'Indoo Express', logo: null },
@@ -208,7 +209,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
           <button className={styles.backBtn} onClick={() => setSelectedOrder(null)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <img src={MARKET_LOGO} alt="" className={styles.headerLogo} />
+          <img src={MARKET_LOGO} alt="" className={styles.headerLogo} onError={imgError('logo')} />
           <h1 className={styles.title}>Order #{o.id.slice(-4)}</h1>
         </div>
 
@@ -227,7 +228,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
 
           {/* Product */}
           <div className={styles.detailProduct}>
-            <img src={o.image} alt={o.product} className={styles.detailProductImg} />
+            <img src={o.image} alt={o.product} className={styles.detailProductImg} onError={imgError('food')} />
             <div className={styles.detailProductInfo}>
               <span className={styles.detailProductName}>{o.product}</span>
               <span className={styles.detailProductPrice}>{fmtRp(o.price)} x {o.qty}</span>
@@ -242,7 +243,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
             <span className={styles.detailMeta}>{new Date(o.orderedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             {o.paymentScreenshot && (
               <button className={styles.paymentThumb} onClick={() => setPaymentPreview(o.paymentScreenshot)}>
-                <img src={o.paymentScreenshot} alt="Payment proof" />
+                <img src={o.paymentScreenshot} alt="Payment proof" onError={imgError('payment')} />
                 <span className={styles.paymentThumbLabel}>View payment proof</span>
               </button>
             )}
@@ -252,7 +253,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
           <div className={styles.detailSection}>
             <span className={styles.detailSectionTitle}>Buyer</span>
             <div className={styles.buyerRow}>
-              <img src={o.buyerAvatar} alt={o.buyer} className={styles.buyerAvatar} />
+              <img src={o.buyerAvatar} alt={o.buyer} className={styles.buyerAvatar} onError={imgError('logo')} />
               <div className={styles.buyerInfo}>
                 <span className={styles.buyerName}>{o.buyer}</span>
                 <span className={styles.buyerAddress}>{o.buyerAddress}</span>
@@ -273,7 +274,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
               <div className={styles.carrierGrid}>
                 {CARRIERS.map(c => (
                   <button key={c.id} className={`${styles.carrierBtn} ${selectedCarrier === c.id ? styles.carrierBtnOn : ''}`} onClick={() => setSelectedCarrier(c.id)}>
-                    {c.logo ? <img src={c.logo} alt={c.label} className={styles.carrierLogo} /> : <span className={styles.carrierEmoji}>📦</span>}
+                    {c.logo ? <img src={c.logo} alt={c.label} className={styles.carrierLogo} onError={imgError('generic')} /> : <span className={styles.carrierEmoji}>📦</span>}
                     <span className={styles.carrierLabel}>{c.label}</span>
                   </button>
                 ))}
@@ -292,7 +293,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
             <div className={styles.detailSection}>
               <span className={styles.detailSectionTitle}>Tracking</span>
               <div className={styles.trackingDisplay}>
-                {ci?.logo && <img src={ci.logo} alt={ci.label} className={styles.trackingCarrierLogo} />}
+                {ci?.logo && <img src={ci.logo} alt={ci.label} className={styles.trackingCarrierLogo} onError={imgError('generic')} />}
                 <div>
                   <span className={styles.trackingCarrier}>{ci?.label ?? 'Carrier'}</span>
                   <span className={styles.trackingNumber}>{o.trackingNo}</span>
@@ -342,7 +343,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
         {/* Payment proof preview modal */}
         {paymentPreview && (
           <div className={styles.previewOverlay} onClick={() => setPaymentPreview(null)}>
-            <img src={paymentPreview} alt="Payment proof" className={styles.previewImg} />
+            <img src={paymentPreview} alt="Payment proof" className={styles.previewImg} onError={imgError('payment')} />
           </div>
         )}
       </div>,
@@ -357,7 +358,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
         <button className={styles.backBtn} onClick={onClose}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <img src={MARKET_LOGO} alt="" className={styles.headerLogo} />
+        <img src={MARKET_LOGO} alt="" className={styles.headerLogo} onError={imgError('logo')} />
         <h1 className={styles.title}>My Orders</h1>
       </div>
 
@@ -375,7 +376,7 @@ export default function SellerOrdersScreen({ open, onClose, onOpenChat }) {
           const color = STATUS_COLORS[order.status] ?? STATUS_COLORS.pending
           return (
             <button key={order.id} className={styles.card} onClick={() => { setSelectedOrder(order); setTrackingInput(''); setSelectedCarrier(order.carrier || '') }}>
-              <img src={order.image} alt="" className={styles.cardThumb} />
+              <img src={order.image} alt="" className={styles.cardThumb} onError={imgError('food')} />
               <div className={styles.cardBody}>
                 <span className={styles.cardProduct}>{order.product}</span>
                 <span className={styles.cardMeta}>{order.buyer} · Qty: {order.qty}</span>

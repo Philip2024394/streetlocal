@@ -521,7 +521,7 @@ export default function ContactUsPage({ onClose }) {
         bottom: 0,
         zIndex: 10000,
         backgroundImage:
-          'url(https://ik.imagekit.io/nepgaxllc/Untitledfsdsss.png)',
+          'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdsss.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

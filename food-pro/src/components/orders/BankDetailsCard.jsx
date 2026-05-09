@@ -6,6 +6,7 @@
  * Screenshot upload triggers commission lock.
  */
 import { useState, useRef } from 'react'
+import imgError from '../../imgFallback'
 import { uploadImage } from '@/lib/uploadImage'
 import styles from './BankDetailsCard.module.css'
 
@@ -89,7 +90,7 @@ export default function BankDetailsCard({ bankDetails, fromMe, orderId, onScreen
 
           {previewUrl && (
             <div className={styles.preview}>
-              <img src={previewUrl} alt="Payment proof" className={styles.previewImg} />
+              <img src={previewUrl} alt="Payment proof" className={styles.previewImg} onError={imgError('payment')} />
             </div>
           )}
 
@@ -114,7 +115,7 @@ export default function BankDetailsCard({ bankDetails, fromMe, orderId, onScreen
         <div className={styles.uploadedSection}>
           {previewUrl && (
             <div className={styles.preview}>
-              <img src={previewUrl} alt="Payment proof" className={styles.previewImg} />
+              <img src={previewUrl} alt="Payment proof" className={styles.previewImg} onError={imgError('payment')} />
             </div>
           )}
           <div className={styles.uploadedBadge}>Payment screenshot sent</div>

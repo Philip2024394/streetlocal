@@ -390,7 +390,7 @@ export const DEMO_MAKER_SESSIONS = [
     userId: 'demo-user-9',
     displayName: 'Zara', age: 26,
     photoURL: null,
-    photos: ['https://ik.imagekit.io/nepgaxllc/Untitledsdfasdfddd.png', 'https://ik.imagekit.io/nepgaxllc/Untitledsdfasdfdddfsdfsd.png'],
+    photos: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfasdfddd.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdfasdfdddfsdfsd.png'],
     isVerified: true,
     brandName: 'Zara Clothes',
     tradeRole: 'both',

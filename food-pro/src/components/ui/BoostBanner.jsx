@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import styles from './BoostBanner.module.css'
+import imgError from '../../imgFallback'
 
 const BADGE_IMAGES = {
-  now:    "https://ik.imagekit.io/nepgaxllc/I'm%20out%20boosted%20badge%20design.png",
-  invite: 'https://ik.imagekit.io/nepgaxllc/Golden%20badge%20with%20vibrant%20rocket%20and%20confetti.png',
-  later:  'https://ik.imagekit.io/nepgaxllc/Later%20Out%20BOOSTED%20badge%20design.png',
+  now:    "https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png'm%20out%20boosted%20badge%20design.png",
+  invite: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/golden-badge-with-vibrant-rocket-and-confetti.png',
+  later:  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/later-out-boosted-badge-design.png',
 }
 
 const LABELS = {
@@ -67,6 +68,7 @@ export default function BoostBanner({ filter, onDone }) {
           src={BADGE_IMAGES[filter]}
           alt={`${LABELS[filter]} Boosted`}
           className={styles.badge}
+          onError={imgError('generic')}
         />
         <p className={styles.label}>{LABELS[filter]}</p>
         <p className={styles.sub}>Profile Boosted 🚀</p>

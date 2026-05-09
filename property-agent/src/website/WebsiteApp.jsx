@@ -23,7 +23,7 @@ import AreaGuidePage from './pages/AreaGuidePage'
 import PropertyManagementPage from './pages/PropertyManagementPage'
 import { createListing } from '@/services/rentalListingService'
 
-const BG_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2002_15_43%20AM.png'
+const BG_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-02_15_43-am.png'
 
 export default function WebsiteApp() {
   const [page, setPage] = useState('home')

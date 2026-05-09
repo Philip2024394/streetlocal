@@ -4,12 +4,12 @@
 import { useState, useMemo } from 'react'
 
 const ICON_IMAGES = {
-  '🚇': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '🚂': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '🚌': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdss-removebg-preview.png?updatedAt=1777657927452',
-  '🚈': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '✈️': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssss-removebg-preview.png?updatedAt=1777658011640',
-  '🚐': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdss-removebg-preview.png?updatedAt=1777657927452',
+  '🚇': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '🚂': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '🚌': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdss-removebg-preview.png',
+  '🚈': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '✈️': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssss-removebg-preview.png',
+  '🚐': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdss-removebg-preview.png',
 }
 function TransitIcon({ emoji, size = 22 }) {
   const img = ICON_IMAGES[emoji]

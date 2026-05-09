@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import ProfileStrip from '@/components/map/ProfileStrip'
 import IndooFooter from '@/components/ui/IndooFooter'
 import styles from './NotificationsScreen.module.css'
+import imgError from '../imgFallback'
 
 // ── Active vibe blasts targeting this user ────────────────────────────────
 function useVibeBlasts(userId, userCity, userAge, userGender) {
@@ -148,7 +149,7 @@ export default function NotificationsScreen({ onClose, onOpenChat, userId, userP
 
       {/* ── Header ── */}
       <div className={styles.header}>
-        <img src="https://ik.imagekit.io/nepgaxllc/UntitledasdsSDdasdASDSFSD-removebg-preview.png" alt="" className={styles.headerIcon} aria-hidden="true" />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdssddasdasdsfsd-removebg-preview.png" alt="" className={styles.headerIcon} aria-hidden="true" onError={imgError('logo')} />
         <span className={styles.title}>Notifications</span>
       </div>
 
@@ -186,7 +187,7 @@ export default function NotificationsScreen({ onClose, onOpenChat, userId, userP
               <div key={b.id} className={styles.vibeBlastRow}>
                 <div className={styles.vibeBlastAvatar}>
                   {b.profiles?.photo_url
-                    ? <img src={b.profiles.photo_url} alt={b.profiles?.display_name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    ? <img src={b.profiles.photo_url} alt={b.profiles?.display_name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={imgError('logo')} />
                     : <span style={{ fontSize: 20 }}>⚡</span>
                   }
                 </div>
@@ -254,7 +255,7 @@ export default function NotificationsScreen({ onClose, onOpenChat, userId, userP
         {(rideNotifs.length > 0 || recentRides.length > 0) && (
           <>
             <div className={`${styles.sectionHeader} ${styles.sectionRide}`}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Green%20and%20black%20speed%20machines.png?updatedAt=1775635360641" alt="" className={styles.sectionImgIcon} aria-hidden="true" />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/green-and-black-speed-machines.png" alt="" className={styles.sectionImgIcon} aria-hidden="true" onError={imgError('generic')} />
               <span className={styles.sectionTitle}>Bike / Car Service</span>
               {onOpenRideHistory && (
                 <button className={styles.viewAllBtn} onClick={onOpenRideHistory}>View All →</button>
@@ -269,8 +270,8 @@ export default function NotificationsScreen({ onClose, onOpenChat, userId, userP
                   {ride.status === 'cancelled'
                     ? '📦'
                     : ride.driver_type === 'car_taxi'
-                      ? <img src="https://ik.imagekit.io/nepgaxllc/Sporty%20green%20and%20black%20hatchback.png?updatedAt=1775634925566" alt="car" className={styles.rideIconImg} />
-                      : <img src="https://ik.imagekit.io/nepgaxllc/Riders%20on%20a%20sleek%20scooter.png?updatedAt=1775657336879" alt="bike" className={styles.rideIconImg} />
+                      ? <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sporty-green-and-black-hatchback.png" alt="car" className={styles.rideIconImg} onError={imgError('generic')} />
+                      : <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/riders-on-a-sleek-scooter.png" alt="bike" className={styles.rideIconImg} onError={imgError('generic')} />
                   }
                 </span>
                 <div className={styles.rideBody}>
@@ -284,9 +285,10 @@ export default function NotificationsScreen({ onClose, onOpenChat, userId, userP
                     ? <span className={styles.rideFare}>{fmtRp(ride.fare)}</span>
                     : (
                       <img
-                        src="https://ik.imagekit.io/nepgaxllc/Order%20canceled%20warning%20banner.png"
+                        src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/order-canceled-warning-banner.png"
                         alt="Cancelled"
                         className={styles.warningBadge}
+                        onError={imgError('generic')}
                       />
                     )
                   }
@@ -360,7 +362,7 @@ function ViewerCard({ viewer }) {
     <div className={styles.viewerCard}>
       <div className={styles.viewerAvatar}>
         {viewer.photoURL
-          ? <img src={viewer.photoURL} alt={viewer.displayName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+          ? <img src={viewer.photoURL} alt={viewer.displayName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={imgError('logo')} />
           : viewer.displayName?.[0]?.toUpperCase() ?? '?'
         }
       </div>

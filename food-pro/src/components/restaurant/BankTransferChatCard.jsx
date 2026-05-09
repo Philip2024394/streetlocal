@@ -9,6 +9,7 @@
  * a push notification to the restaurant.
  */
 import { useState, useRef } from 'react'
+import imgError from '../../imgFallback'
 import styles from './BankTransferChatCard.module.css'
 
 const BANK_COLORS = {
@@ -113,7 +114,7 @@ export default function BankTransferChatCard({ card, fromMe, onProofUploaded }) 
       {/* Proof thumbnail — after upload */}
       {proofUrl && (
         <div className={styles.proofWrap}>
-          <img src={proofUrl} alt="Transfer proof" className={styles.proofImg} />
+          <img src={proofUrl} alt="Transfer proof" onError={imgError('payment')} className={styles.proofImg} />
           <span className={styles.proofLabel}>Transfer screenshot</span>
         </div>
       )}

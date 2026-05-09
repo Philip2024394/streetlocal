@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import imgError from '../../imgFallback'
 import { uploadDriverDocument, submitDriverApplication, getDriverApplication } from '@/services/driverService'
 import styles from './DriverDocumentUpload.module.css'
 
@@ -152,7 +153,7 @@ export default function DriverDocumentUpload({ userId, driverType }) {
                 aria-label={`Upload ${doc.label}`}
               >
                 {preview
-                  ? <img src={preview} alt={doc.label} className={styles.previewImg} />
+                  ? <img src={preview} alt={doc.label} className={styles.previewImg} onError={imgError('generic')} />
                   : <span className={styles.previewPlus}>＋</span>
                 }
                 {busy && <div className={styles.previewOverlay}><span className={styles.spinner} /></div>}

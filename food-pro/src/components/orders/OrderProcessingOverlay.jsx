@@ -6,11 +6,12 @@
  * Close button returns to chat with notification message.
  */
 import { useState, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { createPortal } from 'react-dom'
 import styles from './OrderProcessingOverlay.module.css'
 
-const PROCESSING_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2016,%202026,%2012_43_48%20AM.png?updatedAt=1776275045024'
-const CONFIRMED_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2016,%202026,%2012_41_31%20AM.png?updatedAt=1776274910083'
+const PROCESSING_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-16-2026-12_43_48-am.png'
+const CONFIRMED_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-16-2026-12_41_31-am.png'
 
 export default function OrderProcessingOverlay({ open, sellerName, onClose }) {
   const [phase, setPhase] = useState('processing') // processing | confirmed
@@ -27,7 +28,7 @@ export default function OrderProcessingOverlay({ open, sellerName, onClose }) {
     <div className={styles.overlay}>
       {phase === 'processing' ? (
         <>
-          <img src={PROCESSING_IMG} alt="" className={styles.bgImg} />
+          <img src={PROCESSING_IMG} alt="" className={styles.bgImg} onError={imgError('banner')} />
           <div className={styles.bgDim} />
           <div className={styles.content}>
             {/* Pulsing icon */}
@@ -51,7 +52,7 @@ export default function OrderProcessingOverlay({ open, sellerName, onClose }) {
         </>
       ) : (
         <>
-          <img src={CONFIRMED_IMG} alt="" className={styles.bgImg} />
+          <img src={CONFIRMED_IMG} alt="" className={styles.bgImg} onError={imgError('banner')} />
           <div className={styles.bgDim} />
           <div className={styles.content}>
             <div className={styles.checkIcon}>

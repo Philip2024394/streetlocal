@@ -191,7 +191,7 @@ function AgentCard({ agent: a, delay, onSelect }) {
 
         {/* CTAs */}
         <div style={{ display: 'flex', gap: 8 }}>
-          <a href={`https://wa.me/${a.whatsapp.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><img src="https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png?updatedAt=1777539531358" alt="WhatsApp" style={{ height: 40, objectFit: 'contain' }} /></a>
+          <a href={`https://wa.me/${a.whatsapp.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png" alt="WhatsApp" style={{ height: 40, objectFit: 'contain' }} /></a>
           <button onClick={onSelect} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid rgba(141,198,63,0.3)', background: 'rgba(141,198,63,0.08)', color: '#8DC63F', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>View Profile →</button>
         </div>
       </div>

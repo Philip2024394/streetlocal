@@ -3,7 +3,7 @@
  * Variants: large (full width), small (pill), fab (floating action button).
  */
 
-const WA_IMG = 'https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png?updatedAt=1777539531358'
+const WA_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png'
 
 export default function WhatsAppCTA({ phoneNumber, listingTitle, listingPrice, size = 'large' }) {
   const formattedPhone = phoneNumber ? String(phoneNumber).replace(/^0/, '62').replace(/^\+/, '') : '6281234567890'

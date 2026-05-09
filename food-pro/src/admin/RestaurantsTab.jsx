@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import imgError from '../imgFallback'
 import { supabase } from '@/lib/supabase'
 import ImageUpload from '@/components/ui/ImageUpload'
 import styles from './RestaurantsTab.module.css'
@@ -256,7 +257,7 @@ export default function RestaurantsTab() {
                 <div key={r.id} className={`${styles.card} ${styles['status_' + r.status]}`}>
                   <div className={styles.cardHeader} onClick={() => setExpanded(isExpanded ? null : r.id)}>
                     {r.photo_url
-                      ? <img src={r.photo_url} style={{ width:44, height:44, borderRadius:8, objectFit:'cover', flexShrink:0 }} alt="" />
+                      ? <img src={r.photo_url} style={{ width:44, height:44, borderRadius:8, objectFit:'cover', flexShrink:0 }} alt="" onError={imgError('logo')} />
                       : <div className={styles.restaurantIcon}>🍽</div>
                     }
                     <div className={styles.restaurantInfo}>
@@ -279,7 +280,7 @@ export default function RestaurantsTab() {
                       {/* Payment QR */}
                       {r.bank?.qr_url && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', marginBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                          <img src={r.bank.qr_url} alt="QR" onClick={() => window.open(r.bank.qr_url, '_blank')} style={{ width: 60, height: 60, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#fff', cursor: 'pointer', objectFit: 'cover' }} />
+                          <img src={r.bank.qr_url} alt="QR" onClick={() => window.open(r.bank.qr_url, '_blank')} style={{ width: 60, height: 60, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#fff', cursor: 'pointer', objectFit: 'cover' }} onError={imgError('qr')} />
                           <div>
                             <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{r.bank?.name} — {r.bank?.account_number}</div>
                             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{r.bank?.account_holder}</div>

@@ -22,8 +22,8 @@ export const LOOKING_FOR_GROUPS = [
 
 export const LOOKING_FOR_OPTIONS = [
   // ── Most Popular ─────────────────────────────────────────────
-  { value: 'bike_ride',  emoji: '🛵', label: 'Bike Ride Service',  group: 'featured', img: 'https://ik.imagekit.io/nepgaxllc/Sleek%20green%20and%20black%20scooter%20setup.png?updatedAt=1775634845237' },
-  { value: 'car_taxi',   emoji: '🚗', label: 'Car Taxi Service',   group: 'featured', img: 'https://ik.imagekit.io/nepgaxllc/Sporty%20green%20and%20black%20hatchback.png?updatedAt=1775634925566' },
+  { value: 'bike_ride',  emoji: '🛵', label: 'Bike Ride Service',  group: 'featured', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sleek-green-and-black-scooter-setup.png' },
+  { value: 'car_taxi',   emoji: '🚗', label: 'Car Taxi Service',   group: 'featured', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sporty-green-and-black-hatchback.png' },
   { value: 'restaurant', emoji: '🍴', label: 'Restaurant Owner',   group: 'featured' },
 
   // ── Buying & Selling ─────────────────────────────────────────
@@ -42,7 +42,7 @@ export const LOOKING_FOR_OPTIONS = [
   // ── Social & Personal ────────────────────────────────────────
   { value: 'meet_new',       emoji: '👋', label: 'Meet New People',             group: 'social' },
   { value: 'marriage',       emoji: '💍', label: 'Marriage',                    group: 'social' },
-  { value: 'dating',         img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdasaaaaaaa-removebg-preview.png?updatedAt=1775627388475', label: 'Dating / Romance', group: 'social' },
+  { value: 'dating',         img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdasaaaaaaa-removebg-preview.png', label: 'Dating / Romance', group: 'social' },
   { value: 'date_night',     emoji: '🍽️', label: 'Date Night',                 group: 'social' },
   { value: 'friendship',     emoji: '🤝', label: 'Friendship / Social',         group: 'social' },
   { value: 'travel',         emoji: '✈️', label: 'Travel & Explore',            group: 'social' },

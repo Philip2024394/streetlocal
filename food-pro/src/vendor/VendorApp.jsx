@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import VendorDashboardV2 from '@/components/restaurant/VendorDashboardV2'
 import VendorOnboarding from '@/components/restaurant/VendorOnboarding'
 
-const BG_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2016,%202026,%2006_04_21%20PM.png'
+const BG_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-16-2026-06_04_21-pm.png'
 
 export default function VendorApp() {
   const [user, setUser] = useState(null)

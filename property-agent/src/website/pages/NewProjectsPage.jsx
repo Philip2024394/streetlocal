@@ -28,7 +28,7 @@ export default function NewProjectsPage({ onSelectProject, onBack }) {
         <ScrollReveal>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
             <div>
-              <h1 style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 12 }}><img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2003_29_33%20AM.png?updatedAt=1777667392389" alt="" style={{ width: 130, height: 130, objectFit: 'contain' }} /> <span style={{ color: '#FACC15' }}>New</span> Projects</h1>
+              <h1 style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 12 }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-03_29_33-am.png" alt="" style={{ width: 130, height: 130, objectFit: 'contain' }} /> <span style={{ color: '#FACC15' }}>New</span> Projects</h1>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{filtered.length} projects · Pre-sale & under construction</p>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -74,7 +74,7 @@ export default function NewProjectsPage({ onSelectProject, onBack }) {
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 40%, rgba(0,0,0,0.7))' }} />
                         <div style={{ position: 'absolute', top: 12, left: 12, padding: '4px 12px', borderRadius: 8, background: `${status.color}20`, border: `1.5px solid ${status.color}50`, fontSize: 11, fontWeight: 800, color: status.color }}>{status.label}</div>
                         <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
-                          {p.verified && <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2006_18_19%20AM.png?updatedAt=1777677521038" alt="Verified" style={{ width: 26, height: 26, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />}
+                          {p.verified && <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-06_18_19-am.png" alt="Verified" style={{ width: 26, height: 26, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />}
                         </div>
                         {p.video_url && (
                           <div style={{ position: 'absolute', bottom: 12, right: 12, width: 40, height: 40, borderRadius: 12, background: 'rgba(0,0,0,0.6)', border: '1.5px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -202,7 +202,7 @@ export default function NewProjectsPage({ onSelectProject, onBack }) {
                       {schedule.notes && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>{schedule.notes}</div>}
 
                       {p.contact_whatsapp && (
-                        <a href={`https://wa.me/${p.contact_whatsapp.replace(/^0/, '62')}?text=${encodeURIComponent(`Hi, I'd like to book a site visit for ${p.project_name}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', marginTop: 6 }}><img src="https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png?updatedAt=1777539531358" alt="Book Site Visit" style={{ height: 32, objectFit: 'contain' }} /></a>
+                        <a href={`https://wa.me/${p.contact_whatsapp.replace(/^0/, '62')}?text=${encodeURIComponent(`Hi, I'd like to book a site visit for ${p.project_name}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', marginTop: 6 }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png" alt="Book Site Visit" style={{ height: 32, objectFit: 'contain' }} /></a>
                       )}
                     </div>
                   </div>

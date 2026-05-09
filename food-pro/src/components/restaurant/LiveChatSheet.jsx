@@ -6,10 +6,11 @@
  */
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import imgError from '../../imgFallback'
 import { useAuthContext } from '@/contexts/AuthContext'
 
-const CHAT_BG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2006_12_16%20AM.png?updatedAt=1777245159090'
-const TEAM_PHOTO = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2012_04_23%20PM.png?updatedAt=1777266283038'
+const CHAT_BG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-06_12_16-am.png?updatedAt=1777245159090'
+const TEAM_PHOTO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-12_04_23-pm.png'
 
 function generateTicketNumber() {
   return Math.floor(Math.random() * 9000) + 1000
@@ -42,7 +43,7 @@ export default function LiveChatSheet({ order, onClose }) {
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         zIndex: 9950, display: 'flex', flexDirection: 'column',
       }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/Untitledfsdsss.png?updatedAt=1777336271626)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdsss.png?updatedAt=1777336271626)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
 
         <div style={{ position: 'relative', zIndex: 2, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{

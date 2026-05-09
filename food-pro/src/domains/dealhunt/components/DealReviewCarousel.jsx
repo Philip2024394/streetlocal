@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import styles from './DealReviewCarousel.module.css'
+import imgError from '../../../imgFallback'
 
 // ── Star renderer ────────────────────────────────────────────────────────────
 function Stars({ count, size = 12 }) {
@@ -18,7 +19,7 @@ function ExpandedReview({ review, onClose }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.expandedCard} onClick={e => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
-        <img src={review.photo_url} alt="" className={styles.expandedImg} />
+        <img src={review.photo_url} alt="" className={styles.expandedImg} onError={imgError('food')} />
         <div className={styles.expandedInfo}>
           <Stars count={review.stars} size={16} />
           <p className={styles.expandedCaption}>{review.caption}</p>
@@ -44,7 +45,7 @@ export default function DealReviewCarousel({ dealTitle, sellerId, reviews }) {
             className={styles.thumb}
             onClick={() => setExpanded(review)}
           >
-            <img src={review.photo_url} alt="" className={styles.thumbImg} />
+            <img src={review.photo_url} alt="" className={styles.thumbImg} onError={imgError('food')} />
             <div className={styles.thumbStars}>
               <Stars count={review.stars} size={8} />
             </div>

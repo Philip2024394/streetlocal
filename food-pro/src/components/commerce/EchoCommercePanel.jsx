@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import imgError from '../../imgFallback'
 import {
   fetchProducts, fetchOrders, fetchStats,
   updateOrderStatus, toggleProductActive, DEMO_STATS,
@@ -96,7 +97,7 @@ export default function EchoCommercePanel({ userId, businessName, open: external
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerLeft}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Indoo%20Market%20logo%20design.png?updatedAt=1776203793752" alt="Indoo Market" style={{ height:22, objectFit:'contain' }} />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/indoo-market-logo-design.png" alt="Indoo Market" style={{ height:22, objectFit:'contain' }} onError={imgError('logo')} />
               <span className={styles.commerce}>Seller</span>
             </div>
             <button className={styles.headerCatalogBtn} onClick={() => setAnalyticsOpen(true)}>
@@ -232,7 +233,7 @@ export default function EchoCommercePanel({ userId, businessName, open: external
               {products.map(p => (
                 <div key={p.id} className={[styles.productRow, p.active ? '' : styles.productInactive].join(' ')}>
                   {p.image && (
-                    <img src={p.image} alt={p.name} className={styles.productThumb} />
+                    <img src={p.image} alt={p.name} className={styles.productThumb} onError={imgError('food')} />
                   )}
                   <div className={styles.productInfo}>
                     <span className={styles.productName}>{p.name}</span>

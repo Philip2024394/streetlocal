@@ -1,4 +1,5 @@
 import { useState, useMemo, lazy, Suspense } from 'react'
+import imgError from '../../imgFallback'
 import styles from './ProductDetailSheet.module.css'
 import SafeTradeModal from './SafeTradeModal'
 import FreightCompaniesSheet from './FreightCompaniesSheet'
@@ -96,7 +97,7 @@ export default function ProductDetailSheet({ product, onClose, sellerWa, sellerN
 
       {/* Background image — tap to open gallery */}
       {activeImage
-        ? <img key={activeImage} src={activeImage} alt={product.name} className={styles.bgImg} onClick={() => { setGalleryStart(0); setGalleryOpen(true) }} />
+        ? <img key={activeImage} src={activeImage} alt={product.name} className={styles.bgImg} onClick={() => { setGalleryStart(0); setGalleryOpen(true) }} onError={imgError('food')} />
         : <div className={styles.bgFallback}><span className={styles.bgEmoji}>📦</span></div>
       }
 
@@ -114,7 +115,7 @@ export default function ProductDetailSheet({ product, onClose, sellerWa, sellerN
                 background:'#000', boxShadow:'0 2px 8px rgba(0,0,0,0.5)',
                 flexShrink:0,
               }}>
-              <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+              <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} onError={imgError('food')} />
             </button>
           ))}
         </div>
@@ -385,7 +386,7 @@ export default function ProductDetailSheet({ product, onClose, sellerWa, sellerN
                 {(product.images?.length > 1 ? product.images : [activeImage].filter(Boolean)).map((url, i) => (
                   <button key={i} onClick={() => { setGalleryStart(i); setGalleryOpen(true) }}
                     style={{ width:56, height:56, borderRadius:10, overflow:'hidden', padding:0, border:'2px solid rgba(255,255,255,0.15)', cursor:'pointer', background:'#000', flexShrink:0, boxShadow:'0 2px 6px rgba(0,0,0,0.4)' }}>
-                    <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                    <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} onError={imgError('food')} />
                   </button>
                 ))}
               </div>

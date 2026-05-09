@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import styles from './TimeBackground.module.css'
+import imgError from '../../imgFallback'
 
 /**
  * Time-based full-screen background that cycles through three images
@@ -13,9 +14,9 @@ import styles from './TimeBackground.module.css'
  */
 
 const IMAGES = {
-  sunrise: 'https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33dsdsd.png?updatedAt=1775555858291',
-  day:     'https://ik.imagekit.io/nepgaxllc/Untitledfsdfdfdf33dsdsd.png?updatedAt=1775555858291',
-  night:   'https://ik.imagekit.io/nepgaxllc/Untitledfsdf.png?updatedAt=1775555383465',
+  sunrise: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33dsdsd.png',
+  day:     'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfdfdf33dsdsd.png',
+  night:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdf.png',
 }
 
 // WIB = UTC+7, returns fractional hours 0..24
@@ -78,6 +79,7 @@ export default function TimeBackground({ children }) {
         alt=""
         className={`${styles.layer} ${loaded[bgSrc] ? styles.layerVisible : ''}`}
         onLoad={() => handleLoad(bgSrc)}
+        onError={imgError('banner')}
         draggable={false}
       />
 
@@ -89,6 +91,7 @@ export default function TimeBackground({ children }) {
           className={styles.layer}
           style={{ opacity: nightFadeOpacity, transition: 'opacity 4s ease' }}
           onLoad={() => handleLoad('night-fade')}
+          onError={imgError('banner')}
           draggable={false}
         />
       )}

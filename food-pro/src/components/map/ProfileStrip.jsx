@@ -1,4 +1,5 @@
 import { useLanguage } from '@/i18n'
+import imgError from '../../imgFallback'
 import styles from './ProfileStrip.module.css'
 
 const TAB_ICONS = {
@@ -55,7 +56,7 @@ export default function ProfileStrip({ activeTab = 'map', onTabChange, notifCoun
             >
               <div className={styles.iconWrap}>
                 {tab.id === 'profile' && userPhoto
-                  ? <img src={userPhoto} alt="Profile" className={styles.avatar} />
+                  ? <img src={userPhoto} alt="Profile" className={styles.avatar} onError={imgError('logo')} />
                   : TAB_ICONS[tab.id]
                 }
                 {badge > 0 && (

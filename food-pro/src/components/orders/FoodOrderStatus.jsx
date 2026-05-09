@@ -3,6 +3,7 @@
  * Design matches BookingScreen (bike/car) — same green accent, glass cards, bg images.
  */
 import { useState, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { subscribeToFoodOrder, ORDER_STATUSES, getStatusIndex } from '@/services/foodOrderService'
 import styles from './FoodOrderStatus.module.css'
 
@@ -13,8 +14,8 @@ function isNightWIB() {
   return h >= 18 || h < 6
 }
 
-const BG_DAY   = 'url("https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2012,%202026,%2008_57_07%20PM.png")'
-const BG_NIGHT = 'url("https://ik.imagekit.io/nepgaxllc/Night%20ride%20on%20Jalan%20Bromo.png")'
+const BG_DAY   = 'url("https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-12-2026-08_57_07-pm.png")'
+const BG_NIGHT = 'url("https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/night-ride-on-jalan-bromo.png")'
 
 export default function FoodOrderStatus({ order, onClose }) {
   const [liveOrder, setLiveOrder] = useState(order)
@@ -65,9 +66,10 @@ export default function FoodOrderStatus({ order, onClose }) {
       <div className={styles.header}>
         <div className={styles.headerBrand}>
           <img
-            src="https://ik.imagekit.io/nepgaxllc/Bold%203D%20_INDOO_%20logo%20design.png?updatedAt=1776203769926"
+            src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png"
             alt="INDOO"
             className={styles.headerLogo}
+            onError={imgError('logo')}
           />
         </div>
         <div className={styles.headerActions}>
@@ -126,7 +128,7 @@ export default function FoodOrderStatus({ order, onClose }) {
           <div className={styles.driverTop}>
             <div className={styles.driverAvatar}>
               {liveOrder.driver_photo
-                ? <img src={liveOrder.driver_photo} alt="" className={styles.driverAvatarImg} />
+                ? <img src={liveOrder.driver_photo} alt="" className={styles.driverAvatarImg} onError={imgError('logo')} />
                 : <span className={styles.driverAvatarEmoji}>🏍️</span>}
             </div>
             <div className={styles.driverInfo}>
@@ -136,7 +138,7 @@ export default function FoodOrderStatus({ order, onClose }) {
             </div>
             {/* Chat button — right of profile */}
             <button className={styles.chatBtn} onClick={() => {}}>
-              <img src="https://ik.imagekit.io/nepgaxllc/Untitledsddsssdsssssssssdddd-removebg-preview%20(1).png" alt="Chat" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsddsssdsssssssssdddd-removebg-preview-1.png" alt="Chat" style={{ width: 20, height: 20, objectFit: 'contain' }} onError={imgError('generic')} />
             </button>
           </div>
           {/* Call + WhatsApp — centered row */}

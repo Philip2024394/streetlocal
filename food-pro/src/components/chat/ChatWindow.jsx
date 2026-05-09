@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import imgError from '../../imgFallback'
 import { filterMessage, BLOCK_MESSAGES, logViolation } from '@/utils/contentFilter'
 import { useAuth } from '@/hooks/useAuth'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -47,17 +48,17 @@ const THEME_CONFIG = {
   dating: {
     windowClass: 'windowDating',
     headerClass: 'headerDating',
-    icon: 'https://ik.imagekit.io/nepgaxllc/chat_pink-removebg-preview.png',
+    icon: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chat_pink-removebg-preview.png',
   },
   market: {
     windowClass: 'windowMarket',
     headerClass: 'headerMarket',
-    icon: 'https://ik.imagekit.io/nepgaxllc/chat_market_place-removebg-preview.png',
+    icon: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chat_market_place-removebg-preview.png',
   },
   food: {
     windowClass: 'windowFood',
     headerClass: 'headerFood',
-    icon: 'https://ik.imagekit.io/nepgaxllc/chat_chef-removebg-preview.png',
+    icon: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chat_chef-removebg-preview.png',
   },
 }
 
@@ -454,10 +455,10 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
           const voucherCode = `EATIN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
           const expiresAt = new Date(Date.now() + (rewardSettings.validity ?? 7) * 86400000).toISOString()
           const REWARD_IMAGES = {
-            10: 'https://ik.imagekit.io/nepgaxllc/Untitledcccc-removebg-preview.png?updatedAt=1775721239226',
-            15: 'https://ik.imagekit.io/nepgaxllc/dsasdasdasdasaaaaaa-removebg-preview.png?updatedAt=1775721303992',
-            20: 'https://ik.imagekit.io/nepgaxllc/Untitledbbbbbbbbbbb-removebg-preview.png?updatedAt=1775721392211',
-            25: 'https://ik.imagekit.io/nepgaxllc/Untitledxcvzcvzxcvzxc-removebg-preview.png?updatedAt=1775721470030',
+            10: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledcccc-removebg-preview.png',
+            15: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dsasdasdasdasaaaaaa-removebg-preview.png',
+            20: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbbbbbbbb-removebg-preview.png',
+            25: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxcvzcvzxcvzxc-removebg-preview.png',
           }
           const rewardMsg = {
             id: `reward-${Date.now()}`,
@@ -721,7 +722,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
             >
               <div className={styles.switcherAvatar}>
                 {c.photoURL
-                  ? <img src={c.photoURL} alt={c.displayName} className={styles.switcherAvatarImg} />
+                  ? <img src={c.photoURL} alt={c.displayName} className={styles.switcherAvatarImg} onError={imgError('logo')} />
                   : <span className={styles.switcherAvatarInitial}>{c.displayName?.[0]?.toUpperCase() ?? '?'}</span>
                 }
               </div>
@@ -808,7 +809,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
             {!msg.fromMe && (
               <div className={styles.bubbleAvatar}>
                 {conv.photoURL
-                  ? <img src={conv.photoURL} alt={conv.displayName} className={styles.bubbleAvatarImg} />
+                  ? <img src={conv.photoURL} alt={conv.displayName} className={styles.bubbleAvatarImg} onError={imgError('logo')} />
                   : <span className={styles.bubbleAvatarInitial}>{themInitial}</span>
                 }
               </div>
@@ -839,7 +840,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
                   {msg.qrisImage && (
                     <div style={{ marginTop: 8, padding: 12, borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(141,198,63,0.2)', textAlign: 'center' }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#8DC63F', marginBottom: 8 }}>📱 Scan to Pay (QRIS)</div>
-                      <img src={msg.qrisImage} alt="QRIS" style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 6 }} />
+                      <img src={msg.qrisImage} alt="QRIS" style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 6 }} onError={imgError('qr')} />
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>Works with GoPay, OVO, DANA & all banks</div>
                     </div>
                   )}
@@ -867,6 +868,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
                     src={msg.bannerImage}
                     alt={`${msg.discountPct}% off`}
                     style={{ width: '85%', maxWidth: 300, borderRadius: 14, objectFit: 'contain' }}
+                    onError={imgError('banner')}
                   />
                   <div style={{
                     padding: '10px 16px', borderRadius: 12,
@@ -891,9 +893,10 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                 }}>
                   <img
-                    src="https://ik.imagekit.io/nepgaxllc/Cancelled%20warning%20sign%20with%20grunge%20texture.png?updatedAt=1775813934231"
+                    src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png"
                     alt="Cancelled"
                     style={{ width: '80%', maxWidth: 280, borderRadius: 12, objectFit: 'contain' }}
+                    onError={imgError('banner')}
                   />
                   <div style={{
                     padding: '8px 16px', borderRadius: 10,
@@ -955,7 +958,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
                 <div className={`${styles.bubble} ${msg.fromMe ? styles.bubbleMine : styles.bubbleTheirs} ${msg.imageURL ? styles.bubbleImage : ''}`}>
                   {msg.isAutoReply && <span className={styles.autoReplyLabel}>Auto-reply</span>}
                   {msg.imageURL
-                    ? <img src={msg.imageURL} alt="attachment" className={styles.attachmentImg} />
+                    ? <img src={msg.imageURL} alt="attachment" className={styles.attachmentImg} onError={imgError('generic')} />
                     : <span className={styles.bubbleText}>{msg.text}</span>
                   }
                   <span className={styles.bubbleTime}>
@@ -991,7 +994,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
             {msg.fromMe && (
               <div className={styles.bubbleAvatar}>
                 {myPhoto
-                  ? <img src={myPhoto} alt="Me" className={styles.bubbleAvatarImg} />
+                  ? <img src={myPhoto} alt="Me" className={styles.bubbleAvatarImg} onError={imgError('logo')} />
                   : <span className={styles.bubbleAvatarInitial}>{myInitial}</span>
                 }
               </div>
@@ -1024,7 +1027,7 @@ export default function ChatWindow({ conversation: conv, allConversations = [], 
           <div className={`${styles.row} ${styles.rowTheirs}`}>
             <div className={styles.bubbleAvatar}>
               {conv.photoURL
-                ? <img src={conv.photoURL} alt={conv.displayName} className={styles.bubbleAvatarImg} />
+                ? <img src={conv.photoURL} alt={conv.displayName} className={styles.bubbleAvatarImg} onError={imgError('logo')} />
                 : <span className={styles.bubbleAvatarInitial}>{themInitial}</span>
               }
             </div>

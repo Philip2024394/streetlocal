@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import imgError from '../imgFallback'
 import {
   subscribeToRestaurantOrders,
   updateFoodOrderStatus,
@@ -502,7 +503,7 @@ export default function VendorPanel({ restaurantId: propRestaurantId }) {
                 <div key={item.id} style={{ ...s.card, display: 'flex', gap: 12, alignItems: 'center' }}>
                   {/* Photo */}
                   {item.photo_url && (
-                    <img src={item.photo_url} alt={item.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                    <img src={item.photo_url} alt={item.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} onError={imgError('food')} />
                   )}
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -835,7 +836,7 @@ export default function VendorPanel({ restaurantId: propRestaurantId }) {
                 {sortedDrivers.map(driver => (
                   <div key={driver.id} style={{ ...s.card, display: 'flex', gap: 14, alignItems: 'center', opacity: driver.online ? 1 : 0.45 }}>
                     {/* Photo */}
-                    <img src={driver.photo} alt={driver.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: driver.online ? '2px solid #8DC63F' : '2px solid #555' }} />
+                    <img src={driver.photo} alt={driver.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: driver.online ? '2px solid #8DC63F' : '2px solid #555' }} onError={imgError('logo')} />
 
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { useAuth } from '@/hooks/useAuth'
 import { getBuyerUnlockStatus } from '@/services/unlockService'
 import { fetchProducts, DEMO_PRODUCTS } from '@/services/commerceService'
@@ -64,7 +65,7 @@ export default function SellerProfileSheet({ seller, onClose, onOpenChat, onOrde
 
       {/* Full-height background image */}
       {seller.photoURL
-        ? <img src={seller.photoURL} alt="" className={styles.bgImg} />
+        ? <img src={seller.photoURL} alt="" className={styles.bgImg} onError={imgError('banner')} />
         : <div className={styles.bgFallback}>
             <span className={styles.bgInitial}>{(seller.brandName ?? seller.displayName)[0]}</span>
           </div>
@@ -75,9 +76,10 @@ export default function SellerProfileSheet({ seller, onClose, onOpenChat, onOrde
       <div className={styles.topBar}>
         <div className={styles.indooLogoWrap}>
           <img
-            src="https://ik.imagekit.io/nepgaxllc/Indoo%20Market%20logo%20design.png?updatedAt=1776203793752"
+            src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/indoo-market-logo-design.png"
             alt="Indoo Market"
             className={styles.indooLogoImg}
+            onError={imgError('logo')}
           />
         </div>
         <button className={styles.backBtn} onClick={onClose}>

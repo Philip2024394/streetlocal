@@ -3,15 +3,15 @@ import { createPortal } from 'react-dom'
 import styles from './PostDealWidget.module.css'
 
 const DISCOUNT_TIERS = [
-  { pct: 10, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaa-removebg-preview.png' },
-  { pct: 15, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaad-removebg-preview.png' },
-  { pct: 20, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaada-removebg-preview.png' },
-  { pct: 25, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaadaf-removebg-preview.png' },
-  { pct: 30, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaadafd-removebg-preview.png' },
-  { pct: 35, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaadafde-removebg-preview.png' },
-  { pct: 40, img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaadafdedd-removebg-preview.png' },
-  { pct: 45, img: 'https://ik.imagekit.io/nepgaxllc/6789.png' },
-  { pct: 50, img: 'https://ik.imagekit.io/nepgaxllc/Untitledttt-removebg-preview.png' },
+  { pct: 10, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaa-removebg-preview.png' },
+  { pct: 15, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaad-removebg-preview.png' },
+  { pct: 20, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaada-removebg-preview.png' },
+  { pct: 25, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaadaf-removebg-preview.png' },
+  { pct: 30, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaadafd-removebg-preview.png' },
+  { pct: 35, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaadafde-removebg-preview.png' },
+  { pct: 40, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdaaadafdedd-removebg-preview.png' },
+  { pct: 45, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/6789.png' },
+  { pct: 50, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledttt-removebg-preview.png' },
 ]
 
 const DEMO_ITEMS = {

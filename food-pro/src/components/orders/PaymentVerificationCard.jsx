@@ -10,6 +10,7 @@
  * already proves the transaction happened.
  */
 import { useState } from 'react'
+import imgError from '../../imgFallback'
 import styles from './PaymentVerificationCard.module.css'
 
 export default function PaymentVerificationCard({
@@ -51,7 +52,7 @@ export default function PaymentVerificationCard({
       {/* Screenshot preview */}
       {screenshotUrl && (
         <div className={styles.screenshotWrap}>
-          <img src={screenshotUrl} alt="Payment proof" className={styles.screenshot} />
+          <img src={screenshotUrl} alt="Payment proof" className={styles.screenshot} onError={imgError('payment')} />
         </div>
       )}
 

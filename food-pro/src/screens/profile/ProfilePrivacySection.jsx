@@ -17,6 +17,7 @@ import DriverTripScreen from '@/components/driver/DriverTripScreen'
 import DriverEarningsScreen from '@/components/driver/DriverEarningsScreen'
 import RestaurantDashboard from '@/components/restaurant/RestaurantDashboard'
 import styles from '../ProfileScreen.module.css'
+import imgError from '../../imgFallback'
 
 export default function ProfilePrivacySection({
   // Drawer state
@@ -390,7 +391,7 @@ export default function ProfilePrivacySection({
               <div className={styles.drawerHeaderUser}>
                 <div className={styles.drawerAvatar}>
                   {userProfile?.photoURL
-                    ? <img src={userProfile.photoURL} alt="" className={styles.drawerAvatarImg} />
+                    ? <img src={userProfile.photoURL} alt="" className={styles.drawerAvatarImg} onError={imgError('logo')} />
                     : <span className={styles.drawerAvatarInitial}>{(userProfile?.displayName ?? 'Y')[0].toUpperCase()}</span>
                   }
                 </div>

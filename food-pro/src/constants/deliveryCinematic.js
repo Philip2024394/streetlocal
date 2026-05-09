@@ -28,39 +28,39 @@ export const FALLBACK_IMG = 'data:image/svg+xml,' + encodeURIComponent(
 
 // ── Stage 1: Driver heading to restaurant (8 images) ───────────────────────
 export const STAGE1_IMAGES = [
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2016,%202026,%2006_36_14%20PM.png?updatedAt=1776339391906', text: 'Your driver is en route to the restaurant', speed: 38 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2016,%202026,%2006_35_10%20PM.png?updatedAt=1776339327027', text: 'Travelling on a clear route', speed: 45 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/Rider_s%20view%20of%20a%20sport%20motorcycle%20dashboard.png?updatedAt=1776155502901', text: 'Adjusting speed through a residential zone', speed: 18 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2004_55_25%20AM.png', text: 'Maintaining excellent pace', speed: 40 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2004_06_54%20AM.png', text: 'Restaurant notified — your order is being prepared', speed: 35 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2004_01_25%20AM.png', text: 'Briefly stopped at a traffic signal', speed: 0 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2002_55_36%20AM.png?updatedAt=1776801354200', text: 'Approaching the restaurant for collection', speed: 30 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2003_04_40%20AM.png?updatedAt=1776801900155', text: 'Driver has arrived at the restaurant', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-16-2026-06_36_14-pm.png', text: 'Your driver is en route to the restaurant', speed: 38 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-16-2026-06_35_10-pm.png', text: 'Travelling on a clear route', speed: 45 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/rider_s-view-of-a-sport-motorcycle-dashboard.png', text: 'Adjusting speed through a residential zone', speed: 18 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-04_55_25-am.png', text: 'Maintaining excellent pace', speed: 40 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-04_06_54-am.png', text: 'Restaurant notified — your order is being prepared', speed: 35 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-04_01_25-am.png', text: 'Briefly stopped at a traffic signal', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-02_55_36-am.png', text: 'Approaching the restaurant for collection', speed: 30 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-03_04_40-am.png', text: 'Driver has arrived at the restaurant', speed: 0 },
 ]
 
 // ── Stage 2: Driver picked up food → heading to customer (5 images) ─────────
 export const STAGE2_IMAGES = [
-  { img: 'https://ik.imagekit.io/nepgaxllc/pick%204.png?updatedAt=1776800928696', text: 'Collecting your order from the restaurant', speed: 0 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddsddaadsds333sa.png', text: 'Your order is on its way to you', speed: 38 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2005_24_01%20AM.png', text: 'Making excellent progress on a clear route', speed: 45 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2005_14_30%20AM.png', text: 'Entering your delivery area', speed: 32 },
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2004_55_25%20AM.png', text: 'Right on schedule', speed: 28 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/pick-4.png', text: 'Collecting your order from the restaurant', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsddaadsds333sa.png', text: 'Your order is on its way to you', speed: 38 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-05_24_01-am.png', text: 'Making excellent progress on a clear route', speed: 45 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-05_14_30-am.png', text: 'Entering your delivery area', speed: 32 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-04_55_25-am.png', text: 'Right on schedule', speed: 28 },
 ]
 
 // ── Stage 2 — STREET VENDOR variants (day + night pickup image, rest same) ──
 export const STAGE2_STREET_DAY = [
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2007_27_08%20AM.png', text: 'Collecting your order from the street vendor', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-07_27_08-am.png', text: 'Collecting your order from the street vendor', speed: 0 },
   ...STAGE2_IMAGES.slice(1),
 ]
 
 export const STAGE2_STREET_NIGHT = [
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2007_23_20%20AM.png', text: 'Collecting your order from the street vendor', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-07_23_20-am.png', text: 'Collecting your order from the street vendor', speed: 0 },
   ...STAGE2_IMAGES.slice(1),
 ]
 
 // ── Stage 3: Driver arrived (1 image) ───────────────────────────────────────
 export const STAGE3_IMAGES = [
-  { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2005_03_00%20AM.png', text: 'Your driver has arrived — enjoy your meal', speed: 0 },
+  { img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-05_03_00-am.png', text: 'Your driver has arrived — enjoy your meal', speed: 0 },
 ]
 
 // ── All image URLs for preloading ───────────────────────────────────────────

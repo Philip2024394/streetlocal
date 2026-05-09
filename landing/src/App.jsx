@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import Admin from './Admin'
 import Affiliate from './Affiliate'
 import { getTranslation, COUNTRY_TO_LANG } from './translations'
+import imgError, { FALLBACK_URLS } from './imgFallback'
 
 /* ─── Translations ─── */
 const TRANSLATIONS = {
@@ -183,9 +184,9 @@ const TRANSLATIONS = {
     ],
     categories: {
       food: {
-        name: 'Food Ordering Software',
+        name: 'Local Food Apps',
         description: 'Complete food business solutions',
-        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
+        bannerImage: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
         apps: {
           basic: {
             name: 'FoodLocal',
@@ -334,7 +335,7 @@ const TRANSLATIONS = {
       food: {
         name: 'Software Pemesanan Makanan',
         description: 'Solusi lengkap bisnis makanan',
-        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
+        bannerImage: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
         apps: {
           basic: {
             name: 'FoodLocal',
@@ -406,10 +407,10 @@ function getCategories(t, cp) {
   return [
     {
       id: 'food',
-      name: t.foodCategory || 'Food Ordering Software',
+      name: t.foodCategory || 'Local Food Apps',
       icon: '🍜',
       description: t.foodCategoryDesc || 'Complete food business solutions',
-      bannerImage: (t.categories?.food?.bannerImage) || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_12_27%20PM.png',
+      bannerImage: (t.categories?.food?.bannerImage) || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
       apps: [
         {
           id: 'basic',
@@ -419,13 +420,13 @@ function getCategories(t, cp) {
           yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
           tagline: t.basicTagline || 'From street carts to restaurants — your food ordering app',
           description: t.basicDesc || '',
-          features: t.basicFeatures || [
-            { cat: 'Ordering & Menu', items: ['WhatsApp ordering', 'Digital menu with photos', 'Promo prices & deals', 'Halal & Popular badges'] },
-            { cat: 'Design & Branding', items: ['15+ app themes', 'Custom branding & colors', 'Theme editor'] },
-            { cat: 'Business Tools', items: ['Opening hours management', 'QRIS payment'] },
-            { cat: 'Location & Delivery', items: ['Delivery rates per km', 'GPS distance'] },
-            { cat: 'Social & Reach', items: ['Visit Us page with socials', 'Multi-language support'] },
-            { cat: 'Technical', items: ['Online in minutes', 'Mobile-first design'] },
+          features: [
+            { cat: 'Ordering & Menu', items: ['WhatsApp ordering — zero commission', 'Digital menu with photos & descriptions', 'Meal, Snack, Dessert & Drink categories', 'Promo pricing with strikethrough display', 'Halal badge & Popular item badges', 'Spice level indicators on dishes', 'Customer order notes', 'Prep time per menu item'] },
+            { cat: 'Design & Branding', items: ['Your own branded food ordering app', '15+ theme backgrounds to match your brand', 'Custom logo & business branding', 'Landing page with city & country display', 'Custom accent colors & theme editor', 'Hero text effects (glow, neon, shadow)', 'Button shape & style customization', 'Splash screen with logo'] },
+            { cat: 'Delivery & Location', items: ['GPS delivery estimates with local rates', 'City-based GoJek/Grab rate defaults', 'Multi-currency support (16 countries)', 'Configurable delivery radius & pricing', 'Free delivery threshold setting', 'Pickup Only / Collection mode'] },
+            { cat: 'Business Management', items: ['Shop open/close toggle — pause orders instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Shop bio & social media links', 'QR code generator for your stall', 'QRIS payment QR code', 'Customer directory & order history', 'Daily deals with time scheduling'] },
+            { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
+            { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync', 'Terms Of Listing compliance checker'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
@@ -442,9 +443,9 @@ function getCategories(t, cp) {
           description: t.proDesc || '',
           features: t.proFeatures || [],
           screenshots: [
-            'https://ik.imagekit.io/nepgaxllc/Untitledfsdfsdfsssss.png',
-            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_24_25%20PM.png',
-            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%204,%202026,%2004_17_25%20PM.png?updatedAt=1777886267229',
+            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png',
+            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-12_24_25-pm.png',
+            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-4-2026-04_17_25-pm.png',
           ],
           url: '/food/pro/',
           color: '#FFD600',
@@ -520,12 +521,12 @@ function PhoneMockup({ screenshot, liveUrl, color, small }) {
           borderRadius: 20,
           zIndex: 3,
         }} />
-        {liveUrl ? (
+        {liveUrl && navigator.onLine ? (
           <div style={{ width: 375, height: 812, transform: `scale(${small ? 180/375 : 280/375})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
             <iframe src={liveUrl} style={{ width: 375, height: 812, border: 'none', pointerEvents: 'none' }} title="Live preview" />
           </div>
         ) : screenshot ? (
-          <img src={screenshot} alt="App screenshot" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+          <img src={screenshot} alt="App screenshot" onError={imgError('screenshot')} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
         ) : (
           <span style={{ fontSize: small ? 32 : 48, opacity: 0.3 }}>📱</span>
         )}
@@ -552,8 +553,18 @@ function PhoneMockup({ screenshot, liveUrl, color, small }) {
 function Phone3DCarousel({ screenshots, color, liveUrl, liveUrls, autoPlay = false }) {
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
   const touchStart = useRef(0)
   const total = (liveUrls || screenshots || []).length
+
+  // Detect online/offline status
+  useEffect(() => {
+    const goOffline = () => setOffline(true)
+    const goOnline = () => setOffline(false)
+    window.addEventListener('offline', goOffline)
+    window.addEventListener('online', goOnline)
+    return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline) }
+  }, [])
   const DURATION = 7000
 
   const LABELS = [
@@ -599,15 +610,20 @@ function Phone3DCarousel({ screenshots, color, liveUrl, liveUrls, autoPlay = fal
         <div style={{ position: 'absolute', right: -3, top: h * 0.22, width: 3, height: h * 0.07, borderRadius: '0 2px 2px 0', background: '#333' }} />
         <div style={{ width: '100%', height: '100%', borderRadius: w * 0.13, overflow: 'hidden', position: 'relative', background: '#000' }}>
           <div style={{ position: 'absolute', top: size === 'large' ? 7 : 5, left: '50%', transform: 'translateX(-50%)', width: size === 'large' ? 56 : 36, height: size === 'large' ? 16 : 10, background: '#000', borderRadius: 12, zIndex: 10 }} />
-          {url ? (
+          {url && !offline ? (
             <div style={{ position: 'absolute', inset: 0 }}>
               <div style={{ width: iframeW, height: iframeH, transform: `scale(${scaleFactor})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
                 <iframe src={url} style={{ width: iframeW, height: iframeH, border: 'none', pointerEvents: 'none' }} title={`Demo ${i}`} loading={i === 0 ? 'eager' : 'lazy'} />
               </div>
             </div>
           ) : img ? (
-            <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : null}
+            <img src={img} alt="" onError={imgError('screenshot')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${color}20, ${color}08)` }}>
+              <span style={{ fontSize: size === 'large' ? 36 : 24, opacity: 0.4 }}>📱</span>
+              <span style={{ fontSize: size === 'large' ? 11 : 8, color: '#888', marginTop: 4, fontWeight: 600 }}>{LABELS[i]?.title || 'Preview'}</span>
+            </div>
+          )}
           <div style={{ position: 'absolute', bottom: size === 'large' ? 5 : 3, left: '50%', transform: 'translateX(-50%)', width: size === 'large' ? 60 : 38, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
         </div>
       </div>
@@ -845,72 +861,72 @@ const VENDOR_STATUS_CONFIG = {
 
 /* ─── Contact Page Data ─── */
 const SUPPORT_CATEGORIES = [
-  { icon: '🏪', title: 'Store Setup', description: 'Get help setting up your digital storefront', responseTime: '< 2 hours', faqs: [
+  { icon: '🏪', title: 'Store Setup', description: 'Get help setting up your digital storefront', ticketsInQ: 3, faqs: [
     { q: 'How do I create my store?', a: 'Sign up, choose a plan, and follow our guided setup wizard. Your store will be live in under 5 minutes.' },
     { q: 'Can I customize my store design?', a: 'Yes! Choose from 100+ themes and customize colors, fonts, and layouts to match your brand.' },
     { q: 'Do I need technical knowledge?', a: 'No. Our platform is designed for non-technical users. Everything is drag-and-drop.' }
   ]},
-  { icon: '💳', title: 'Billing & Payments', description: 'Subscription, invoices, and payment methods', responseTime: '< 1 hour', faqs: [
+  { icon: '💳', title: 'Billing & Payments', description: 'Subscription, invoices, and payment methods', ticketsInQ: 1, faqs: [
     { q: 'What payment methods do you accept?', a: 'We accept bank transfer, credit cards, and digital wallets including GoPay, OVO, and Dana.' },
     { q: 'How do I upgrade my plan?', a: 'Go to Settings > Subscription and select your new plan. Changes take effect immediately.' },
     { q: 'Can I get a refund?', a: 'We offer a 7-day money-back guarantee on all plans. Contact support within 7 days of purchase.' }
   ]},
-  { icon: '🌐', title: 'Custom Domains', description: 'Domain connection, DNS, and SSL certificates', responseTime: '< 4 hours', faqs: [
+  { icon: '🌐', title: 'Custom Domains', description: 'Domain connection, DNS, and SSL certificates', ticketsInQ: 0, faqs: [
     { q: 'How do I connect my domain?', a: 'Add a CNAME record pointing to our servers. We handle SSL automatically.' },
     { q: 'Can I buy a domain through StreetLocal?', a: 'Yes, we offer domain registration starting from $12/year through our domain packages.' },
     { q: 'How long does DNS propagation take?', a: 'Usually 15-30 minutes, but can take up to 48 hours in rare cases.' }
   ]},
-  { icon: '📱', title: 'Mobile App', description: 'PWA features, notifications, and mobile optimization', responseTime: '< 3 hours', faqs: [
+  { icon: '📱', title: 'Mobile App', description: 'PWA features, notifications, and mobile optimization', ticketsInQ: 2, faqs: [
     { q: 'Is there a mobile app?', a: 'Your store is a Progressive Web App (PWA) — customers can install it directly from their browser.' },
     { q: 'How do push notifications work?', a: 'Enable notifications in your dashboard. Customers who install your PWA will receive order updates automatically.' },
     { q: 'Does it work offline?', a: 'Yes, basic browsing and menu viewing work offline. Orders require an internet connection.' }
   ]},
-  { icon: '🎨', title: 'Themes & Design', description: 'Templates, customization, and branding', responseTime: '< 4 hours', faqs: [
+  { icon: '🎨', title: 'Themes & Design', description: 'Templates, customization, and branding', ticketsInQ: 1, faqs: [
     { q: 'How many themes are available?', a: 'Over 100 professionally designed themes, all optimized for mobile and desktop.' },
     { q: 'Can I use custom CSS?', a: 'Pro and Enterprise plans support custom CSS for advanced styling.' },
     { q: 'Can I preview themes before applying?', a: 'Yes, use the live preview feature to see how any theme looks with your content.' }
   ]},
-  { icon: '📊', title: 'Analytics & Reports', description: 'Traffic, sales data, and performance metrics', responseTime: '< 4 hours', faqs: [
+  { icon: '📊', title: 'Analytics & Reports', description: 'Traffic, sales data, and performance metrics', ticketsInQ: 0, faqs: [
     { q: 'What analytics are included?', a: 'Page views, unique visitors, conversion rates, top products, and revenue tracking.' },
     { q: 'Can I export reports?', a: 'Yes, export reports as CSV or PDF from your analytics dashboard.' },
     { q: 'Is Google Analytics supported?', a: 'Yes, connect your GA4 property in Settings > Integrations.' }
   ]},
-  { icon: '🔒', title: 'Security & Privacy', description: 'Account security, data protection, and compliance', responseTime: '< 1 hour', faqs: [
+  { icon: '🔒', title: 'Security & Privacy', description: 'Account security, data protection, and compliance', ticketsInQ: 0, faqs: [
     { q: 'Is my data secure?', a: 'We use bank-level encryption (AES-256) and all data is stored on secure cloud infrastructure.' },
     { q: 'Do you comply with data regulations?', a: 'Yes, we comply with GDPR, and Indonesian data protection regulations.' },
     { q: 'How do I enable 2FA?', a: 'Go to Settings > Security and enable two-factor authentication via SMS or authenticator app.' }
   ]},
-  { icon: '🤝', title: 'Affiliate Program', description: 'Commissions, referrals, and partner support', responseTime: '< 6 hours', faqs: [
+  { icon: '🤝', title: 'Affiliate Program', description: 'Commissions, referrals, and partner support', ticketsInQ: 4, faqs: [
     { q: 'How much commission do I earn?', a: '100% of the first month subscription for every vendor you refer.' },
     { q: 'When do I get paid?', a: 'Commissions are paid monthly, 30 days after the referred vendor activates.' },
     { q: 'Is there a referral limit?', a: 'No limit. Refer as many vendors as you want.' }
   ]},
-  { icon: '🛒', title: 'Product Management', description: 'Adding products, inventory, and categories', responseTime: '< 3 hours', faqs: [
+  { icon: '🛒', title: 'Product Management', description: 'Adding products, inventory, and categories', ticketsInQ: 2, faqs: [
     { q: 'How many products can I add?', a: 'Depends on your plan — Starter allows 50, Pro allows 500, Enterprise is unlimited.' },
     { q: 'Can I import products in bulk?', a: 'Yes, use our CSV import tool to add hundreds of products at once.' },
     { q: 'How do I manage inventory?', a: 'Set stock levels per product. Get alerts when inventory is low.' }
   ]},
-  { icon: '📦', title: 'Orders & Delivery', description: 'Order processing, shipping, and fulfillment', responseTime: '< 2 hours', faqs: [
+  { icon: '📦', title: 'Orders & Delivery', description: 'Order processing, shipping, and fulfillment', ticketsInQ: 5, faqs: [
     { q: 'How do I process orders?', a: 'Orders appear in your dashboard in real-time. Accept, prepare, and mark as delivered.' },
     { q: 'Do you integrate with delivery services?', a: 'We integrate with GrabExpress, GoSend, and other local delivery partners.' },
     { q: 'Can customers track their orders?', a: 'Yes, customers receive real-time status updates via WhatsApp and in-app notifications.' }
   ]},
-  { icon: '⚙️', title: 'Technical Issues', description: 'Bugs, errors, and platform troubleshooting', responseTime: '< 1 hour', faqs: [
+  { icon: '⚙️', title: 'Technical Issues', description: 'Bugs, errors, and platform troubleshooting', ticketsInQ: 1, faqs: [
     { q: 'My store is loading slowly', a: 'Clear your browser cache, check your image sizes (we recommend under 500KB), and contact support if it persists.' },
     { q: 'I see an error message', a: 'Take a screenshot and submit a ticket with the error details. Our team will investigate within 1 hour.' },
     { q: 'The dashboard is not updating', a: 'Try refreshing the page. If the issue persists, clear cookies and log in again.' }
   ]},
-  { icon: '🏢', title: 'Enterprise Solutions', description: 'Custom development, API access, and SLAs', responseTime: '< 2 hours', faqs: [
+  { icon: '🏢', title: 'Enterprise Solutions', description: 'Custom development, API access, and SLAs', ticketsInQ: 0, faqs: [
     { q: 'Do you offer custom development?', a: 'Yes, our enterprise team can build custom features, integrations, and white-label solutions.' },
     { q: 'Is API access available?', a: 'Enterprise plans include full REST API access with comprehensive documentation.' },
     { q: 'What SLAs do you offer?', a: 'Enterprise plans include 99.9% uptime SLA with dedicated support and priority response times.' }
   ]},
-  { icon: '📣', title: 'Marketing & SEO', description: 'Promotions, social media, and search optimization', responseTime: '< 6 hours', faqs: [
+  { icon: '📣', title: 'Marketing & SEO', description: 'Promotions, social media, and search optimization', ticketsInQ: 1, faqs: [
     { q: 'Is SEO built in?', a: 'Yes, every store includes meta tags, sitemaps, structured data, and mobile optimization.' },
     { q: 'Can I run promotions?', a: 'Create discount codes, flash sales, and bundle deals from your marketing dashboard.' },
     { q: 'Do you support social media integration?', a: 'Connect Instagram, Facebook, and TikTok to sync products and share updates.' }
   ]},
-  { icon: '🌍', title: 'Multi-Language', description: 'Translations, regional settings, and localization', responseTime: '< 4 hours', faqs: [
+  { icon: '🌍', title: 'Multi-Language', description: 'Translations, regional settings, and localization', ticketsInQ: 0, faqs: [
     { q: 'What languages are supported?', a: 'Indonesian, English, Malay, Thai, Vietnamese, Filipino, and more being added.' },
     { q: 'Can my store be multilingual?', a: 'Yes, Pro and Enterprise plans support multiple languages with automatic detection.' },
     { q: 'How do I change my store language?', a: 'Go to Settings > Language and select your default language. Customers can switch languages too.' }
@@ -933,11 +949,11 @@ const CONTACT_DEPARTMENTS = [
 ]
 
 const CONTACT_CHANNELS = [
-  { icon: '🎫', name: 'Support Ticket', availability: '24/7 submission', responseTime: '< 4 hours', primary: true, color: '#FFD600', href: null, action: 'ticket' },
-  { icon: '📧', name: 'Email Support', availability: 'Mon-Sat 09:00-21:00 WIB', responseTime: '< 2 hours', primary: false, color: '#1a73e8', href: null, action: 'ticket' },
-  { icon: '⚡', name: 'Priority Support', availability: 'Enterprise plans', responseTime: '< 30 minutes', primary: false, color: '#ff6b35', href: null },
-  { icon: '👨‍💻', name: 'Developer Support', availability: 'Enterprise API users', responseTime: '< 1 hour', primary: false, color: '#6366f1', href: null },
-  { icon: '💼', name: 'Sales Consultation', availability: 'Mon-Sat 09:00-18:00 WIB', responseTime: '< 1 hour', primary: false, color: '#1a1a1a', href: null, action: 'sales' },
+  { icon: '🎫', name: 'Support Ticket', availability: 'Mon-Fri 09:00-21:00 WIB', responseTime: 'Tickets processed in queue', primary: true, color: '#FFD600', href: null, action: 'ticket' },
+  { icon: '📧', name: 'Email Support', availability: 'Mon-Fri 09:00-21:00 WIB', responseTime: 'Tickets processed in queue', primary: false, color: '#1a73e8', href: null, action: 'ticket' },
+  { icon: '⚡', name: 'Priority Support', availability: 'Enterprise plans', responseTime: 'Fast-tracked queue', primary: false, color: '#ff6b35', href: null },
+  { icon: '🛡️', name: 'Site Operations', availability: '24/7 monitoring', responseTime: 'Automated systems', primary: false, color: '#6366f1', href: null },
+  { icon: '💼', name: 'Sales Consultation', availability: 'Mon-Fri 09:00-18:00 WIB', responseTime: 'Tickets processed in queue', primary: false, color: '#1a1a1a', href: null, action: 'sales' },
 ]
 
 const CONTACT_COMPANY_STATS = [
@@ -966,6 +982,19 @@ export default function App() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchFilter, setSearchFilter] = useState('all') // all, free_delivery, open_now, popular, pickup, delivery
   const [searchActive, setSearchActive] = useState(false)
+  const [openFaqSection, setOpenFaqSection] = useState(null)
+  const [openFaqItem, setOpenFaqItem] = useState(null)
+  const [searchError, setSearchError] = useState(null)
+  // Silent search reset — clears errors and reloads data without user noticing
+  const searchSilentReset = () => {
+    setSearchError(null)
+    setSearchResults([])
+    setSearchLoading(true)
+    // Re-trigger search by toggling filter
+    const current = searchFilter
+    setSearchFilter('__reset')
+    setTimeout(() => setSearchFilter(current), 50)
+  }
   const [regForm, setRegForm] = useState({ name: '', url: '', whatsapp: '', email: '' })
   const [regSubmitted, setRegSubmitted] = useState(false)
   const [billingCycle, setBillingCycle] = useState('monthly')
@@ -1072,19 +1101,55 @@ export default function App() {
     setSearchLoading(true)
     const fetchVendors = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch vendor accounts with delivery config
+        const { data: vendors, error: vErr } = await supabase
           .from('vendor_accounts')
-          .select('id, shop_name, shop_food_type, slug, shop_address, shop_open, shop_logo, status')
+          .select('id, shop_name, shop_food_type, slug, shop_address, shop_open, shop_logo, shop_phone, shop_hours, status')
           .eq('status', 'active')
-        if (error || !data || data.length === 0) throw new Error('no data')
-        return data.map(v => ({
-          ...v, distance_km: Math.round((Math.random() * 10 + 0.5) * 10) / 10,
-          delivery_fee: Math.floor(Math.random() * 12000), pickup_time: `${Math.floor(Math.random() * 15 + 10)} min`,
-          rating: Math.round((Math.random() * 1.5 + 3.5) * 10) / 10, reviews: Math.floor(Math.random() * 200 + 20),
-          popular: Math.random() > 0.5, has_promo: Math.random() > 0.7, accent: '#FFD600',
-          status: v.shop_open ? 'open' : 'closed', menu: [],
+        if (vErr) throw new Error(`vendor_accounts: ${vErr.message}`)
+        if (!vendors || vendors.length === 0) return []
+        // Fetch menu items for active vendors
+        const vendorIds = vendors.map(v => v.id)
+        const { data: menuItems, error: mErr } = await supabase
+          .from('vendor_menu_items')
+          .select('vendor_id, name, price, photo_url, description, category, available, sort_order')
+          .in('vendor_id', vendorIds)
+          .eq('available', true)
+        if (mErr) console.warn('[StreetLocal Search] Menu items warning:', mErr.message)
+        // Group menu items by vendor
+        const menuByVendor = {}
+        ;(menuItems || []).forEach(m => {
+          if (!menuByVendor[m.vendor_id]) menuByVendor[m.vendor_id] = []
+          menuByVendor[m.vendor_id].push({
+            name: m.name, img: m.photo_url, price: m.price, promoPrice: null,
+            prepTime: 0, orders: 0,
+            tags: [m.name?.toLowerCase(), m.category?.toLowerCase(), m.description?.toLowerCase()].filter(Boolean),
+          })
+        })
+        return vendors.map(v => ({
+          id: v.id, shop_name: v.shop_name, shop_food_type: v.shop_food_type, slug: v.slug,
+          shop_address: v.shop_address, shop_open: v.shop_open, shop_phone: v.shop_phone,
+          logo: v.shop_logo, accent: '#FFD600',
+          status: v.shop_open ? 'open' : 'closed',
+          delivery_enabled: true, // default until delivery config columns exist
+          delivery_fee: 0, // placeholder
+          distance_km: Math.round((Math.random() * 10 + 0.5) * 10) / 10, // GPS placeholder
+          rating: 4.5, reviews: 0, popular: false, has_promo: false,
+          pickup_time: '15 min',
+          menu: menuByVendor[v.id] || [],
         }))
-      } catch { return null }
+      } catch (err) {
+        console.error('[StreetLocal Search] Supabase error:', err.message)
+        // Log error to admin alerts silently
+        try {
+          await supabase.from('app_alerts').insert({
+            type: 'search_error', severity: 'warning', app: 'landing',
+            title: 'Search data fetch failed', description: err.message,
+            status: 'open', created_at: new Date().toISOString(),
+          })
+        } catch { /* silent — don't break search for alert failure */ }
+        return null
+      }
     }
     fetchVendors().then(supabaseVendors => {
       const allVendors = supabaseVendors ? [...supabaseVendors, ...MOCK_VENDORS] : MOCK_VENDORS
@@ -1147,7 +1212,18 @@ export default function App() {
         return (a.distance_km || 99) - (b.distance_km || 99)
       })
       setSearchResults(results)
+      setSearchError(null)
       setSearchLoading(false)
+    }).catch(err => {
+      console.error('[StreetLocal Search] Unexpected error:', err)
+      setSearchError(err.message || 'Search failed')
+      setSearchResults(MOCK_VENDORS.map(v => {
+        const best = v.menu && v.menu.length > 0 ? [...v.menu].sort((a, b) => b.orders - a.orders)[0] : null
+        return { ...v, _matchedItem: best }
+      }).filter(v => v._matchedItem))
+      setSearchLoading(false)
+      // Auto-recover after 10 seconds
+      setTimeout(() => searchSilentReset(), 10000)
     })
   }, [searchQuery, searchFilter, searchActive])
 
@@ -1184,7 +1260,69 @@ export default function App() {
     }
   }, [currentPage])
 
+  // Scroll to top on any page navigation
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    const page = document.querySelector('[style*="maxWidth: 480"]')
+    if (page) page.scrollTop = 0
+  }, [currentPage, selectedApp, selectedCategory, searchActive])
+
   const [adminAuth, setAdminAuth] = useState(false)
+
+  // Shared footer for all pages
+  const SiteFooter = () => (
+    <div style={{ background: '#0a0a0a', marginTop: 40, padding: '32px 20px 20px', borderRadius: '24px 24px 0 0' }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500, marginTop: 4 }}>Software built for local businesses</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, marginBottom: 24 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Company</div>
+          {[{ label: 'About Us', page: 'about' }, { label: 'FAQ', page: 'faq' }, { label: 'Contact', page: 'contact' }, { label: 'Affiliate', page: 'affiliate' }].map(link => (
+            <button key={link.page} onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(link.page) }} style={{ display: 'block', background: 'none', border: 'none', padding: '6px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontWeight: 500, textAlign: 'left' }}>{link.label}</button>
+          ))}
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Product</div>
+          {[{ label: 'Domains', page: 'domains' }, { label: 'Themes', page: 'themes' }, { label: 'Terms & Conditions', page: 'services' }, { label: 'Privacy Policy', page: 'privacy' }].map((link, i) => (
+            <button key={i} onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(link.page) }} style={{ display: 'block', background: 'none', border: 'none', padding: '6px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontWeight: 500, textAlign: 'left' }}>{link.label}</button>
+          ))}
+        </div>
+      </div>
+      {/* Subscribe */}
+      <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 16, marginBottom: 24, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Get updates & offers</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input placeholder="Enter your email" style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+          <button style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Subscribe</button>
+        </div>
+      </div>
+      {/* Social icons */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 20 }}>
+        {[
+          { label: 'IG', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>, href: '#' },
+          { label: 'TT', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>, href: '#' },
+          { label: 'FB', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06 2 17.06 5.66 21.21 10.44 21.96V14.96H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>, href: '#' },
+          { label: 'YT', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>, href: '#' },
+          { label: 'WA', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>, href: '#' },
+        ].map(s => (
+          <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>{s.icon}</a>
+        ))}
+      </div>
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 16 }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>© 2026 StreetLocal.live</div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('services') }} style={{ background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 500 }}>Terms</button>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('privacy') }} style={{ background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 500 }}>Privacy</button>
+        </div>
+      </div>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', cursor: 'pointer' }} onClick={() => setCurrentPage('admin')}>{t.footer}</p>
+      </div>
+    </div>
+  )
   const [adminPin, setAdminPin] = useState('')
   const [registrations, setRegistrations] = useState([])
   const [adminFilter, setAdminFilter] = useState('all')
@@ -1212,19 +1350,14 @@ export default function App() {
       <div style={styles.page}>
         <div style={styles.detailHeader}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
             <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
           </div>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         {/* Hero: Auto-playing demo or 3D carousel */}
         <div style={{ position: 'relative' }}>
-          <img
-            src={selectedApp.id === 'basic' ? 'https://ik.imagekit.io/nepgaxllc/eeeee-removebg-preview.png' : 'https://ik.imagekit.io/nepgaxllc/eeeeevvv-removebg-preview.png'}
-            alt={selectedApp.tier}
-            style={{ position: 'absolute', top: 10, left: 10, width: 70, height: 70, objectFit: 'contain', zIndex: 5 }}
-          />
           <Phone3DCarousel screenshots={selectedApp.screenshots} color={selectedApp.color} liveUrl={selectedApp.liveUrl} liveUrls={selectedApp.liveUrls} autoPlay={!!selectedApp.liveUrls} />
         </div>
 
@@ -1237,29 +1370,31 @@ export default function App() {
             <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 45s linear infinite', width: 'max-content' }}>
               {(() => {
                 const themes = [
-                  { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'] },
-                  { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'] },
-                  { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_31_54%20PM.png' },
-                  { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'] },
-                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'] },
-                  { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'] },
-                  { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496' },
-                  { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png' },
-                  { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png' },
-                  { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png' },
-                  { id: 'pecellele', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568' },
-                  { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png' },
-                  { id: 'cilok', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png' },
-                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'] },
-                  { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png' },
-                  { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png' },
-                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_52_09%20PM.png' },
-                  { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png' },
+                  { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_24_04-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_25_10-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_27_39-am.png'] },
+                  { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_09_46-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_10_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_12_08-am.png'] },
+                  { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png' },
+                  { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'] },
+                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'] },
+                  { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_49_45-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_52_59-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_57_35-pm.png'] },
+                  { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png' },
+                  { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_08_25-am.png' },
+                  { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_06_43-pm.png' },
+                  { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_04_20-pm.png' },
+                  { id: 'pecellele', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_17_10-am.png' },
+                  { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_10_51-pm.png' },
+                  { id: 'cilok', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_12_27-pm.png' },
+                  { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_14_52-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_17-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_21_18-pm.png'] },
+                  { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png' },
+                  { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png' },
+                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png' },
+                  { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_49_41-pm.png' },
+                  { id: 'hotdog', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png' },
+                  { id: 'pizza', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png' },
                 ]
                 const renderCard = (theme, i) => (
                   <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
                     <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                      <img src={theme.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                      <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
                     </div>
                     <a href={(window.location.hostname === 'localhost' ? 'http://localhost:5177/food/basic/' : '/food/basic/') + '?demo=true&page=landing&theme=' + theme.id} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
@@ -1282,7 +1417,7 @@ export default function App() {
                 })()}
               </div>
               <button onClick={() => { const t = [
-                { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433' },
+                { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png' },
               ]; setSelectedApp(null); setSelectedCategory(null); setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
             </div>
@@ -1303,7 +1438,7 @@ export default function App() {
               <div style={{ position: 'absolute', left: -3, top: 108, width: 3, height: 20, borderRadius: '2px 0 0 2px', background: '#333' }} />
               <div style={{ width: '100%', height: '100%', borderRadius: 32, overflow: 'hidden', position: 'relative', background: '#000' }}>
                 <div style={{ position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)', width: 56, height: 18, background: '#000', borderRadius: 16, zIndex: 3 }} />
-                <img src={activeImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'fill', transition: 'opacity 0.3s' }} />
+                <img src={activeImg} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill', transition: 'opacity 0.3s' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
                   <div style={{ width: 64, height: 64, borderRadius: 32, background: previewTheme.accent || '#8DC63F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, border: '2px solid rgba(255,255,255,0.15)' }}>
@@ -1322,7 +1457,7 @@ export default function App() {
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }} onClick={e => e.stopPropagation()}>
                 {allImages.map((img, i) => (
                   <button key={i} onClick={() => setPreviewTheme({ ...previewTheme, activeImg: img })} style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${previewTheme.accent || '#FFD600'}` : '2px solid rgba(255,255,255,0.2)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </button>
                 ))}
               </div>
@@ -1345,16 +1480,16 @@ export default function App() {
         <div style={styles.detailContent}>
           <h1 style={styles.detailTitle}>{selectedApp.name}</h1>
           {/* Billing toggle */}
-          <div style={{ ...styles.detailToggle, marginBottom: 10, marginTop: 10 }}>
+          <div style={{ ...styles.detailToggle, marginBottom: 10, marginTop: 10, background: '#FFD600' }}>
             <button
               onClick={() => setBillingCycle('monthly')}
-              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'monthly' ? { background: '#1a1a1a', color: '#FFD600' } : {}) }}
+              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'monthly' ? { background: '#1a1a1a', color: '#FFD600', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : { background: 'transparent', color: '#1a1a1a' }) }}
             >
               {t.monthly}
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'yearly' ? { background: '#1a1a1a', color: '#FFD600' } : {}) }}
+              style={{ ...styles.detailToggleBtn, ...(billingCycle === 'yearly' ? { background: '#1a1a1a', color: '#FFD600', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : { background: 'transparent', color: '#1a1a1a' }) }}
             >
               {t.yearly}
             </button>
@@ -1363,15 +1498,27 @@ export default function App() {
             {billingCycle === 'monthly' ? selectedApp.price : selectedApp.yearlyPrice}
             <span style={{ fontSize: 14, fontWeight: 600, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
           </p>
-          <p style={styles.detailTagline}>{selectedApp.tagline}</p>
+
+          {/* Value proposition */}
+          <div style={{ background: '#f8f9fa', borderRadius: 14, padding: '14px 16px', margin: '12px 0 14px', border: '1px solid #f0f0f0' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 6 }}>Your own branded food ordering app — zero commission, pure profit.</div>
+            <div style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>
+              For the price of a coffee, get the leading mobile food ordering software with all features unlocked from day one. Start uploading your menu, setting your branding, and configuring delivery straight away — your app is fully functional while your personalised URL is being activated. URL activation takes up to 1 hour during office hours (Mon-Fri 09:00-21:00 WIB). Once confirmed live, customers can find you and start ordering immediately.
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+              {['All features included', 'Live within 1 hour', 'Zero commission', 'Cancel anytime'].map(tag => (
+                <span key={tag} style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a', background: '#FFD600', padding: '3px 8px', borderRadius: 6 }}>{tag}</span>
+              ))}
+            </div>
+          </div>
 
           {/* Toggle tabs */}
-          <div style={styles.detailToggle}>
+          <div style={{ ...styles.detailToggle, background: '#FFD600' }}>
             <button
               onClick={() => setDetailTab('details')}
               style={{
                 ...styles.detailToggleBtn,
-                ...(detailTab === 'details' ? { background: selectedApp.color, color: '#fff' } : {}),
+                ...(detailTab === 'details' ? { background: '#1a1a1a', color: '#FFD600', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : { background: 'transparent', color: '#1a1a1a' }),
               }}
             >
               {t.tabDetails}
@@ -1380,7 +1527,7 @@ export default function App() {
               onClick={() => setDetailTab('benefits')}
               style={{
                 ...styles.detailToggleBtn,
-                ...(detailTab === 'benefits' ? { background: selectedApp.color, color: '#fff' } : {}),
+                ...(detailTab === 'benefits' ? { background: '#1a1a1a', color: '#FFD600', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : { background: 'transparent', color: '#1a1a1a' }),
               }}
             >
               {t.tabBenefits}
@@ -1400,9 +1547,9 @@ export default function App() {
                     return (
                       <div key={gi} style={{ marginBottom: 6 }}>
                         <button onClick={() => setFeatureCatOpen(isOpen ? null : gi)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, border: '1px solid #f0f0f0', background: isOpen ? '#1a1a1a' : '#f8f9fa', cursor: 'pointer', transition: 'all 0.2s' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ width: 26, height: 26, borderRadius: 13, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#1a1a1a', flexShrink: 0 }}>{group.items.length}</span>
                             <span style={{ fontSize: 13, fontWeight: 800, color: isOpen ? '#FFD600' : '#1a1a1a' }}>{group.cat}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: isOpen ? 'rgba(255,255,255,0.4)' : '#999', background: isOpen ? 'rgba(255,255,255,0.1)' : '#eee', padding: '1px 8px', borderRadius: 10 }}>{group.items.length}</span>
                           </div>
                           <span style={{ fontSize: 14, color: isOpen ? '#FFD600' : '#ccc', transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
                         </button>
@@ -1435,7 +1582,7 @@ export default function App() {
                 <div style={styles.screenshotRow}>
                   {selectedApp.screenshots.map((s, i) => (
                     <div key={i} style={styles.screenshotThumb}>
-                      <img src={s} alt={`Screenshot ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
+                      <img src={s} alt={`Screenshot ${i + 1}`} onError={imgError('screenshot')} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                     </div>
                   ))}
                 </div>
@@ -1579,8 +1726,9 @@ export default function App() {
                 href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/food/basic/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ ...styles.ctaButton, background: 'transparent', color: selectedApp.color, border: `2px solid ${selectedApp.color}` }}
+                style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#FFD600', border: '2px solid #1a1a1a', animation: 'demoShake 3s ease-in-out infinite' }}
               >
+                <style>{`@keyframes demoShake { 0%, 85%, 100% { transform: translateX(0); } 88% { transform: translateX(-3px); } 91% { transform: translateX(3px); } 94% { transform: translateX(-2px); } 97% { transform: translateX(2px); } }`}</style>
                 {t.openApp}
               </a>
               {/* Subscribe */}
@@ -1597,7 +1745,7 @@ export default function App() {
               {/* Vendor Sign In */}
               <button
                 onClick={() => { setVendorAuthOpen(true); setVendorAuthApp(selectedApp); setVendorAuthMode('login'); setVendorAuthError('') }}
-                style={{ ...styles.ctaButton, background: 'none', color: '#888', border: '1px solid #ddd', fontSize: 13 }}
+                style={{ ...styles.ctaButton, background: '#f5f5f5', color: '#999', border: 'none', fontSize: 13 }}
               >
                 Already subscribed? Sign In to Manage
               </button>
@@ -1640,7 +1788,7 @@ export default function App() {
           {/* Signup Popup */}
           {signupOpen && (
             <div style={styles.paymentOverlay} onClick={() => setSignupOpen(false)}>
-              <div style={{ ...styles.paymentSheet, borderTop: '4px solid #FFD600', backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png?updatedAt=1777542461928)', backgroundSize: 'cover', backgroundPosition: 'center' }} onClick={e => e.stopPropagation()}>
+              <div style={{ ...styles.paymentSheet, borderTop: '4px solid #FFD600', backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-30-2026-04_47_24-pm.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#1a1a1a' }} onClick={e => e.stopPropagation()}>
                 <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.4)', borderRadius: 2, margin: '10px auto 16px' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>Create Your Account</h3>
@@ -1861,7 +2009,7 @@ export default function App() {
                 {/* Header */}
                 <div style={styles.paymentHeader}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src="https://ik.imagekit.io/nepgaxllc/mmmass-removebg-preview.png?updatedAt=1777002478628" alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                    <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/mmmass-removebg-preview.png" alt="" onError={imgError('payment')} style={{ width: 36, height: 36, objectFit: 'contain' }} />
                     <h3 style={styles.paymentTitle}>{t.payment.title} {selectedApp.name}</h3>
                   </div>
                   <button onClick={() => setPaymentOpen(false)} style={styles.paymentClose}>&times;</button>
@@ -1883,13 +2031,13 @@ export default function App() {
                       const qrUrl = countryPricing[qrKey]
                       // Fallback to Indonesia QR codes if no country-specific QR
                       const fallbackQr = userAccount?.country_code === 'ID'
-                        ? (selectedApp.id === 'pro' ? 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsdss.png' : 'https://ik.imagekit.io/nepgaxllc/Untitleddssaaadsddsd.png')
+                        ? (selectedApp.id === 'pro' ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaadsddsdss.png' : 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaadsddsd.png')
                         : null
                       const finalQr = qrUrl || fallbackQr
                       return finalQr ? (
                         <div style={{ ...styles.paymentBank, textAlign: 'center' }}>
                           <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>{t.payment?.scanToPay || 'Scan to Pay'}</p>
-                          <img src={finalQr} alt="QR Code" style={{ width: '100%', maxWidth: 220, height: 'auto', borderRadius: 12, margin: '0 auto 10px', display: 'block' }} />
+                          <img src={finalQr} alt="QR Code" onError={imgError('qr')} style={{ width: '100%', maxWidth: 220, height: 'auto', borderRadius: 12, margin: '0 auto 10px', display: 'block' }} />
                           <p style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>
                             {countryPricing.currency_symbol} {billingCycle === 'monthly'
                               ? (selectedApp.id === 'pro' ? countryPricing.pro_monthly : countryPricing.basic_monthly).toLocaleString()
@@ -1978,7 +2126,7 @@ export default function App() {
                       </div>
                     ) : (
                       <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                        <img src="https://ik.imagekit.io/nepgaxllc/Untitledddddccc-removebg-preview.png?updatedAt=1777894363133" alt="Upload" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+                        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddccc-removebg-preview.png" alt="Upload" onError={imgError('payment')} style={{ width: 48, height: 48, objectFit: 'contain' }} />
                         <p style={{ fontSize: 14, color: '#888', marginTop: 8 }}>{t.payment.uploadBtn}</p>
                       </div>
                     )}
@@ -2029,10 +2177,7 @@ export default function App() {
             </div>
           )}
         </div>
-        <div style={styles.footer}>
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
-          <p style={styles.footerText}>{t.footer}</p>
-        </div>
+        <SiteFooter />
       </div>
     )
   }
@@ -2043,17 +2188,17 @@ export default function App() {
       <div style={styles.page}>
         <div style={styles.detailHeader}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
             <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
           </div>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         {/* Hero image */}
         {selectedCategory.id === 'food' && (
           <FadeIn>
             <div style={{ textAlign: 'center', padding: '10px 20px 0' }}>
-              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2012_48_31%20PM.png" alt="Food Ordering Software" style={{ width: 180, height: 180, borderRadius: 24, objectFit: 'cover' }} />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-12_48_31-pm.png" alt="Local Food Apps" onError={imgError('banner')} style={{ width: 240, height: 240, borderRadius: 28, objectFit: 'cover' }} />
             </div>
           </FadeIn>
         )}
@@ -2081,8 +2226,9 @@ export default function App() {
                   </div>
                   <div style={styles.appCardInfo}>
                     <img
-                      src={app.id === 'basic' ? 'https://ik.imagekit.io/nepgaxllc/eeeee-removebg-preview.png' : 'https://ik.imagekit.io/nepgaxllc/eeeeevvv-removebg-preview.png'}
+                      src={app.id === 'basic' ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/eeeee-removebg-preview.png' : 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/eeeeevvv-removebg-preview.png'}
                       alt={app.tier}
+                      onError={imgError('logo')}
                       style={{ width: 80, height: 80, objectFit: 'contain' }}
                     />
                     <h3 style={styles.appCardName}>{app.name}</h3>
@@ -2100,10 +2246,7 @@ export default function App() {
             ))}
           </div>
         </div>
-        <div style={styles.footer}>
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
-          <p style={styles.footerText}>{t.footer}</p>
-        </div>
+        <SiteFooter />
       </div>
     )
   }
@@ -2113,16 +2256,16 @@ export default function App() {
     return (
       <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: '#fff', position: 'relative', height: '100vh', overflow: 'hidden' }}>
         {/* Background image */}
-        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_18_35%20AM.png?updatedAt=1778005134436" alt="" style={{ position: 'absolute', top: 30, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_18_35-am.png" alt="" onError={imgError('banner')} style={{ position: 'absolute', top: 30, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
 
         {/* Header */}
         <div style={{ ...styles.detailHeader, position: 'relative', zIndex: 2, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', borderBottom: 'none' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
             <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
           </div>
           <button onClick={() => setVendorAuthOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} />
+            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} />
           </button>
         </div>
 
@@ -2311,16 +2454,16 @@ export default function App() {
       <div style={styles.page}>
         <div style={styles.detailHeader}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
             <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
           </div>
-          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
         </div>
 
         <div style={{ padding: '20px 24px 40px' }}>
           {currentPage === 'about' && (
             <div>
-              <img src="https://ik.imagekit.io/nepgaxllc/dsfsdfffsss.png" alt="About Us" style={{ width: '100%', borderRadius: 20, marginBottom: 20 }} />
+              <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dsfsdfffsss.png" alt="About Us" onError={imgError('banner')} style={{ width: '100%', borderRadius: 20, marginBottom: 20 }} />
               <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 16 }}>{t.aboutTitle}</h1>
               {t.aboutBody.split('\n\n').map((p, i) => (
                 <p key={i} style={{ fontSize: 15, color: '#444', lineHeight: 1.7, marginBottom: 14 }}>{p}</p>
@@ -2328,17 +2471,123 @@ export default function App() {
             </div>
           )}
 
-          {currentPage === 'faq' && (
-            <div>
-              <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2006_39_32%20PM.png" alt="FAQ" style={{ width: '100%', borderRadius: 20, marginBottom: 20 }} />
-              {t.faqs.map((faq, i) => (
-                <div key={i} style={styles.faqItem}>
-                  <h4 style={styles.faqQ}>{faq.q}</h4>
-                  <p style={styles.faqA}>{faq.a}</p>
+          {currentPage === 'faq' && (() => {
+            const faqSections = [
+              { title: 'About StreetLocal', icon: '🏢', questions: [
+                { q: 'What is StreetLocal?', a: 'StreetLocal is a software platform that provides fully branded mobile ordering apps for local businesses — street food vendors, restaurants, cafes, and more. We handle the technology so you can focus on your business.' },
+                { q: 'How does it work?', a: 'Choose your plan, subscribe, and we set up your branded food app within 24 hours. You get a shareable link (streetlocal.live/your-name) that customers use to browse your menu and place orders via WhatsApp.' },
+                { q: 'Do I need technical skills?', a: 'Not at all. Everything is managed through a simple mobile dashboard. If you can use WhatsApp, you can manage your app — add menu items, change prices, upload photos, toggle your shop open/closed, and more.' },
+                { q: 'Can I buy the app and host it myself?', a: 'No — StreetLocal is a managed service, not a product for sale. Your subscription includes hosting, automatic updates, new features, security patches, and customer support. Building equivalent software from scratch would cost Rp 15-30 million and still require ongoing hosting and maintenance costs.' },
+              ]},
+              { title: 'Features & Capabilities', icon: '⚡', questions: [
+                { q: 'What features are included?', a: 'Every app includes: digital menu with photos and descriptions, WhatsApp ordering (zero commission), 15+ professional themes, custom branding and logo, promo pricing with strikethrough display, halal and popular item badges, spice level indicators, meal/snack/dessert/drink categories, GPS delivery estimates, multi-currency support (16 countries), open/close toggle, daily opening hours, visit page with map link, QR code generator, social media links, 2 language support, auto SEO, and mobile-first PWA design.' },
+                { q: 'Can I customize my app design?', a: 'Yes. You get full control over: theme background, accent colors, logo, landing page layout, hero text effects (glow, neon, shadow), button styles, menu card layouts, promo banners, and more. All customizable from your dashboard with live preview.' },
+                { q: 'Can I have my own domain name?', a: 'Yes! We offer three domain plans: a free subdomain (shopname.streetlocal.live), a custom subdomain (menu.yourbrand.com), or a full domain (yourbrand.com) where we handle everything including DNS, SSL, and renewals.' },
+                { q: 'How many menu items can I add?', a: 'There is no hard limit on menu items. Add as many meals, drinks, snacks, desserts, and extras as you need. Each item can have a photo, description, price, promo price, prep time, spice level, and halal/popular badges.' },
+                { q: 'Does it work on all phones?', a: 'Yes. Your app is a Progressive Web App (PWA) — it works on any smartphone browser without downloading from an app store. Customers can also "install" it to their home screen for instant access.' },
+                { q: 'Do you support multiple languages?', a: 'Currently the app supports Indonesian and English, with the landing site available in 6 languages. More languages are being added regularly.' },
+              ]},
+              { title: 'Ordering & Delivery', icon: '🛵', questions: [
+                { q: 'How do customers place orders?', a: 'Customers open your app link, browse your menu, add items to cart, and checkout. The order is sent to your WhatsApp as a formatted message with all details — items, quantities, total, delivery address, and any notes.' },
+                { q: 'Do you take commission on orders?', a: 'Never. You keep 100% of your revenue. We only charge the monthly subscription fee. There are no hidden fees, no per-order charges, and no commission cuts.' },
+                { q: 'How does delivery work?', a: 'You configure your own delivery settings: enable/disable delivery, set per-km pricing, base fees, minimum charges, maximum delivery radius, and free delivery thresholds. Customers see estimated delivery costs based on their distance from your location.' },
+                { q: 'Can I offer pickup only?', a: 'Yes. Toggle delivery off in your dashboard and your app switches to "Collection Only" mode. Customers can still browse and order, but will collect from your location.' },
+                { q: 'What payment methods do customers use?', a: 'Payment is handled directly between you and your customer — cash on delivery, bank transfer, or any method you agree on. We do not process payments or hold funds.' },
+              ]},
+              { title: 'Pricing & Subscription', icon: '💳', questions: [
+                { q: 'How much does it cost?', a: 'Plans start from as low as Rp 50,000/month (varies by country). Check the pricing on our homepage for your region. Yearly plans offer significant savings.' },
+                { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no lock-in periods. Cancel anytime from your dashboard. Your app will remain active until the end of your current billing period.' },
+                { q: 'What payment methods do you accept for subscriptions?', a: 'We currently support direct payment methods (bank transfer) in order to reduce unnecessary transaction and banking fees. This allows us to continue offering affordable app solutions and digital services at the best prices possible while avoiding excessive third-party processing costs.' },
+                { q: 'Is there a free trial?', a: 'We offer a live demo that you can explore before subscribing. This gives you full visibility of the app experience, features, and design quality before making a purchase decision.' },
+                { q: 'Do prices change?', a: 'We reserve the right to adjust pricing with 30 days written notice. However, we are committed to keeping our services affordable for local businesses. Active subscribers will always be notified before any price changes take effect.' },
+              ]},
+              { title: 'Refund Policy', icon: '🔄', questions: [
+                { q: 'What is your refund policy?', a: 'Refunds can only be granted if the service URL link has NOT been shared, published, activated, or presented on the live internet. Once a live link has been activated or used publicly, the service is classified as used and cannot be resold or reused, therefore refunds cannot be provided.' },
+                { q: 'What should I know before purchasing?', a: 'We strongly advise customers to refrain from making any purchase unless they are fully confident in their order and requirements before checkout. Please explore our demo, read our FAQ thoroughly, and contact our support team with any questions before subscribing.' },
+                { q: 'What if I have issues after purchase?', a: 'Our support team is available Mon-Fri 09:00-21:00 WIB to help resolve any issues. We are committed to ensuring every customer gets full value from their subscription. Technical issues, setup assistance, and feature guidance are all covered by your subscription.' },
+              ]},
+              { title: 'Setup & Getting Started', icon: '🚀', questions: [
+                { q: 'How long does setup take?', a: 'Your app is ready within minutes of subscribing. Simply sign up, choose your theme, add your menu items, and share your link. The entire setup can be done from your phone.' },
+                { q: 'What do I need to get started?', a: 'Just your phone, your menu details (names, prices, photos), and a WhatsApp number for receiving orders. That\'s it — no special equipment, no technical knowledge, no computer required.' },
+                { q: 'Can I change my theme later?', a: 'Yes. You can switch between 15+ themes at any time from your dashboard. Changes take effect immediately — no downtime, no data loss.' },
+                { q: 'How do I add menu items?', a: 'Tap the + button in your dashboard, fill in the item name, price, description, category, and upload a photo. You can also set promo pricing, prep time, spice level, and halal/popular badges. Items go live instantly.' },
+              ]},
+              { title: 'Support & Contact', icon: '💬', questions: [
+                { q: 'How do I get help?', a: 'Visit our Contact page to submit a support ticket. Our team responds Mon-Fri 09:00-21:00 WIB (Indonesia time). For common questions, check the FAQ categories on our Contact page — many issues can be resolved instantly.' },
+                { q: 'Is support included in my subscription?', a: 'Yes. All support — technical issues, setup help, feature guidance, and troubleshooting — is included at no extra cost. We do not charge for support calls or ticket submissions.' },
+                { q: 'What about after-hours emergencies?', a: 'Our site operations and monitoring systems run 24/7 to ensure platform stability and security. Critical infrastructure issues are addressed automatically. For business-level support, our team is available during working hours.' },
+              ]},
+              { title: 'Search & Listing', icon: '🔍', questions: [
+                { q: 'How do customers find my business?', a: 'Your business appears in the StreetLocal.live search when customers search for food near them. Your menu items become searchable keywords — so if you sell satay, customers searching "satay" will find you.' },
+                { q: 'What are the listing requirements?', a: 'To appear in search results, each menu item must have: a clear photo, item name, price, description, category, and prep time. Incomplete items are excluded from search to maintain quality for customers. See "Terms Of Listing" in your app dashboard for full details.' },
+                { q: 'How are search results ranked?', a: 'Results are ranked by: free delivery vendors first, then vendors with active promotions, then by distance from the customer. Closed businesses are shown last. Complete, high-quality listings naturally rank higher.' },
+              ]},
+            ]
+            return (
+              <div style={{ margin: '-20px -24px', padding: '0 0 40px', background: '#fff' }}>
+                {/* Hero */}
+                <div style={{ padding: '24px 24px 20px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb', marginBottom: 10, fontWeight: 600 }}>KNOWLEDGE BASE</div>
+                  <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', lineHeight: 1.15, margin: '0 0 10px' }}>Frequently Asked Questions</h1>
+                  <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, margin: 0 }}>Everything you need to know about StreetLocal — from features and pricing to support and policies.</p>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {/* Confidence statement */}
+                <div style={{ margin: '0 16px 20px', padding: 16, background: '#fffde7', borderRadius: 14, border: '1px solid #fde68a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>Our Commitment to You</div>
+                  <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>We are extremely confident in the quality, reliability, and value of our systems, applications, and services provided. It is important to us that customers not only trust the platform, but also genuinely enjoy and experience the value it delivers.</div>
+                </div>
+
+                {/* FAQ sections */}
+                <div style={{ padding: '0 16px' }}>
+                  {faqSections.map((section, si) => (
+                    <div key={si} style={{ marginBottom: 8 }}>
+                      {/* Section header */}
+                      <button onClick={() => setOpenFaqSection(openFaqSection === si ? null : si)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, border: '1px solid #f0f0f0', background: openFaqSection === si ? '#1a1a1a' : '#f8f9fa', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        <span style={{ fontSize: 20 }}>{section.icon}</span>
+                        <div style={{ flex: 1, textAlign: 'left' }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: openFaqSection === si ? '#FFD600' : '#1a1a1a' }}>{section.title}</div>
+                          <div style={{ fontSize: 11, color: openFaqSection === si ? 'rgba(255,255,255,0.4)' : '#999', marginTop: 1 }}>{section.questions.length} questions</div>
+                        </div>
+                        <span style={{ fontSize: 14, color: openFaqSection === si ? '#FFD600' : '#ccc', transition: 'transform 0.2s', transform: openFaqSection === si ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                      </button>
+                      {/* Questions */}
+                      {openFaqSection === si && (
+                        <div style={{ padding: '8px 0 0 0' }}>
+                          {section.questions.map((faq, fi) => {
+                            const key = `${si}-${fi}`
+                            return (
+                              <div key={fi} style={{ marginBottom: 4 }}>
+                                <button onClick={() => setOpenFaqItem(openFaqItem === key ? null : key)} style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 10, border: 'none', background: openFaqItem === key ? '#fffde7' : '#f8f9fa', cursor: 'pointer', textAlign: 'left' }}>
+                                  <span style={{ fontSize: 12, color: '#FFD600', fontWeight: 800, marginTop: 1, flexShrink: 0 }}>{openFaqItem === key ? '−' : '+'}</span>
+                                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', flex: 1 }}>{faq.q}</span>
+                                </button>
+                                {openFaqItem === key && (
+                                  <div style={{ padding: '8px 14px 14px 36px', fontSize: 13, color: '#555', lineHeight: 1.7 }}>{faq.a}</div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Purchase notice */}
+                <div style={{ margin: '20px 16px 0', padding: 16, background: '#fef2f2', borderRadius: 14, border: '1px solid #fecaca' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>Important Notice</div>
+                  <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>We strongly advise customers to refrain from making any purchase unless they are fully confident in their order and requirements before checkout. Please explore our demo and contact support with any questions first.</div>
+                </div>
+
+                {/* CTA */}
+                <div style={{ padding: '24px 16px 0', textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>Still have questions?</div>
+                  <button onClick={() => setCurrentPage('contact')} style={{ padding: '12px 28px', borderRadius: 12, border: 'none', background: '#1a1a1a', color: '#FFD600', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Contact Support</button>
+                </div>
+              </div>
+            )
+          })()}
 
           {currentPage === 'services' && (
             <div>
@@ -2352,6 +2601,77 @@ export default function App() {
                   ))}
                 </div>
               ))}
+            </div>
+          )}
+
+          {currentPage === 'privacy' && (
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>Privacy Policy</h1>
+              <p style={{ fontSize: 12, color: '#999', marginBottom: 20 }}>Last updated: May 8, 2026</p>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>1. Introduction</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>StreetLocal ("we," "our," or "us") operates a software platform that helps local businesses across Southeast Asia establish and manage their digital presence. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform, websites, and related services.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>By accessing or using StreetLocal, you agree to the terms of this Privacy Policy. If you do not agree with our practices, please do not use our services.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>2. Data We Collect</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We collect information you provide directly, including: your name, email address, phone number, and business details when you register an account; payment and billing information when you subscribe to our services; business content such as menus, product listings, images, and descriptions you upload to the platform; and any communications you send to us, including support requests and feedback.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We also collect information automatically, including: device information (browser type, operating system, device identifiers); IP address and approximate location; usage data such as pages visited, features used, and interaction patterns; and log data including access times, referring URLs, and error reports.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>3. How We Use Your Data</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We use the information we collect to: provide, operate, and maintain our platform and services; set up and manage your business storefront, domain, and digital presence; process transactions and send related billing information; respond to your inquiries, support requests, and feedback; send service-related notifications, updates, and promotional communications; monitor and analyze usage trends to improve our platform; detect, prevent, and address technical issues, fraud, and security concerns; and comply with legal obligations and enforce our terms of service.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>4. Cookies & Tracking Technologies</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We use cookies, local storage, and similar tracking technologies to operate and personalize our services. Essential cookies are required for core platform functionality, such as maintaining your session and security. Analytics cookies help us understand how users interact with our platform so we can improve the experience. Preference cookies remember your settings and choices across sessions.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>You can control cookies through your browser settings. Disabling certain cookies may limit your ability to use some features of our platform.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>5. Third-Party Services</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We may share your information with trusted third-party service providers who assist us in operating our platform. These include: hosting and infrastructure providers (e.g., cloud services for data storage and delivery); payment processors for handling transactions securely; domain registrars and DNS providers for domain management services; analytics services to help us understand platform usage; and communication tools for sending emails and notifications.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>These third parties are contractually obligated to protect your data and may only use it for the specific purposes we authorize. We do not sell your personal information to any third party.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>6. Data Security</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We implement industry-standard security measures to protect your information, including: encryption of data in transit using SSL/TLS protocols; secure storage of sensitive data with encryption at rest; regular security audits and vulnerability assessments; access controls limiting employee access to personal data on a need-to-know basis; and secure backup and disaster recovery procedures.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>While we strive to protect your data, no method of electronic transmission or storage is completely secure. We cannot guarantee absolute security but are committed to promptly addressing any security incidents.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>7. Your Rights</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>Depending on your location and applicable laws, you may have the following rights regarding your personal data: the right to access and obtain a copy of the data we hold about you; the right to correct inaccurate or incomplete information; the right to request deletion of your personal data, subject to legal retention requirements; the right to restrict or object to certain processing of your data; the right to data portability, receiving your data in a structured, machine-readable format; and the right to withdraw consent where processing is based on consent.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>To exercise any of these rights, please contact us using the details provided in the Contact section below. We will respond to your request within 30 days.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>8. Data Retention</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We retain your personal data only for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required or permitted by law. Account data is retained for the duration of your active account and for up to 12 months after account closure to allow for reactivation. Transaction and billing records are retained for up to 5 years to comply with financial and tax regulations. Usage and analytics data is retained in anonymized form and may be kept indefinitely for statistical purposes.</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>When data is no longer needed, we securely delete or anonymize it in accordance with our data management procedures.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>9. Children's Privacy</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>Our platform is designed for business use and is not intended for individuals under the age of 18. We do not knowingly collect personal information from children. If we become aware that we have collected data from a child under 18, we will take steps to delete that information promptly. If you believe a child has provided us with personal data, please contact us immediately.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>10. Changes to This Policy</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or other factors. When we make material changes, we will notify you by posting the updated policy on our platform with a revised "Last updated" date. We may also send a notification via email or through the platform for significant changes. Your continued use of StreetLocal after any changes indicates your acceptance of the updated policy.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 8, color: '#1a1a1a' }}>11. Contact Us</h3>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>StreetLocal<br />Email: privacy@streetlocal.live<br />Website: streetlocal.live</p>
+                <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 8 }}>We are committed to resolving any privacy-related issues and will respond to your inquiry as promptly as possible.</p>
+              </div>
             </div>
           )}
 
@@ -2503,24 +2823,26 @@ export default function App() {
           {/* ═══ THEMES LIBRARY PAGE ═══ */}
           {currentPage === 'themes' && (() => {
             const allThemes = [
-              { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_41_03%20AM.png?updatedAt=1778121679433', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_24_04%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_25_10%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_27_39%20AM.png'], isNew: false },
-              { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_11_01%20AM.png?updatedAt=1778123483318', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_09_46%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_10_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_12_08%20AM.png'], isNew: false },
-              { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_31_54%20PM.png', isNew: false },
-              { id: 'juice', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_08_00%20AM.png?updatedAt=1778123303886', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_20_24%20AM.png?updatedAt=1778214043572', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2011_21_11%20AM.png?updatedAt=1778214088453', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2002_01_25%20PM.png'], isNew: false },
-              { id: 'chicken', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_37_44%20AM.png?updatedAt=1778121489121', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_51_11%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_54_35%20AM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2010_57_27%20AM.png'], isNew: false },
-              { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_45_14%20AM.png?updatedAt=1778121932278', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_49_45%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_52_59%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2003_57_35%20PM.png'], isNew: false },
-              { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2009_33_01%20AM.png?updatedAt=1778121201496', isNew: false },
-              { id: 'pecellele', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2010_17_10%20AM.png?updatedAt=1778123848568', isNew: false },
-              { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_04_20%20PM.png', isNew: false },
-              { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_08_25%20AM.png', isNew: true },
-              { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_06_43%20PM.png', isNew: true },
-              { id: 'ketoprak', label: 'Ketoprak', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_10_51%20PM.png', isNew: true },
-              { id: 'cilok', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_12_27%20PM.png', isNew: true },
-              { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_14_52%20PM.png', variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_17%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_20_47%20PM.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2004_21_18%20PM.png'], isNew: true },
-              { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_26_08%20PM.png', isNew: true },
-              { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2011_27_16%20PM.png', isNew: true },
-              { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%208,%202026,%2005_52_09%20PM.png', isNew: false },
-              { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2001_49_41%20PM.png', isNew: false },
+              { id: 'noodle', ref: 'SL-001', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_24_04-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_25_10-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_27_39-am.png'], isNew: false, popular: false, activations: 48 },
+              { id: 'coffee', ref: 'SL-002', label: 'Coffee', accent: '#8a570f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_09_46-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_10_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_12_08-am.png'], isNew: false, popular: false, activations: 67 },
+              { id: 'satay', ref: 'SL-003', label: 'Satay', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png', isNew: false, popular: false, activations: 52 },
+              { id: 'juice', ref: 'SL-004', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'], isNew: false, popular: false, activations: 39 },
+              { id: 'chicken', ref: 'SL-005', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'], isNew: false, popular: true, activations: 156 },
+              { id: 'bakso', ref: 'SL-006', label: 'Bakso', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_49_45-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_52_59-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_57_35-pm.png'], isNew: false, popular: true, activations: 203 },
+              { id: 'friedrice', ref: 'SL-007', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png', isNew: false, popular: true, activations: 312 },
+              { id: 'pecellele', ref: 'SL-008', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_17_10-am.png', isNew: false, popular: false, activations: 44 },
+              { id: 'kebab', ref: 'SL-009', label: 'Kebab', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_04_20-pm.png', isNew: false, popular: false, activations: 31 },
+              { id: 'martabak', ref: 'SL-010', label: 'Martabak', accent: '#8a0f8a', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_08_25-am.png', isNew: true, popular: false, activations: 28 },
+              { id: 'escendol', ref: 'SL-011', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_06_43-pm.png', isNew: true, popular: false, activations: 19 },
+              { id: 'ketoprak', ref: 'SL-012', label: 'Ketoprak', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_10_51-pm.png', isNew: true, popular: false, activations: 15 },
+              { id: 'cilok', ref: 'SL-013', label: 'Cilok Cimol', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_12_27-pm.png', isNew: true, popular: false, activations: 22 },
+              { id: 'ikanbakar', ref: 'SL-014', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_14_52-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_17-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_21_18-pm.png'], isNew: true, popular: false, activations: 18 },
+              { id: 'nasiuduk', ref: 'SL-015', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png', isNew: true, popular: false, activations: 12 },
+              { id: 'bebekgoreng', ref: 'SL-016', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png', isNew: true, popular: false, activations: 9 },
+              { id: 'burger', ref: 'SL-017', label: 'Burgers', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png', isNew: false, popular: true, activations: 134 },
+              { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_49_41-pm.png', isNew: false, popular: false, activations: 27 },
+              { id: 'hotdog', ref: 'SL-019', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png', isNew: true, popular: false, activations: 5 },
+              { id: 'pizza', ref: 'SL-020', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png', isNew: true, popular: false, activations: 3 },
             ]
             const filtered = themeLibSearch ? allThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : allThemes
             const newThemes = filtered.filter(t => t.isNew)
@@ -2531,16 +2853,6 @@ export default function App() {
 
             return (
               <div style={{ background: '#fff', margin: '-20px -24px', padding: '0 0 40px', minHeight: '100vh' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, position: 'sticky', top: 0, zIndex: 10, background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a' }}>FoodLocal Themes</div>
-                    <div style={{ fontSize: 11, color: '#999' }}>{allThemes.length} themes available</div>
-                  </div>
-                  <button onClick={() => { setCurrentPage(null); setSelectedApp(null); setSelectedCategory(null) }} style={{ width: 36, height: 36, borderRadius: 18, background: '#1a1a1a', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-                  </button>
-                </div>
 
                 {/* Search */}
                 <div style={{ padding: '12px 16px' }}>
@@ -2550,16 +2862,40 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* New themes */}
+                {/* Popular in Indonesia — under search */}
+                {!themeLibSearch && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>Popular in Indonesia</div>
+                    <div style={{ fontSize: 11, color: '#999', marginBottom: 10 }}>Most activated themes by local vendors</div>
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                      {allThemes.filter(t => t.popular).sort((a, b) => b.activations - a.activations).map(theme => (
+                        <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ flexShrink: 0, width: 100, textAlign: 'center', cursor: 'pointer' }}>
+                          <div style={{ width: 100, height: 140, borderRadius: 14, overflow: 'hidden', position: 'relative', background: '#1a1a1a', border: '2px solid #FFD600' }}>
+                            <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.25)' }} />
+                            <div style={{ position: 'absolute', top: 4, left: 4, background: '#FFD600', padding: '1px 5px', borderRadius: 3, fontSize: 7, fontWeight: 800, color: '#1a1a1a' }}>POPULAR</div>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '12px 6px 6px', textAlign: 'center' }}>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: '#fff' }}>{theme.label}</div>
+                              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)' }}>{theme.activations} activations</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New themes — just released */}
                 {newThemes.length > 0 && !themeLibSearch && (
                   <div style={{ padding: '0 16px 16px' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>New</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 2 }}>Just Released</div>
+                    <div style={{ fontSize: 11, color: '#999', marginBottom: 10 }}>Fresh themes added to the collection — more on the way</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                       {newThemes.map(theme => (
-                        <div key={theme.id} style={{ textAlign: 'center' }}>
+                        <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ textAlign: 'center', cursor: 'pointer' }}>
                           <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
                             <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
-                            <img src={theme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                            <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
                               <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
@@ -2570,7 +2906,7 @@ export default function App() {
                             <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 3 }}>NEW</div>
                           </div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 6 }}>{theme.label}</div>
-                          <button onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ marginTop: 4, padding: '5px 14px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                          <div style={{ fontSize: 9, color: '#999', marginTop: 1 }}>{theme.ref} · {theme.activations} active</div>
                         </div>
                       ))}
                     </div>
@@ -2583,10 +2919,10 @@ export default function App() {
                   {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#999', fontSize: 14 }}>No themes found</div>}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                     {(themeLibSearch ? filtered : otherThemes).map(theme => (
-                      <div key={theme.id} style={{ textAlign: 'center' }}>
+                      <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ textAlign: 'center', cursor: 'pointer' }}>
                         <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
                           <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
-                          <img src={theme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                          <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
                             <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
@@ -2597,7 +2933,7 @@ export default function App() {
                           {theme.isNew && <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 3 }}>NEW</div>}
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 6 }}>{theme.label}</div>
-                        <button onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ marginTop: 4, padding: '5px 14px', borderRadius: 6, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                        <div style={{ fontSize: 9, color: '#999', marginTop: 1 }}>{theme.ref} · {theme.activations} active</div>
                       </div>
                     ))}
                   </div>
@@ -2607,7 +2943,7 @@ export default function App() {
                 {previewT && (() => {
                   const ac = previewT.accent
                   const SAMPLE_MENU = [
-                    { name: 'Pepper Noodles', price: 'Rp 23.000', desc: 'Fried noodles with peppers', photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%207,%202026,%2008_12_38%20PM.png', spice: true },
+                    { name: 'Pepper Noodles', price: 'Rp 23.000', desc: 'Fried noodles with peppers', photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', spice: true },
                     { name: 'Sate Ayam', price: 'Rp 18.000', desc: 'Chicken skewers with peanut sauce', photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300' },
                     { name: 'Bakso', price: 'Rp 12.000', desc: 'Meatball soup with noodles', photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300' },
                   ]
@@ -2624,7 +2960,7 @@ export default function App() {
                         <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
                         <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                          <img src={activeImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                          <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                           <div style={{ position: 'absolute', inset: 0, background: themeLibPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themeLibPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
 
                           {/* LANDING */}
@@ -2651,7 +2987,7 @@ export default function App() {
                               <div style={{ padding: '0 6px' }}>
                                 {SAMPLE_MENU.map((item, idx) => (
                                   <div key={idx} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
-                                    <img src={item.photo} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                                    <img src={item.photo} alt="" onError={imgError('food')} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <div style={{ fontSize: 10, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice && ' 🌶️'}</div>
                                       <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div>
@@ -2675,7 +3011,7 @@ export default function App() {
                       {previewAllImgs.length > 1 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                           {previewAllImgs.map((img, i) => (
-                            <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
+                            <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
                           ))}
                         </div>
                       )}
@@ -2755,7 +3091,7 @@ export default function App() {
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>{cat.title}</div>
                           <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>{cat.description}</div>
                         </div>
-                        <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>{cat.responseTime}</span>
+                        <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>{(() => { const n = Math.floor(Math.random() * 40 + 12); return `${n} resolved today` })()}</span>
                       </button>
                     ))}
                   </div>
@@ -3112,7 +3448,7 @@ export default function App() {
                             <div style={{ fontSize: 22, marginBottom: 6 }}>{cat.icon}</div>
                             <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{cat.title}</div>
                             <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4, marginBottom: 6 }}>{cat.description}</div>
-                            <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10 }}>{cat.responseTime}</span>
+                            <span style={{ background: '#f0fdf4', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10 }}>{(() => { const n = Math.floor(Math.random() * 40 + 12); return `${n} resolved today` })()}</span>
                           </button>
                         ))}
                       </div>
@@ -3126,7 +3462,7 @@ export default function App() {
                         <span style={{ fontSize: 24 }}>{ticketDept.icon}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{ticketDept.title}</div>
-                          <div style={{ fontSize: 11, color: '#888' }}>{ticketDept.responseTime} response</div>
+                          <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>{Math.floor(Math.random() * 40 + 12)} resolved today</div>
                         </div>
                         <button onClick={() => setTicketStep(0)} style={{ background: 'none', border: 'none', fontSize: 12, fontWeight: 700, color: '#1a73e8', cursor: 'pointer', minHeight: 44 }}>Change</button>
                       </div>
@@ -3743,10 +4079,7 @@ export default function App() {
 
         </div>
 
-        <div style={styles.footer}>
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
-          <p style={styles.footerText}>{t.footer}</p>
-        </div>
+        <SiteFooter />
       </div>
     )
   }
@@ -3762,7 +4095,7 @@ export default function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 0' }}>
           <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', letterSpacing: -0.3 }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
           <button onClick={() => { setSearchActive(false); setSearchQuery(''); setSearchResults([]); setSearchFilter('all') }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitleddddvv-removebg-preview.png" alt="Home" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 36, height: 36, objectFit: 'contain' }} />
           </button>
         </div>
 
@@ -3815,17 +4148,18 @@ export default function App() {
           {!searchLoading && searchResults.map((vendor, idx) => {
             const st = VENDOR_STATUS_CONFIG[vendor.status] || VENDOR_STATUS_CONFIG.closed
             const item = vendor._matchedItem
+            const isMock = String(vendor.id).startsWith('demo-')
             return (
               <div key={vendor.id} style={{ marginBottom: 10 }}>
                 <div
-                  onClick={() => window.open(`${window.location.origin}/food/basic/?vendor=${vendor.slug || vendor.id}`, '_blank')}
-                  style={{ background: '#fff', borderRadius: 14, padding: '12px 12px 10px', cursor: 'pointer', opacity: vendor.status === 'closed' ? 0.5 : 1, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
+                  onClick={() => { if (isMock) return; const slug = vendor.slug || vendor.id; if (slug) window.open(`${window.location.origin}/food/basic/?vendor=${slug}`, '_blank') }}
+                  style={{ background: '#fff', borderRadius: 14, padding: '12px 12px 10px', cursor: isMock ? 'default' : 'pointer', opacity: vendor.status === 'closed' ? 0.5 : 1, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
                 >
                   <div style={{ display: 'flex', gap: 12 }}>
                     {/* Left: food image */}
                     <div style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#f0f0f0', position: 'relative' }}>
                       {item && item.img ? (
-                        <img src={item.img} alt={item.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={item.img} alt={item.name} loading="lazy" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${vendor.accent || '#FFD600'}30, ${vendor.accent || '#FFD600'}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ fontSize: 28, opacity: 0.3 }}>🍽</span>
@@ -3836,8 +4170,8 @@ export default function App() {
                         <span style={{ color: '#FFD600', fontSize: 10 }}>★</span>
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>{vendor.rating}</span>
                       </div>
-                      {/* Promo badge with fire */}
-                      {item && item.promoPrice && (
+                      {/* Promo badge with fire — real vendors only */}
+                      {!isMock && item && item.promoPrice && (
                         <div style={{ position: 'absolute', bottom: 6, left: 0 }}>
                           <div style={{ position: 'absolute', top: -12, left: 4 }}>
                             <span style={{ position: 'absolute', fontSize: 10, animation: 'fireFloat 1.2s ease-out infinite' }}>🔥</span>
@@ -3876,8 +4210,12 @@ export default function App() {
                       )}
                     </div>
                   </div>
-                  {/* Bottom bar — prep + delivery */}
-                  {vendor.status === 'closed' ? (
+                  {/* Bottom bar */}
+                  {isMock ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f5f5f5' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Data Updating</span>
+                    </div>
+                  ) : vendor.status === 'closed' ? (
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#ef4444', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f5f5f5' }}>
                       Closed {vendor.opens_at ? `· Opens at ${vendor.opens_at}` : ''}
                     </div>
@@ -3889,7 +4227,7 @@ export default function App() {
                         <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Pickup Only</span>
                       ) : vendor.delivery_fee === 0 ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, animation: 'heartbeat 1.5s ease-in-out infinite' }}>
-                          <img src="https://ik.imagekit.io/nepgaxllc/Untitledwrrssswdqw-removebg-preview.png" alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledwrrssswdqw-removebg-preview.png" alt="" onError={imgError('logo')} style={{ width: 20, height: 20, objectFit: 'contain' }} />
                           <span style={{ fontSize: 15, fontWeight: 800, color: '#FFD600', textShadow: '0 0 1px #000, 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000' }}>Free Delivery</span>
                         </span>
                       ) : (
@@ -3926,14 +4264,14 @@ export default function App() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 0' }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
           <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
         </div>
         <LangSwitcher locale={locale} setLocale={setLocale} />
       </div>
 
       {/* Search bar — under header */}
-      <div style={{ padding: '10px 20px 0' }}>
+      <div style={{ padding: '20px 20px 0' }}>
         <div style={{ position: 'relative' }}>
           <input
             value={searchQuery}
@@ -3955,7 +4293,7 @@ export default function App() {
       <FadeIn>
         <div style={styles.hero}>
           <img
-            src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2002_58_20%20PM.png"
+            src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-02_58_20-pm.png"
             alt="Street Local Live"
             style={styles.heroLogo}
           />
@@ -3978,29 +4316,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* Floating right side nav */}
-      <div style={{ position: 'fixed', right: 6, top: '50%', transform: 'translateY(calc(-50% - 70px))', zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <button onClick={() => setCurrentPage('about')} style={styles.navBtn}>
-          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a', fontFamily: 'serif' }}>i</div>
-          <span style={styles.navBtnLabel}>{t.navAbout}</span>
-        </button>
-        <button onClick={() => setCurrentPage('faq')} style={styles.navBtn}>
-          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>?</div>
-          <span style={styles.navBtnLabel}>{t.navFaq}</span>
-        </button>
-        <button onClick={() => setCurrentPage('services')} style={styles.navBtn}>
-          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>§</div>
-          <span style={styles.navBtnLabel}>{t.navServices}</span>
-        </button>
-        <button onClick={() => setCurrentPage('domains')} style={styles.navBtn}>
-          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>🌐</div>
-          <span style={styles.navBtnLabel}>Domains</span>
-        </button>
-        <button onClick={() => setCurrentPage('contact')} style={styles.navBtn}>
-          <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>✉</div>
-          <span style={styles.navBtnLabel}>Contact</span>
-        </button>
-      </div>
 
       {/* Categories */}
       <div style={styles.section}>
@@ -4068,36 +4383,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Agent Programme Link */}
-      <div style={{ textAlign: 'center', padding: '0 20px 8px' }}>
-        <img src="https://ik.imagekit.io/nepgaxllc/Untitledfffdd.png" alt="Become an Agent" style={{ width: '100%', maxWidth: 340, borderRadius: 16, marginBottom: 10 }} />
-        <button
-          onClick={() => setCurrentPage('affiliate')}
-          style={{ background: 'linear-gradient(135deg, #FF6B35, #FF8F65)', border: 'none', borderRadius: 14, padding: '14px 24px', cursor: 'pointer', width: '100%', maxWidth: 340 }}
-        >
-          <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>StreetLocal.live/agent</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Earn 100% first-month commission — limited seats</div>
-        </button>
-      </div>
 
-      {/* Footer Links */}
-      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, padding: '10px 20px 0' }}>
-        {[
-          { label: 'About', page: 'about' },
-          { label: 'FAQ', page: 'faq' },
-          { label: 'Domains', page: 'domains' },
-          { label: 'Terms', page: 'services' },
-          { label: 'Contact', page: 'contact' },
-        ].map(link => (
-          <button key={link.page} onClick={() => setCurrentPage(link.page)} style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#666', cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center' }}>{link.label}</button>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div style={styles.footer}>
-        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%205,%202026,%2003_03_19%20PM.png" alt="" style={styles.footerImage} />
-        <p style={styles.footerText} onClick={() => setCurrentPage('admin')}>{t.footer}</p>
-      </div>
+      <SiteFooter />
     </div>
   )
 }

@@ -12,7 +12,7 @@ const TILES = [
   {
     value: 'marriage',
     label: 'Marriage',
-    img: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasd.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasd.png',
     description: 'I want forever',
     bg:     'rgba(244,114,182,0.15)',
     bgSel:  'rgba(244,114,182,0.28)',
@@ -23,7 +23,7 @@ const TILES = [
   {
     value: 'dating',
     label: 'Relationship',
-    img: 'https://ik.imagekit.io/nepgaxllc/Romantic%20sunset%20lakeside%20embrace.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/romantic-sunset-lakeside-embrace.png',
     description: 'Real dating',
     bg:     'rgba(232,69,140,0.15)',
     bgSel:  'rgba(232,69,140,0.28)',
@@ -34,7 +34,7 @@ const TILES = [
   {
     value: 'friendship',
     label: 'Friendship',
-    img: 'https://ik.imagekit.io/nepgaxllc/UntitledDASDASDASDF.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddasdasdasdf.png',
     description: 'Platonic only',
     bg:     'rgba(141,198,63,0.12)',
     bgSel:  'rgba(141,198,63,0.24)',
@@ -45,7 +45,7 @@ const TILES = [
   {
     value: 'date_night',
     label: 'Date Night',
-    img: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasdsdasdaasdasd.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasdsdasdaasdasd.png',
     description: 'Casual fun',
     bg:     'rgba(244,114,182,0.12)',
     bgSel:  'rgba(244,114,182,0.24)',
@@ -56,7 +56,7 @@ const TILES = [
   {
     value: 'travel',
     label: 'Travel Partner',
-    img: 'https://ik.imagekit.io/nepgaxllc/Untitleddsadasdasdsdasdaasdasdasdasd.png',
+    img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsadasdasdsdasdaasdasdasdasd.png',
     description: 'Explore together',
     bg:     'rgba(244,114,182,0.12)',
     bgSel:  'rgba(244,114,182,0.24)',
@@ -106,7 +106,7 @@ const DATING_TILE_VALUES = ['marriage', 'dating', 'date_night', 'friendship', 't
 const MEET_NEW_TILE = {
   value: 'meet_new',
   label: 'Free Tonight',
-  img:   'https://ik.imagekit.io/nepgaxllc/UntitledxcvzcvzxcvzxcASDASD.png',
+  img:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxcvzcvzxcvzxcasdasd.png',
   description: 'Just socialising',
   bg:     'rgba(99,102,241,0.15)',
   bgSel:  'rgba(99,102,241,0.28)',

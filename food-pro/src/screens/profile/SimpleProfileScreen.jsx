@@ -4,9 +4,10 @@ import ContactUsPage from '@/components/ui/ContactUsPage';
 import LegalPage from '@/components/ui/LegalPage';
 import IndooFooter from '@/components/ui/IndooFooter';
 import { useLanguage, LANGUAGES as LANG_OPTIONS } from '@/i18n';
+import imgError from '../../imgFallback';
 
-const DAY_BG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png';
-const NIGHT_BG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2030,%202026,%2004_47_24%20PM.png';
+const DAY_BG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-30-2026-04_47_24-pm.png';
+const NIGHT_BG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-30-2026-04_47_24-pm.png';
 
 const CITIES = [
   'Yogyakarta', 'Jakarta', 'Surabaya', 'Bandung', 'Semarang',
@@ -235,7 +236,7 @@ export default function SimpleProfileScreen({ onClose }) {
               position: 'relative', zIndex: 1, border: '3px solid #080808',
             }}>
               {profile.photo ? (
-                <img src={profile.photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={profile.photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
               ) : (
                 <span style={{ fontSize: 44, color: 'rgba(255,255,255,0.3)' }}>👤</span>
               )}
@@ -452,7 +453,7 @@ export default function SimpleProfileScreen({ onClose }) {
                     boxShadow: isActive ? '0 0 12px rgba(141,198,63,0.3)' : 'none',
                     transition: 'all 0.2s',
                   }}>
-                    <img src={l.image} alt={l.label} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: '50%' }} />
+                    <img src={l.image} alt={l.label} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: '50%' }} onError={imgError('generic')} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#8DC63F' : 'rgba(255,255,255,0.5)' }}>{l.label}</span>
                   </button>
                 )

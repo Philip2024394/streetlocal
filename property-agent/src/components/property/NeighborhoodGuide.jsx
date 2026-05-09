@@ -12,19 +12,19 @@ const glass = {
 }
 
 const ICON_IMAGES = {
-  '🚌': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdss-removebg-preview.png?updatedAt=1777657927452',
-  '🚂': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '✈️': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssss-removebg-preview.png?updatedAt=1777658011640',
-  '🏬': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssds-removebg-preview.png?updatedAt=1777658130387',
-  '🏫': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdads-removebg-preview.png?updatedAt=1777658209572',
-  '🛍️': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssa-removebg-preview.png?updatedAt=1777658280022',
-  '🏪': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssa-removebg-preview.png?updatedAt=1777658280022',
-  '🌳': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssadsds-removebg-preview.png?updatedAt=1777658367231',
-  '🚇': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '🚈': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafd-removebg-preview.png?updatedAt=1777626145573',
-  '🏛️': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png?updatedAt=1777658439258',
-  '🏰': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png?updatedAt=1777658439258',
-  '👑': 'https://ik.imagekit.io/nepgaxllc/Untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png?updatedAt=1777658439258',
+  '🚌': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdss-removebg-preview.png',
+  '🚂': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '✈️': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssss-removebg-preview.png',
+  '🏬': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssds-removebg-preview.png',
+  '🏫': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdads-removebg-preview.png',
+  '🛍️': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssa-removebg-preview.png',
+  '🏪': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssa-removebg-preview.png',
+  '🌳': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssadsds-removebg-preview.png',
+  '🚇': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '🚈': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafd-removebg-preview.png',
+  '🏛️': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png',
+  '🏰': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png',
+  '👑': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddfsafdsssssdssdadssadsdsqww-removebg-preview.png',
 }
 
 function PoiIcon({ emoji, size = 22 }) {

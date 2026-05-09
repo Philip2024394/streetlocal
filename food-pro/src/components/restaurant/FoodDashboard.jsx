@@ -11,6 +11,7 @@
  * 5. Spending summary
  */
 import { useState, useEffect, useRef } from 'react'
+import imgError from '../../imgFallback'
 import { useAuth } from '@/hooks/useAuth'
 import { getFoodOrders } from './menuSheetConstants'
 import { getSavedAddresses, getLocalDefaultAddress } from '@/services/addressService'
@@ -19,9 +20,9 @@ const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 
 // ── Demo promos (live: fetched from Supabase per restaurant) ─────────────────
 const DEMO_PROMOS = [
-  { id: 'p1', restaurant: 'Warung Sari Rasa', dish: 'Nasi Goreng Spesial', discount: '30%', endsAt: Date.now() + 2 * 60 * 60 * 1000, img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2019,%202026,%2002_07_07%20AM.png?updatedAt=1776539245009' },
-  { id: 'p2', restaurant: 'Bakso Mas Kumis', dish: 'Bakso Urat Jumbo', discount: '20%', endsAt: Date.now() + 45 * 60 * 1000, img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2019,%202026,%2002_10_36%20AM.png?updatedAt=1776539452508' },
-  { id: 'p3', restaurant: 'Sate Pak Haji', dish: 'Sate Ayam 20 Tusuk', discount: '15%', endsAt: Date.now() + 5 * 60 * 60 * 1000, img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2019,%202026,%2002_08_50%20AM.png?updatedAt=1776539347891' },
+  { id: 'p1', restaurant: 'Warung Sari Rasa', dish: 'Nasi Goreng Spesial', discount: '30%', endsAt: Date.now() + 2 * 60 * 60 * 1000, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png' },
+  { id: 'p2', restaurant: 'Bakso Mas Kumis', dish: 'Bakso Urat Jumbo', discount: '20%', endsAt: Date.now() + 45 * 60 * 1000, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png' },
+  { id: 'p3', restaurant: 'Sate Pak Haji', dish: 'Sate Ayam 20 Tusuk', discount: '15%', endsAt: Date.now() + 5 * 60 * 60 * 1000, img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/bold-3d-_indoo_-logo-design.png' },
 ]
 
 function CountdownTimer({ endsAt }) {
@@ -140,7 +141,7 @@ export default function FoodDashboard({ onClose, onOpenRestaurant }) {
                 display: 'flex', gap: 12, padding: 12, borderRadius: 16,
                 background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
               }}>
-                <img src={promo.img} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                <img src={promo.img} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'block' }}>{promo.dish}</span>
                   <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'block', marginTop: 2 }}>{promo.restaurant}</span>

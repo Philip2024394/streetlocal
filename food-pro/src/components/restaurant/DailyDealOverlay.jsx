@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getTodayDeal } from '@/constants/dailyDeals'
 import { getAllTodayDeals } from '@/services/dailyDealService'
+import imgError from '../../imgFallback'
 
 const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 
@@ -38,6 +39,7 @@ function DealItemCard({ item, todayTheme, qty, onQtyChange, dealDiscount, onAdd 
       {/* Photo */}
       {item.photoUrl ? (
         <img src={item.photoUrl} alt="" onClick={(e) => { e.stopPropagation(); setZoomed(true) }}
+          onError={imgError('food')}
           style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0, cursor: 'pointer' }}
         />
       ) : (
@@ -86,7 +88,7 @@ function DealItemCard({ item, todayTheme, qty, onQtyChange, dealDiscount, onAdd 
         }}>
           {/* Image */}
           <div style={{ position: 'relative', width: '100%', height: 200 }}>
-            <img src={item.photoUrl} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={item.photoUrl} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('food')} />
             {/* Discount badge */}
             {/* Discount badge — top left */}
             <div style={{
@@ -237,7 +239,7 @@ export default function DailyDealOverlay({ restaurant, dealItems, onClose, onAdd
 
       {/* Cart icon — fixed top right */}
       <div onClick={onClose} style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', right: 16, zIndex: 9720, cursor: 'pointer' }}>
-        <img src="https://ik.imagekit.io/nepgaxllc/Untitleddasdasdasdasss-removebg-preview.png?updatedAt=1775737452452" alt="Cart" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddasdasdasdasss-removebg-preview.png" alt="Cart" style={{ width: 32, height: 32, objectFit: 'contain' }} onError={imgError('generic')} />
       </div>
 
       {/* Floating discount balls — higher on splash, lower on deal cards */}
@@ -280,7 +282,7 @@ export default function DailyDealOverlay({ restaurant, dealItems, onClose, onAdd
         {/* ── Card 1: Hero splash — no restaurant name, just theme ── */}
         <div style={{ width: '100%', minHeight: '100dvh', scrollSnapAlign: 'start', position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
           {/* Full background image */}
-          <img src={todayTheme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <img src={todayTheme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} onError={imgError('banner')} />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', pointerEvents: 'none', zIndex: 0 }} />
 
           {/* Center: hero text + profiles */}
@@ -289,7 +291,7 @@ export default function DailyDealOverlay({ restaurant, dealItems, onClose, onAdd
             {todayTheme.slogan && <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontStyle: 'italic', marginTop: 10, textShadow: '0 2px 10px rgba(0,0,0,0.8)', textAlign: 'center' }}>{todayTheme.slogan}</span>}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 16 }}>
               {avatarIds.map((id, i) => (
-                <img key={id} src={`https://i.pravatar.cc/40?img=${id}`} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '2px solid #8DC63F', marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i, position: 'relative' }} />
+                <img key={id} src={`https://i.pravatar.cc/40?img=${id}`} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '2px solid #8DC63F', marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i, position: 'relative' }} onError={imgError('logo')} />
               ))}
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginLeft: 6, fontWeight: 800, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}><span style={{ color: '#8DC63F' }}>{viewerCount}</span> viewing</span>
             </div>
@@ -322,7 +324,7 @@ export default function DailyDealOverlay({ restaurant, dealItems, onClose, onAdd
         {/* ── Other restaurant deal cards ── */}
         {otherDeals.map(deal => (
           <div key={deal.id} style={{ width: '100%', minHeight: '100dvh', scrollSnapAlign: 'start', position: 'relative', flexShrink: 0, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={todayTheme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img src={todayTheme.img} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} onError={imgError('banner')} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', pointerEvents: 'none', zIndex: 0 }} />
 
             {/* Top banner — solid dark */}
@@ -347,7 +349,7 @@ export default function DailyDealOverlay({ restaurant, dealItems, onClose, onAdd
               {todayTheme.slogan && <span style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontStyle: 'italic', marginTop: 8, textShadow: '0 2px 8px rgba(0,0,0,0.8)', textAlign: 'center' }}>{todayTheme.slogan}</span>}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 {[11,22,33,44].map((id, i) => (
-                  <img key={id} src={`https://i.pravatar.cc/40?img=${id + (deal.restaurant_id ?? 0)}`} alt="" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', border: '2px solid #8DC63F', marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i, position: 'relative' }} />
+                  <img key={id} src={`https://i.pravatar.cc/40?img=${id + (deal.restaurant_id ?? 0)}`} alt="" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', border: '2px solid #8DC63F', marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i, position: 'relative' }} onError={imgError('logo')} />
                 ))}
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginLeft: 4, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}><span style={{ color: '#8DC63F', fontWeight: 900 }}>{40 + Math.floor((deal.restaurant_id ?? 1) * 7.3 % 81)}</span> viewing</span>
               </div>

@@ -27,11 +27,11 @@ function fmtRp(n) {
 const glass = { background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }
 
 const DETAIL_ICONS = {
-  Certificate: 'https://ik.imagekit.io/nepgaxllc/Untitledsssvvvvv-removebg-preview.png',
-  Furnished: 'https://ik.imagekit.io/nepgaxllc/Untitledsssvvvvvdd-removebg-preview.png?updatedAt=1777625220883',
-  Facing: 'https://ik.imagekit.io/nepgaxllc/Untitledssv-removebg-preview.png',
-  Floors: 'https://ik.imagekit.io/nepgaxllc/Untitled33-removebg-preview.png',
-  'Year Built': 'https://ik.imagekit.io/nepgaxllc/Untitledsssff-removebg-preview.png',
+  Certificate: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssvvvvv-removebg-preview.png',
+  Furnished: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssvvvvvdd-removebg-preview.png',
+  Facing: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledssv-removebg-preview.png',
+  Floors: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitled33-removebg-preview.png',
+  'Year Built': 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssff-removebg-preview.png',
   Electricity: '⚡', Water: '💧', Parking: '🅿️', Pool: '🏊',
 }
 
@@ -178,7 +178,7 @@ export default function PropertyDetailPage({ listing, onBack, onSelectListing })
             {/* CTAs */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <a href={`https://wa.me/${phone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo, saya tertarik dengan ${listing.title}`)}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-                <img src="https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png?updatedAt=1777539531358" alt="WhatsApp" style={{ height: 44, objectFit: 'contain' }} />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png" alt="WhatsApp" style={{ height: 44, objectFit: 'contain' }} />
               </a>
               {listing.buy_now && (
                 <button onClick={() => setShowKPR(true)} style={{ flex: 1, padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FACC15, #F59E0B)', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>🏦 KPR</button>

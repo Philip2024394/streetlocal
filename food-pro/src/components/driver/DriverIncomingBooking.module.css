@@ -15,7 +15,7 @@
 }
 .modalBg {
   position: absolute; inset: 0;
-  background-image: url('https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_39_04%20AM.png?updatedAt=1776814761653');
+  background-image: url('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_39_04-am.png?updatedAt=1776814761653');
   background-size: cover; background-position: center;
   opacity: 0.15; pointer-events: none;
   border-radius: 24px 24px 0 0;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { FOOD_CATEGORIES_FULL } from '../constants/foodCategories'
+import imgError from '../imgFallback'
 
 const DEMO_RESTAURANTS = [
   { id: '1', name: 'Warung Bu Tini', cuisine_type: 'Javanese', cover_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop', rating: 4.8, is_open: true, slug: 'warung-bu-tini' },
@@ -157,6 +158,7 @@ export default function DirectoryPage({ onSelectRestaurant }) {
                     src={restaurant.cover_url}
                     alt={restaurant.name}
                     style={{ width: '100%', height: '180px', objectFit: 'cover' }}
+                    onError={imgError('banner')}
                   />
                   <span style={{
                     position: 'absolute',

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import imgError from '../../imgFallback'
 import IndooChat from '@/components/chat/IndooChat'
 import styles from './RestaurantMenuSheet.module.css'
 import WeeklyPromoSheet from './WeeklyPromoSheet'
@@ -101,12 +102,12 @@ function DeliveryChat({ driverName, chatKey, initialMessages, onClose }) {
 
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 10010, backgroundColor: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
-      <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2006_12_16%20AM.png?updatedAt=1777245159090" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
+      <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-06_12_16-am.png?updatedAt=1777245159090" alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, position: 'relative', zIndex: 1 }}>
         {/* Driver profile image */}
         <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #8DC63F', overflow: 'hidden', flexShrink: 0 }}>
-          <img src={`https://i.pravatar.cc/100?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={`https://i.pravatar.cc/100?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" onError={imgError('logo')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', display: 'block' }}>{driverName}</span>
@@ -132,19 +133,19 @@ function DeliveryChat({ driverName, chatKey, initialMessages, onClose }) {
           const isCustomer = msg.from === 'customer'
           const isSystem = msg.from === 'system' || msg.from === 'indoo'
           const isDriver = msg.from === 'driver'
-          const INDOO_LOGO = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2012_04_23%20PM.png'
+          const INDOO_LOGO = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-12_04_23-pm.png'
 
           return (
             <div key={msg.id} style={{ display: 'flex', justifyContent: isCustomer ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 6 }}>
               {/* Avatar — driver or INDOO logo */}
               {isDriver && (
                 <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1.5px solid #991B1B' }}>
-                  <img src={`https://i.pravatar.cc/60?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={`https://i.pravatar.cc/60?img=${(driverName ?? 'D').charCodeAt(0) % 50 + 1}`} alt="" onError={imgError('logo')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               )}
               {isSystem && (
                 <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(141,198,63,0.4)', background: '#111' }}>
-                  <img src={INDOO_LOGO} alt="INDOO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={INDOO_LOGO} alt="INDOO" onError={imgError('logo')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               )}
               {/* Bubble */}
@@ -156,15 +157,15 @@ function DeliveryChat({ driverName, chatKey, initialMessages, onClose }) {
                 borderBottomLeftRadius: isCustomer ? 16 : 4,
               }}>
                 {isSystem && <span style={{ fontSize: 10, fontWeight: 900, color: '#8DC63F', display: 'block', marginBottom: 4, letterSpacing: '0.05em', padding: (msg.image || msg.imageLeft || msg.imageRight) ? '6px 10px 0' : 0 }}>INDOO HQ</span>}
-                {isDriver && <span style={{ fontSize: 10, fontWeight: 900, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, letterSpacing: '0.05em' }}><img src="https://ik.imagekit.io/nepgaxllc/Untitleddsddaa-removebg-preview.png?updatedAt=1776781020066" alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} /> {msg.callsign ?? 'DRIVER'}</span>}
+                {isDriver && <span style={{ fontSize: 10, fontWeight: 900, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, letterSpacing: '0.05em' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddsddaa-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 14, height: 14, objectFit: 'contain' }} /> {msg.callsign ?? 'DRIVER'}</span>}
                 {msg.image && (
-                  <img src={msg.image} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 6 }} />
+                  <img src={msg.image} alt="" onError={imgError('food')} style={{ width: '100%', borderRadius: 12, marginBottom: 6 }} />
                 )}
                 {(msg.imageLeft || msg.imageRight) ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 6px' }}>
-                    {msg.imageLeft && <img src={msg.imageLeft} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
+                    {msg.imageLeft && <img src={msg.imageLeft} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
                     <span style={{ fontSize: 14, color: '#fff', flex: 1, lineHeight: 1.4, whiteSpace: 'pre-line' }}>{msg.text}</span>
-                    {msg.imageRight && <img src={msg.imageRight} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
+                    {msg.imageRight && <img src={msg.imageRight} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />}
                   </div>
                 ) : !msg.image && (
                   <span style={{ fontSize: 14, color: isCustomer ? '#000' : '#fff', display: 'block', lineHeight: 1.4, whiteSpace: 'pre-line', padding: msg.image ? '0 10px' : 0 }}>{msg.text}</span>
@@ -710,8 +711,8 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
     const callsign = driverOnWay?.driverCallsign ?? 'INDOO 4578'
     const ordNum = `#${driverOnWay.orderId ? driverOnWay.orderId.slice(-4).toUpperCase() : String(Math.floor(1000 + Math.random() * 9000))}`
 
-    const INDOO_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2019,%202026,%2012_07_28%20AM.png?updatedAt=1776532065659'
-    const ARRIVED_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2011_17_44%20AM.png'
+    const INDOO_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-19-2026-12_07_28-am.png'
+    const ARRIVED_IMG = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-11_17_44-am.png'
 
     const postMsg = (from, text, extra) => {
       try {
@@ -806,17 +807,17 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
   // Processing & received images per vendor type + day/night
   const ORDER_IMAGES = {
     restaurant: {
-      processing: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_44_19%20AM.png',
-      received:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2021,%202026,%2006_43_19%20AM.png',
+      processing: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_44_19-am.png',
+      received:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-21-2026-06_43_19-am.png',
     },
     street_vendor: {
       day: {
-        processing: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_35_28%20AM.png?updatedAt=1776814549960',
-        received:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_05_25%20AM.png?updatedAt=1776812742688',
+        processing: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_35_28-am.png',
+        received:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_05_25-am.png',
       },
       night: {
-        processing: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_02_47%20AM.png?updatedAt=1776812600889',
-        received:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_03_51%20AM.png?updatedAt=1776812648331',
+        processing: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_02_47-am.png',
+        received:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_03_51-am.png',
       },
     },
   }
@@ -1008,7 +1009,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
       >
         {/* Icon row */}
         <div className={styles.cartBadgeTop}>
-          <img src="https://ik.imagekit.io/nepgaxllc/Untitleddasdasdasdasss-removebg-preview.png?updatedAt=1775737452452" alt="Cart" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddasdasdasdasss-removebg-preview.png" alt="Cart" onError={imgError('generic')} style={{ width: 28, height: 28, objectFit: 'contain' }} />
           {cartCount > 0 && <span className={styles.cartCount}>{cartCount}</span>}
         </div>
 
@@ -1206,7 +1207,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                 {/* Delivery card */}
                 {(deliveryFare ?? 0) > 0 && (
                   <div className={styles.cartPageItem} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src="https://ik.imagekit.io/nepgaxllc/Sleek%20green%20and%20black%20scooter%20setup.png?updatedAt=1775634845237" alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+                    <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/sleek-green-and-black-scooter-setup.png" alt="" onError={imgError('generic')} style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'block' }}>Delivery</span>
                       <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>~{formatETA(eta)} · Payment To Driver</span>
@@ -1259,7 +1260,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ padding: '14px', borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(141,198,63,0.2)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                      <img src="https://ik.imagekit.io/nepgaxllc/mmma-removebg-preview.png?updatedAt=1777002391090" alt="COD" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+                      <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/mmma-removebg-preview.png?updatedAt=1777002391090" alt="COD" onError={imgError('payment')} style={{ width: 48, height: 48, objectFit: 'contain' }} />
                       <div>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', display: 'block' }}>Cash on Delivery</span>
                         <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Pay driver when food arrives</span>
@@ -1297,7 +1298,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                   if (customerWa.trim().length >= 10) handleOrder()
                 }}
               >
-                <img src="https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png" alt="" />
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png" alt="" onError={imgError('generic')} />
                 <span>{customerWa.trim().length >= 10 ? 'Confirm Order' : 'Enter WhatsApp Number'}</span>
               </button>
             </div>
@@ -1564,6 +1565,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
             src={!orderReceived ? currentOrderImages.processing : currentOrderImages.received}
             alt={!orderReceived ? 'Processing' : 'Order Received'}
             key={`order-${orderReceived ? 'received' : 'processing'}-${vendorType}-${isNight ? 'night' : 'day'}`}
+            onError={imgError('banner')}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', animation: 'fadeIn 0.8s ease' }}
           />
           {/* Overlay */}
@@ -1605,7 +1607,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
 
       {driverOnWay && !driverOnWay.minimized && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9850, background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2027,%202026,%2006_12_16%20AM.png?updatedAt=1777245159090" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
+          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-27-2026-06_12_16-am.png?updatedAt=1777245159090" alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
           {/* Minimize button — top left */}
           <button onClick={() => setDriverOnWay(prev => ({ ...prev, minimized: true }))} style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 16, zIndex: 10, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1626,7 +1628,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                 src={currentStageImages[Math.min(driverImgIdx, currentStageImages.length - 1)]?.img ?? FALLBACK_IMG}
                 alt=""
                 key={`${driverPhase}-${driverImgIdx}`}
-                onError={e => { e.currentTarget.src = FALLBACK_IMG }}
+                onError={imgError('banner')}
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', animation: 'fadeIn 0.8s ease' }}
               />
 
@@ -1670,15 +1672,15 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                         <img
                           src={currentStageImages[Math.min(driverImgIdx, currentStageImages.length - 1)]?.img ?? FALLBACK_IMG}
                           alt=""
-                          onError={e => { e.currentTarget.src = FALLBACK_IMG }}
+                          onError={imgError('banner')}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
                         /* Map thumbnail preview */
                         <img
-                          src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_39_04%20AM.png"
+                          src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_39_04-am.png"
                           alt=""
-                          onError={e => { e.currentTarget.src = FALLBACK_IMG }}
+                          onError={imgError('banner')}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       )}
@@ -1718,7 +1720,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                 {/* Animated glow ring behind profile */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '2px solid #8DC63F', animation: 'ping 2s ease-in-out infinite', opacity: 0.4 }} />
-                  <img src={driverOnWay?.driverPhoto ?? ''} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2.5px solid #8DC63F', position: 'relative', zIndex: 1 }} />
+                  <img src={driverOnWay?.driverPhoto ?? ''} alt="" onError={imgError('logo')} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2.5px solid #8DC63F', position: 'relative', zIndex: 1 }} />
                   <div style={{ position: 'absolute', bottom: -2, right: -2, width: 16, height: 16, borderRadius: '50%', background: '#8DC63F', border: '2px solid #0a0a0a', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </div>
@@ -1921,47 +1923,47 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
             {[
               { type: 'item', id: null, label: 'All', emoji: '🍛' },
               { type: 'header', label: '🇮🇩 Indonesian' },
-              { type: 'item', id: 'rice', label: 'Rice', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvv-removebg-preview.png' },
-              { type: 'item', id: 'noodles', label: 'Noodles', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvd-removebg-preview.png' },
-              { type: 'item', id: 'chicken', label: 'Chicken', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddd-removebg-preview.png' },
-              { type: 'item', id: 'satay', label: 'Satay', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasda-removebg-preview.png' },
-              { type: 'item', id: 'grilled', label: 'Snacks', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdasss-removebg-preview.png' },
-              { type: 'item', id: 'seafood', label: 'Seafood', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassss-removebg-preview.png' },
-              { type: 'item', id: 'padang', label: 'Padang', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfss-removebg-preview.png' },
-              { type: 'item', id: 'gudeg', label: 'Gudeg', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfssd-removebg-preview.png' },
-              { type: 'item', id: 'rendang', label: 'Rendang', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfssdss-removebg-preview.png' },
-              { type: 'item', id: 'soup', label: 'Soup', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdas-removebg-preview.png' },
-              { type: 'item', id: 'tofu_tempe', label: 'Tempe', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccddd-removebg-preview.png' },
-              { type: 'item', id: 'siomay', label: 'Siomay', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccddddd-removebg-preview.png' },
-              { type: 'item', id: 'ketoprak', label: 'Ketoprak', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfssdssssddffdddd-removebg-preview.png' },
-              { type: 'item', id: 'martabak', label: 'Martabak', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddf-removebg-preview.png' },
-              { type: 'item', id: 'duck', label: 'Duck', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfssdssss-removebg-preview.png' },
-              { type: 'item', id: 'fish', label: 'Fish', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssddddfssdssssdd-removebg-preview.png' },
-              { type: 'item', id: 'porridge', label: 'Porridge', img: 'https://ik.imagekit.io/nepgaxllc/Untitledasdasdaaavvvdddddasdassssdd-removebg-preview.png' },
+              { type: 'item', id: 'rice', label: 'Rice', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvv-removebg-preview.png' },
+              { type: 'item', id: 'noodles', label: 'Noodles', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvd-removebg-preview.png' },
+              { type: 'item', id: 'chicken', label: 'Chicken', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddd-removebg-preview.png' },
+              { type: 'item', id: 'satay', label: 'Satay', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasda-removebg-preview.png' },
+              { type: 'item', id: 'grilled', label: 'Snacks', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdasss-removebg-preview.png' },
+              { type: 'item', id: 'seafood', label: 'Seafood', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassss-removebg-preview.png' },
+              { type: 'item', id: 'padang', label: 'Padang', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfss-removebg-preview.png' },
+              { type: 'item', id: 'gudeg', label: 'Gudeg', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfssd-removebg-preview.png' },
+              { type: 'item', id: 'rendang', label: 'Rendang', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfssdss-removebg-preview.png' },
+              { type: 'item', id: 'soup', label: 'Soup', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdas-removebg-preview.png' },
+              { type: 'item', id: 'tofu_tempe', label: 'Tempe', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxcccddd-removebg-preview.png' },
+              { type: 'item', id: 'siomay', label: 'Siomay', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxcccddddd-removebg-preview.png' },
+              { type: 'item', id: 'ketoprak', label: 'Ketoprak', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfssdssssddffdddd-removebg-preview.png' },
+              { type: 'item', id: 'martabak', label: 'Martabak', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddf-removebg-preview.png' },
+              { type: 'item', id: 'duck', label: 'Duck', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfssdssss-removebg-preview.png' },
+              { type: 'item', id: 'fish', label: 'Fish', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssddddfssdssssdd-removebg-preview.png' },
+              { type: 'item', id: 'porridge', label: 'Porridge', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledasdasdaaavvvdddddasdassssdd-removebg-preview.png' },
               { type: 'header', label: '🍔 Western' },
-              { type: 'item', id: 'burgers', label: 'Burgers', img: 'https://ik.imagekit.io/nepgaxllc/od-removebg-preview.png' },
-              { type: 'item', id: 'steak', label: 'Steak', img: 'https://ik.imagekit.io/nepgaxllc/odf-removebg-preview.png' },
-              { type: 'item', id: 'pizza', label: 'Pizza', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsada-removebg-preview.png' },
-              { type: 'item', id: 'pasta', label: 'Pasta', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadadd-removebg-preview.png' },
-              { type: 'item', id: 'breakfast', label: 'Breakfast', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaa-removebg-preview.png' },
-              { type: 'item', id: 'healthy', label: 'Healthy', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddd-removebg-preview.png' },
-              { type: 'item', id: 'vegetarian', label: 'Vegetarian', img: 'https://ik.imagekit.io/nepgaxllc/odfssddasds-removebg-preview.png' },
+              { type: 'item', id: 'burgers', label: 'Burgers', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/od-removebg-preview.png' },
+              { type: 'item', id: 'steak', label: 'Steak', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odf-removebg-preview.png' },
+              { type: 'item', id: 'pizza', label: 'Pizza', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsada-removebg-preview.png' },
+              { type: 'item', id: 'pasta', label: 'Pasta', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadadd-removebg-preview.png' },
+              { type: 'item', id: 'breakfast', label: 'Breakfast', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaa-removebg-preview.png' },
+              { type: 'item', id: 'healthy', label: 'Healthy', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddd-removebg-preview.png' },
+              { type: 'item', id: 'vegetarian', label: 'Vegetarian', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odfssddasds-removebg-preview.png' },
               { type: 'header', label: '🇨🇳 Chinese' },
-              { type: 'item', id: 'chinese', label: 'Chinese', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxccc-removebg-preview.png' },
+              { type: 'item', id: 'chinese', label: 'Chinese', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxccc-removebg-preview.png' },
               { type: 'header', label: '🇯🇵 Japanese' },
-              { type: 'item', id: 'japanese', label: 'Japanese', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddss-removebg-preview.png' },
+              { type: 'item', id: 'japanese', label: 'Japanese', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddss-removebg-preview.png' },
               { type: 'header', label: '🇰🇷 Korean' },
-              { type: 'item', id: 'korean', label: 'Korean', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxc-removebg-preview.png' },
+              { type: 'item', id: 'korean', label: 'Korean', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxc-removebg-preview.png' },
               { type: 'header', label: '🇮🇳 Indian' },
-              { type: 'item', id: 'indian', label: 'Indian', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccdddddss-removebg-preview.png' },
+              { type: 'item', id: 'indian', label: 'Indian', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxcccdddddss-removebg-preview.png' },
               { type: 'header', label: '🥤 Drinks & Desserts' },
-              { type: 'item', id: 'drinks', label: 'Iced Drinks', img: 'https://ik.imagekit.io/nepgaxllc/odfs-removebg-preview.png' },
-              { type: 'item', id: 'traditional_drinks', label: 'Traditional', img: 'https://ik.imagekit.io/nepgaxllc/odfss-removebg-preview.png' },
-              { type: 'item', id: 'coffee', label: 'Tea & Coffee', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccdddddsssda-removebg-preview.png' },
-              { type: 'item', id: 'juice', label: 'Juice', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaaddddsadaddsscxcccdddddsssdaasda-removebg-preview.png' },
-              { type: 'item', id: 'cakes', label: 'Cakes', img: 'https://ik.imagekit.io/nepgaxllc/odfssddasd-removebg-preview.png' },
-              { type: 'item', id: 'desserts', label: 'Desserts', img: 'https://ik.imagekit.io/nepgaxllc/odfssd-removebg-preview.png' },
-              { type: 'item', id: 'snacks', label: 'Snacks', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaaad-removebg-preview.png' },
+              { type: 'item', id: 'drinks', label: 'Iced Drinks', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odfs-removebg-preview.png' },
+              { type: 'item', id: 'traditional_drinks', label: 'Traditional', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odfss-removebg-preview.png' },
+              { type: 'item', id: 'coffee', label: 'Tea & Coffee', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxcccdddddsssda-removebg-preview.png' },
+              { type: 'item', id: 'juice', label: 'Juice', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaaddddsadaddsscxcccdddddsssdaasda-removebg-preview.png' },
+              { type: 'item', id: 'cakes', label: 'Cakes', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odfssddasd-removebg-preview.png' },
+              { type: 'item', id: 'desserts', label: 'Desserts', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/odfssd-removebg-preview.png' },
+              { type: 'item', id: 'snacks', label: 'Snacks', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdaaaad-removebg-preview.png' },
             ].map(c => c.type === 'header' ? (
               <div key={c.label} style={{ padding: '10px 8px 4px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <span style={{ fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.5)' }}>{c.label}</span>
@@ -1973,7 +1975,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
                 border: activeCategory === c.label ? '1px solid rgba(141,198,63,0.3)' : '1px solid transparent',
                 cursor: 'pointer', width: '100%', textAlign: 'left',
               }}>
-                {c.img ? <img src={c.img} alt="" style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} /> : <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>{c.emoji}</span>}
+                {c.img ? <img src={c.img} alt="" onError={imgError('food')} style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }} /> : <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>{c.emoji}</span>}
                 <span style={{ fontSize: 13, fontWeight: 800, color: activeCategory === c.label ? '#8DC63F' : '#fff' }}>{c.label}</span>
               </button>
             ))}

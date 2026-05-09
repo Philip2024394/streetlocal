@@ -11,21 +11,21 @@ import VideoUpload from '@/components/property/VideoUpload'
    PROPERTY DIRECTORY — showroom carousel data
    ══════════════════════════════════════════════════════════════════════════════ */
 const PROPERTY_DIRECTORY = [
-  { id: 'villa_sunset_bali',      name: 'Villa Sunset Bali',         type: 'Villa',     bedrooms: 3, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2006_57_42%20PM.png', listings: 12, priceFrom: 500000, priceTo: 1500000 },
-  { id: 'kos_exclusive_jakarta',  name: 'Kos Exclusive Jakarta',     type: 'Kos',       bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_07_33%20PM.png', listings: 28, priceFrom: 1500000, priceTo: 3500000 },
-  { id: 'studio_apartment_bandung', name: 'Studio Apartment Bandung', type: 'Studio',    bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2010_39_50%20PM.png', listings: 18, priceFrom: 300000, priceTo: 800000 },
-  { id: 'rice_field_villa_ubud',  name: 'Rice Field Villa Ubud',     type: 'Villa',     bedrooms: 2, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2011_13_56%20PM.png?updatedAt=1776528855040', listings: 8, priceFrom: 600000, priceTo: 2000000 },
-  { id: 'beachfront_bungalow',    name: 'Beachfront Bungalow',       type: 'Bungalow',  bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2006_57_42%20PM.png', listings: 6, priceFrom: 400000, priceTo: 1200000 },
-  { id: 'modern_loft_surabaya',   name: 'Modern Loft Surabaya',      type: 'Apartment', bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_07_33%20PM.png', listings: 10, priceFrom: 350000, priceTo: 900000 },
-  { id: 'family_house_yogya',     name: 'Family House Yogya',        type: 'House',     bedrooms: 4, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2010_39_50%20PM.png', listings: 5, priceFrom: 400000, priceTo: 1000000 },
-  { id: 'penthouse_suite',        name: 'Penthouse Suite',           type: 'Penthouse', bedrooms: 3, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2011_13_56%20PM.png?updatedAt=1776528855040', listings: 2, priceFrom: 2000000, priceTo: 5000000 },
-  { id: 'traditional_joglo',      name: 'Traditional Joglo',         type: 'House',     bedrooms: 2, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2006_57_42%20PM.png', listings: 4, priceFrom: 500000, priceTo: 1500000 },
-  { id: 'container_house',        name: 'Container House',           type: 'House',     bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_07_33%20PM.png', listings: 3, priceFrom: 250000, priceTo: 700000 },
-  { id: 'tiny_house',             name: 'Tiny House',                type: 'House',     bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2010_39_50%20PM.png', listings: 7, priceFrom: 200000, priceTo: 500000 },
-  { id: 'glamping_tent',          name: 'Glamping Tent',             type: 'Glamping',  bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2011_13_56%20PM.png?updatedAt=1776528855040', listings: 9, priceFrom: 300000, priceTo: 800000 },
-  { id: 'treehouse_villa',        name: 'Treehouse Villa',           type: 'Villa',     bedrooms: 1, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2006_57_42%20PM.png', listings: 3, priceFrom: 500000, priceTo: 1500000 },
-  { id: 'cliff_villa_uluwatu',    name: 'Cliff Villa Uluwatu',       type: 'Villa',     bedrooms: 4, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_07_33%20PM.png', listings: 2, priceFrom: 1500000, priceTo: 5000000 },
-  { id: 'pool_villa_seminyak',    name: 'Pool Villa Seminyak',       type: 'Villa',     bedrooms: 3, image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2010_39_50%20PM.png', listings: 6, priceFrom: 800000, priceTo: 2500000 },
+  { id: 'villa_sunset_bali',      name: 'Villa Sunset Bali',         type: 'Villa',     bedrooms: 3, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-06_57_42-pm.png', listings: 12, priceFrom: 500000, priceTo: 1500000 },
+  { id: 'kos_exclusive_jakarta',  name: 'Kos Exclusive Jakarta',     type: 'Kos',       bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-07_07_33-pm.png', listings: 28, priceFrom: 1500000, priceTo: 3500000 },
+  { id: 'studio_apartment_bandung', name: 'Studio Apartment Bandung', type: 'Studio',    bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-10_39_50-pm.png', listings: 18, priceFrom: 300000, priceTo: 800000 },
+  { id: 'rice_field_villa_ubud',  name: 'Rice Field Villa Ubud',     type: 'Villa',     bedrooms: 2, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-11_13_56-pm.png?updatedAt=1776528855040', listings: 8, priceFrom: 600000, priceTo: 2000000 },
+  { id: 'beachfront_bungalow',    name: 'Beachfront Bungalow',       type: 'Bungalow',  bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-06_57_42-pm.png', listings: 6, priceFrom: 400000, priceTo: 1200000 },
+  { id: 'modern_loft_surabaya',   name: 'Modern Loft Surabaya',      type: 'Apartment', bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-07_07_33-pm.png', listings: 10, priceFrom: 350000, priceTo: 900000 },
+  { id: 'family_house_yogya',     name: 'Family House Yogya',        type: 'House',     bedrooms: 4, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-10_39_50-pm.png', listings: 5, priceFrom: 400000, priceTo: 1000000 },
+  { id: 'penthouse_suite',        name: 'Penthouse Suite',           type: 'Penthouse', bedrooms: 3, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-11_13_56-pm.png?updatedAt=1776528855040', listings: 2, priceFrom: 2000000, priceTo: 5000000 },
+  { id: 'traditional_joglo',      name: 'Traditional Joglo',         type: 'House',     bedrooms: 2, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-06_57_42-pm.png', listings: 4, priceFrom: 500000, priceTo: 1500000 },
+  { id: 'container_house',        name: 'Container House',           type: 'House',     bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-07_07_33-pm.png', listings: 3, priceFrom: 250000, priceTo: 700000 },
+  { id: 'tiny_house',             name: 'Tiny House',                type: 'House',     bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-10_39_50-pm.png', listings: 7, priceFrom: 200000, priceTo: 500000 },
+  { id: 'glamping_tent',          name: 'Glamping Tent',             type: 'Glamping',  bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-11_13_56-pm.png?updatedAt=1776528855040', listings: 9, priceFrom: 300000, priceTo: 800000 },
+  { id: 'treehouse_villa',        name: 'Treehouse Villa',           type: 'Villa',     bedrooms: 1, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-06_57_42-pm.png', listings: 3, priceFrom: 500000, priceTo: 1500000 },
+  { id: 'cliff_villa_uluwatu',    name: 'Cliff Villa Uluwatu',       type: 'Villa',     bedrooms: 4, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-07_07_33-pm.png', listings: 2, priceFrom: 1500000, priceTo: 5000000 },
+  { id: 'pool_villa_seminyak',    name: 'Pool Villa Seminyak',       type: 'Villa',     bedrooms: 3, image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-10_39_50-pm.png', listings: 6, priceFrom: 800000, priceTo: 2500000 },
 ]
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -427,9 +427,9 @@ export default function PropertyListingForm({ open, onClose, onSubmit, editListi
   const [previewListingIdx, setPreviewListingIdx] = useState(null)
 
   const DEMO_LISTINGS = [
-    { ref: 'PROP-AB3K7821', category: 'Property', title: 'Villa Sunset 3BR - Seminyak', image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2006_57_42%20PM.png', price_day: '850.000', price_week: '5.000.000', price_month: '15.000.000', status: 'live', created_at: '2026-04-15T10:30:00Z', extra_fields: { propType: 'Villa', bedrooms: '3', bathrooms: '2', amenities: ['Pool', 'AC', 'WiFi', 'Kitchen'] } },
-    { ref: 'PROP-CD5M2943', category: 'Property', title: 'Kos Exclusive Jakarta Selatan', image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2007_07_33%20PM.png', price_day: '150.000', price_month: '3.500.000', status: 'live', created_at: '2026-04-12T08:15:00Z', extra_fields: { propType: 'Kos', bedrooms: '1', bathrooms: '1', amenities: ['AC', 'WiFi', 'Laundry'] } },
-    { ref: 'PROP-EF8N4567', category: 'Property', title: 'Studio Apartment Bandung', image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2010_39_50%20PM.png', price_day: '300.000', price_month: '5.000.000', status: 'offline', created_at: '2026-04-10T14:20:00Z', extra_fields: { propType: 'Studio', bedrooms: '1', bathrooms: '1', amenities: ['AC', 'WiFi', 'Parking'] } },
+    { ref: 'PROP-AB3K7821', category: 'Property', title: 'Villa Sunset 3BR - Seminyak', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-06_57_42-pm.png', price_day: '850.000', price_week: '5.000.000', price_month: '15.000.000', status: 'live', created_at: '2026-04-15T10:30:00Z', extra_fields: { propType: 'Villa', bedrooms: '3', bathrooms: '2', amenities: ['Pool', 'AC', 'WiFi', 'Kitchen'] } },
+    { ref: 'PROP-CD5M2943', category: 'Property', title: 'Kos Exclusive Jakarta Selatan', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-07_07_33-pm.png', price_day: '150.000', price_month: '3.500.000', status: 'live', created_at: '2026-04-12T08:15:00Z', extra_fields: { propType: 'Kos', bedrooms: '1', bathrooms: '1', amenities: ['AC', 'WiFi', 'Laundry'] } },
+    { ref: 'PROP-EF8N4567', category: 'Property', title: 'Studio Apartment Bandung', image: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-10_39_50-pm.png', price_day: '300.000', price_month: '5.000.000', status: 'offline', created_at: '2026-04-10T14:20:00Z', extra_fields: { propType: 'Studio', bedrooms: '1', bathrooms: '1', amenities: ['AC', 'WiFi', 'Parking'] } },
   ]
   const [myListings, setMyListings] = useState(() => {
     try {
@@ -542,7 +542,7 @@ export default function PropertyListingForm({ open, onClose, onSubmit, editListi
   }
 
   return createPortal(
-    <div className={styles.screen} style={{ backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2002_15_43%20AM.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className={styles.screen} style={{ backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-02_15_43-am.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
 
       <FormHeader step={step} setStep={setStep} onClose={onClose} setShowDrawer={setShowDrawer} />
 
@@ -1759,7 +1759,7 @@ export default function PropertyListingForm({ open, onClose, onSubmit, editListi
 
       {/* My Listings Popup */}
       {showMyListings && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2011_13_56%20PM.png)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-11_13_56-pm.png)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
           <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1836,7 +1836,7 @@ export default function PropertyListingForm({ open, onClose, onSubmit, editListi
           {previewListingIdx !== null && myListings[previewListingIdx] && (() => {
             const pl = myListings[previewListingIdx]
             return (
-              <div style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundImage: 'url(https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2018,%202026,%2011_13_56%20PM.png)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setPreviewListingIdx(null)}>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundImage: 'url(https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-18-2026-11_13_56-pm.png)', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setPreviewListingIdx(null)}>
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', pointerEvents: 'none' }} />
                 <div onClick={e => e.stopPropagation()} style={{
                   width: '100%', maxWidth: 380,

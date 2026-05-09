@@ -3,6 +3,7 @@
  * Indonesian wood-themed design. Shows before the menu.
  */
 import { useState } from 'react'
+import imgError from '../../imgFallback'
 
 function fmtRp(n) { return 'Rp ' + (n ?? 0).toLocaleString('id-ID').replace(/,/g, '.') }
 
@@ -36,7 +37,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
       {/* ═══ FULL SCREEN — single page, no scroll ═══ */}
       <section style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 24px 40px' }}>
         {/* Background */}
-        <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2011_54_05%20AM.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+        <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-3-2026-11_54_05-am.png" alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(26,14,4,0.95) 0%, rgba(26,14,4,0.6) 40%, rgba(26,14,4,0.3) 70%, rgba(26,14,4,0.1) 100%)', zIndex: 1 }} />
 
         {/* Back button */}
@@ -112,7 +113,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
       {/* ═══ VISIT US PAGE ═══ */}
       {visitOpen && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: '#1a0e04', overflowY: 'auto' }}>
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png" alt="" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-3-2026-12_07_40-pm.png" alt="" onError={imgError('banner')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
           {/* Header */}
           <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(210,180,140,0.1)', position: 'relative', zIndex: 1 }}>
             <button onClick={() => setVisitOpen(false)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(210,180,140,0.1)', border: '1px solid rgba(210,180,140,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -334,7 +335,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
             animation: 'slideInMenuLeft 0.25s ease', overflow: 'hidden',
           }}>
             {/* Background image */}
-            <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-3-2026-12_07_40-pm.png" alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
             <style>{`
               @keyframes slideInMenuLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
               @keyframes menuEdgeGlow { 0% { top: -20%; } 100% { top: 120%; } }
@@ -377,7 +378,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
                       borderRadius: 14, cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center',
                     }}>
                       {item.photo_url && (
-                        <img src={item.photo_url} alt="" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                        <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#f5e6d0', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
@@ -411,7 +412,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
                   {/* Image */}
                   {previewDish.photo_url && (
                     <div style={{ height: 180, position: 'relative' }}>
-                      <img src={previewDish.photo_url} alt={previewDish.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={previewDish.photo_url} alt={previewDish.name} onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 50%, rgba(26,14,4,0.9))' }} />
                     </div>
                   )}
@@ -437,7 +438,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
       {dealsOpen && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 20 }}>
           {/* Background image + dark overlay */}
-          <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%203,%202026,%2012_07_40%20PM.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-3-2026-12_07_40-pm.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
           <div onClick={() => setDealsOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
 
           {/* Close button */}
@@ -464,7 +465,7 @@ export default function RestaurantLandingPage({ restaurant, onViewMenu, onSelect
                     <div style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(26,14,4,0.95)', border: '1px solid rgba(210,180,140,0.15)', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}>
                       {/* Image */}
                       <div style={{ height: 200, position: 'relative' }}>
-                        <img src={d.photo_url} alt={d.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={d.photo_url} alt={d.name} onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 50%, rgba(26,14,4,0.9))' }} />
                         <span style={{ position: 'absolute', top: 12, left: 12, padding: '6px 14px', borderRadius: 10, background: '#FACC15', fontSize: 16, fontWeight: 900, color: '#000' }}>-{d.discount}%</span>
                         {/* Dots indicator */}

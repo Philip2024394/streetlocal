@@ -3,6 +3,7 @@
  * Today's deal is live with countdown. Others show as upcoming.
  */
 import { useState, useEffect } from 'react'
+import imgError from '../../imgFallback'
 import { DAILY_DEALS, getTodayDeal, getMsUntilMidnightWIB } from '@/constants/dailyDeals'
 
 function pad(n) { return String(n).padStart(2, '0') }
@@ -47,7 +48,7 @@ export default function DailyDealCard({ onTap }) {
   return (
     <div onClick={onTap} style={{ position: 'absolute', inset: 0, cursor: 'pointer', background: '#000' }}>
       {/* Background — full width + height */}
-      <img src={deal.img} alt={deal.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+      <img src={deal.img} alt={deal.name} onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
 
       {/* Center: glowing discount + countdown */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -112,6 +113,7 @@ export function DailyDealStrip({ onSelectDeal }) {
             <img
               src={deal.img}
               alt={deal.name}
+              onError={imgError('food')}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
             />
             {/* Dark overlay */}

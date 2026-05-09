@@ -1,3 +1,4 @@
+import imgError from '../../imgFallback'
 import styles from './ChatWindow.module.css'
 
 export default function ChatHeader({
@@ -10,7 +11,7 @@ export default function ChatHeader({
       <div className={styles.headerUser}>
         <div className={styles.headerAvatar}>
           {conv.photoURL
-            ? <img src={conv.photoURL} alt={conv.displayName} className={styles.headerAvatarImg} />
+            ? <img src={conv.photoURL} alt={conv.displayName} className={styles.headerAvatarImg} onError={imgError('logo')} />
             : <span className={styles.headerAvatarEmoji}>{conv.emoji}</span>
           }
           <span className={`${styles.presenceDot} ${isOnline ? styles.presenceDotOnline : styles.presenceDotOffline}`} />

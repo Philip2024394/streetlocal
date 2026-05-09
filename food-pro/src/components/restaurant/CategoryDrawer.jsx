@@ -1,3 +1,4 @@
+import imgError from '../../imgFallback'
 import styles from './RestaurantMenuSheet.module.css'
 import { FOOD_CATEGORIES_FULL } from '@/constants/foodCategories'
 
@@ -77,7 +78,7 @@ export default function CategoryDrawer({
               style={{ padding: 0 }}
             >
               {img && (
-                <img src={img} alt={cat} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 20 }} />
+                <img src={img} alt={cat} onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 20 }} />
               )}
               {/* Dark gradient overlay */}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.6) 100%)', borderRadius: 'inherit' }} />

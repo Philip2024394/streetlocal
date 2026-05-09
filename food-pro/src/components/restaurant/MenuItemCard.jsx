@@ -1,3 +1,4 @@
+import imgError from '../../imgFallback'
 import styles from './RestaurantMenuSheet.module.css'
 import { fmtRp, CATEGORY_GRADIENTS } from './menuSheetConstants'
 
@@ -19,7 +20,7 @@ export default function MenuItemCard({ item, qty, onAdd, onRemove, onCustomize, 
           position: 'absolute', top: 8, right: 8, zIndex: 3,
           width: 60, height: 60,
         }}>
-          <img src={badge.image} alt={badge.label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
+          <img src={badge.image} alt={badge.label} onError={imgError('generic')} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
         </div>
       )}
 

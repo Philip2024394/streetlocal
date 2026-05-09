@@ -363,7 +363,7 @@ export default function VendorOnboarding({ open, onClose, onComplete, userId }) 
 
           {/* ── STEP 1: Restaurant info ──────────────────────────────────── */}
           <div className={styles.step}>
-            <img className={styles.stepHero} src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20Apr%2022,%202026,%2006_35_28%20AM.png?updatedAt=1776814549960" alt="" />
+            <img className={styles.stepHero} src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_35_28-am.png" alt="" />
             <h2 className={styles.stepTitle}>Daftarkan Bisnis Anda</h2>
             <p className={styles.stepSubtitle}>Register your food business on INDOO Street</p>
 

@@ -62,7 +62,7 @@ export default function NewProjectDetail({ open, onClose, project }) {
                 <img src={images[activeImg] || images[0]} alt="" style={{ width: '100%', height: 340, objectFit: 'cover', display: 'block' }} />
               )}
               <div style={{ position: 'absolute', top: 12, right: 12, padding: '4px 12px', borderRadius: 8, background: `${statusInfo.color}20`, border: `1.5px solid ${statusInfo.color}50`, fontSize: 11, fontWeight: 800, color: statusInfo.color }}>{statusInfo.label}</div>
-              {project.verified && <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2006_18_19%20AM.png?updatedAt=1777677521038" alt="Verified" style={{ position: 'absolute', top: 12, left: 56, width: 28, height: 28, objectFit: 'contain' }} />}
+              {project.verified && <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-06_18_19-am.png" alt="Verified" style={{ position: 'absolute', top: 12, left: 56, width: 28, height: 28, objectFit: 'contain' }} />}
             </div>
 
             {/* Thumbnails + video toggle */}
@@ -121,7 +121,7 @@ export default function NewProjectDetail({ open, onClose, project }) {
             <div style={{ display: 'flex', gap: 8 }}>
               {project.contact_whatsapp && (
                 <a href={`https://wa.me/${project.contact_whatsapp.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-                  <img src="https://ik.imagekit.io/nepgaxllc/dfggdfgees-removebg-preview.png?updatedAt=1777539531358" alt="WhatsApp" style={{ height: 40, objectFit: 'contain' }} />
+                  <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/dfggdfgees-removebg-preview.png" alt="WhatsApp" style={{ height: 40, objectFit: 'contain' }} />
                 </a>
               )}
               {project.instagram && (
@@ -224,7 +224,7 @@ export default function NewProjectDetail({ open, onClose, project }) {
             )}
             <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{project.developer_name}</div>
             {project.website && <div style={{ fontSize: 11, color: '#60A5FA' }}>{project.website}</div>}
-            {project.verified && <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 6, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', fontSize: 10, fontWeight: 800, color: '#60A5FA', marginTop: 6 }}><img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%202,%202026,%2006_18_19%20AM.png?updatedAt=1777677521038" alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} /> Verified</div>}
+            {project.verified && <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 6, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', fontSize: 10, fontWeight: 800, color: '#60A5FA', marginTop: 6 }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-2-2026-06_18_19-am.png" alt="" style={{ width: 14, height: 14, objectFit: 'contain' }} /> Verified</div>}
           </div>
 
           {/* Book Site Visit */}
