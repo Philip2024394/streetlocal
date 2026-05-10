@@ -295,7 +295,9 @@ const THEME_PRESETS = [
   // Clothing & Fashion
   { id: 'clothing', accent: '#4A90D9', img: themeImg('Clothing store display with folded shirts jeans and sneakers on dark wooden shelves warm lighting'), label: '#1 Clothing', category: 'Clothing', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH'], foodTypes: ['Clothing', 'Fashion'] },
   { id: 'shoes', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-shoes.png', label: '#2 Shoes', category: 'Shoes', countries: ['ID', 'MY', 'US', 'GB', 'AU'], foodTypes: ['Shoes', 'Fashion'] },
-  { id: 'handbags', isNew: true, accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png', label: '#3 Handbags', category: 'Handbags', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'FR'], foodTypes: ['Handbags', 'Fashion', 'Accessories'] },
+  { id: 'raincoats', isNew: true, accent: '#2C5F8A', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-raincoats.png', label: '#3 Raincoats', category: 'Raincoats', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'DE', 'NL'], foodTypes: ['Raincoats', 'Clothing', 'Outdoor', 'Fashion'] },
+  { id: 'running', isNew: true, accent: '#1B2A4A', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-running-footwear.png', label: '#4 Running Footwear', category: 'Running Footwear', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'DE', 'JP', 'KR', 'TH'], foodTypes: ['Running Footwear', 'Shoes', 'Sports', 'Fashion'] },
+  { id: 'handbags', isNew: true, accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png', label: '#4 Handbags', category: 'Handbags', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'FR'], foodTypes: ['Handbags', 'Fashion', 'Accessories'] },
   { id: 'hijab', accent: '#9B59B6', img: themeImg('Beautiful hijab scarves and accessories arranged on dark velvet display elegant'), label: '#4 Hijab & Scarves', category: 'Hijab & Scarves', countries: ['ID', 'MY', 'SG', 'AE', 'SA', 'EG'], foodTypes: ['Hijab & Scarves', 'Fashion'] },
   { id: 'batik', isNew: true, accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-batik.png', label: '#4 Batik', category: 'Batik', countries: ['ID', 'MY'], foodTypes: ['Batik', 'Fashion', 'Traditional'] },
 
@@ -311,7 +313,7 @@ const THEME_PRESETS = [
 
   // Home & Living
   { id: 'homedecor', accent: '#D4A373', img: themeImg('Home decor items candles vases cushions on wooden shelf cozy dark interior'), label: '#10 Home Decor', category: 'Home Decor', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG'], foodTypes: ['Home Decor', 'Home & Living'] },
-  { id: 'furniture', isNew: true, accent: '#795548', img: themeImg('Modern minimalist furniture chair and side table in dark room with accent lighting'), label: '#11 Furniture', category: 'Furniture', countries: ['ID', 'MY', 'US', 'GB', 'AU'], foodTypes: ['Furniture', 'Home & Living'] },
+  { id: 'furniture', isNew: true, accent: '#8FB4A3', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-home-furniture.png', label: '#11 Home Furniture', category: 'Home Furniture', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'DE', 'FR', 'NL', 'TH'], foodTypes: ['Furniture', 'Home & Living', 'Home Decor'] },
   { id: 'kitchenware', accent: '#FF6B35', img: themeImg('Kitchen utensils pots pans wooden cutting boards arranged on dark counter top'), label: '#12 Kitchenware', category: 'Kitchenware', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'JP'], foodTypes: ['Kitchenware', 'Home & Living'] },
 
   // Packaging
@@ -327,6 +329,7 @@ const THEME_PRESETS = [
 
   // Baby & Kids
   { id: 'baby', isNew: true, accent: '#FF69B4', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-baby-clothes.png', label: '#17 Baby Clothes', category: 'Baby Clothes', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN', 'PH', 'JP', 'KR'], foodTypes: ['Baby Clothes', 'Baby & Kids', 'Fashion'] },
+  { id: 'toys', isNew: true, accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-childrens-toys.png', label: '#18 Children\'s Toys', category: 'Children\'s Toys', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'PH', 'DE', 'FR'], foodTypes: ['Children\'s Toys', 'Baby & Kids', 'Toys'] },
 
   // School & Stationery
   { id: 'school', accent: '#4A90D9', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-school-accessories.png', label: '#18 School Accessories', category: 'School Accessories', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'PH'], foodTypes: ['School Accessories', 'Books & Stationery'] },
@@ -335,7 +338,8 @@ const THEME_PRESETS = [
   // Automotive
   { id: 'motortyres', isNew: true, accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-motorbike-tyres.png', label: '#20 Motorbike Tyres', category: 'Motorbike Tyres', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'TH', 'VN', 'PH', 'IN'], foodTypes: ['Motorbike Tyres', 'Automotive'] },
   { id: 'seatcovers', isNew: true, accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-seat-covers.png', label: '#21 Seat Covers', category: 'Seat Covers', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'TH', 'VN', 'PH', 'IN', 'DE', 'JP'], foodTypes: ['Seat Covers', 'Automotive'] },
-  { id: 'automotive', isNew: true, accent: '#dc2626', img: themeImg('Car accessories parts tools and detailing products on dark garage workbench'), label: '#22 Automotive', category: 'Automotive', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'DE', 'JP'], foodTypes: ['Automotive'] },
+  { id: 'bicycle', isNew: true, accent: '#2E86AB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-bicycle.png', label: '#22 Bicycle', category: 'Bicycle', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'DE', 'NL', 'FR'], foodTypes: ['Bicycle', 'Sports', 'Outdoor', 'Automotive'] },
+  { id: 'automotive', isNew: true, accent: '#dc2626', img: themeImg('Car accessories parts tools and detailing products on dark garage workbench'), label: '#23 Automotive', category: 'Automotive', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'DE', 'JP'], foodTypes: ['Automotive'] },
 
   // Pet Supplies
   { id: 'pets', isNew: true, accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-pet-supplies.png', label: '#23 Pet Supplies', category: 'Pet Supplies', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG'], foodTypes: ['Pet Supplies'] },

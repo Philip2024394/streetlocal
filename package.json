@@ -11,5 +11,8 @@
     "build:food-pro": "cd food-pro && npm run build",
     "build": "npm run build:landing && npm run build:food-basic && npm run build:food-pro",
     "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../food-pro && npm install"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4"
   }
 }
