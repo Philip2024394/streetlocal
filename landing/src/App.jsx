@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 import Admin from './Admin'
 import Affiliate from './Affiliate'
@@ -429,7 +429,7 @@ function getCategories(t, cp) {
             { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync', 'Terms Of Listing compliance checker'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
-          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
+          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5174/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
           url: '/food/basic/',
           color: '#FF6B35',
         },
@@ -449,6 +449,36 @@ function getCategories(t, cp) {
           ],
           url: '/food/pro/',
           color: '#FFD600',
+        },
+      ],
+    },
+    {
+      id: 'products',
+      name: t.productsCategory || 'Local Product Apps',
+      icon: '📦',
+      description: t.productsCategoryDesc || 'Sell any product — your own store app',
+      bannerImage: 'https://image.pollinations.ai/prompt/Modern%20product%20store%20display%20shelves%20dark%20moody%20background?width=480&height=300&nologo=true',
+      apps: [
+        {
+          id: 'productslocal',
+          name: t.productsName || 'ProductsLocal',
+          tier: t.productsTier || 'Software 3',
+          price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 35.000',
+          yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
+          tagline: t.productsTagline || 'Sell any product — from crafts to clothing, your own store app',
+          description: t.productsDesc || '',
+          features: [
+            { cat: 'Products & Catalog', items: ['Product catalog with photos & descriptions', 'Category management', 'Promo pricing with strikethrough display', 'Stock availability toggle', 'Product variants & options', 'Customer order notes', 'WhatsApp ordering — zero commission'] },
+            { cat: 'Design & Branding', items: ['Your own branded product store app', '15+ theme backgrounds to match your brand', 'Custom logo & business branding', 'Landing page with city & country display', 'Custom accent colors & theme editor', 'Button shape & style customization', 'Splash screen with logo'] },
+            { cat: 'Delivery & Location', items: ['GPS delivery estimates with local rates', 'City-based shipping rate defaults', 'Multi-currency support (16 countries)', 'Configurable delivery radius & pricing', 'Free delivery threshold setting', 'Pickup Only / Collection mode'] },
+            { cat: 'Business Management', items: ['Shop open/close toggle — pause orders instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Shop bio & social media links', 'QR code generator for your store', 'QRIS payment QR code', 'Customer directory & order history'] },
+            { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
+            { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync'] },
+          ],
+          screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
+          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5178/products/local/' : '/products/local/') + '?demo=true&page=' + p),
+          url: '/products/local/',
+          color: '#4A90D9',
         },
       ],
     },
@@ -1420,6 +1450,63 @@ export default function App() {
                 { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png' },
               ]; setSelectedApp(null); setSelectedCategory(null); setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
+            </div>
+          </div>
+        )}
+
+        {/* ProductsLocal Theme showcase strip */}
+        {selectedApp.id === 'productslocal' && (
+          <div style={{ padding: '0 20px 16px' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Available in 27+ Product Themes</div>
+            <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
+            <div style={{ overflow: 'hidden', paddingBottom: 8 }}>
+            <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 60s linear infinite', width: 'max-content' }}>
+              {(() => {
+                const themes = [
+                  { id: 'clothing', label: 'Clothing', accent: '#4A90D9' },
+                  { id: 'shoes', label: 'Shoes', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-shoes.png' },
+                  { id: 'handbags', label: 'Handbags', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png' },
+                  { id: 'hijab', label: 'Hijab', accent: '#9B59B6' },
+                  { id: 'batik', label: 'Batik', accent: '#B8860B' },
+                  { id: 'electronics', label: 'Electronics', accent: '#2ECC71', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png' },
+                  { id: 'comprepair', label: 'PC Repair', accent: '#1E90FF', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair.png' },
+                  { id: 'phoneacc', label: 'Phone Cases', accent: '#3498DB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases.png' },
+                  { id: 'beauty', label: 'Beauty', accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png' },
+                  { id: 'cosmetics', label: 'Cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png' },
+                  { id: 'perfume', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png' },
+                  { id: 'homedecor', label: 'Home Decor', accent: '#D4A373' },
+                  { id: 'kitchenware', label: 'Kitchen', accent: '#FF6B35' },
+                  { id: 'packaging', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png' },
+                  { id: 'handicraft', label: 'Handicrafts', accent: '#e8992c' },
+                  { id: 'jewelry', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png' },
+                  { id: 'sports', label: 'Sports', accent: '#27AE60' },
+                  { id: 'baby', label: 'Baby Clothes', accent: '#FF69B4', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-baby-clothes.png' },
+                  { id: 'school', label: 'School', accent: '#4A90D9', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-school-accessories.png' },
+                  { id: 'motortyres', label: 'Motorbike', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-motorbike-tyres.png' },
+                  { id: 'tobacco', label: 'Tobacco', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-tobacco.png' },
+                  { id: 'pets', label: 'Pet Supplies', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-pet-supplies.png' },
+                  { id: 'grocery', label: 'Grocery', accent: '#c15d15' },
+                  { id: 'digital', label: 'Digital', accent: '#8E44AD' },
+                  { id: 'general', label: 'General', accent: '#4A90D9' },
+                ]
+                const renderCard = (theme, i) => (
+                  <div key={`${theme.id}-${i}`} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer' }}>
+                    <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', background: `linear-gradient(135deg, ${theme.accent}30, ${theme.accent}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {theme.img ? (
+                        <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                      ) : (
+                        <span style={{ fontSize: 28 }}>📦</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
+                  </div>
+                )
+                return [...themes.map((t, i) => renderCard(t, i)), ...themes.map((t, i) => renderCard(t, i + themes.length))]
+              })()}
+            </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 10 }}>
+              <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('product-themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
           </div>
         )}
@@ -3027,6 +3114,112 @@ export default function App() {
             )
           })()}
 
+          {currentPage === 'product-themes' && (() => {
+            const productThemes = [
+              { id: 'clothing', ref: 'PL-001', label: 'Clothing', accent: '#4A90D9', isNew: false, popular: true, activations: 89 },
+              { id: 'shoes', ref: 'PL-002', label: 'Shoes', accent: '#8B4513', isNew: false, popular: false, activations: 45 },
+              { id: 'hijab', ref: 'PL-003', label: 'Hijab & Scarves', accent: '#9B59B6', isNew: false, popular: true, activations: 134 },
+              { id: 'batik', ref: 'PL-004', label: 'Batik', accent: '#B8860B', isNew: true, popular: false, activations: 28 },
+              { id: 'handbags', ref: 'PL-003', label: 'Handbags', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png', isNew: true, popular: false, activations: 31 },
+              { id: 'electronics', ref: 'PL-005', label: 'Electronics', accent: '#2ECC71', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png', isNew: false, popular: true, activations: 156 },
+              { id: 'comprepair', ref: 'PL-006', label: 'Computer Repair', accent: '#1E90FF', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v2.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v3.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v4.png'], isNew: true, popular: false, activations: 4 },
+              { id: 'phoneacc', ref: 'PL-006', label: 'Phone Cases', accent: '#3498DB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases-v2.png'], isNew: false, popular: true, activations: 203 },
+              { id: 'skincare', ref: 'PL-007', label: 'Beauty Products', accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png', isNew: false, popular: true, activations: 178 },
+              { id: 'cosmetics', ref: 'PL-008', label: 'Cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png', isNew: false, popular: false, activations: 67 },
+              { id: 'perfume', ref: 'PL-009', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png', isNew: true, popular: false, activations: 19 },
+              { id: 'homedecor', ref: 'PL-010', label: 'Home Decor', accent: '#D4A373', isNew: false, popular: false, activations: 52 },
+              { id: 'furniture', ref: 'PL-011', label: 'Furniture', accent: '#795548', isNew: true, popular: false, activations: 8 },
+              { id: 'kitchenware', ref: 'PL-012', label: 'Kitchenware', accent: '#FF6B35', isNew: false, popular: false, activations: 34 },
+              { id: 'packaging', ref: 'PL-013', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png', isNew: true, popular: false, activations: 14 },
+              { id: 'handicraft', ref: 'PL-014', label: 'Handicrafts', accent: '#e8992c', isNew: false, popular: false, activations: 41 },
+              { id: 'jewelry', ref: 'PL-015', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry-v2.png'], isNew: false, popular: false, activations: 56 },
+              { id: 'candles', ref: 'PL-016', label: 'Candles', accent: '#e8b92c', isNew: true, popular: false, activations: 12 },
+              { id: 'sports', ref: 'PL-017', label: 'Sports', accent: '#27AE60', isNew: false, popular: false, activations: 38 },
+              { id: 'baby', ref: 'PL-018', label: 'Baby Clothes', accent: '#FF69B4', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-baby-clothes.png', isNew: true, popular: false, activations: 15 },
+              { id: 'school', ref: 'PL-019', label: 'School Accessories', accent: '#4A90D9', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-school-accessories.png', isNew: true, popular: false, activations: 22 },
+              { id: 'motortyres', ref: 'PL-020', label: 'Motorbike Tyres', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-motorbike-tyres.png', isNew: true, popular: false, activations: 7 },
+              { id: 'tobacco', ref: 'PL-021', label: 'Tobacco', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-tobacco.png', isNew: true, popular: false, activations: 5 },
+              { id: 'pets', ref: 'PL-022', label: 'Pet Supplies', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-pet-supplies.png', isNew: true, popular: false, activations: 11 },
+              { id: 'grocery', ref: 'PL-023', label: 'Grocery & Snacks', accent: '#c15d15', isNew: false, popular: false, activations: 44 },
+              { id: 'herbal', ref: 'PL-024', label: 'Herbal & Jamu', accent: '#4d8a0f', isNew: true, popular: false, activations: 9 },
+              { id: 'digital', ref: 'PL-025', label: 'Digital Products', accent: '#8E44AD', isNew: true, popular: false, activations: 3 },
+              { id: 'general', ref: 'PL-026', label: 'General Store', accent: '#4A90D9', isNew: false, popular: false, activations: 62 },
+            ]
+            const filtered = themeLibSearch ? productThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : productThemes
+            const newThemes = filtered.filter(t => t.isNew)
+            const otherThemes = filtered.filter(t => !t.isNew)
+
+            return (
+              <div style={{ background: '#fff', margin: '-20px -24px', padding: '0 0 40px', minHeight: '100vh' }}>
+                <div style={{ padding: '12px 16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input value={themeLibSearch} onChange={e => setThemeLibSearch(e.target.value)} placeholder="Search product themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ccc" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  </div>
+                </div>
+
+                {/* Popular */}
+                {!themeLibSearch && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>Popular Product Themes</div>
+                    <div style={{ fontSize: 11, color: '#999', marginBottom: 10 }}>Most activated by local vendors</div>
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                      {productThemes.filter(t => t.popular).sort((a, b) => b.activations - a.activations).map(theme => (
+                        <div key={theme.id} style={{ flexShrink: 0, width: 100, textAlign: 'center', cursor: 'pointer' }}>
+                          <div style={{ width: 100, height: 140, borderRadius: 14, overflow: 'hidden', position: 'relative', border: '2px solid #4A90D9', background: `linear-gradient(135deg, ${theme.accent}30, ${theme.accent}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 36 }}>📦</span>}
+                            <div style={{ position: 'absolute', top: 4, left: 4, background: '#4A90D9', padding: '1px 5px', borderRadius: 3, fontSize: 7, fontWeight: 800, color: '#fff' }}>POPULAR</div>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '12px 6px 6px', textAlign: 'center' }}>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: '#fff' }}>{theme.label}</div>
+                              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)' }}>{theme.activations} activations</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Themes */}
+                {newThemes.length > 0 && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>🆕 New Product Themes</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                      {newThemes.map(theme => (
+                        <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                          <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
+                            <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>{theme.label}</div>
+                          <div style={{ fontSize: 9, color: '#999' }}>{theme.ref}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All Themes */}
+                <div style={{ padding: '0 16px 16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Product Themes ({otherThemes.length})</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    {otherThemes.map(theme => (
+                      <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                        <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
+                          {theme.popular && <div style={{ position: 'absolute', top: 4, left: 4, background: '#4A90D9', padding: '1px 5px', borderRadius: 3, fontSize: 7, fontWeight: 800, color: '#fff' }}>POPULAR</div>}
+                          <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>{theme.label}</div>
+                        <div style={{ fontSize: 9, color: '#999' }}>{theme.ref}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {currentPage === 'contact' && (
             <div>
               <style>{`
@@ -4323,35 +4516,71 @@ export default function App() {
           <h2 style={{ ...styles.sectionTitle, marginTop: 50 }}>{countryPricing ? `${t.ourApps?.split(' ')[0] || 'Starting'} ${countryPricing.currency_symbol} ${countryPricing.basic_monthly.toLocaleString()}${t.perMonth}` : t.ourApps}</h2>
         </FadeIn>
 
-        {/* Food App — full-width banner card with image */}
-        {CATEGORIES.filter(c => c.id === 'food').map((cat) => (
-          <FadeIn key={cat.id} delay={0.3}>
-            <div
-              style={styles.foodBannerCard}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {/* Header over image */}
-              <div style={styles.foodBannerHeader}>
-                <span style={styles.foodBannerHeaderText}>
-                  {(cat.name || '').split(' ')[0]}<br />
-                  <span style={{ fontSize: 14 }}>{(cat.name || '').split(' ').slice(1).join(' ')}</span>
-                </span>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>2,572 downloads</span>
-              </div>
-              <img
-                src={cat.bannerImage}
-                alt={cat.name}
-                style={styles.foodBannerImage}
-              />
-              {/* Yellow enter button */}
-              <div style={styles.foodBannerBottom}>
-                <button style={styles.foodBannerEnterBtn}>
-                  {locale === 'id' || locale === 'ms' ? 'Masuk' : locale === 'vi' ? 'Vào' : locale === 'th' ? 'เข้า' : locale === 'fr' ? 'Entrer' : locale === 'de' ? 'Eintreten' : locale === 'es' ? 'Entrar' : locale === 'zh' ? '进入' : locale === 'ar' ? 'دخول' : 'Enter'} →
-                </button>
-              </div>
-            </div>
-          </FadeIn>
-        ))}
+        {/* FoodLocal — banner card */}
+        {(() => {
+          const foodCat = CATEGORIES.find(c => c.id === 'food')
+          const productsCat = CATEGORIES.find(c => c.id === 'products')
+          const enterLabel = locale === 'id' || locale === 'ms' ? 'Masuk' : locale === 'vi' ? 'Vào' : locale === 'th' ? 'เข้า' : locale === 'fr' ? 'Entrer' : locale === 'de' ? 'Eintreten' : locale === 'es' ? 'Entrar' : locale === 'zh' ? '进入' : locale === 'ar' ? 'دخول' : 'Enter'
+          return (
+            <>
+              {foodCat && (
+                <FadeIn delay={0.3}>
+                  <div
+                    style={styles.foodBannerCard}
+                    onClick={() => setSelectedCategory(foodCat)}
+                  >
+                    <div style={styles.foodBannerHeader}>
+                      <span style={styles.foodBannerHeaderText}>
+                        FoodLocal<br />
+                        <span style={{ fontSize: 14 }}>From street carts to restaurants</span>
+                      </span>
+                      <style>{`@keyframes danceBounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-4px) rotate(-3deg); } 40% { transform: translateY(0) rotate(2deg); } 60% { transform: translateY(-3px) rotate(-2deg); } 80% { transform: translateY(0) rotate(1deg); } }`}</style>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', display: 'inline-block', animation: 'danceBounce 1.5s ease-in-out infinite', textShadow: '0 0 8px rgba(255,214,0,0.4)' }}>{foodCat.apps[0]?.price || 'Rp 35.000'}</span>
+                    </div>
+                    <img
+                      src={foodCat.bannerImage}
+                      alt="FoodLocal"
+                      style={styles.foodBannerImage}
+                    />
+                    <div style={styles.foodBannerBottom}>
+                      <button style={styles.foodBannerEnterBtn}>
+                        {enterLabel} →
+                      </button>
+                    </div>
+                  </div>
+                </FadeIn>
+              )}
+
+              {/* ProductsLocal — banner card (separate category) */}
+              {productsCat && (
+                <FadeIn delay={0.4}>
+                  <div
+                    style={{ ...styles.foodBannerCard, marginTop: 16 }}
+                    onClick={() => setSelectedCategory(productsCat)}
+                  >
+                    <div style={{ ...styles.foodBannerHeader, background: '#0d1b2a' }}>
+                      <span style={styles.foodBannerHeaderText}>
+                        ProductsLocal<br />
+                        <span style={{ fontSize: 14 }}>Sell any product — your own store</span>
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#4A90D9' }}>{productsCat.apps[0]?.price || 'Rp 35.000'}</span>
+                    </div>
+                    <img
+                      src={productsCat.bannerImage}
+                      alt="ProductsLocal"
+                      style={styles.foodBannerImage}
+                    />
+                    <div style={{ ...styles.foodBannerBottom, background: '#0d1b2a' }}>
+                      <button style={{ ...styles.foodBannerEnterBtn, background: '#4A90D9', color: '#fff' }}>
+                        {enterLabel} →
+                      </button>
+                    </div>
+                  </div>
+                </FadeIn>
+              )}
+            </>
+          )
+        })()}
 
         {/* Remaining + placeholder categories */}
         <div style={{ ...styles.catGrid, marginTop: 12 }}>

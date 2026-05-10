@@ -76,6 +76,7 @@ export default function ActivatePage() {
           activated_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           activated_by: salesPerson.trim(),
+          module: 'products',
         }).select().single()
 
         if (vendorErr) {
