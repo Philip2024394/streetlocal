@@ -1,0 +1,16 @@
+{
+  "name": "StreetLocal — Food Local WhatsApp",
+  "short_name": "FoodLocalWA",
+  "start_url": "/food/whatsapp/",
+  "scope": "/food/whatsapp/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/food/whatsapp/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -429,9 +429,10 @@ function getCategories(t, cp) {
             { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync', 'Terms Of Listing compliance checker'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
-          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5174/food/basic/' : '/food/basic/') + '?demo=true&page=' + p),
-          url: '/food/basic/',
+          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=' + p),
+          url: '/food/whatsapp/',
           color: '#FF6B35',
+          checkoutChooser: 'food',
         },
         {
           id: 'pro',
@@ -479,6 +480,7 @@ function getCategories(t, cp) {
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5178/products/local/' : '/products/local/') + '?demo=true&page=' + p),
           url: '/products/local/',
           color: '#4A90D9',
+          checkoutChooser: 'products',
         },
       ],
     },
@@ -995,6 +997,138 @@ const CONTACT_COMPANY_STATS = [
   { label: 'Support', target: 24, suffix: '/7' }
 ]
 
+// Critical image URLs preloaded at app startup so the home page never shows
+// half-loaded thumbnails. Browser kicks off these fetches in parallel before
+// React renders the theme strips, populating cache for when the img tags mount.
+const PRELOAD_URLS = [
+  // Hero
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-02_58_20-pm.png',
+  // Logo / home button
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png',
+  // Top food themes (most visible on initial scroll)
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012941.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013408.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014830.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012403.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014403.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png',
+  // Top product themes
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-shoes.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png',
+  'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2004_57_19%20PM.png?updatedAt=1778407052888',
+  'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2011_41_38%20AM.png?updatedAt=1778388112989',
+  'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasd.png?updatedAt=1778435998178',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases.png',
+  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png',
+  'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png',
+]
+
+// Fire image preloads as soon as this module evaluates — runs before React mounts.
+if (typeof window !== 'undefined') {
+  PRELOAD_URLS.forEach(url => { const img = new Image(); img.decoding = 'async'; img.src = url })
+}
+
+// Searchable index of every food + product theme. Used by the landing search
+// to suggest categories when a user types a keyword like "burger" or "hijab"
+// — they jump straight to the right app. `app` controls which app URL the
+// suggestion links to.
+const THEME_INDEX = [
+  // Food themes — open the food/whatsapp demo
+  { id: 'satay', label: 'Chicken Satay', app: 'food', accent: '#c15d15', keywords: ['sate', 'satay', 'skewer', 'ayam', 'kambing', 'grilled'] },
+  { id: 'friedrice', label: 'Nasi Goreng', app: 'food', accent: '#FF6B35', keywords: ['nasi', 'goreng', 'fried rice', 'rice'] },
+  { id: 'noodle', label: 'Noodles', app: 'food', accent: '#8B0000', keywords: ['mie', 'noodle', 'ramen', 'pasta', 'mie ayam'] },
+  { id: 'chicken', label: 'Crispy Chicken', app: 'food', accent: '#c15d15', keywords: ['chicken', 'fried chicken', 'crispy chicken', 'ayam', 'ayam goreng'] },
+  { id: 'juice', label: 'Fresh Juice', app: 'food', accent: '#e8b92c', keywords: ['juice', 'jus', 'smoothie', 'fresh juice'] },
+  { id: 'coffee', label: 'Coffee', app: 'food', accent: '#8a570f', keywords: ['kopi', 'coffee', 'espresso', 'latte', 'cafe'] },
+  { id: 'bakso', label: 'Bakso', app: 'food', accent: '#e8992c', keywords: ['bakso', 'meatball', 'soup'] },
+  { id: 'martabak', label: 'Martabak', app: 'food', accent: '#8a0f8a', keywords: ['martabak', 'pancake', 'sweet pancake'] },
+  { id: 'escendol', label: 'Es Cendol', app: 'food', accent: '#4d8a0f', keywords: ['cendol', 'es cendol', 'dessert', 'ice'] },
+  { id: 'kebab', label: 'Kebab', app: 'food', accent: '#FF6B35', keywords: ['kebab', 'shawarma', 'doner', 'wrap'] },
+  { id: 'pecellele', label: 'Pecel Lele', app: 'food', accent: '#6b8a0f', keywords: ['pecel lele', 'lele', 'fish', 'catfish'] },
+  { id: 'ketoprak', label: 'Ketoprak', app: 'food', accent: '#B8860B', keywords: ['ketoprak', 'salad'] },
+  { id: 'cilok', label: 'Cilok Cimol', app: 'food', accent: '#c15d15', keywords: ['cilok', 'cimol', 'snack'] },
+  { id: 'ikanbakar', label: 'Ikan Bakar', app: 'food', accent: '#e8512c', keywords: ['ikan bakar', 'grilled fish', 'fish'] },
+  { id: 'nasiuduk', label: 'Nasi Uduk', app: 'food', accent: '#e8b92c', keywords: ['nasi uduk', 'rice', 'coconut rice'] },
+  { id: 'bebekgoreng', label: 'Bebek Goreng', app: 'food', accent: '#6b8a0f', keywords: ['bebek goreng', 'duck', 'fried duck'] },
+  { id: 'burger', label: 'Burgers', app: 'food', accent: '#B8860B', keywords: ['burger', 'hamburger', 'cheeseburger'] },
+  { id: 'donut', label: 'Donuts', app: 'food', accent: '#DB2777', keywords: ['donut', 'doughnut', 'dessert'] },
+  { id: 'hotdog', label: 'Hot Dogs', app: 'food', accent: '#dc2626', keywords: ['hot dog', 'hotdog', 'sausage'] },
+  { id: 'pizza', label: 'Pizza', app: 'food', accent: '#dc2626', keywords: ['pizza', 'italian'] },
+  { id: 'sweetbread', label: 'Sweet Bread', app: 'food', accent: '#D4A373', keywords: ['bread', 'roti', 'sweet bread', 'bakery', 'roti manis', 'sweet bun', 'bun'] },
+  // Product themes — open the products/local demo
+  { id: 'clothing', label: 'Clothing', app: 'products', accent: '#4A90D9', keywords: ['clothes', 'clothing', 'fashion', 'apparel'] },
+  { id: 'shoes', label: 'Shoes', app: 'products', accent: '#8B4513', keywords: ['shoes', 'sneakers', 'footwear', 'sepatu'] },
+  { id: 'raincoats', label: 'Raincoats', app: 'products', accent: '#2C5F8A', keywords: ['raincoat', 'jacket', 'waterproof', 'jas hujan'] },
+  { id: 'running', label: 'Running Footwear', app: 'products', accent: '#1B2A4A', keywords: ['running', 'sneakers', 'athletic', 'jogger'] },
+  { id: 'handbags', label: 'Handbags', app: 'products', accent: '#8B4513', keywords: ['handbag', 'bag', 'purse', 'tas'] },
+  { id: 'hijab', label: 'Hijab & Scarves', app: 'products', accent: '#9B59B6', keywords: ['hijab', 'scarf', 'jilbab', 'headscarf', 'kerudung'] },
+  { id: 'batik', label: 'Batik', app: 'products', accent: '#B8860B', keywords: ['batik', 'traditional', 'indonesian fashion'] },
+  { id: 'tshirts', label: 'T-Shirts', app: 'products', accent: '#4A90D9', keywords: ['tshirt', 't-shirt', 'shirt', 'tee', 'kaos'] },
+  { id: 'helmets', label: 'Helmets', app: 'products', accent: '#1a1a1a', keywords: ['helmet', 'motorcycle helmet', 'bike helmet', 'helm', 'safety'] },
+  { id: 'electronics', label: 'Electronics', app: 'products', accent: '#2ECC71', keywords: ['electronics', 'gadgets', 'electrical', 'elektronik'] },
+  { id: 'comprepair', label: 'Computer Repair', app: 'products', accent: '#1E90FF', keywords: ['computer repair', 'pc repair', 'laptop repair', 'tech support', 'service'] },
+  { id: 'phoneacc', label: 'Phone Cases', app: 'products', accent: '#3498DB', keywords: ['phone case', 'phone accessories', 'mobile', 'phone', 'hp'] },
+  { id: 'skincare', label: 'Beauty Products', app: 'products', accent: '#E91E90', keywords: ['beauty', 'skincare', 'makeup', 'cosmetics', 'kecantikan'] },
+  { id: 'cosmetics', label: 'Cosmetics', app: 'products', accent: '#C0392B', keywords: ['cosmetics', 'makeup', 'lipstick', 'foundation'] },
+  { id: 'perfume', label: 'Perfume', app: 'products', accent: '#8E44AD', keywords: ['perfume', 'fragrance', 'parfum', 'cologne'] },
+  { id: 'homedecor', label: 'Home Decor', app: 'products', accent: '#D4A373', keywords: ['home decor', 'decoration', 'interior'] },
+  { id: 'furniture', label: 'Furniture', app: 'products', accent: '#8FB4A3', keywords: ['furniture', 'sofa', 'table', 'chair', 'mebel'] },
+  { id: 'kitchenware', label: 'Kitchenware', app: 'products', accent: '#FF6B35', keywords: ['kitchen', 'kitchenware', 'utensils', 'pots', 'pans', 'cookware'] },
+  { id: 'packaging', label: 'Packaging', app: 'products', accent: '#795548', keywords: ['packaging', 'boxes', 'bags', 'wrapping'] },
+  { id: 'handicraft', label: 'Handicrafts', app: 'products', accent: '#e8992c', keywords: ['handicraft', 'handmade', 'craft', 'kerajinan'] },
+  { id: 'jewelry', label: 'Jewelry', app: 'products', accent: '#FFD700', keywords: ['jewelry', 'jewellery', 'ring', 'necklace', 'perhiasan'] },
+  { id: 'candles', label: 'Candles', app: 'products', accent: '#e8b92c', keywords: ['candle', 'scented', 'lilin'] },
+  { id: 'sports', label: 'Sports', app: 'products', accent: '#27AE60', keywords: ['sports', 'athletic', 'gym', 'fitness'] },
+  { id: 'baby', label: 'Baby Clothes', app: 'products', accent: '#FF69B4', keywords: ['baby', 'baby clothes', 'kids', 'infant', 'bayi'] },
+  { id: 'toys', label: "Children's Toys", app: 'products', accent: '#FF6B35', keywords: ['toys', 'kids toys', 'children toys', 'mainan'] },
+  { id: 'school', label: 'School Accessories', app: 'products', accent: '#4A90D9', keywords: ['school', 'stationery', 'supplies', 'sekolah'] },
+  { id: 'books', label: 'Books & Stationery', app: 'products', accent: '#2C3E50', keywords: ['books', 'stationery', 'reading', 'buku'] },
+  { id: 'motortyres', label: 'Motorbike Tyres', app: 'products', accent: '#dc2626', keywords: ['tyre', 'tire', 'motorbike', 'motorcycle', 'ban motor'] },
+  { id: 'seatcovers', label: 'Seat Covers', app: 'products', accent: '#795548', keywords: ['seat cover', 'car seat', 'motorcycle seat', 'jok'] },
+  { id: 'bicycle', label: 'Bicycle', app: 'products', accent: '#2E86AB', keywords: ['bicycle', 'bike', 'cycle', 'sepeda'] },
+  { id: 'automotive', label: 'Automotive', app: 'products', accent: '#dc2626', keywords: ['automotive', 'car accessories', 'auto', 'mobil'] },
+  { id: 'pets', label: 'Pet Supplies', app: 'products', accent: '#6b8a0f', keywords: ['pet', 'pets', 'dog', 'cat', 'pet supplies', 'hewan'] },
+  { id: 'grocery', label: 'Grocery & Snacks', app: 'products', accent: '#c15d15', keywords: ['grocery', 'snack', 'market', 'sembako'] },
+  { id: 'tobacco', label: 'Tobacco', app: 'products', accent: '#8B0000', keywords: ['tobacco', 'cigarette', 'smoke', 'vape', 'rokok'] },
+  { id: 'herbal', label: 'Herbal & Jamu', app: 'products', accent: '#4d8a0f', keywords: ['herbal', 'jamu', 'natural medicine', 'tradisional'] },
+  { id: 'digital', label: 'Digital Products', app: 'products', accent: '#8E44AD', keywords: ['digital', 'software', 'online', 'gift card'] },
+  { id: 'general', label: 'General Store', app: 'products', accent: '#4A90D9', keywords: ['general', 'mixed', 'variety', 'toko'] },
+]
+
+// Return THEME_INDEX entries whose label/id/keywords contain the query.
+function findThemeMatches(query, limit = 6) {
+  const q = (query || '').toLowerCase().trim()
+  if (!q) return []
+  return THEME_INDEX.filter(t =>
+    t.label.toLowerCase().includes(q) ||
+    t.id.toLowerCase().includes(q) ||
+    t.keywords.some(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))
+  ).slice(0, limit)
+}
+
+// Build the demo URL for a theme suggestion, respecting localhost dev ports.
+function themeDemoUrl(theme) {
+  const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  if (theme.app === 'food') {
+    return (isLocal ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=landing&theme=' + theme.id
+  }
+  return (isLocal ? 'http://localhost:5178/products/local/' : '/products/local/') + '?demo=true&page=landing&theme=' + theme.id
+}
+
+// Reference code for offline payments. Customer includes this in their bank
+// transfer description so admin can match the incoming payment to the right
+// registration row. Excludes look-alike chars (O/0/I/1).
+function generatePaymentRef() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let out = 'SL-'
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)]
+  return out
+}
+
 /* ─── Main App ─── */
 export default function App() {
   const [selectedApp, setSelectedApp] = useState(null)
@@ -1005,6 +1139,10 @@ export default function App() {
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [paymentProof, setPaymentProof] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [paymentReg, setPaymentReg] = useState(null) // app_registrations row for the in-flight subscription
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false)
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+  const [refCopied, setRefCopied] = useState(false)
   const [currentPage, setCurrentPage] = useState(null)
   // Local search
   const [searchQuery, setSearchQuery] = useState('')
@@ -1099,6 +1237,10 @@ export default function App() {
     }
   }, [])
 
+  // EU member states map to the shared 'EU' pricing row
+  const EU_MEMBERS = new Set(['AT','BE','BG','CY','CZ','DE','DK','EE','ES','FI','FR','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK'])
+  const mapPricingCountry = (code) => (code && EU_MEMBERS.has(code) ? 'EU' : code)
+
   // Detect country from IP for pricing (before account creation)
   useEffect(() => {
     if (countryPricing) return
@@ -1108,7 +1250,7 @@ export default function App() {
         const text = await res.text()
         const country = text.split(';')[1]
         setDetectedCountry(country)
-        const { data } = await supabase.from('country_pricing').select('*').eq('id', country).single()
+        const { data } = await supabase.from('country_pricing').select('*').eq('id', mapPricingCountry(country)).single()
         if (data) setCountryPricing(data)
       } catch {}
     }
@@ -1119,10 +1261,54 @@ export default function App() {
   useEffect(() => {
     const country = userAccount?.country_code
     if (!country) return
-    supabase.from('country_pricing').select('*').eq('id', country).single().then(({ data }) => {
+    supabase.from('country_pricing').select('*').eq('id', mapPricingCountry(country)).single().then(({ data }) => {
       if (data) setCountryPricing(data)
     })
   }, [userAccount?.country_code])
+
+  // When payment modal opens, ensure there's a pending app_registrations row
+  // with a unique reference code so the customer has something to put in the
+  // bank transfer description and we can match the payment later.
+  useEffect(() => {
+    if (!paymentOpen || !userAccount || !selectedApp || !supabase) return
+    setPaymentSubmitted(false)
+    let cancelled = false
+    ;(async () => {
+      const whatsapp = (userAccount.phone || '').replace(/[^0-9]/g, '')
+      // Look for an existing pending row for this customer + app combo
+      const { data: existing } = await supabase
+        .from('app_registrations')
+        .select('*')
+        .eq('whatsapp', whatsapp)
+        .eq('app_type', selectedApp.id)
+        .eq('status', 'pending_verification')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (cancelled) return
+      if (existing) { setPaymentReg(existing); return }
+      // Create a new pending registration with a fresh reference code
+      const priceText = billingCycle === 'monthly' ? selectedApp.price : selectedApp.yearlyPrice
+      const { data: created } = await supabase
+        .from('app_registrations')
+        .insert({
+          business_name: userAccount.business_name || userAccount.name || 'Customer',
+          slug: userAccount.slug || (userAccount.business_name || userAccount.name || 'customer').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30),
+          whatsapp,
+          email: userAccount.email || '',
+          app_type: selectedApp.id,
+          app_tier: selectedApp.tier || selectedApp.id,
+          status: 'pending_verification',
+          billing_cycle: billingCycle,
+          price: priceText,
+          payment_reference: generatePaymentRef(),
+        })
+        .select()
+        .single()
+      if (!cancelled && created) setPaymentReg(created)
+    })()
+    return () => { cancelled = true }
+  }, [paymentOpen, userAccount?.phone, selectedApp?.id, billingCycle])
 
   // Local search — match against menu item tags, return best matching item image
   useEffect(() => {
@@ -1392,7 +1578,7 @@ export default function App() {
         </div>
 
         {/* Theme showcase strip */}
-        {selectedApp.id === 'basic' && (
+        {(selectedApp.id === 'basic' || selectedApp.id === 'chat') && (
           <div style={{ padding: '0 20px 16px' }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Available in 22+ Themes</div>
             <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
@@ -1402,11 +1588,11 @@ export default function App() {
                 const themes = [
                   { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_24_04-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_25_10-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_27_39-am.png'] },
                   { id: 'coffee', label: 'Coffee', accent: '#8a570f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_09_46-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_10_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_12_08-am.png'] },
-                  { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png' },
-                  { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'] },
-                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'] },
+                  { id: 'satay', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012941.png' },
+                  { id: 'juice', label: 'Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013408.png', variants: ['https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013601.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013703.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'] },
+                  { id: 'chicken', label: 'Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014830.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'] },
                   { id: 'bakso', label: 'Bakso', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_49_45-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_52_59-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_57_35-pm.png'] },
-                  { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png' },
+                  { id: 'friedrice', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012403.png' },
                   { id: 'martabak', label: 'Martabak', accent: '#8a0f8a', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_08_25-am.png' },
                   { id: 'escendol', label: 'Es Cendol', accent: '#4d8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_06_43-pm.png' },
                   { id: 'kebab', label: 'Kebab', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_04_20-pm.png' },
@@ -1416,8 +1602,8 @@ export default function App() {
                   { id: 'ikanbakar', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_14_52-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_17-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_21_18-pm.png'] },
                   { id: 'nasiuduk', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png' },
                   { id: 'bebekgoreng', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png' },
-                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png' },
-                  { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_49_41-pm.png' },
+                  { id: 'burger', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014403.png' },
+                  { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png' },
                   { id: 'hotdog', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png' },
                   { id: 'pizza', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png' },
                 ]
@@ -1426,7 +1612,7 @@ export default function App() {
                     <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                       <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
                     </div>
-                    <a href={(window.location.hostname === 'localhost' ? 'http://localhost:5177/food/basic/' : '/food/basic/') + '?demo=true&page=landing&theme=' + theme.id} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
+                    <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const isChat = selectedApp.id === 'chat'; const base = isLocal ? (isChat ? 'http://localhost:5177/food/chat/' : 'http://localhost:5176/food/whatsapp/') : (isChat ? '/food/chat/' : '/food/whatsapp/'); return base + '?demo=true&page=landing&theme=' + theme.id })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
                   </div>
                 )
@@ -1455,7 +1641,7 @@ export default function App() {
         )}
 
         {/* ProductsLocal Theme showcase strip */}
-        {selectedApp.id === 'productslocal' && (
+        {(selectedApp.id === 'productslocal' || selectedApp.id === 'productschat' || selectedApp.id === 'productsemail') && (
           <div style={{ padding: '0 20px 16px' }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Available in 27+ Product Themes</div>
             <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
@@ -1466,8 +1652,10 @@ export default function App() {
                   { id: 'clothing', label: 'Clothing', accent: '#4A90D9' },
                   { id: 'shoes', label: 'Shoes', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-shoes.png' },
                   { id: 'handbags', label: 'Handbags', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png' },
-                  { id: 'hijab', label: 'Hijab', accent: '#9B59B6' },
-                  { id: 'batik', label: 'Batik', accent: '#B8860B' },
+                  { id: 'hijab', label: 'Hijab', accent: '#9B59B6', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2004_57_19%20PM.png?updatedAt=1778407052888' },
+                  { id: 'batik', label: 'Batik', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2011_41_38%20AM.png?updatedAt=1778388112989' },
+                  { id: 'tshirts', label: 'T-Shirts', accent: '#4A90D9', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasd.png?updatedAt=1778435998178' },
+                  { id: 'helmets', label: 'Helmets', accent: '#1a1a1a', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasdsdsasddd.png' },
                   { id: 'electronics', label: 'Electronics', accent: '#2ECC71', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png' },
                   { id: 'comprepair', label: 'PC Repair', accent: '#1E90FF', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair.png' },
                   { id: 'phoneacc', label: 'Phone Cases', accent: '#3498DB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases.png' },
@@ -1475,7 +1663,7 @@ export default function App() {
                   { id: 'cosmetics', label: 'Cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png' },
                   { id: 'perfume', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png' },
                   { id: 'homedecor', label: 'Home Decor', accent: '#D4A373' },
-                  { id: 'kitchenware', label: 'Kitchen', accent: '#FF6B35' },
+                  { id: 'kitchenware', label: 'Kitchen', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png' },
                   { id: 'packaging', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png' },
                   { id: 'handicraft', label: 'Handicrafts', accent: '#e8992c' },
                   { id: 'jewelry', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png' },
@@ -1494,7 +1682,7 @@ export default function App() {
                   { id: 'general', label: 'General', accent: '#4A90D9' },
                 ]
                 const renderCard = (theme, i) => (
-                  <div key={`${theme.id}-${i}`} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer' }}>
+                  <div key={`${theme.id}-${i}`} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
                     <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', background: `linear-gradient(135deg, ${theme.accent}30, ${theme.accent}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {theme.img ? (
                         <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
@@ -1502,6 +1690,7 @@ export default function App() {
                         <span style={{ fontSize: 28 }}>📦</span>
                       )}
                     </div>
+                    <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const id = selectedApp.id; const path = id === 'productschat' ? 'products/chat' : id === 'productsemail' ? 'products/email' : 'products/local'; const portMap = { productschat: 5179, productsemail: 5180, productslocal: 5178 }; const port = portMap[id] || 5178; const base = isLocal ? `http://localhost:${port}/${path}/` : `/${path}/`; return base + '?demo=true&page=landing&theme=' + theme.id })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
                   </div>
                 )
@@ -1560,7 +1749,7 @@ export default function App() {
                 <div style={{ width: 24, height: 24, borderRadius: 6, background: previewTheme.accent || '#8DC63F', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: 'monospace', letterSpacing: 1 }}>{(previewTheme.accent || '#8DC63F').toUpperCase()}</span>
               </div>
-              <a href={(window.location.hostname === 'localhost' ? 'http://localhost:5177/food/basic/' : '/food/basic/') + '?demo=true&page=landing&theme=' + previewTheme.id} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'block' }}>Edit Theme</a>
+              <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const isChat = selectedApp?.id === 'chat'; const base = isLocal ? (isChat ? 'http://localhost:5177/food/chat/' : 'http://localhost:5176/food/whatsapp/') : (isChat ? '/food/chat/' : '/food/whatsapp/'); return base + '?demo=true&page=landing&theme=' + previewTheme.id })()} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'block' }}>Edit Theme</a>
             </div>
 
             <button onClick={() => setPreviewTheme(null)} style={{ marginTop: 10, padding: '10px 28px', borderRadius: 12, border: 'none', background: '#fff', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Close</button>
@@ -1570,6 +1759,9 @@ export default function App() {
 
         <div style={styles.detailContent}>
           <h1 style={styles.detailTitle}>{selectedApp.name}</h1>
+          {selectedApp.checkoutLabel && (
+            <div style={{ fontSize: 13, color: '#888', fontWeight: 600, marginTop: -6, marginBottom: 10 }}>{selectedApp.checkoutLabel}</div>
+          )}
           {/* Billing toggle */}
           <div style={{ ...styles.detailToggle, marginBottom: 10, marginTop: 10, background: '#FFD600' }}>
             <button
@@ -1814,7 +2006,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Try Demo — always free, no signup required */}
               <a
-                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/food/basic/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
+                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/food/whatsapp/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#FFD600', border: '2px solid #1a1a1a', animation: 'demoShake 3s ease-in-out infinite' }}
@@ -2111,6 +2303,23 @@ export default function App() {
                   <span style={{ fontSize: 14, color: '#888' }}>{billingCycle === 'monthly' ? t.perMonth : t.perYear}</span>
                 </p>
 
+                {/* Payment reference code — customer must include this in their bank transfer description so we can match the payment */}
+                {paymentReg?.payment_reference && (
+                  <div style={{ background: '#FFFBEB', border: '2px dashed #FFD600', borderRadius: 12, padding: '12px 14px', marginBottom: 16, textAlign: 'center' }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>Your Payment Reference</p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: 2, fontFamily: 'monospace', color: '#1a1a1a' }}>{paymentReg.payment_reference}</span>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(paymentReg.payment_reference); setRefCopied(true); setTimeout(() => setRefCopied(false), 2000) }}
+                        style={{ background: '#1a1a1a', color: '#FFD600', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 800, cursor: 'pointer', minHeight: 32 }}
+                      >
+                        {refCopied ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <p style={{ fontSize: 11, color: '#666', marginTop: 8, lineHeight: 1.4 }}>Include this code in your bank transfer description so we can find your payment quickly.</p>
+                  </div>
+                )}
+
                 {/* Payment — QR code if available for country, otherwise contact */}
                 {countryPricing ? (
                   <>
@@ -2224,46 +2433,62 @@ export default function App() {
                   </label>
                 </div>
 
-                {/* Confirm Payment — send to email */}
-                <button
-                  onClick={() => {
-                    const subject = encodeURIComponent(`Payment Confirmation — ${selectedApp.name} (${selectedApp.tier})`)
-                    const body = encodeURIComponent(
-                      `New Subscription Payment\n\n` +
-                      `Customer: ${userAccount?.name || 'N/A'}\n` +
-                      `Email: ${userAccount?.email || 'N/A'}\n` +
-                      `Phone: ${userAccount?.phone || 'N/A'}\n` +
-                      `Country: ${userAccount?.country_name || 'N/A'}\n\n` +
-                      `Software: ${selectedApp.name} (${selectedApp.tier})\n` +
-                      `Plan: ${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}\n` +
-                      `Price: ${billingCycle === 'monthly' ? selectedApp.price + '/month' : selectedApp.yearlyPrice + '/year'}\n\n` +
-                      `Payment proof screenshot attached.\n` +
-                      `Please activate my account.`
-                    )
-                    window.open(`mailto:indootechteam@gmail.com?subject=${subject}&body=${body}`, '_blank')
-                    // Close payment sheet and show registration after short delay
-                    setTimeout(() => {
-                      setPaymentOpen(false)
-                      setRegSubmitted(false)
-                      setRegForm({ name: '', url: '', whatsapp: '', email: '' })
-                      setDetailTab('register')
-                    }, 1000)
-                  }}
-                  style={{
-                    ...styles.ctaButton,
-                    background: '#FFD600',
-                    color: '#1a1a1a',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    opacity: paymentProof ? 1 : 0.4,
-                    pointerEvents: paymentProof ? 'auto' : 'none',
-                  }}
-                >
-                  ✉️ Confirm Payment
-                </button>
+                {/* Confirm Payment — uploads proof to storage and marks registration as awaiting verification */}
+                {paymentSubmitted ? (
+                  <div style={{ background: '#ECFDF5', border: '2px solid #22C55E', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
+                    <p style={{ fontSize: 16, fontWeight: 800, color: '#065F46', marginBottom: 6 }}>Payment Received!</p>
+                    <p style={{ fontSize: 13, color: '#047857', lineHeight: 1.5, marginBottom: 12 }}>We'll verify your payment within 24 hours and activate your account. We'll message you on WhatsApp once you're live.</p>
+                    {paymentReg?.payment_reference && (
+                      <p style={{ fontSize: 12, color: '#666' }}>Reference: <strong style={{ fontFamily: 'monospace' }}>{paymentReg.payment_reference}</strong></p>
+                    )}
+                    <button
+                      onClick={() => { setPaymentOpen(false); setPaymentSubmitted(false); setPaymentProof(null) }}
+                      style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#fff', border: 'none', marginTop: 12 }}
+                    >
+                      Done
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    disabled={!paymentProof || !paymentReg || paymentSubmitting}
+                    onClick={async () => {
+                      if (!paymentProof || !paymentReg || !supabase) return
+                      setPaymentSubmitting(true)
+                      try {
+                        const ext = (paymentProof.name.split('.').pop() || 'png').toLowerCase()
+                        const path = `app-payments/${paymentReg.id}/${Date.now()}.${ext}`
+                        const { error: upErr } = await supabase.storage.from('images').upload(path, paymentProof, { contentType: paymentProof.type })
+                        if (upErr) throw upErr
+                        const { data: urlData } = supabase.storage.from('images').getPublicUrl(path)
+                        const proofUrl = urlData?.publicUrl
+                        await supabase.from('app_registrations').update({
+                          payment_proof_url: proofUrl,
+                          payment_uploaded_at: new Date().toISOString(),
+                        }).eq('id', paymentReg.id)
+                        setPaymentReg({ ...paymentReg, payment_proof_url: proofUrl, payment_uploaded_at: new Date().toISOString() })
+                        setPaymentSubmitted(true)
+                      } catch (err) {
+                        console.error('Payment proof upload failed:', err)
+                        alert('Upload failed — please try again or contact support on WhatsApp.')
+                      }
+                      setPaymentSubmitting(false)
+                    }}
+                    style={{
+                      ...styles.ctaButton,
+                      background: paymentProof && paymentReg && !paymentSubmitting ? '#FFD600' : '#e0e0e0',
+                      color: paymentProof && paymentReg && !paymentSubmitting ? '#1a1a1a' : '#999',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      cursor: paymentProof && paymentReg && !paymentSubmitting ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {paymentSubmitting ? '⏳ Uploading...' : '✓ Submit Payment Proof'}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -2309,8 +2534,11 @@ export default function App() {
             {selectedCategory.apps.map((app, i) => (
               <FadeIn key={app.id} delay={i * 0.1}>
                 <div
-                  style={styles.appCard}
-                  onClick={() => { setSelectedApp(app); setDetailTab('details') }}
+                  style={{ ...styles.appCard, cursor: 'pointer' }}
+                  onClick={(e) => {
+                    if (app.checkoutChooser) { setSelectedCategory(null); setCurrentPage('checkoutChooser-' + app.checkoutChooser); return }
+                    setSelectedApp(app); setDetailTab('details')
+                  }}
                 >
                   <div style={styles.appCardPhone}>
                     <PhoneMockup screenshot={app.screenshots[0]} liveUrl={app.liveUrls?.[0] || app.liveUrl} color={app.color} small />
@@ -2328,9 +2556,16 @@ export default function App() {
                       <span style={{ fontSize: 13, color: '#888' }}>{t.perMonth}</span>
                     </p>
                     <p style={styles.appCardTagline}>{app.tagline}</p>
-                    <span style={{ ...styles.appCardBtn, background: '#FFD600', color: '#1a1a1a', padding: '8px 16px', borderRadius: 10, display: 'inline-block' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (app.checkoutChooser) { setSelectedCategory(null); setCurrentPage('checkoutChooser-' + app.checkoutChooser); return }
+                        setSelectedApp(app); setDetailTab('details')
+                      }}
+                      style={{ ...styles.appCardBtn, background: '#FFD600', color: '#1a1a1a', padding: '8px 16px', borderRadius: 10, display: 'inline-block', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontWeight: 'inherit', minHeight: 44 }}
+                    >
                       {t.viewDetails}
-                    </span>
+                    </button>
                   </div>
                 </div>
               </FadeIn>
@@ -2448,7 +2683,9 @@ export default function App() {
               localStorage.setItem('vendorbasic_vendorId', data.id)
               const isDev = window.location.port === '5173' || window.location.port === '5174'
               const baseUrl = vendorAuthApp?.id === 'basic'
-                ? (isDev ? 'http://localhost:5176/' : '/food/basic/')
+                ? (isDev ? 'http://localhost:5176/' : '/food/whatsapp/')
+                : vendorAuthApp?.id === 'chat'
+                ? (isDev ? 'http://localhost:5177/' : '/food/chat/')
                 : (isDev ? '/food/pro/' : '/food/pro/')
               const appUrl = `${baseUrl}?vendor=${data.id}`
               window.open(appUrl, '_blank')
@@ -2507,7 +2744,9 @@ export default function App() {
               localStorage.setItem('vendorbasic_vendorId', data.id)
               const isDev = window.location.port === '5173' || window.location.port === '5174'
               const baseUrl = vendorAuthApp?.id === 'basic'
-                ? (isDev ? 'http://localhost:5176/' : '/food/basic/')
+                ? (isDev ? 'http://localhost:5176/' : '/food/whatsapp/')
+                : vendorAuthApp?.id === 'chat'
+                ? (isDev ? 'http://localhost:5177/' : '/food/chat/')
                 : (isDev ? '/food/pro/' : '/food/pro/')
               const countryName = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)?.name || ''
               const appUrl = `${baseUrl}?vendor=${data.id}&slug=${encodeURIComponent(slug)}&city=${encodeURIComponent(vendorAuthForm.city)}&country=${encodeURIComponent(countryName)}&cc=${vendorAuthForm.country}`
@@ -2537,6 +2776,212 @@ export default function App() {
 
   if (currentPage === 'affiliate') {
     return <Affiliate onClose={() => setCurrentPage(null)} />
+  }
+
+  /* ─── Checkout Chooser (Basic Food Local) ─── */
+  if (currentPage === 'checkoutChooser-food') {
+    const isDevHost = window.location.hostname === 'localhost'
+    const foodCat = CATEGORIES.find(c => c.id === 'food')
+    const basicApp = foodCat?.apps.find(a => a.id === 'basic')
+    const waApp = basicApp ? { ...basicApp, checkoutChooser: false, checkoutLabel: 'Customers Order By Whats App' } : null
+    const chatApp = basicApp ? {
+      ...basicApp,
+      id: 'chat',
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By App Chat',
+      name: 'FoodLocal',
+      tier: 'Software 1 — Chat',
+      price: 'Rp 50.000',
+      yearlyPrice: 'Rp 600.000',
+      tagline: 'Your WhatsApp stays private. Your team logs in to handle orders together.',
+      description: 'Same FoodLocal storefront. Orders arrive in a private chat inside your app instead of going to your personal WhatsApp — your number stays private from customers. Invite your team: any staff member can install the app on their phone, log in, and pick up new orders alongside you. Real-time sound and vibration alerts on every new order so nobody misses one.',
+      liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (isDevHost ? 'http://localhost:5177/food/chat/' : '/food/chat/') + '?demo=true&page=' + p),
+      url: '/food/chat/',
+      color: '#1a1a1a',
+    } : null
+    const cardBase = { background: '#fff', borderRadius: 18, padding: 18, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', gap: 10 }
+    const btnBase = { padding: '14px 20px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', minHeight: 44 }
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+        </div>
+        <div style={{ padding: '24px 20px 60px', maxWidth: 720, margin: '0 auto' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6, lineHeight: 1.2 }}>Select your preferred checkout system</h1>
+          <p style={{ fontSize: 13, color: '#666', marginBottom: 22, lineHeight: 1.5 }}>Both options share the same FoodLocal storefront. They differ only in how customer orders reach you.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
+            {/* WhatsApp card */}
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddccc-removebg-preview.png" alt="WhatsApp Checkout" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>FoodLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By Whats App</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#25D366', marginTop: 2 }}>Rp 35.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Orders go straight to your WhatsApp. Familiar to your customers, zero learning curve. Your customers' phone numbers stay between you and them.
+              </p>
+              <button
+                onClick={() => { if (!waApp) return; setCurrentPage(null); setSelectedApp(waApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#25D366', color: '#fff' }}
+              >Pick WhatsApp</button>
+            </div>
+
+            {/* Chat card */}
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🔔</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>FoodLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By App Chat</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginTop: 2 }}>Rp 50.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Your WhatsApp number stays private — customers never see it. Add your team: anyone you invite installs the app on their phone, logs in, and handles incoming orders right beside you. Sound and vibration alerts on every new order. Optionally show your WhatsApp on the Visit Us page.
+              </p>
+              <button
+                onClick={() => { if (!chatApp) return; setCurrentPage(null); setSelectedApp(chatApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#1a1a1a', color: '#FFD600' }}
+              >Pick Chat</button>
+            </div>
+          </div>
+
+          <button onClick={() => setCurrentPage(null)} style={{ marginTop: 20, background: 'none', border: '1px solid #ddd', borderRadius: 12, padding: '10px 18px', fontSize: 13, color: '#666', cursor: 'pointer', minHeight: 44 }}>Back</button>
+        </div>
+      </div>
+    )
+  }
+
+  /* ─── Checkout Chooser (Products Local — 3 options: WhatsApp / Chat / Email) ─── */
+  if (currentPage === 'checkoutChooser-products') {
+    const isDevHost = window.location.hostname === 'localhost'
+    const productsCat = CATEGORIES.find(c => c.id === 'products')
+    const productslocalApp = productsCat?.apps.find(a => a.id === 'productslocal')
+
+    const productsWaApp = productslocalApp ? {
+      ...productslocalApp,
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By Whats App',
+    } : null
+
+    const productsChatApp = productslocalApp ? {
+      ...productslocalApp,
+      id: 'productschat',
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By App Chat',
+      name: 'ProductsLocal',
+      tier: 'Software 3 — Chat',
+      price: 'Rp 50.000',
+      yearlyPrice: 'Rp 600.000',
+      tagline: 'Your WhatsApp stays private. Your team logs in to handle orders together.',
+      description: 'Same ProductsLocal storefront. Orders arrive in a private chat inside your app instead of going to your personal WhatsApp — your number stays private from customers. Invite your team: any staff member can install the app on their phone, log in, and pick up new orders alongside you. Real-time sound and vibration alerts on every new order so nobody misses one.',
+      liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (isDevHost ? 'http://localhost:5179/products/chat/' : '/products/chat/') + '?demo=true&page=' + p),
+      url: '/products/chat/',
+      color: '#1a1a1a',
+    } : null
+
+    const productsEmailApp = productslocalApp ? {
+      ...productslocalApp,
+      id: 'productsemail',
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By Email',
+      name: 'ProductsLocal',
+      tier: 'Software 3 — Email',
+      price: 'Rp 75.000',
+      yearlyPrice: 'Rp 900.000',
+      tagline: 'Formal orders, professional inbox flow — ideal for B2B and serious purchases.',
+      description: 'Same ProductsLocal storefront. Customer orders arrive as a clean, formatted HTML email in your business inbox — perfect for B2B, custom orders, and serious purchases that need a paper trail. Replies are threaded by email. Customers leave their email at checkout so you can quote, confirm, or follow up directly. No app login required to read orders — they live in your normal email.',
+      liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (isDevHost ? 'http://localhost:5180/products/email/' : '/products/email/') + '?demo=true&page=' + p),
+      url: '/products/email/',
+      color: '#1a1a1a',
+    } : null
+
+    const cardBase = { background: '#fff', borderRadius: 18, padding: 18, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', gap: 10 }
+    const btnBase = { padding: '14px 20px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', minHeight: 44 }
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+        </div>
+        <div style={{ padding: '24px 20px 60px', maxWidth: 720, margin: '0 auto' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6, lineHeight: 1.2 }}>Select your preferred checkout system</h1>
+          <p style={{ fontSize: 13, color: '#666', marginBottom: 22, lineHeight: 1.5 }}>All three share the same ProductsLocal storefront. They differ only in how customer orders reach you.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
+            {/* WhatsApp card — Rp 35.000 */}
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddccc-removebg-preview.png" alt="WhatsApp Checkout" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ProductsLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By Whats App</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#25D366', marginTop: 2 }}>Rp 35.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Orders go straight to your WhatsApp. Familiar to your customers, zero learning curve. Best for quick everyday product sales where chat and pricing happen on WhatsApp anyway.
+              </p>
+              <button
+                onClick={() => { if (!productsWaApp) return; setCurrentPage(null); setSelectedApp(productsWaApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#25D366', color: '#fff' }}
+              >Pick WhatsApp</button>
+            </div>
+
+            {/* Chat card — Rp 50.000 */}
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🔔</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ProductsLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By App Chat</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginTop: 2 }}>Rp 50.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Your WhatsApp number stays private — customers never see it. Add your team: anyone you invite installs the app on their phone, logs in, and handles incoming orders right beside you. Sound and vibration alerts on every new order. Optionally show your WhatsApp on the Visit Us page.
+              </p>
+              <button
+                onClick={() => { if (!productsChatApp) return; setCurrentPage(null); setSelectedApp(productsChatApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#1a1a1a', color: '#FFD600' }}
+              >Pick Chat</button>
+            </div>
+
+            {/* Email card — Rp 75.000 */}
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: '#4A90D9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📧</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ProductsLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By Email</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#4A90D9', marginTop: 2 }}>Rp 75.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Customer orders arrive as a clean, formatted HTML email in your business inbox — ideal for B2B, custom orders, and serious purchases that need a paper trail. Replies are threaded by email so the conversation lives where you already work. No app login required to read orders.
+              </p>
+              <button
+                onClick={() => { if (!productsEmailApp) return; setCurrentPage(null); setSelectedApp(productsEmailApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#4A90D9', color: '#fff' }}
+              >Pick Email</button>
+            </div>
+          </div>
+
+          <button onClick={() => setCurrentPage(null)} style={{ marginTop: 20, background: 'none', border: '1px solid #ddd', borderRadius: 12, padding: '10px 18px', fontSize: 13, color: '#666', cursor: 'pointer', minHeight: 44 }}>Back</button>
+        </div>
+      </div>
+    )
   }
 
   /* ─── Sub Pages (About, FAQ, Services) ─── */
@@ -2916,11 +3361,11 @@ export default function App() {
             const allThemes = [
               { id: 'noodle', ref: 'SL-001', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_24_04-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_25_10-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_27_39-am.png'], isNew: false, popular: false, activations: 48 },
               { id: 'coffee', ref: 'SL-002', label: 'Coffee', accent: '#8a570f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_09_46-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_10_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_12_08-am.png'], isNew: false, popular: false, activations: 67 },
-              { id: 'satay', ref: 'SL-003', label: 'Satay', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png', isNew: false, popular: false, activations: 52 },
-              { id: 'juice', ref: 'SL-004', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'], isNew: false, popular: false, activations: 39 },
-              { id: 'chicken', ref: 'SL-005', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'], isNew: false, popular: true, activations: 156 },
+              { id: 'satay', ref: 'SL-003', label: 'Satay', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012941.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png'], isNew: false, popular: false, activations: 52 },
+              { id: 'juice', ref: 'SL-004', label: 'Fresh Juice', accent: '#e8b92c', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013408.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013601.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511013703.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'], isNew: false, popular: false, activations: 39 },
+              { id: 'chicken', ref: 'SL-005', label: 'Crispy Chicken', accent: '#c15d15', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014830.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'], isNew: false, popular: true, activations: 156 },
               { id: 'bakso', ref: 'SL-006', label: 'Bakso', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_49_45-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_52_59-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_57_35-pm.png'], isNew: false, popular: true, activations: 203 },
-              { id: 'friedrice', ref: 'SL-007', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png', isNew: false, popular: true, activations: 312 },
+              { id: 'friedrice', ref: 'SL-007', label: 'Nasi Goreng', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012403.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511012720.png'], isNew: false, popular: true, activations: 312 },
               { id: 'pecellele', ref: 'SL-008', label: 'Pecel Lele', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_17_10-am.png', isNew: false, popular: false, activations: 44 },
               { id: 'kebab', ref: 'SL-009', label: 'Kebab', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_04_20-pm.png', isNew: false, popular: false, activations: 31 },
               { id: 'martabak', ref: 'SL-010', label: 'Martabak', accent: '#8a0f8a', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_08_25-am.png', isNew: true, popular: false, activations: 28 },
@@ -2930,8 +3375,8 @@ export default function App() {
               { id: 'ikanbakar', ref: 'SL-014', label: 'Ikan Bakar', accent: '#e8512c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_14_52-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_17-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_21_18-pm.png'], isNew: true, popular: false, activations: 18 },
               { id: 'nasiuduk', ref: 'SL-015', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png', isNew: true, popular: false, activations: 12 },
               { id: 'bebekgoreng', ref: 'SL-016', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png', isNew: true, popular: false, activations: 9 },
-              { id: 'burger', ref: 'SL-017', label: 'Burgers', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png', isNew: false, popular: true, activations: 134 },
-              { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_49_41-pm.png', isNew: false, popular: false, activations: 27 },
+              { id: 'burger', ref: 'SL-017', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014403.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014523.png'], isNew: false, popular: true, activations: 134 },
+              { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_49_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_48_16-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_45_26-pm.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_42_58%20PM.png?updatedAt=1778308994638'], isNew: false, popular: false, activations: 27 },
               { id: 'hotdog', ref: 'SL-019', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png', isNew: true, popular: false, activations: 5 },
               { id: 'pizza', ref: 'SL-020', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png', isNew: true, popular: false, activations: 3 },
             ]
@@ -3122,8 +3567,10 @@ export default function App() {
             const productThemes = [
               { id: 'clothing', ref: 'PL-001', label: 'Clothing', accent: '#4A90D9', isNew: false, popular: true, activations: 89 },
               { id: 'shoes', ref: 'PL-002', label: 'Shoes', accent: '#8B4513', isNew: false, popular: false, activations: 45 },
-              { id: 'hijab', ref: 'PL-003', label: 'Hijab & Scarves', accent: '#9B59B6', isNew: false, popular: true, activations: 134 },
-              { id: 'batik', ref: 'PL-004', label: 'Batik', accent: '#B8860B', isNew: true, popular: false, activations: 28 },
+              { id: 'hijab', ref: 'PL-003', label: 'Hijab & Scarves', accent: '#9B59B6', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2004_57_19%20PM.png?updatedAt=1778407052888', isNew: false, popular: true, activations: 134 },
+              { id: 'batik', ref: 'PL-004', label: 'Batik', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2011_41_38%20AM.png?updatedAt=1778388112989', isNew: true, popular: false, activations: 28 },
+              { id: 'tshirts', ref: 'PL-027', label: 'T-Shirts', accent: '#4A90D9', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasd.png?updatedAt=1778435998178', variants: ['https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvv.png?updatedAt=1778434284405', 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdas.png?updatedAt=1778434574941'], isNew: true, popular: false, activations: 0 },
+              { id: 'helmets', ref: 'PL-028', label: 'Helmets', accent: '#1a1a1a', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasdsdsasddd.png', variants: ['https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasdsdsasd.png', 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasds.png?updatedAt=1778436294045'], isNew: true, popular: false, activations: 0 },
               { id: 'handbags', ref: 'PL-003', label: 'Handbags', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png', isNew: true, popular: false, activations: 31 },
               { id: 'electronics', ref: 'PL-005', label: 'Electronics', accent: '#2ECC71', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png', isNew: false, popular: true, activations: 156 },
               { id: 'comprepair', ref: 'PL-006', label: 'Computer Repair', accent: '#1E90FF', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v2.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v3.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v4.png'], isNew: true, popular: false, activations: 4 },
@@ -3133,7 +3580,7 @@ export default function App() {
               { id: 'perfume', ref: 'PL-009', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png', isNew: true, popular: false, activations: 19 },
               { id: 'homedecor', ref: 'PL-010', label: 'Home Decor', accent: '#D4A373', isNew: false, popular: false, activations: 52 },
               { id: 'furniture', ref: 'PL-011', label: 'Furniture', accent: '#795548', isNew: true, popular: false, activations: 8 },
-              { id: 'kitchenware', ref: 'PL-012', label: 'Kitchenware', accent: '#FF6B35', isNew: false, popular: false, activations: 34 },
+              { id: 'kitchenware', ref: 'PL-012', label: 'Kitchenware', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png', isNew: false, popular: false, activations: 34 },
               { id: 'packaging', ref: 'PL-013', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png', isNew: true, popular: false, activations: 14 },
               { id: 'handicraft', ref: 'PL-014', label: 'Handicrafts', accent: '#e8992c', isNew: false, popular: false, activations: 41 },
               { id: 'jewelry', ref: 'PL-015', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry-v2.png'], isNew: false, popular: false, activations: 56 },
@@ -3188,7 +3635,7 @@ export default function App() {
                 {newThemes.length > 0 && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>🆕 New Product Themes</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                       {newThemes.map(theme => (
                         <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
                           <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3206,7 +3653,7 @@ export default function App() {
                 {/* All Themes */}
                 <div style={{ padding: '0 16px 16px' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Product Themes ({otherThemes.length})</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                     {otherThemes.map(theme => (
                       <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
                         <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -4303,7 +4750,7 @@ export default function App() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               autoFocus
-              placeholder="Search food, drinks, services..."
+              placeholder="Search food, products, or category..."
               style={{ width: '100%', padding: '12px 40px 12px 38px', borderRadius: 14, border: '1.5px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
               onFocus={e => e.target.style.borderColor = '#FFD600'}
               onBlur={e => e.target.style.borderColor = '#e8e8e8'}
@@ -4341,6 +4788,32 @@ export default function App() {
 
           {searchLoading && <div style={{ textAlign: 'center', padding: 24, color: '#ccc', fontSize: 13 }}>Searching...</div>}
 
+          {/* Theme suggestions — match query against THEME_INDEX so users can find any app/category */}
+          {searchQuery && !searchLoading && (() => {
+            const themeMatches = findThemeMatches(searchQuery, 8)
+            if (themeMatches.length === 0) return null
+            return (
+              <div style={{ marginBottom: 16, padding: '12px 12px 14px', background: '#FFFBEB', borderRadius: 14, border: '1px solid #FFE082' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Matching categories</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {themeMatches.map(theme => (
+                    <a
+                      key={theme.id}
+                      href={themeDemoUrl(theme)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: '#fff', border: `1.5px solid ${theme.accent}40`, color: '#1a1a1a', fontSize: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', minHeight: 36 }}
+                    >
+                      <span style={{ width: 8, height: 8, borderRadius: 4, background: theme.accent }} />
+                      {theme.label}
+                      <span style={{ fontSize: 10, color: '#888', fontWeight: 600 }}>{theme.app === 'food' ? 'Food app' : 'Products app'}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Listings */}
           {!searchLoading && searchResults.map((vendor, idx) => {
             const st = VENDOR_STATUS_CONFIG[vendor.status] || VENDOR_STATUS_CONFIG.closed
@@ -4349,7 +4822,7 @@ export default function App() {
             return (
               <div key={vendor.id} style={{ marginBottom: 10 }}>
                 <div
-                  onClick={() => { if (isMock) return; const slug = vendor.slug || vendor.id; if (slug) window.open(`${window.location.origin}/food/basic/?vendor=${slug}`, '_blank') }}
+                  onClick={() => { if (isMock) return; const slug = vendor.slug || vendor.id; if (slug) window.open(`${window.location.origin}/food/whatsapp/?vendor=${slug}`, '_blank') }}
                   style={{ background: '#fff', borderRadius: 14, padding: '12px 12px 10px', cursor: isMock ? 'default' : 'pointer', opacity: vendor.status === 'closed' ? 0.5 : 1, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
                 >
                   <div style={{ display: 'flex', gap: 12 }}>
@@ -4474,7 +4947,7 @@ export default function App() {
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); if (!searchActive && e.target.value) setSearchActive(true) }}
             onFocus={() => setSearchActive(true)}
-            placeholder="What are you craving? 🍜"
+            placeholder="Search anything — food, products, services 🔍"
             style={{ width: '100%', padding: '14px 16px 14px 44px', borderRadius: 16, border: '2px solid #f0f0f0', background: '#f8f9fa', color: '#1a1a1a', fontSize: 15, fontWeight: 500, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
             onMouseEnter={e => e.target.style.borderColor = '#FFD600'}
             onMouseLeave={e => { if (document.activeElement !== e.target) e.target.style.borderColor = '#f0f0f0' }}

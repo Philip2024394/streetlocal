@@ -212,7 +212,13 @@ export default function Admin({ onClose }) {
   const filtered = regs.filter(r => {
     if (filterStatus !== 'all' && r.status !== filterStatus) return false
     if (filterApp !== 'all' && r.app_type !== filterApp) return false
-    if (search && !r.business_name.toLowerCase().includes(search.toLowerCase()) && !r.slug.toLowerCase().includes(search.toLowerCase())) return false
+    if (search) {
+      const q = search.toLowerCase()
+      const inName = r.business_name?.toLowerCase().includes(q)
+      const inSlug = r.slug?.toLowerCase().includes(q)
+      const inRef = r.payment_reference?.toLowerCase().includes(q)
+      if (!inName && !inSlug && !inRef) return false
+    }
     return true
   })
 
@@ -504,7 +510,8 @@ export default function Admin({ onClose }) {
                   style={{ ...s.input, marginBottom: 10 }}
                 >
                   <option value="">Select app...</option>
-                  <option value="food-basic">FoodLocal</option>
+                  <option value="foodlocalwhatsapp">FoodLocal (WhatsApp)</option>
+                  <option value="foodlocalchat">FoodLocal Chat</option>
                   <option value="food-pro">Food Pro (Restaurant)</option>
                   <option value="landing">Landing Page (streetlocal.live)</option>
                   <option value="admin">Admin Dashboard</option>
@@ -811,23 +818,41 @@ export default function Admin({ onClose }) {
                   <h3 style={{ ...s.sectionTitle, color: '#F59E0B' }}>Pending Verification ({pendingPayments.length})</h3>
                   {pendingPayments.map(reg => (
                     <div key={reg.id} style={{ ...s.memberCard, borderLeft: '4px solid #F59E0B', marginBottom: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 14, fontWeight: 800 }}>{reg.business_name}</div>
                           <div style={{ fontSize: 12, color: '#888' }}>{reg.app_tier} — {reg.billing_cycle || 'monthly'} — {reg.price || 'N/A'}</div>
                           <div style={{ fontSize: 11, color: '#999' }}>Registered {daysAgo(reg.created_at)} | {getCountry(reg.whatsapp)}</div>
                         </div>
+                        {reg.payment_reference && (
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(reg.payment_reference) }}
+                            title="Click to copy"
+                            style={{ background: '#FFFBEB', border: '1.5px dashed #FFD600', borderRadius: 8, padding: '4px 8px', fontSize: 13, fontWeight: 800, fontFamily: 'monospace', color: '#1a1a1a', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            {reg.payment_reference}
+                          </button>
+                        )}
                       </div>
-                      {reg.payment_proof && (
+                      {reg.payment_proof_url ? (
                         <div style={{ marginBottom: 8 }}>
-                          <img src={reg.payment_proof} alt="Payment proof" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, border: '1px solid #e0e0e0' }} />
+                          <a href={reg.payment_proof_url} target="_blank" rel="noopener noreferrer">
+                            <img src={reg.payment_proof_url} alt="Payment proof" style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8, border: '1px solid #e0e0e0', cursor: 'zoom-in' }} />
+                          </a>
+                          {reg.payment_uploaded_at && (
+                            <div style={{ fontSize: 10, color: '#999', marginTop: 4 }}>Uploaded {daysAgo(reg.payment_uploaded_at)}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ marginBottom: 8, padding: 10, background: '#FEF3C7', border: '1px dashed #F59E0B', borderRadius: 8, fontSize: 12, color: '#92400E' }}>
+                          ⏳ No proof uploaded yet — customer hasn't completed payment
                         </div>
                       )}
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => verifyPayment(reg.id)} style={{ ...s.btnGreen, flex: 1 }}>Verify & Activate</button>
                         <button onClick={() => rejectPayment(reg.id)} style={{ ...s.btnRed, flex: 1 }}>Reject</button>
                         {reg.whatsapp && (
-                          <a href={`https://wa.me/${reg.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi! We received your payment for Street Local. Can you confirm the amount and date of transfer?')}`} target="_blank" rel="noopener noreferrer" style={{ ...s.btnWhatsApp, flex: 0 }}>💬</a>
+                          <a href={`https://wa.me/${reg.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi! We received your payment for Street Local (ref ${reg.payment_reference || ''}). Can you confirm the amount and date of transfer?`)}`} target="_blank" rel="noopener noreferrer" style={{ ...s.btnWhatsApp, flex: 0 }}>💬</a>
                         )}
                       </div>
                     </div>

@@ -3,14 +3,22 @@
   "private": true,
   "scripts": {
     "dev:landing": "cd landing && npm run dev",
-    "dev:food-basic": "cd food-basic && npm run dev -- --port 5176",
+    "dev:foodlocalwhatsapp": "cd foodlocalwhatsapp && npm run dev -- --port 5176",
     "dev:food-pro": "cd food-pro && npm run dev -- --port 5174",
-    "dev": "npm run dev:landing & npm run dev:food-basic & npm run dev:food-pro",
+    "dev:foodlocalchat": "cd foodlocalchat && npm run dev -- --port 5177",
+    "dev:products-local": "cd products-local && npm run dev -- --port 5178",
+    "dev:productslocalchat": "cd productslocalchat && npm run dev -- --port 5179",
+    "dev:productslocalemail": "cd productslocalemail && npm run dev -- --port 5180",
+    "dev": "npm run dev:landing & npm run dev:foodlocalwhatsapp & npm run dev:food-pro & npm run dev:foodlocalchat & npm run dev:products-local & npm run dev:productslocalchat & npm run dev:productslocalemail",
     "build:landing": "cd landing && npm run build",
-    "build:food-basic": "cd food-basic && npm run build",
+    "build:foodlocalwhatsapp": "cd foodlocalwhatsapp && npm run build",
     "build:food-pro": "cd food-pro && npm run build",
-    "build": "npm run build:landing && npm run build:food-basic && npm run build:food-pro",
-    "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../food-pro && npm install"
+    "build:foodlocalchat": "cd foodlocalchat && npm run build",
+    "build:products-local": "cd products-local && npm run build",
+    "build:productslocalchat": "cd productslocalchat && npm run build",
+    "build:productslocalemail": "cd productslocalemail && npm run build",
+    "build": "npm run build:landing && npm run build:foodlocalwhatsapp && npm run build:food-pro && npm run build:foodlocalchat && npm run build:products-local && npm run build:productslocalchat && npm run build:productslocalemail",
+    "install:all": "cd landing && npm install && cd ../foodlocalwhatsapp && npm install && cd ../food-pro && npm install && cd ../foodlocalchat && npm install && cd ../products-local && npm install && cd ../productslocalchat && npm install && cd ../productslocalemail && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4"

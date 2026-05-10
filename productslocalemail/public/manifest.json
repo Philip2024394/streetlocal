@@ -1,0 +1,16 @@
+{
+  "name": "StreetLocal — ProductsLocal Email",
+  "short_name": "ProductsLocalEmail",
+  "start_url": "/products/email/",
+  "scope": "/products/email/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/products/email/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

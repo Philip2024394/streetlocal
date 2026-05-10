@@ -4,6 +4,20 @@ import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
 import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
+import {
+  sendCustomerOrder,
+  sendChatText,
+  sendSystemStatus,
+  loadMessages,
+  loadVendorConversations,
+  clearVendorUnread,
+  clearCustomerUnread,
+  subscribeToMessages,
+  subscribeToVendorMessages,
+  getRememberedConvo,
+  fmtRupiah as fmtRupiahChat,
+} from './lib/chat'
+import { enableVendorPush, disableVendorPush, getCurrentSubscription, pushSupported, registerSW } from './lib/push'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
 const MODULE = 'products'
@@ -480,6 +494,189 @@ function DevBadge({ n }) {
   return null
 }
 
+/* ─── Customer Chat Panel (inline below cart confirmation) ─── */
+function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt }) {
+  const [sending, setSending] = useState(false)
+  const [err, setErr] = useState('')
+  const scrollRef = useRef(null)
+
+  // Subscribe to message inserts for this conversation
+  useEffect(() => {
+    if (!conversation?.id) return
+    const unsub = subscribeToMessages(conversation.id, (msg) => {
+      setMessages((prev) => prev.find(m => m.id === msg.id) ? prev : [...prev, msg])
+    })
+    // Mark customer's unread cleared when they view
+    clearCustomerUnread(conversation.id)
+    return unsub
+  }, [conversation?.id])
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages.length])
+
+  if (!conversation) return null
+
+  const orderMsg = messages.find(m => m.order_payload)
+  const op = orderMsg?.order_payload || {}
+
+  const onSend = async () => {
+    const body = draft.trim()
+    if (!body || sending) return
+    setSending(true)
+    setErr('')
+    const optimistic = { id: 'tmp-' + Date.now(), conversation_id: conversation.id, sender_role: 'customer', body, created_at: new Date().toISOString() }
+    setMessages((prev) => [...prev, optimistic])
+    setDraft('')
+    const res = await sendChatText({ conversationId: conversation.id, senderRole: 'customer', body })
+    setSending(false)
+    if (res.error) {
+      setErr(res.error)
+      setMessages((prev) => prev.filter(m => m.id !== optimistic.id))
+    } else if (res.message) {
+      setMessages((prev) => prev.map(m => m.id === optimistic.id ? res.message : m))
+    }
+  }
+
+  const sStyle = {
+    panel: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 12, marginTop: 16, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' },
+    header: { fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 },
+    orderCard: { background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: 10, marginBottom: 10, fontSize: 12, color: 'rgba(255,255,255,0.85)' },
+    msgList: { maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8, paddingRight: 4 },
+    msgRow: (role) => ({ display: 'flex', justifyContent: role === 'customer' ? 'flex-end' : role === 'system' ? 'center' : 'flex-start' }),
+    bubble: (role) => ({
+      maxWidth: '78%',
+      padding: '8px 12px',
+      borderRadius: 14,
+      fontSize: 13,
+      lineHeight: 1.4,
+      background: role === 'customer' ? accent : role === 'system' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.14)',
+      color: role === 'system' ? 'rgba(255,255,255,0.7)' : '#fff',
+      fontStyle: role === 'system' ? 'italic' : 'normal',
+      wordBreak: 'break-word',
+    }),
+    inputRow: { display: 'flex', gap: 8 },
+    input: { flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, minHeight: 44 },
+    sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
+  }
+
+  return (
+    <div style={sStyle.panel}>
+      <div style={sStyle.header}>Chat with the vendor</div>
+      {op && op.items && (
+        <div style={sStyle.orderCard}>
+          <div style={{ fontWeight: 800, marginBottom: 4 }}>Order {op.orderNumber || ''}</div>
+          {op.items.map((it, i) => (
+            <div key={i}>{it.qty}x {it.name} — {fmt ? fmt(it.lineTotal) : it.lineTotal}</div>
+          ))}
+          {op.delivery?.fee > 0 && <div style={{ marginTop: 4 }}>Delivery: {fmt ? fmt(op.delivery.fee) : op.delivery.fee}</div>}
+          <div style={{ marginTop: 4, fontWeight: 800 }}>Total: {fmt ? fmt(op.total) : op.total}</div>
+          {op.note && <div style={{ marginTop: 4, opacity: 0.8 }}>Note: {op.note}</div>}
+        </div>
+      )}
+      <div style={sStyle.msgList} ref={scrollRef}>
+        {messages.filter(m => !m.order_payload).map((m) => (
+          <div key={m.id} style={sStyle.msgRow(m.sender_role)}>
+            <div style={sStyle.bubble(m.sender_role)}>{m.body}</div>
+          </div>
+        ))}
+      </div>
+      <div style={sStyle.inputRow}>
+        <input
+          style={sStyle.input}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') onSend() }}
+          placeholder="Type a message…"
+          aria-label="Type a message to the vendor"
+        />
+        <button style={sStyle.sendBtn} onClick={onSend} disabled={sending || !draft.trim()}>{sending ? '…' : 'Send'}</button>
+      </div>
+      {err && <div style={{ marginTop: 6, color: '#FCA5A5', fontSize: 12 }}>{err}</div>}
+    </div>
+  )
+}
+
+/* ─── Vendor thread view (inbox conversation) ─── */
+function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, setDraft, onSend, onStatus }) {
+  const scrollRef = useRef(null)
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages.length])
+
+  const orderMsg = messages.find(m => m.order_payload)
+  const op = orderMsg?.order_payload || {}
+  const sty = {
+    header: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' },
+    backBtn: { padding: '8px 12px', borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, cursor: 'pointer', minHeight: 44 },
+    name: { fontSize: 15, fontWeight: 800, color: '#fff', flex: 1 },
+    orderCard: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12, margin: 12, fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+    msgList: { flex: 1, overflowY: 'auto', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 },
+    msgRow: (role) => ({ display: 'flex', justifyContent: role === 'vendor' ? 'flex-end' : role === 'system' ? 'center' : 'flex-start' }),
+    bubble: (role) => ({
+      maxWidth: '78%',
+      padding: '8px 12px',
+      borderRadius: 14,
+      fontSize: 13,
+      lineHeight: 1.4,
+      background: role === 'vendor' ? accent : role === 'system' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.14)',
+      color: role === 'system' ? 'rgba(255,255,255,0.7)' : '#fff',
+      fontStyle: role === 'system' ? 'italic' : 'normal',
+      wordBreak: 'break-word',
+    }),
+    statusRow: { display: 'flex', gap: 6, padding: '8px 12px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)' },
+    statusBtn: { padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 44 },
+    inputRow: { display: 'flex', gap: 8, padding: 12, borderTop: '1px solid rgba(255,255,255,0.05)' },
+    input: { flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, minHeight: 44 },
+    sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
+  }
+  return (
+    <>
+      <div style={sty.header}>
+        <button style={sty.backBtn} onClick={onBack}>‹ Back</button>
+        <div style={sty.name}>{conversation.customer_name || conversation.customer_phone}</div>
+      </div>
+      {op && op.items && (
+        <div style={sty.orderCard}>
+          <div style={{ fontWeight: 800, marginBottom: 4 }}>Order {op.orderNumber || ''}</div>
+          {op.items.map((it, i) => (
+            <div key={i}>{it.qty}x {it.name} — {fmt ? fmt(it.lineTotal) : it.lineTotal}</div>
+          ))}
+          {op.delivery?.fee > 0 && <div style={{ marginTop: 4 }}>Delivery: {fmt ? fmt(op.delivery.fee) : op.delivery.fee}</div>}
+          <div style={{ marginTop: 4, fontWeight: 800 }}>Total: {fmt ? fmt(op.total) : op.total}</div>
+          {op.note && <div style={{ marginTop: 4, opacity: 0.8 }}>Note: {op.note}</div>}
+          {op.customer?.address && <div style={{ marginTop: 4, opacity: 0.8 }}>Address: {op.customer.address}</div>}
+          <div style={{ marginTop: 4, opacity: 0.8 }}>Phone: {op.customer?.phone}</div>
+        </div>
+      )}
+      <div style={sty.msgList} ref={scrollRef}>
+        {messages.filter(m => !m.order_payload).map((m) => (
+          <div key={m.id} style={sty.msgRow(m.sender_role)}>
+            <div style={sty.bubble(m.sender_role)}>{m.body}</div>
+          </div>
+        ))}
+      </div>
+      <div style={sty.statusRow}>
+        {['Accepted', 'Preparing', 'Ready for pickup', 'Out for delivery', 'Completed'].map((s) => (
+          <button key={s} style={sty.statusBtn} onClick={() => onStatus(s)}>{s}</button>
+        ))}
+      </div>
+      <div style={sty.inputRow}>
+        <input
+          style={sty.input}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') onSend() }}
+          placeholder="Reply to customer…"
+          aria-label="Reply to customer"
+        />
+        <button style={sty.sendBtn} onClick={onSend} disabled={!draft.trim()}>Send</button>
+      </div>
+    </>
+  )
+}
+
 /* ─── Main App ─── */
 export default function App() {
   // Route to admin or activate page
@@ -493,31 +690,31 @@ export default function App() {
   const APP_VERSION = '1.0.0'
   useEffect(() => {
     if (isDemo || isPreview || !supabase) return
-    const vid = localStorage.getItem('productslocal_vendorId')
+    const vid = localStorage.getItem('productslocalchat_vendorId')
     if (!vid || String(vid).startsWith('local')) return
 
     // Auto-heal: detect and fix broken states
     const errors = []
-    const theme = localStorage.getItem('productslocal_theme')
-    const accentColor = localStorage.getItem('productslocal_accentColor')
-    const themeBg = localStorage.getItem('productslocal_themeBg')
+    const theme = localStorage.getItem('productslocalchat_theme')
+    const accentColor = localStorage.getItem('productslocalchat_accentColor')
+    const themeBg = localStorage.getItem('productslocalchat_themeBg')
 
     // Fix invalid accent color
     if (accentColor && !/^#[0-9A-Fa-f]{6}$/.test(accentColor)) {
-      localStorage.setItem('productslocal_accentColor', '#8DC63F')
+      localStorage.setItem('productslocalchat_accentColor', '#8DC63F')
       errors.push('Invalid accent color reset')
     }
     // Fix missing theme background
     if (theme && theme !== 'custom' && !themeBg) {
       const preset = THEME_PRESETS.find(t => t.id === theme)
-      if (preset) { localStorage.setItem('productslocal_themeBg', preset.img); errors.push('Missing theme bg restored') }
+      if (preset) { localStorage.setItem('productslocalchat_themeBg', preset.img); errors.push('Missing theme bg restored') }
     }
     // Fix NaN prices in menu
     try {
-      const menu = JSON.parse(localStorage.getItem('productslocal_menu') || '[]')
+      const menu = JSON.parse(localStorage.getItem('productslocalchat_menu') || '[]')
       let fixed = false
       menu.forEach(item => { if (isNaN(item.price) || item.price < 0) { item.price = 0; fixed = true } })
-      if (fixed) { localStorage.setItem('productslocal_menu', JSON.stringify(menu)); errors.push('NaN prices fixed') }
+      if (fixed) { localStorage.setItem('productslocalchat_menu', JSON.stringify(menu)); errors.push('NaN prices fixed') }
     } catch { errors.push('Corrupt menu JSON') }
 
     // Check for remote config (force reset, maintenance, announcements)
@@ -527,9 +724,9 @@ export default function App() {
         const newAccent = data.reset_accent || '#8B0000'
         const preset = THEME_PRESETS.find(t => t.id === newTheme)
         if (preset) {
-          localStorage.setItem('productslocal_theme', newTheme)
-          localStorage.setItem('productslocal_themeBg', preset.img)
-          localStorage.setItem('productslocal_accentColor', newAccent)
+          localStorage.setItem('productslocalchat_theme', newTheme)
+          localStorage.setItem('productslocalchat_themeBg', preset.img)
+          localStorage.setItem('productslocalchat_accentColor', newAccent)
           const bgImg = document.getElementById('app-bg-img')
           if (bgImg) bgImg.src = preset.img
           supabase.from('vendor_status').update({ force_reset: false }).eq('vendor_id', vid)
@@ -539,7 +736,7 @@ export default function App() {
     })
 
     // Report health
-    const menuCount = JSON.parse(localStorage.getItem('productslocal_menu') || '[]').length
+    const menuCount = JSON.parse(localStorage.getItem('productslocalchat_menu') || '[]').length
     const status = errors.length > 0 ? 'warning' : 'healthy'
     supabase.from('vendor_health_logs').insert({
       vendor_id: vid, status, app_version: APP_VERSION,
@@ -590,7 +787,7 @@ export default function App() {
   const [publicVendorLogo, setPublicVendorLogo] = useState('')
   useEffect(() => {
     // Check if this is a vendor's public page (has slug in URL or stored vendor ID)
-    const storedId = localStorage.getItem('productslocal_vendorId')
+    const storedId = localStorage.getItem('productslocalchat_vendorId')
     if (storedId && !String(storedId).startsWith('local') && supabase) {
       supabase.from('vendor_accounts').select('status,shop_name,shop_logo').eq('id', storedId).single().then(({ data }) => {
         if (data) {
@@ -608,10 +805,10 @@ export default function App() {
   const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
   const [showLanding, setShowLanding] = useState(() => {
     if (isDemo) return demoPage === 'landing'
-    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocal_vendorId') || localStorage.getItem('productslocal_vendor_id')
+    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocalchat_vendorId') || localStorage.getItem('productslocalchat_vendor_id')
     return !id
   })
-  const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('productslocal_menu', DEMO_MENU))
+  const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('productslocalchat_menu', DEMO_MENU))
   const [cart, setCart] = useState([])
   const [isVendor, setIsVendor] = useState(() => {
     if (isDemo) return false
@@ -620,23 +817,23 @@ export default function App() {
     const urlCity = params.get('city')
     const urlCountry = params.get('country')
     if (urlVendor) {
-      localStorage.setItem('productslocal_vendorId', urlVendor)
-      localStorage.setItem('productslocal_vendor_id', urlVendor)
-      if (urlCity) localStorage.setItem('productslocal_shopCity', urlCity)
-      if (urlCountry) localStorage.setItem('productslocal_shopCountry', urlCountry)
+      localStorage.setItem('productslocalchat_vendorId', urlVendor)
+      localStorage.setItem('productslocalchat_vendor_id', urlVendor)
+      if (urlCity) localStorage.setItem('productslocalchat_shopCity', urlCity)
+      if (urlCountry) localStorage.setItem('productslocalchat_shopCountry', urlCountry)
       // Auto-set delivery rates for new vendors
       const countryCode = params.get('cc')
-      if (countryCode && !localStorage.getItem('productslocal_delRatesSet')) {
+      if (countryCode && !localStorage.getItem('productslocalchat_delRatesSet')) {
         const rates = getDeliveryDefaults(countryCode, urlCity)
-        localStorage.setItem('productslocal_delMin', rates.minCharge)
-        localStorage.setItem('productslocal_delMinKm', rates.minKm)
-        localStorage.setItem('productslocal_delPerKm', rates.perKm)
-        localStorage.setItem('productslocal_delMax', rates.maxKm)
-        localStorage.setItem('productslocal_delCurrency', rates.currency)
-        localStorage.setItem('productslocal_delRatesSet', 'true')
+        localStorage.setItem('productslocalchat_delMin', rates.minCharge)
+        localStorage.setItem('productslocalchat_delMinKm', rates.minKm)
+        localStorage.setItem('productslocalchat_delPerKm', rates.perKm)
+        localStorage.setItem('productslocalchat_delMax', rates.maxKm)
+        localStorage.setItem('productslocalchat_delCurrency', rates.currency)
+        localStorage.setItem('productslocalchat_delRatesSet', 'true')
       }
     }
-    const id = urlVendor || localStorage.getItem('productslocal_vendorId') || localStorage.getItem('productslocal_vendor_id')
+    const id = urlVendor || localStorage.getItem('productslocalchat_vendorId') || localStorage.getItem('productslocalchat_vendor_id')
     return !!id
   })
   const [vendorLogin, setVendorLogin] = useState(false)
@@ -661,8 +858,8 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState(false)
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
   const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
-  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : (isDemo || isPreview) ? 'noodle' : (localStorage.getItem('productslocal_theme') || 'default'))
-  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : (isDemo || isPreview) ? '#8B0000' : (localStorage.getItem('productslocal_accentColor') || '#8DC63F'))
+  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : (isDemo || isPreview) ? 'noodle' : (localStorage.getItem('productslocalchat_theme') || 'default'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : (isDemo || isPreview) ? '#8B0000' : (localStorage.getItem('productslocalchat_accentColor') || '#8DC63F'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
@@ -683,60 +880,60 @@ export default function App() {
   const accentLight = accent + '25'
   const accentBorder = accent + '40'
   const isCustomAccent = shopAccentColor !== '#8DC63F'
-  const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('productslocal_bgPos')) } catch { return null } })()
+  const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('productslocalchat_bgPos')) } catch { return null } })()
   const bgStyle = shopTheme === 'custom' && savedBgPos ? { objectFit: 'cover', objectPosition: `${savedBgPos.x}% ${savedBgPos.y}%` } : { objectFit: 'fill' }
-  const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('productslocal_delBase')) || 5000)
-  const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('productslocal_delPerKm')) || 2500)
-  const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('productslocal_delMin')) || 7000)
-  const [delMaxKm, setDelMaxKm] = useState(() => parseInt(localStorage.getItem('productslocal_delMax')) || 15)
-  const [delFreeAbove, setDelFreeAbove] = useState(() => parseInt(localStorage.getItem('productslocal_delFree')) || 0)
-  const [delCurrency, setDelCurrency] = useState(() => localStorage.getItem('productslocal_delCurrency') || 'Rp')
-  const [delMinKm, setDelMinKm] = useState(() => parseInt(localStorage.getItem('productslocal_delMinKm')) || 2)
-  const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('productslocal_delEnabled') !== 'false')
+  const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('productslocalchat_delBase')) || 5000)
+  const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('productslocalchat_delPerKm')) || 2500)
+  const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('productslocalchat_delMin')) || 7000)
+  const [delMaxKm, setDelMaxKm] = useState(() => parseInt(localStorage.getItem('productslocalchat_delMax')) || 15)
+  const [delFreeAbove, setDelFreeAbove] = useState(() => parseInt(localStorage.getItem('productslocalchat_delFree')) || 0)
+  const [delCurrency, setDelCurrency] = useState(() => localStorage.getItem('productslocalchat_delCurrency') || 'Rp')
+  const [delMinKm, setDelMinKm] = useState(() => parseInt(localStorage.getItem('productslocalchat_delMinKm')) || 2)
+  const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('productslocalchat_delEnabled') !== 'false')
 
   /* Shop info */
-  const [shopName, setShopName] = useState(() => localStorage.getItem('productslocal_shopName') || 'Your Store')
-  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('productslocal_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
-  const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('productslocal_logoStyle') || 'circle') // circle | bare | off
-  const [heroSize, setHeroSize] = useState(() => localStorage.getItem('productslocal_heroSize') || 'normal') // normal | large | xl
-  const [heroFont, setHeroFont] = useState(() => localStorage.getItem('productslocal_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
-  const [heroColor, setHeroColor] = useState(() => localStorage.getItem('productslocal_heroColor') || '#ffffff')
-  const [heroSubColor, setHeroSubColor] = useState(() => localStorage.getItem('productslocal_heroSubColor') || '') // empty = auto from heroColor
-  const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('productslocal_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
+  const [shopName, setShopName] = useState(() => localStorage.getItem('productslocalchat_shopName') || 'Your Store')
+  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('productslocalchat_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
+  const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('productslocalchat_logoStyle') || 'circle') // circle | bare | off
+  const [heroSize, setHeroSize] = useState(() => localStorage.getItem('productslocalchat_heroSize') || 'normal') // normal | large | xl
+  const [heroFont, setHeroFont] = useState(() => localStorage.getItem('productslocalchat_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
+  const [heroColor, setHeroColor] = useState(() => localStorage.getItem('productslocalchat_heroColor') || '#ffffff')
+  const [heroSubColor, setHeroSubColor] = useState(() => localStorage.getItem('productslocalchat_heroSubColor') || '') // empty = auto from heroColor
+  const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('productslocalchat_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
   const [heroEditor, setHeroEditor] = useState(false) // full editor open
-  const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('productslocal_shopPhone') || '6281234567890')
-  const [shopOpen, setShopOpen] = useState(() => loadJSON('productslocal_shopOpen', true))
-  const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('productslocal_shopAddress') || 'Jl. Malioboro, Yogyakarta')
-  const [shopHours, setShopHours] = useState(() => localStorage.getItem('productslocal_shopHours') || '17:00 – 23:00')
+  const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('productslocalchat_shopPhone') || '6281234567890')
+  const [shopOpen, setShopOpen] = useState(() => loadJSON('productslocalchat_shopOpen', true))
+  const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('productslocalchat_shopAddress') || 'Jl. Malioboro, Yogyakarta')
+  const [shopHours, setShopHours] = useState(() => localStorage.getItem('productslocalchat_shopHours') || '17:00 – 23:00')
   const defaultSchedule = { mon: { open: '17:00', close: '23:00', off: false }, tue: { open: '17:00', close: '23:00', off: false }, wed: { open: '17:00', close: '23:00', off: false }, thu: { open: '17:00', close: '23:00', off: false }, fri: { open: '17:00', close: '23:00', off: false }, sat: { open: '17:00', close: '23:00', off: false }, sun: { open: '17:00', close: '23:00', off: true } }
-  const [shopSchedule, setShopSchedule] = useState(() => loadJSON('productslocal_shopSchedule', defaultSchedule))
-  const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('productslocal_shopMaps') || '')
-  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('productslocal_shopIG') || 'lummeenoodles')
-  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('productslocal_shopTT') || 'lummeenoodles')
-  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('productslocal_shopFB') || 'lummeenoodles')
-  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('productslocal_shopYT') || 'lummeenoodles')
-  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('productslocal_shopWeb') || 'www.lummeenoodles.com')
-  const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('productslocal_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
-  const [shopBio, setShopBio] = useState(() => localStorage.getItem('productslocal_shopBio') || '')
-  const [shopCity, setShopCity] = useState(() => localStorage.getItem('productslocal_shopCity') || '')
-  const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('productslocal_shopCountry') || '')
-  const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('productslocal_shopFoodType') || 'General Store')
+  const [shopSchedule, setShopSchedule] = useState(() => loadJSON('productslocalchat_shopSchedule', defaultSchedule))
+  const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('productslocalchat_shopMaps') || '')
+  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('productslocalchat_shopIG') || 'lummeenoodles')
+  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('productslocalchat_shopTT') || 'lummeenoodles')
+  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('productslocalchat_shopFB') || 'lummeenoodles')
+  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('productslocalchat_shopYT') || 'lummeenoodles')
+  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('productslocalchat_shopWeb') || 'www.lummeenoodles.com')
+  const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('productslocalchat_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
+  const [shopBio, setShopBio] = useState(() => localStorage.getItem('productslocalchat_shopBio') || '')
+  const [shopCity, setShopCity] = useState(() => localStorage.getItem('productslocalchat_shopCity') || '')
+  const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('productslocalchat_shopCountry') || '')
+  const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('productslocalchat_shopFoodType') || 'General Store')
 
   /* ─── Customization Features (all optional) ─── */
-  const [btnShape, setBtnShape] = useState(() => localStorage.getItem('productslocal_btnShape') || 'rounded')
-  const [btnColor, setBtnColor] = useState(() => localStorage.getItem('productslocal_btnColor') || '')
-  const [btnText, setBtnText] = useState(() => localStorage.getItem('productslocal_btnText') || '')
-  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('productslocal_btnGlow') === 'true')
-  const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('productslocal_overlayOpacity')) || 40)
-  const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('productslocal_landingLayout') || 'center')
-  const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('productslocal_customTagline') || '')
-  const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('productslocal_menuCardStyle') || 'horizontal')
-  const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('productslocal_menuBanner') || '')
-  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('productslocal_showClosedBanner') === 'true')
-  const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('productslocal_promoBanner') || '')
-  const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('productslocal_promoBannerEnabled') === 'true')
-  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('productslocal_splashEnabled') === 'true')
-  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('productslocal_splashEnabled') === 'true')
+  const [btnShape, setBtnShape] = useState(() => localStorage.getItem('productslocalchat_btnShape') || 'rounded')
+  const [btnColor, setBtnColor] = useState(() => localStorage.getItem('productslocalchat_btnColor') || '')
+  const [btnText, setBtnText] = useState(() => localStorage.getItem('productslocalchat_btnText') || '')
+  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('productslocalchat_btnGlow') === 'true')
+  const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('productslocalchat_overlayOpacity')) || 40)
+  const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('productslocalchat_landingLayout') || 'center')
+  const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('productslocalchat_customTagline') || '')
+  const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('productslocalchat_menuCardStyle') || 'horizontal')
+  const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('productslocalchat_menuBanner') || '')
+  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('productslocalchat_showClosedBanner') === 'true')
+  const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('productslocalchat_promoBanner') || '')
+  const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('productslocalchat_promoBannerEnabled') === 'true')
+  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('productslocalchat_splashEnabled') === 'true')
+  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('productslocalchat_splashEnabled') === 'true')
   const [configPreviewTab, setConfigPreviewTab] = useState('landing')
   const [configTool, setConfigTool] = useState(null) // null | 'color' | 'layout' | 'button' | 'text' | 'cards' | 'promo' | 'splash'
   const [configColorRow, setConfigColorRow] = useState('Blue')
@@ -746,9 +943,9 @@ export default function App() {
   const [userDistance, setUserDistance] = useState(null)
   const [showDeals, setShowDeals] = useState(false)
   const [menuView, setMenuView] = useState('all') // 'all' or 'promo'
-  const [dailyDeals, setDailyDeals] = useState(() => loadJSON('productslocal_dailyDeals', []))
+  const [dailyDeals, setDailyDeals] = useState(() => loadJSON('productslocalchat_dailyDeals', []))
   const [showCustomers, setShowCustomers] = useState(false)
-  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('productslocal_installDismissed') === 'true')
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('productslocalchat_installDismissed') === 'true')
   const [customerSearch, setCustomerSearch] = useState('')
   const [promoMsg, setPromoMsg] = useState('')
 
@@ -762,6 +959,27 @@ export default function App() {
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
 
+  /* In-app chat state (productslocalchat) */
+  const [chatConversation, setChatConversation] = useState(null)
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatDraft, setChatDraft] = useState('')
+  const [chatSending, setChatSending] = useState(false)
+  const [chatError, setChatError] = useState('')
+
+  /* Vendor inbox state (productslocalchat) */
+  const [vendorTab, setVendorTab] = useState('shop') // 'shop' | 'orders' | 'settings'
+  const [vendorConversations, setVendorConversations] = useState([])
+  const [vendorActiveConv, setVendorActiveConv] = useState(null)
+  const [vendorThreadMessages, setVendorThreadMessages] = useState([])
+  const [vendorReplyDraft, setVendorReplyDraft] = useState('')
+  const [vendorChimePrimed, setVendorChimePrimed] = useState(() => localStorage.getItem('productslocalchat_chimePrimed') === 'true')
+  const [vendorPushEnabled, setVendorPushEnabled] = useState(false)
+  const [vendorPushBusy, setVendorPushBusy] = useState(false)
+  const [vendorPushMsg, setVendorPushMsg] = useState('')
+  const [showVisitUsWA, setShowVisitUsWA] = useState(() => localStorage.getItem('productslocalchat_showVisitUsWA') === 'true')
+  const [flashConvId, setFlashConvId] = useState(null)
+  const chimeAudioRef = useRef(null)
+
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
   const [loginPass, setLoginPass] = useState('')
@@ -769,7 +987,7 @@ export default function App() {
   const [loginMode, setLoginMode] = useState('login') // 'login' or 'signup'
   const [signupName, setSignupName] = useState('')
   const [signupCategory, setSignupCategory] = useState('')
-  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocal_vendorId') || localStorage.getItem('productslocal_vendor_id') || null)
+  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocalchat_vendorId') || localStorage.getItem('productslocalchat_vendor_id') || null)
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
 
@@ -811,19 +1029,19 @@ export default function App() {
   const [formSpice, setFormSpice] = useState(0)
   const [formHalal, setFormHalal] = useState(false)
   const [formPopular, setFormPopular] = useState(false)
-  const [formCategory, setFormCategory] = useState(() => getMenuTabsForTheme(localStorage.getItem('productslocal_theme') || 'default')[0])
+  const [formCategory, setFormCategory] = useState(() => getMenuTabsForTheme(localStorage.getItem('productslocalchat_theme') || 'default')[0])
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formPrepTime, setFormPrepTime] = useState(0)
 
   /* --- Persist to localStorage + sync to Supabase --- */
-  useEffect(() => { if (vendorId) localStorage.setItem('productslocal_vendorId', vendorId) }, [vendorId])
-  useEffect(() => { saveJSON('productslocal_menu', menuItems) }, [menuItems])
-  useEffect(() => { localStorage.setItem('productslocal_shopName', shopName) }, [shopName])
-  useEffect(() => { localStorage.setItem('productslocal_shopLogo', shopLogo) }, [shopLogo])
-  useEffect(() => { localStorage.setItem('productslocal_logoStyle', shopLogoStyle) }, [shopLogoStyle])
-  useEffect(() => { localStorage.setItem('productslocal_heroSize', heroSize) }, [heroSize])
-  useEffect(() => { localStorage.setItem('productslocal_heroFont', heroFont) }, [heroFont])
+  useEffect(() => { if (vendorId) localStorage.setItem('productslocalchat_vendorId', vendorId) }, [vendorId])
+  useEffect(() => { saveJSON('productslocalchat_menu', menuItems) }, [menuItems])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopName', shopName) }, [shopName])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopLogo', shopLogo) }, [shopLogo])
+  useEffect(() => { localStorage.setItem('productslocalchat_logoStyle', shopLogoStyle) }, [shopLogoStyle])
+  useEffect(() => { localStorage.setItem('productslocalchat_heroSize', heroSize) }, [heroSize])
+  useEffect(() => { localStorage.setItem('productslocalchat_heroFont', heroFont) }, [heroFont])
   useEffect(() => {
     if (heroFont !== 'system') {
       const fontMap = { nunito: 'Nunito:wght@700;800;900', poppins: 'Poppins:wght@700;800;900', playfair: 'Playfair+Display:wght@700;800;900', caveat: 'Caveat:wght@700', bebas: 'Bebas+Neue' }
@@ -833,48 +1051,48 @@ export default function App() {
       link.href = `https://fonts.googleapis.com/css2?family=${fontMap[heroFont]}&display=swap`
     }
   }, [heroFont])
-  useEffect(() => { localStorage.setItem('productslocal_heroColor', heroColor) }, [heroColor])
-  useEffect(() => { localStorage.setItem('productslocal_heroSubColor', heroSubColor) }, [heroSubColor])
-  useEffect(() => { localStorage.setItem('productslocal_heroEffect', heroEffect) }, [heroEffect])
-  useEffect(() => { localStorage.setItem('productslocal_shopPhone', shopPhone) }, [shopPhone])
-  useEffect(() => { saveJSON('productslocal_shopOpen', shopOpen) }, [shopOpen])
-  useEffect(() => { localStorage.setItem('productslocal_shopAddress', shopAddress) }, [shopAddress])
-  useEffect(() => { localStorage.setItem('productslocal_shopHours', shopHours) }, [shopHours])
-  useEffect(() => { localStorage.setItem('productslocal_shopSchedule', JSON.stringify(shopSchedule)) }, [shopSchedule])
-  useEffect(() => { localStorage.setItem('productslocal_shopMaps', shopMapsLink) }, [shopMapsLink])
-  useEffect(() => { localStorage.setItem('productslocal_shopIG', shopInstagram) }, [shopInstagram])
-  useEffect(() => { localStorage.setItem('productslocal_shopTT', shopTiktok) }, [shopTiktok])
-  useEffect(() => { localStorage.setItem('productslocal_shopFB', shopFacebook) }, [shopFacebook])
-  useEffect(() => { localStorage.setItem('productslocal_shopYT', shopYoutube) }, [shopYoutube])
-  useEffect(() => { localStorage.setItem('productslocal_shopWeb', shopWebsite) }, [shopWebsite])
-  useEffect(() => { localStorage.setItem('productslocal_shopQris', shopQris) }, [shopQris])
-  useEffect(() => { localStorage.setItem('productslocal_shopFoodType', shopFoodType) }, [shopFoodType])
-  useEffect(() => { localStorage.setItem('productslocal_shopBio', shopBio) }, [shopBio])
-  useEffect(() => { localStorage.setItem('productslocal_shopCity', shopCity) }, [shopCity])
-  useEffect(() => { localStorage.setItem('productslocal_shopCountry', shopCountry) }, [shopCountry])
-  useEffect(() => { localStorage.setItem('productslocal_delBase', delBaseFee) }, [delBaseFee])
-  useEffect(() => { localStorage.setItem('productslocal_delPerKm', delPerKm) }, [delPerKm])
-  useEffect(() => { localStorage.setItem('productslocal_delMin', delMinCharge) }, [delMinCharge])
-  useEffect(() => { localStorage.setItem('productslocal_delMax', delMaxKm) }, [delMaxKm])
-  useEffect(() => { localStorage.setItem('productslocal_delFree', delFreeAbove) }, [delFreeAbove])
-  useEffect(() => { localStorage.setItem('productslocal_delCurrency', delCurrency) }, [delCurrency])
-  useEffect(() => { localStorage.setItem('productslocal_delMinKm', delMinKm) }, [delMinKm])
-  useEffect(() => { localStorage.setItem('productslocal_delEnabled', delEnabled) }, [delEnabled])
+  useEffect(() => { localStorage.setItem('productslocalchat_heroColor', heroColor) }, [heroColor])
+  useEffect(() => { localStorage.setItem('productslocalchat_heroSubColor', heroSubColor) }, [heroSubColor])
+  useEffect(() => { localStorage.setItem('productslocalchat_heroEffect', heroEffect) }, [heroEffect])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopPhone', shopPhone) }, [shopPhone])
+  useEffect(() => { saveJSON('productslocalchat_shopOpen', shopOpen) }, [shopOpen])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopAddress', shopAddress) }, [shopAddress])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopHours', shopHours) }, [shopHours])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopSchedule', JSON.stringify(shopSchedule)) }, [shopSchedule])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopMaps', shopMapsLink) }, [shopMapsLink])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopIG', shopInstagram) }, [shopInstagram])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopTT', shopTiktok) }, [shopTiktok])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopFB', shopFacebook) }, [shopFacebook])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopYT', shopYoutube) }, [shopYoutube])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopWeb', shopWebsite) }, [shopWebsite])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopQris', shopQris) }, [shopQris])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopFoodType', shopFoodType) }, [shopFoodType])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopBio', shopBio) }, [shopBio])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopCity', shopCity) }, [shopCity])
+  useEffect(() => { localStorage.setItem('productslocalchat_shopCountry', shopCountry) }, [shopCountry])
+  useEffect(() => { localStorage.setItem('productslocalchat_delBase', delBaseFee) }, [delBaseFee])
+  useEffect(() => { localStorage.setItem('productslocalchat_delPerKm', delPerKm) }, [delPerKm])
+  useEffect(() => { localStorage.setItem('productslocalchat_delMin', delMinCharge) }, [delMinCharge])
+  useEffect(() => { localStorage.setItem('productslocalchat_delMax', delMaxKm) }, [delMaxKm])
+  useEffect(() => { localStorage.setItem('productslocalchat_delFree', delFreeAbove) }, [delFreeAbove])
+  useEffect(() => { localStorage.setItem('productslocalchat_delCurrency', delCurrency) }, [delCurrency])
+  useEffect(() => { localStorage.setItem('productslocalchat_delMinKm', delMinKm) }, [delMinKm])
+  useEffect(() => { localStorage.setItem('productslocalchat_delEnabled', delEnabled) }, [delEnabled])
 
   /* Customization features persistence */
-  useEffect(() => { localStorage.setItem('productslocal_btnShape', btnShape) }, [btnShape])
-  useEffect(() => { localStorage.setItem('productslocal_btnColor', btnColor) }, [btnColor])
-  useEffect(() => { localStorage.setItem('productslocal_btnText', btnText) }, [btnText])
-  useEffect(() => { localStorage.setItem('productslocal_btnGlow', btnGlow) }, [btnGlow])
-  useEffect(() => { localStorage.setItem('productslocal_overlayOpacity', overlayOpacity) }, [overlayOpacity])
-  useEffect(() => { localStorage.setItem('productslocal_landingLayout', landingLayout) }, [landingLayout])
-  useEffect(() => { localStorage.setItem('productslocal_customTagline', customTagline) }, [customTagline])
-  useEffect(() => { localStorage.setItem('productslocal_menuCardStyle', menuCardStyle) }, [menuCardStyle])
-  useEffect(() => { localStorage.setItem('productslocal_menuBanner', menuBanner) }, [menuBanner])
-  useEffect(() => { localStorage.setItem('productslocal_showClosedBanner', showClosedBanner) }, [showClosedBanner])
-  useEffect(() => { localStorage.setItem('productslocal_promoBanner', promoBanner) }, [promoBanner])
-  useEffect(() => { localStorage.setItem('productslocal_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
-  useEffect(() => { localStorage.setItem('productslocal_splashEnabled', splashEnabled) }, [splashEnabled])
+  useEffect(() => { localStorage.setItem('productslocalchat_btnShape', btnShape) }, [btnShape])
+  useEffect(() => { localStorage.setItem('productslocalchat_btnColor', btnColor) }, [btnColor])
+  useEffect(() => { localStorage.setItem('productslocalchat_btnText', btnText) }, [btnText])
+  useEffect(() => { localStorage.setItem('productslocalchat_btnGlow', btnGlow) }, [btnGlow])
+  useEffect(() => { localStorage.setItem('productslocalchat_overlayOpacity', overlayOpacity) }, [overlayOpacity])
+  useEffect(() => { localStorage.setItem('productslocalchat_landingLayout', landingLayout) }, [landingLayout])
+  useEffect(() => { localStorage.setItem('productslocalchat_customTagline', customTagline) }, [customTagline])
+  useEffect(() => { localStorage.setItem('productslocalchat_menuCardStyle', menuCardStyle) }, [menuCardStyle])
+  useEffect(() => { localStorage.setItem('productslocalchat_menuBanner', menuBanner) }, [menuBanner])
+  useEffect(() => { localStorage.setItem('productslocalchat_showClosedBanner', showClosedBanner) }, [showClosedBanner])
+  useEffect(() => { localStorage.setItem('productslocalchat_promoBanner', promoBanner) }, [promoBanner])
+  useEffect(() => { localStorage.setItem('productslocalchat_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
+  useEffect(() => { localStorage.setItem('productslocalchat_splashEnabled', splashEnabled) }, [splashEnabled])
   useEffect(() => { if (splashEnabled) { const t = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(t) } else { setShowSplash(false) } }, [splashEnabled])
 
   // Build delivery zones from vendor's own settings
@@ -999,15 +1217,15 @@ export default function App() {
       if (items.length > 0) {
         setMenuItems(items.map(i => ({ id: i.id, supabaseId: i.id, name: i.name, price: i.price, photo: i.photo_url, desc: i.description, category: i.category, available: i.available, promoPrice: i.promo_price, prepTime: i.prep_time, spice: i.spice, halal: i.halal, popular: i.popular })))
       }
-      localStorage.setItem('productslocal_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
-      localStorage.setItem('productslocal_vendor_pass', loginPass)
+      localStorage.setItem('productslocalchat_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
+      localStorage.setItem('productslocalchat_vendor_pass', loginPass)
       setIsVendor(true); setVendorLogin(false)
       setLoginPhone(''); setLoginPass(''); setLoginError(''); setLoginMode('login')
       return
     }
     // Fallback to localStorage
-    const storedPhone = localStorage.getItem('productslocal_vendor_phone') || shopPhone
-    const storedPass = localStorage.getItem('productslocal_vendor_pass') || 'vendor123'
+    const storedPhone = localStorage.getItem('productslocalchat_vendor_phone') || shopPhone
+    const storedPass = localStorage.getItem('productslocalchat_vendor_pass') || 'vendor123'
     if (loginPhone.replace(/[^0-9]/g, '') === storedPhone.replace(/[^0-9]/g, '') && loginPass === storedPass) {
       setIsVendor(true); setVendorLogin(false)
       setLoginPhone(''); setLoginPass(''); setLoginError(''); setLoginMode('login')
@@ -1025,18 +1243,18 @@ export default function App() {
     try {
       const vendor = await vendorSignup(loginPhone, loginPass, signupName)
       setVendorId(vendor.id)
-      localStorage.setItem('productslocal_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
-      localStorage.setItem('productslocal_vendor_pass', loginPass)
+      localStorage.setItem('productslocalchat_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
+      localStorage.setItem('productslocalchat_vendor_pass', loginPass)
       setShopName(signupName)
       setShopFoodType(signupCategory)
-      localStorage.setItem('productslocal_shopFoodType', signupCategory)
+      localStorage.setItem('productslocalchat_shopFoodType', signupCategory)
       setShopPhone(loginPhone.replace(/[^0-9]/g, ''))
       // Auto-set theme based on category
       const matchedTheme = THEME_PRESETS.find(t => t.category === signupCategory)
       if (matchedTheme) {
         setShopTheme(matchedTheme.id)
-        localStorage.setItem('productslocal_theme', matchedTheme.id)
-        localStorage.setItem('productslocal_themeBg', matchedTheme.img)
+        localStorage.setItem('productslocalchat_theme', matchedTheme.id)
+        localStorage.setItem('productslocalchat_themeBg', matchedTheme.img)
         const bgImg = document.getElementById('app-bg-img')
         if (bgImg) bgImg.src = matchedTheme.img
       }
@@ -1103,93 +1321,238 @@ export default function App() {
     setAddingItem(false)
   }
 
-  /* --- WhatsApp order --- */
-  const sendWhatsApp = () => {
-    const note = document.getElementById('orderNote')?.value?.trim()
+  /* --- In-app chat order (productslocalchat) --- */
+  const sendOrder = async () => {
+    if (chatSending) return
+    setChatError('')
+    const note = document.getElementById('orderNote')?.value?.trim() || ''
     const now = new Date()
-    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
     const orderNum = String(Date.now()).slice(-6)
     const initials = shopName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-
-    // Calculate max prep time from cart items
     const maxPrep = Math.max(0, ...cart.map(c => c.prepTime || 0))
-
-    // Check if customer is returning
-    const customers = loadJSON('productslocal_customers', [])
-    const returning = customers.find(c => c.phone === custPhone)
-    const orderHistory = returning ? returning.orders || 0 : 0
-
     const subtotal = totalPrice
     const deliveryFee = delEnabled && deliveryZone ? (deliveryZone.fee || 0) : 0
     const grandTotal = subtotal + deliveryFee
 
-    const lines = [
-      `━━━━━━━━━━━━━━━━━━`,
-      `*${shopName.toUpperCase()}*`,
-      `Order Receipt`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      `${dateStr}  ${timeStr}`,
-      `Order #${initials}-${orderNum}`,
-      ``,
-      ...(custName ? [`*Customer:* ${custName}`] : []),
-      ...(orderHistory > 0 ? [`Returning customer (${orderHistory + 1} orders)`] : []),
-      ``,
-      `━━━━━━━━━━━━━━━━━━`,
-      `*ORDER ITEMS*`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      ...cart.map((c) => {
-        const itemTotal = (c.promoPrice || c.price) * c.qty
-        return `${c.qty}x  ${c.name}\n      ${fmt(itemTotal)}`
-      }),
-      ``,
-      ...(note ? [`━━━━━━━━━━━━━━━━━━`, `*Note:* ${note}`, ``] : []),
-      `━━━━━━━━━━━━━━━━━━`,
-      ...(deliveryFee > 0 ? [
-        `Subtotal:     ${fmt(subtotal)}`,
-        `Delivery:     ${fmt(deliveryFee)}${userDistance ? ` (${userDistance} km)` : ''}`,
-        `━━━━━━━━━━━━━━━━━━`,
-      ] : []),
-      `*TOTAL:  ${fmt(grandTotal)}*`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      ...(maxPrep > 0 ? [`Est. prep time: ~${maxPrep} min`, ``] : []),
-      ...(shopAddress ? [`${shopAddress}`, ``] : []),
-      `Placed via StreetLocal.live`,
-    ]
-    const msg = encodeURIComponent(lines.join('\n'))
-    const phone = shopPhone.replace(/[^0-9]/g, '')
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+    const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
+    if (!cleanPhone) { setChatError('Enter your phone number'); return }
+    if (!vendorId) { setChatError('Vendor not set'); return }
+
+    const orderPayload = {
+      orderNumber: `${initials}-${orderNum}`,
+      placedAt: now.toISOString(),
+      customer: { name: custName || '', phone: cleanPhone, address: custAddress || '' },
+      items: cart.map((c) => ({
+        id: c.id || null,
+        name: c.name,
+        qty: c.qty,
+        price: c.price,
+        promoPrice: c.promoPrice || null,
+        lineTotal: (c.promoPrice || c.price) * c.qty,
+      })),
+      subtotal,
+      delivery: {
+        enabled: !!delEnabled,
+        type: delEnabled ? 'delivery' : 'pickup',
+        zone: delEnabled && deliveryZone ? deliveryZone.label || null : null,
+        fee: deliveryFee,
+        distanceKm: userDistance || null,
+      },
+      payment: { method: payMethod || 'cod' },
+      note,
+      total: grandTotal,
+      prepMins: maxPrep,
+      shop: { name: shopName, address: shopAddress },
+    }
+
+    const summaryItems = cart.map(c => `${c.qty}x ${c.name}`).join(', ')
+    const summaryBody = `New order #${initials}-${orderNum}: ${summaryItems} · ${fmt(grandTotal)}${note ? ` · Note: ${note}` : ''}`
+
+    setChatSending(true)
+    const res = await sendCustomerOrder({
+      vendorId,
+      customerPhone: cleanPhone,
+      customerName: custName || null,
+      orderPayload,
+      summaryBody,
+    })
+    setChatSending(false)
+    if (res.error) {
+      setChatError(res.error)
+      return
+    }
+    setChatConversation(res.conversation)
+    setChatMessages([res.message])
+
     // Save customer to directory (localStorage + Supabase)
+    const customers = loadJSON('productslocalchat_customers', [])
+    const returning = customers.find(c => c.phone === cleanPhone)
     if (returning) {
       returning.orders = (returning.orders || 0) + 1
       returning.totalSpent = (returning.totalSpent || 0) + totalPrice
       returning.lastOrder = new Date().toISOString()
       returning.name = custName || returning.name
     } else {
-      customers.push({ phone: custPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
+      customers.push({ phone: cleanPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
     }
-    saveJSON('productslocal_customers', customers)
-    // Sync to Supabase
+    saveJSON('productslocalchat_customers', customers)
     if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-      supabase.from('vendor_customers').upsert({
-        vendor_id: vendorId, phone: custPhone, name: custName,
-        orders: existing ? existing.orders : 1,
-        total_spent: existing ? existing.totalSpent : totalPrice,
-        last_order: new Date().toISOString(),
-      }, { onConflict: 'vendor_id,phone' }).then(() => {})
-      // Save order
-      supabase.from('vendor_orders').insert({
-        vendor_id: vendorId, customer_name: custName, customer_phone: custPhone,
-        items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
-        subtotal: totalPrice, delivery_type: 'delivery', payment_method: 'cod',
-        note: document.getElementById('orderNote')?.value || '',
-      }).then(() => {})
+      try {
+        supabase.from('vendor_customers').upsert({
+          vendor_id: vendorId, phone: cleanPhone, name: custName,
+          orders: returning ? returning.orders : 1,
+          total_spent: returning ? returning.totalSpent : totalPrice,
+          last_order: new Date().toISOString(),
+        }, { onConflict: 'vendor_id,phone' }).then(() => {})
+        supabase.from('vendor_orders').insert({
+          vendor_id: vendorId, customer_name: custName, customer_phone: cleanPhone,
+          items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
+          subtotal: totalPrice, delivery_type: delEnabled ? 'delivery' : 'pickup', payment_method: payMethod || 'cod',
+          note,
+        }).then(() => {})
+      } catch {}
     }
     setOrderDone(true)
   }
+
+  /* --- Vendor chime: prime audio after first user click + WebAudio fallback --- */
+  const primeVendorChime = useCallback(() => {
+    if (!chimeAudioRef.current) {
+      try {
+        const a = new Audio('https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/notification-ping.mp3')
+        a.preload = 'auto'
+        a.volume = 0.7
+        chimeAudioRef.current = a
+      } catch {}
+    }
+    if (!vendorChimePrimed) {
+      setVendorChimePrimed(true)
+      try { localStorage.setItem('productslocalchat_chimePrimed', 'true') } catch {}
+    }
+  }, [vendorChimePrimed])
+
+  const playVendorChime = useCallback(() => {
+    const a = chimeAudioRef.current
+    if (a) {
+      try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => playWebAudioPing()); return } catch { /* fallback */ }
+    }
+    playWebAudioPing()
+  }, [])
+
+  function playWebAudioPing() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext
+      if (!Ctx) return
+      const ctx = new Ctx()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.frequency.value = 880
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.16)
+      setTimeout(() => { try { ctx.close() } catch {} }, 300)
+    } catch {}
+  }
+
+  /* --- Vendor: load conversations + subscribe to incoming msgs --- */
+  useEffect(() => {
+    if (!isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    let cancelled = false
+    ;(async () => {
+      const list = await loadVendorConversations(vendorId)
+      if (!cancelled) setVendorConversations(list)
+    })()
+    const unsub = subscribeToVendorMessages(vendorId, async (payload) => {
+      if (payload.__conv) {
+        const list = await loadVendorConversations(vendorId)
+        setVendorConversations(list)
+        return
+      }
+      if (payload.sender_role === 'customer') {
+        playVendorChime()
+        try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]) } catch {}
+        setFlashConvId(payload.conversation_id)
+        setTimeout(() => setFlashConvId((cur) => cur === payload.conversation_id ? null : cur), 1500)
+        const list = await loadVendorConversations(vendorId)
+        setVendorConversations(list)
+        // If we are in this conversation, append message
+        setVendorActiveConv((cur) => {
+          if (cur && cur.id === payload.conversation_id) {
+            setVendorThreadMessages((prev) => prev.find(m => m.id === payload.id) ? prev : [...prev, payload])
+          }
+          return cur
+        })
+      }
+    })
+    return () => { cancelled = true; unsub() }
+  }, [isVendor, vendorId, playVendorChime])
+
+  /* --- Vendor: detect existing push subscription --- */
+  useEffect(() => {
+    if (!isVendor) return
+    ;(async () => {
+      const sub = await getCurrentSubscription()
+      setVendorPushEnabled(!!sub)
+    })()
+  }, [isVendor])
+
+  const onEnableVendorPush = async () => {
+    if (vendorPushBusy) return
+    setVendorPushBusy(true); setVendorPushMsg('')
+    primeVendorChime()
+    const res = await enableVendorPush(vendorId)
+    setVendorPushBusy(false)
+    if (res.error) { setVendorPushMsg(res.error); return }
+    setVendorPushEnabled(true); setVendorPushMsg('Order alerts enabled.')
+  }
+  const onDisableVendorPush = async () => {
+    if (vendorPushBusy) return
+    setVendorPushBusy(true); setVendorPushMsg('')
+    await disableVendorPush()
+    setVendorPushBusy(false); setVendorPushEnabled(false); setVendorPushMsg('Order alerts disabled.')
+  }
+
+  /* --- Vendor: open conversation thread --- */
+  const openVendorConv = useCallback(async (conv) => {
+    primeVendorChime()
+    setVendorActiveConv(conv)
+    const msgs = await loadMessages(conv.id, 200)
+    setVendorThreadMessages(msgs)
+    await clearVendorUnread(conv.id)
+    const list = await loadVendorConversations(vendorId)
+    setVendorConversations(list)
+  }, [vendorId, primeVendorChime])
+
+  const sendVendorReply = async () => {
+    if (!vendorActiveConv) return
+    const body = vendorReplyDraft.trim()
+    if (!body) return
+    setVendorReplyDraft('')
+    const optimistic = { id: 'tmp-' + Date.now(), conversation_id: vendorActiveConv.id, sender_role: 'vendor', body, created_at: new Date().toISOString() }
+    setVendorThreadMessages((prev) => [...prev, optimistic])
+    const res = await sendChatText({ conversationId: vendorActiveConv.id, senderRole: 'vendor', body })
+    if (res.message) setVendorThreadMessages((prev) => prev.map(m => m.id === optimistic.id ? res.message : m))
+  }
+  const sendVendorStatus = async (status) => {
+    if (!vendorActiveConv) return
+    const body = `Status: ${status}`
+    const optimistic = { id: 'tmp-' + Date.now(), conversation_id: vendorActiveConv.id, sender_role: 'system', body, created_at: new Date().toISOString() }
+    setVendorThreadMessages((prev) => [...prev, optimistic])
+    const res = await sendSystemStatus({ conversationId: vendorActiveConv.id, body })
+    if (res.message) setVendorThreadMessages((prev) => prev.map(m => m.id === optimistic.id ? res.message : m))
+  }
+
+  /* --- Persist showVisitUsWA toggle --- */
+  useEffect(() => {
+    try { localStorage.setItem('productslocalchat_showVisitUsWA', showVisitUsWA ? 'true' : 'false') } catch {}
+    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+      try { supabase.from('vendor_accounts').update({ show_wa_on_visit_us: !!showVisitUsWA }).eq('id', vendorId).then(() => {}) } catch {}
+    }
+  }, [showVisitUsWA, vendorId])
 
   /* --- Menu category filter --- */
   const [menuFilter, setMenuFilter] = useState('All')
@@ -1226,7 +1589,7 @@ export default function App() {
     return (
       <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}><DevBadge n={1} />
         {/* Background image — uses vendor's selected theme */}
-        <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
+        <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
 
 
         {/* Language toggle — top right, single flag, tap to switch */}
@@ -1654,7 +2017,7 @@ export default function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200 }} onClick={() => setItemModal(null)}><DevBadge n={3} />
           {/* Fixed background + glass — stays in place while content scrolls */}
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
 
           {/* Content — scrollable over the fixed glass background */}
@@ -1761,7 +2124,7 @@ export default function App() {
 
         return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}><DevBadge n={4} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2010,7 +2373,7 @@ export default function App() {
                     {/* Dynamic island */}
                     <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
                     {/* Background image */}
-                    <img src={localStorage.getItem('productslocal_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <img src={localStorage.getItem('productslocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
                     <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
@@ -2205,8 +2568,8 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px 24px', gap: 12 }}>
             <button onClick={() => {
               setShopTheme('custom'); setShopAccentColor(editorColor)
-              localStorage.setItem('productslocal_theme', 'custom'); localStorage.setItem('productslocal_themeBg', themeEditor.url)
-              localStorage.setItem('productslocal_accentColor', editorColor); localStorage.setItem('productslocal_bgPos', JSON.stringify(editorPos))
+              localStorage.setItem('productslocalchat_theme', 'custom'); localStorage.setItem('productslocalchat_themeBg', themeEditor.url)
+              localStorage.setItem('productslocalchat_accentColor', editorColor); localStorage.setItem('productslocalchat_bgPos', JSON.stringify(editorPos))
               const bgImg = document.getElementById('app-bg-img')
               if (bgImg) { bgImg.src = themeEditor.url; bgImg.style.objectFit = 'cover'; bgImg.style.objectPosition = `${editorPos.x}% ${editorPos.y}%` }
               setThemeEditor(null); setShowLanding(true)
@@ -2296,7 +2659,7 @@ export default function App() {
         const qtyColor = isCustomAccent ? '#fff' : '#000'
         return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}><DevBadge n={6} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
@@ -2339,12 +2702,42 @@ export default function App() {
                     <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>{t.cartEmpty || 'Your cart is empty'}</p>
                   )}
 
+                  {/* Your details */}
+                  {cart.length > 0 && (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={custName}
+                        onChange={e => setCustName(e.target.value)}
+                        style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="WhatsApp number (required)"
+                        value={custPhone}
+                        onChange={e => setCustPhone(e.target.value)}
+                        style={{ ...S.input, marginBottom: delEnabled ? 8 : 0, fontSize: 13 }}
+                      />
+                      {delEnabled && (
+                        <input
+                          type="text"
+                          placeholder="Delivery address"
+                          value={custAddress}
+                          onChange={e => setCustAddress(e.target.value)}
+                          style={{ ...S.input, marginBottom: 0, fontSize: 13 }}
+                        />
+                      )}
+                    </div>
+                  )}
+
                   {/* Order note */}
                   {cart.length > 0 && (
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note</label>
                       <textarea
-                        placeholder="Extra spicy, no onions..."
+                        placeholder="Special requests, sizing, color..."
                         style={{ ...S.input, minHeight: 50, resize: 'none', marginBottom: 0, fontSize: 13 }}
                         id="orderNote"
                       />
@@ -2385,9 +2778,21 @@ export default function App() {
                   </div>
                   <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 4, color: '#fff' }}>{t.orderSent || 'Order Sent!'}</h2>
                   <div style={{ fontSize: 20, fontWeight: 900, color: '#FACC15', marginBottom: 10 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>
-                    {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+                    {t.orderSentMsg || 'Your order has been sent. The vendor will reply shortly in this chat.'}
                   </p>
+
+                  {/* Inline customer chat panel */}
+                  <CustomerChatPanel
+                    conversation={chatConversation}
+                    messages={chatMessages}
+                    setMessages={setChatMessages}
+                    draft={chatDraft}
+                    setDraft={setChatDraft}
+                    accent={accent}
+                    fmt={fmt}
+                  />
+
                   {/* QRIS Payment QR — if vendor uploaded */}
                   {shopQris && (
                     <div style={{ marginBottom: 24 }}>
@@ -2399,7 +2804,7 @@ export default function App() {
                     </div>
                   )}
 
-                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginTop: -30 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false) }}>
+                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginTop: -30 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false); setChatConversation(null); setChatMessages([]); setChatDraft('') }}>
                     Back To Menu
                   </button>
                   <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfffddfsdfsdfff-removebg-preview.png" alt="" onError={imgError('generic')} style={{ position: 'fixed', bottom: 16, right: 16, width: 100, height: 'auto', opacity: 0.8, pointerEvents: 'none' }} />
@@ -2412,11 +2817,13 @@ export default function App() {
               <div style={{ padding: '12px 14px 24px', flexShrink: 0 }}>
                 <button
                   style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                  onClick={sendWhatsApp}
+                  onClick={sendOrder}
+                  disabled={chatSending}
                 >
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>Order WhatsApp — {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{chatSending ? 'Sending…' : `Send Order — ${fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}`}</span>
                 </button>
+                {chatError && <div style={{ marginTop: 8, color: '#FCA5A5', fontSize: 12, textAlign: 'center' }}>{chatError}</div>}
               </div>
             )}
           </div>
@@ -2424,6 +2831,105 @@ export default function App() {
         )
       })()}
 
+
+      {/* ═══ VENDOR ORDERS INBOX ═══ */}
+      {isVendor && vendorTab === 'orders' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Orders</div>
+            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 }}>Close</button>
+          </div>
+
+          {!vendorActiveConv && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {vendorConversations.length === 0 && (
+                <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center' }}>No orders yet. New orders will appear here with a chime + vibration.</div>
+              )}
+              {vendorConversations.map((conv) => {
+                const isFlash = flashConvId === conv.id
+                const unread = conv.unread_vendor_count || 0
+                return (
+                  <button key={conv.id} onClick={() => openVendorConv(conv)} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', border: 'none', background: isFlash ? 'rgba(250,204,21,0.18)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', textAlign: 'left', minHeight: 44, transition: 'background 200ms ease' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.08)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>
+                      {(conv.customer_name || conv.customer_phone || '?').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{conv.customer_name || conv.customer_phone}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ''}</div>
+                    </div>
+                    {unread > 0 && (
+                      <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {vendorActiveConv && (
+            <VendorThreadView
+              conversation={vendorActiveConv}
+              messages={vendorThreadMessages}
+              accent={accent}
+              fmt={fmt}
+              onBack={() => setVendorActiveConv(null)}
+              draft={vendorReplyDraft}
+              setDraft={setVendorReplyDraft}
+              onSend={sendVendorReply}
+              onStatus={sendVendorStatus}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ═══ VENDOR ORDER ALERTS / SETTINGS ═══ */}
+      {isVendor && vendorTab === 'settings' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Order Alerts</div>
+            <button onClick={() => setVendorTab('shop')} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 }}>Close</button>
+          </div>
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Sound + vibration</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
+                When the inbox is open and a new customer order arrives, the app plays a chime and vibrates. Tap below once to allow audio playback.
+              </div>
+              <button onClick={() => { primeVendorChime(); playVendorChime(); try { navigator.vibrate && navigator.vibrate([200,100,200]) } catch {} }} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+                Test chime &amp; vibration
+              </button>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Push notifications (app closed)</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
+                Receive a system notification when a new order arrives even if the app is closed or the phone is asleep.
+              </div>
+              {!vendorPushEnabled ? (
+                <button onClick={onEnableVendorPush} disabled={vendorPushBusy} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#22C55E', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+                  {vendorPushBusy ? 'Enabling…' : 'Enable order alerts'}
+                </button>
+              ) : (
+                <button onClick={onDisableVendorPush} disabled={vendorPushBusy} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+                  {vendorPushBusy ? 'Disabling…' : 'Disable order alerts'}
+                </button>
+              )}
+              {vendorPushMsg && <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{vendorPushMsg}</div>}
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Show WhatsApp on Visit Us page</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
+                Off by default. When ON, your WhatsApp link/icon appears on the public Visit Us page so customers can message you directly.
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', minHeight: 44 }}>
+                <input type="checkbox" checked={!!showVisitUsWA} onChange={(e) => setShowVisitUsWA(e.target.checked)} style={{ width: 22, height: 22 }} />
+                <span style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>Show WhatsApp on Visit Us</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
@@ -2473,19 +2979,24 @@ export default function App() {
             {/* Navigation items */}
             <div style={{ padding: '0 16px' }}>
               {[
+                { icon: '🔔', label: 'Orders', desc: 'In-app chat orders inbox', onClick: () => { setVendorTab('orders'); setVendorDrawer(false) }, badge: vendorConversations.reduce((s, c) => s + (c.unread_vendor_count || 0), 0) },
                 { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
                 { icon: '🎨', label: 'Design Studio', desc: 'Layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
                 { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
                 { icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements', onClick: () => { setTermsOfListing(true); setVendorDrawer(false) } },
+                { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => { setVendorTab('settings'); setVendorDrawer(false) } },
               ].map(item => (
-                <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{item.label}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{item.desc}</div>
                   </div>
+                  {item.badge > 0 && (
+                    <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>{item.badge}</span>
+                  )}
                   <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.2)' }}>›</span>
                 </button>
               ))}
@@ -2513,9 +3024,9 @@ export default function App() {
                   <button onClick={() => {
                     setShopTheme(theme.id)
                     setShopAccentColor(theme.accent || '#8DC63F')
-                    localStorage.setItem('productslocal_theme', theme.id)
-                    localStorage.setItem('productslocal_themeBg', theme.img)
-                    localStorage.setItem('productslocal_accentColor', theme.accent || '#8DC63F')
+                    localStorage.setItem('productslocalchat_theme', theme.id)
+                    localStorage.setItem('productslocalchat_themeBg', theme.img)
+                    localStorage.setItem('productslocalchat_accentColor', theme.accent || '#8DC63F')
                     const bgImg = document.getElementById('app-bg-img')
                     if (bgImg) bgImg.src = theme.img
                     setVendorDrawer(false)
@@ -2528,7 +3039,7 @@ export default function App() {
                       {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
                     </div>
                   </button>
-                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocal_theme', theme.id); localStorage.setItem('productslocal_themeBg', theme.img); localStorage.setItem('productslocal_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
+                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocalchat_theme', theme.id); localStorage.setItem('productslocalchat_themeBg', theme.img); localStorage.setItem('productslocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
                     <span style={{ fontSize: 9, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
                   </div>
                 </div>
@@ -2626,7 +3137,7 @@ export default function App() {
       {/* ═══ DELIVERY SETTINGS ═══ */}
       {showDeliverySettings && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2781,7 +3292,7 @@ export default function App() {
       {/* ═══ VENDOR EDIT ITEM PAGE ═══ */}
       {editItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={8} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2940,7 +3451,7 @@ export default function App() {
       {/* ═══ VENDOR ADD ITEM PAGE ═══ */}
       {addingItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -3095,7 +3606,7 @@ export default function App() {
       {/* ═══ SHOP CONFIG PAGE ═══ */}
       {shopConfig && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={9} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
           {/* Header */}
@@ -3126,7 +3637,7 @@ export default function App() {
                   const file = e.target.files[0]
                   if (!file) return
                   const url = await uploadMenuImage(vendorId, file)
-                  if (url) { setShopLogo(url); localStorage.setItem('productslocal_shopLogo', url) }
+                  if (url) { setShopLogo(url); localStorage.setItem('productslocalchat_shopLogo', url) }
                 }} />
                 {shopLogo ? (
                   <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
@@ -3140,7 +3651,7 @@ export default function App() {
                 )}
               </label>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
-              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('productslocal_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
+              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('productslocalchat_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
 
             </div>
 
@@ -3279,7 +3790,7 @@ export default function App() {
                   const file = e.target.files[0]
                   if (!file) return
                   const url = await uploadMenuImage(vendorId, file)
-                  if (url) { setShopQris(url); localStorage.setItem('productslocal_shopQris', url) }
+                  if (url) { setShopQris(url); localStorage.setItem('productslocalchat_shopQris', url) }
                 }} />
                 {shopQris ? (
                   <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 8 }} />
@@ -3292,7 +3803,7 @@ export default function App() {
               </label>
               {shopQris && (
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => { setShopQris(''); localStorage.removeItem('productslocal_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
+                  <button onClick={() => { setShopQris(''); localStorage.removeItem('productslocalchat_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
                 </div>
               )}
             </div>
@@ -3415,7 +3926,7 @@ export default function App() {
                     </div>
                     {/* Mini phone frame */}
                     <div style={{ width: 140, height: 250, borderRadius: 20, background: '#1a1a1a', padding: 2, position: 'relative', border: shopTheme === theme.id ? '2px solid #FFD600' : '2px solid #333', boxShadow: shopTheme === theme.id ? '0 0 12px rgba(255,214,0,0.3)' : '0 4px 12px rgba(0,0,0,0.3)' }}>
-                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocal_theme', theme.id); localStorage.setItem('productslocal_themeBg', theme.img); localStorage.setItem('productslocal_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
+                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocalchat_theme', theme.id); localStorage.setItem('productslocalchat_themeBg', theme.img); localStorage.setItem('productslocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
                       <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', width: 32, height: 8, background: '#000', borderRadius: 6, zIndex: 3 }} />
                         <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
@@ -3538,7 +4049,7 @@ export default function App() {
                       <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
-                        localStorage.setItem('productslocal_theme', theme.id); localStorage.setItem('productslocal_themeBg', activeImg); localStorage.setItem('productslocal_accentColor', theme.accent || '#8DC63F')
+                        localStorage.setItem('productslocalchat_theme', theme.id); localStorage.setItem('productslocalchat_themeBg', activeImg); localStorage.setItem('productslocalchat_accentColor', theme.accent || '#8DC63F')
                         const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = activeImg
                         setThemePreviewId(null); setThemePreviewImg(null); setThemeBrowser(false); setShowLanding(true)
                       }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Use Theme</button>
@@ -3554,7 +4065,7 @@ export default function App() {
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
       {designStudio && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={11} />
-          <img src={localStorage.getItem('productslocal_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             {/* Header */}
@@ -3623,7 +4134,7 @@ export default function App() {
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
                           {previewTab === 'landing' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('productslocal_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={localStorage.getItem('productslocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
                               {showClosedBanner && !shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
                               <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 36 : 0, paddingLeft: landingLayout === 'left' ? 10 : 0 }}>
@@ -3636,7 +4147,7 @@ export default function App() {
                           )}
                           {previewTab === 'menu' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('productslocal_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={localStorage.getItem('productslocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
@@ -3720,7 +4231,7 @@ export default function App() {
                                 {shades.map((c, i) => (
                                   <button key={i} onClick={() => {
                                     setShopAccentColor(c)
-                                    localStorage.setItem('productslocal_accentColor', c)
+                                    localStorage.setItem('productslocalchat_accentColor', c)
                                   }} style={{
                                     flex: 1, height: 40, borderRadius: 8, border: accent === c ? '3px solid #FFD600' : 'none',
                                     background: c, cursor: 'pointer', padding: 0, minWidth: 0,
@@ -3763,7 +4274,7 @@ export default function App() {
       {/* ─── Custom Domain Page ─── */}
       {domainPage && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}><DevBadge n={12} />
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -3906,7 +4417,7 @@ export default function App() {
       {/* ═══ TERMS OF LISTING PAGE ═══ */}
       {termsOfListing && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('productslocal_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', padding: '20px 16px 40px' }}>
             {/* Header */}

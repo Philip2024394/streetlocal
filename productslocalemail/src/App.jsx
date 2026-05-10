@@ -4,8 +4,11 @@ import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
 import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
+import { sendCustomerOrderEmail } from './lib/email'
 
-/* ─── Supabase Vendor Service ─── */
+/* ─── Supabase Vendor Service (ProductsLocal module) ─── */
+const MODULE = 'products'
+
 async function vendorSignup(phone, password, name) {
   if (!supabase) return { id: 'local-' + Date.now(), slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-') }
   const { data, error } = await supabase.from('vendor_accounts').insert({
@@ -14,6 +17,7 @@ async function vendorSignup(phone, password, name) {
     shop_name: name,
     shop_phone: phone.replace(/[^0-9]/g, ''),
     slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30),
+    module: MODULE,
   }).select().single()
   if (error) throw new Error(error.message)
   return data
@@ -25,6 +29,7 @@ async function vendorLogin(phone, password) {
     .select('*')
     .eq('phone', phone.replace(/[^0-9]/g, ''))
     .eq('password_hash', password)
+    .eq('module', MODULE)
     .single()
   return data || null
 }
@@ -36,7 +41,7 @@ async function updateVendorConfig(vendorId, config) {
 
 async function getVendorBySlug(slug) {
   if (!supabase) return null
-  const { data } = await supabase.from('vendor_accounts').select('*').eq('slug', slug).single()
+  const { data } = await supabase.from('vendor_accounts').select('*').eq('slug', slug).eq('module', MODULE).single()
   return data
 }
 
@@ -169,53 +174,47 @@ function getDeliveryDefaults(countryCode, city) {
 
 /* ─── Food Type Categories ─── */
 const FOOD_TYPES = {
-  'Nasi': ['Nasi Goreng', 'Nasi Uduk', 'Nasi Kuning', 'Nasi Padang', 'Nasi Campur', 'Nasi Kucing', 'Nasi Bakar', 'Nasi Pecel', 'Nasi Liwet', 'Lontong Sayur', 'Ketupat Sayur'],
-  'Mie': ['Mie Goreng', 'Mie Rebus', 'Mie Ayam', 'Bakmi Jawa', 'Mie Tek-Tek', 'Kwetiau Goreng', 'Bihun Goreng', 'Mie Aceh'],
-  'Sop/Soto': ['Soto Ayam', 'Soto Betawi', 'Soto Lamongan', 'Soto Madura', 'Bakso', 'Bakso Urat', 'Rawon', 'Tongseng', 'Sop Iga', 'Sop Buntut'],
-  'Sate/Bakar': ['Sate Ayam', 'Sate Kambing', 'Sate Padang', 'Sate Madura', 'Sate Taichan', 'Sate Usus', 'Jagung Bakar', 'Ikan Bakar', 'Ayam Bakar'],
-  'Gorengan': ['Bakwan', 'Tahu Goreng', 'Tempe Goreng', 'Tahu Isi', 'Pisang Goreng', 'Ubi Goreng', 'Risoles', 'Cireng', 'Comro', 'Martabak Telur'],
-  'Jajanan': ['Siomay', 'Batagor', 'Pempek', 'Cilok', 'Cimol', 'Tahu Bulat', 'Lumpia', 'Seblak', 'Telur Gulung', 'Sempol Ayam', 'Sosis Bakar'],
-  'Ayam': ['Ayam Goreng', 'Ayam Bakar', 'Ayam Penyet', 'Ayam Geprek', 'Ayam Kremes', 'Ayam Rica-Rica', 'Pecel Lele'],
-  'Seafood': ['Ikan Bakar', 'Ikan Goreng', 'Udang Bakar', 'Cumi Goreng', 'Kerang Rebus', 'Gurame Goreng'],
-  'Roti': ['Roti Bakar', 'Martabak Manis', 'Roti Canai', 'Pukis', 'Kue Cubit', 'Kue Pancong'],
-  'Minuman': ['Es Teh Manis', 'Es Jeruk', 'Es Kelapa', 'Es Cendol', 'Es Campur', 'Es Cincau', 'Es Teler', 'Jus Alpukat', 'Jus Mangga', 'Wedang Jahe', 'Bandrek', 'Sekoteng', 'Es Buah'],
-  'Dessert': ['Klepon', 'Onde-Onde', 'Lupis', 'Dadar Gulung', 'Serabi', 'Kue Putu', 'Kue Lapis', 'Getuk', 'Wingko'],
-  'Bubur': ['Bubur Ayam', 'Bubur Kacang Hijau', 'Bubur Sumsum', 'Bubur Ketan Hitam', 'Bubur Manado'],
+  'Fashion': ['Clothing', 'Shoes', 'Hijab & Scarves', 'Batik', 'Baby Clothes', 'Jewelry'],
+  'Electronics': ['Electronics', 'Phone Cases', 'Phone Accessories', 'Gadgets'],
+  'Beauty': ['Skincare', 'Cosmetics', 'Perfume'],
+  'Home & Living': ['Home Decor', 'Furniture', 'Kitchenware', 'Candles'],
+  'Handmade': ['Handicrafts', 'Jewelry', 'Candles'],
+  'Sports': ['Sports', 'Outdoor'],
+  'Automotive': ['Motorbike Tyres', 'Automotive'],
+  'Books & School': ['School Accessories', 'Books & Stationery'],
+  'Grocery': ['Grocery & Snacks', 'Tobacco', 'Herbal & Jamu'],
+  'Digital': ['Digital Products'],
+  'General': ['General Store'],
+  'Baby & Kids': ['Baby Clothes', 'Baby & Kids'],
+  'Pet Supplies': ['Pet Supplies'],
 }
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
-/* ─── Demo Menu ─── */
+/* ─── Demo Product Catalog ─── */
 const DEMO_MENU = [
-  // Meals
-  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1 },
-  { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
-  { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
-  { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },
-  { id: 5, name: 'Ayam Geprek', price: 20000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Crispy smashed chicken with sambal', category: 'Meal', available: true },
-  // Drinks
-  { id: 6, name: 'Es Teh Manis', price: 5000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Sweet iced tea', category: 'Drink', available: true },
-  { id: 7, name: 'Es Jeruk', price: 7000, photo: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=300', desc: 'Fresh orange juice', category: 'Drink', available: true },
-  { id: 8, name: 'Kopi Hitam', price: 5000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Black coffee, strong Indonesian brew', category: 'Drink', available: true },
-  { id: 9, name: 'Es Alpukat', price: 10000, photo: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=300', desc: 'Creamy avocado smoothie with chocolate', category: 'Drink', available: true },
-  { id: 10, name: 'Air Mineral', price: 3000, photo: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300', desc: 'Bottled mineral water', category: 'Drink', available: true },
-  { id: 23, name: 'Es Kelapa Muda', price: 8000, photo: 'https://images.unsplash.com/photo-1544252890-c8e1a1080400?w=300', desc: 'Fresh young coconut water with ice', category: 'Drink', available: true },
-  { id: 24, name: 'Jus Mangga', price: 10000, photo: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=300', desc: 'Fresh mango juice blended smooth', category: 'Drink', available: true },
-  { id: 25, name: 'Es Cendol', price: 8000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Pandan jelly with coconut milk and palm sugar', category: 'Drink', available: true },
-  { id: 26, name: 'Teh Tarik', price: 7000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Pulled milk tea, hot or iced', category: 'Drink', available: true },
-  // Snacks
-  { id: 11, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
-  { id: 12, name: 'Kerupuk', price: 3000, photo: 'https://images.unsplash.com/photo-1630384060421-cb20aed56993?w=300', desc: 'Crispy prawn crackers', category: 'Snack', available: true },
-  { id: 13, name: 'Pisang Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Fried banana fritters with crispy batter', category: 'Snack', available: true },
-  { id: 14, name: 'Tahu Crispy', price: 4000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Crispy fried tofu bites', category: 'Snack', available: true },
-  { id: 19, name: 'Tempe Mendoan', price: 5000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Thinly sliced fried tempeh', category: 'Snack', available: true },
-  { id: 20, name: 'Cireng Isi', price: 6000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Fried tapioca balls with filling', category: 'Snack', available: true },
-  { id: 21, name: 'Lumpia Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Crispy fried spring rolls', category: 'Snack', available: true },
-  { id: 22, name: 'Bakwan Jagung', price: 4000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Corn fritters with vegetables', category: 'Snack', available: true },
-  // Extra Sauce
-  { id: 15, name: 'Sambal Extra', price: 2000, photo: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=300', desc: 'Extra portion of spicy chili sambal', category: 'Extra Sauce', available: true },
-  { id: 16, name: 'Kecap Manis', price: 1000, photo: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300', desc: 'Sweet soy sauce', category: 'Extra Sauce', available: true },
-  { id: 17, name: 'Saus Kacang', price: 3000, photo: 'https://images.unsplash.com/photo-1635321593217-40050ad13c74?w=300', desc: 'Creamy peanut sauce for satay and gado-gado', category: 'Extra Sauce', available: true },
-  { id: 18, name: 'Sambal Matah', price: 3000, photo: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=300', desc: 'Fresh Balinese shallot and lemongrass sambal', category: 'Extra Sauce', available: true },
+  // Clothing
+  { id: 1, name: 'Basic T-Shirt', price: 89000, photo: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300', desc: 'Cotton crew neck tee, available in 5 colors', category: 'Clothing', available: true },
+  { id: 2, name: 'Denim Jeans', price: 250000, photo: 'https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a?w=300', desc: 'Slim fit denim, dark wash', category: 'Clothing', available: true },
+  { id: 3, name: 'Hoodie Pullover', price: 175000, photo: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300', desc: 'Fleece-lined hoodie, oversized fit', category: 'Clothing', available: true },
+  { id: 4, name: 'Polo Shirt', price: 120000, photo: 'https://images.unsplash.com/photo-1625910513413-5fc420e7abbe?w=300', desc: 'Classic polo with embroidered logo', category: 'Clothing', available: true },
+  // Electronics
+  { id: 5, name: 'Wireless Earbuds', price: 350000, photo: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=300', desc: 'Bluetooth 5.0, noise cancelling, 24hr battery', category: 'Electronics', available: true },
+  { id: 6, name: 'Phone Case Clear', price: 45000, photo: 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300', desc: 'Transparent shockproof case, all models', category: 'Electronics', available: true },
+  { id: 7, name: 'USB-C Cable 2m', price: 25000, photo: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300', desc: 'Fast charging braided cable', category: 'Electronics', available: true },
+  { id: 8, name: 'Screen Protector', price: 35000, photo: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=300', desc: 'Tempered glass, 9H hardness', category: 'Electronics', available: true },
+  // Beauty
+  { id: 9, name: 'Face Moisturizer', price: 85000, photo: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=300', desc: 'Hydrating daily moisturizer with SPF 30', category: 'Beauty', available: true },
+  { id: 10, name: 'Lip Tint', price: 45000, photo: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300', desc: 'Long-lasting matte lip tint, 8 shades', category: 'Beauty', available: true },
+  { id: 11, name: 'Sheet Mask Pack', price: 30000, photo: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=300', desc: 'Korean sheet mask, aloe & vitamin C', category: 'Beauty', available: true },
+  // Home & Living
+  { id: 12, name: 'Scented Candle', price: 65000, photo: 'https://images.unsplash.com/photo-1602607730746-f3ce34fba4b3?w=300', desc: 'Vanilla & sandalwood, 40hr burn time', category: 'Home', available: true },
+  { id: 13, name: 'Cushion Cover', price: 55000, photo: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300', desc: 'Linen cushion cover, minimalist design', category: 'Home', available: true },
+  { id: 14, name: 'Ceramic Mug', price: 40000, photo: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=300', desc: 'Handmade ceramic mug, 350ml', category: 'Home', available: true },
+  // Accessories
+  { id: 15, name: 'Tote Bag Canvas', price: 75000, photo: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300', desc: 'Sturdy canvas tote, reusable & eco-friendly', category: 'Accessories', available: true },
+  { id: 16, name: 'Beaded Bracelet', price: 35000, photo: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=300', desc: 'Handmade natural stone bracelet', category: 'Accessories', available: true },
+  { id: 17, name: 'Sunglasses UV400', price: 95000, photo: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300', desc: 'Retro round frame, full UV protection', category: 'Accessories', available: true },
+  { id: 18, name: 'Cap Snapback', price: 60000, photo: 'https://images.unsplash.com/photo-1588850561407-ed78c334e67a?w=300', desc: 'Adjustable snapback, embroidered logo', category: 'Accessories', available: true },
 ]
 
 /* ─── Helpers ─── */
@@ -287,34 +286,127 @@ function adjustColor(hex, factor) {
   return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('')
 }
 
+/* ─── Pollinations.ai theme image generator ─── */
+const POLLINATIONS_BASE = 'https://image.pollinations.ai/prompt/'
+function themeImg(prompt) {
+  return POLLINATIONS_BASE + encodeURIComponent(prompt + ', dark moody background, professional product photography, cinematic lighting, 4k') + '?width=480&height=854&nologo=true&seed=42'
+}
+
 const THEME_PRESETS = [
-  // Indonesian
-  { id: 'satay', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_31_54-pm.png', label: '#1 Satay', category: 'Chicken Satay', countries: ['ID', 'MY', 'SG', 'TH'], foodTypes: ['Chicken Satay', 'Street Food'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_37_32-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_37_54-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_38_17-pm.png'] },
-  { id: 'pecellele', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_17_10-am.png', label: '#2 Pecel Lele', category: 'Pecel Lele', countries: ['ID'], foodTypes: ['Pecel Lele', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'friedrice', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_33_01-am.png', label: '#3 Fried Rice', category: 'Fried Rice', countries: ['ID', 'MY', 'TH', 'VN'], foodTypes: ['Fried Rice', 'Street Food'] },
-  { id: 'noodle', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png', label: '#4 Noodles', category: 'Noodles', countries: ['ID', 'VN', 'TH', 'MY'], foodTypes: ['Noodles', 'Noodle Soup', 'Asian Cuisine'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_24_04-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_25_10-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_27_39-am.png'] },
-  { id: 'bakso', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_45_14-am.png', label: '#5 Bakso', category: 'Bakso', countries: ['ID'], foodTypes: ['Bakso', 'Meatball Soup', 'Street Food'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_49_45-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_52_59-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-03_57_35-pm.png'] },
-  { id: 'chicken', accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_37_44-am.png', label: '#6 Crispy Chicken', category: 'Crispy Chicken', countries: ['ID', 'MY', 'US', 'GB', 'PH', 'KR'], foodTypes: ['Crispy Chicken', 'Street Food'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_51_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_54_35-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-10_57_27-am.png'] },
-  { id: 'juice', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_08_00-am.png', label: '#7 Fresh Juice', category: 'Fresh Juice', countries: ['ID'], foodTypes: ['Fresh Juice', 'Coffee'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_20_24-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_21_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-02_01_25-pm.png'] },
-  { id: 'coffee', accent: '#8a570f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_11_01-am.png', label: '#8 Coffee', category: 'Coffee', countries: ['ID'], foodTypes: ['Coffee'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_09_46-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_10_11-am.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-11_12_08-am.png'] },
-  { id: 'kebab', accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_04_20-pm.png', label: '#9 Kebab', category: 'Kebabs', countries: ['AE', 'SA', 'QA', 'KW', 'EG', 'DE', 'GB', 'FR', 'NL'], foodTypes: ['Kebabs', 'Street Food'] },
-  { id: 'martabak', isNew: true, accent: '#8a0f8a', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_08_25-am.png', label: '#10 Martabak', category: 'Martabak', countries: ['ID'], foodTypes: ['Martabak', 'Street Food', 'Dessert'] },
-  { id: 'escendol', isNew: true, accent: '#4d8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_06_43-pm.png', label: '#11 Es Cendol', category: 'Es Cendol', countries: ['ID', 'MY'], foodTypes: ['Es Cendol', 'Fresh Juice', 'Coffee'] },
-  { id: 'ketoprak', isNew: true, accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_10_51-pm.png', label: '#12 Ketoprak', category: 'Ketoprak', countries: ['ID'], foodTypes: ['Ketoprak', 'Street Food', 'Indonesian Street Food'] },
-  { id: 'cilok', isNew: true, accent: '#c15d15', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_12_27-pm.png', label: '#13 Cilok Cimol', category: 'Cilok Cimol', countries: ['ID'], foodTypes: ['Cilok Cimol', 'Snack', 'Street Food'] },
-  { id: 'ikanbakar', isNew: true, accent: '#e8512c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_14_52-pm.png', label: '#14 Ikan Bakar', category: 'Ikan Bakar', countries: ['ID', 'MY'], foodTypes: ['Ikan Bakar', 'Seafood', 'Street Food'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_17-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_20_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-04_21_18-pm.png'] },
-  { id: 'nasiuduk', isNew: true, accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png', label: '#15 Nasi Uduk', category: 'Nasi Uduk', countries: ['ID'], foodTypes: ['Nasi Uduk', 'Indonesian Street Food', 'Street Food'] },
-  { id: 'bebekgoreng', isNew: true, accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png', label: '#16 Bebek Goreng', category: 'Bebek Goreng', countries: ['ID'], foodTypes: ['Bebek Goreng', 'Crispy Chicken', 'Street Food'] },
-  { id: 'burger', accent: '#B8860B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png', label: '#17 Burgers', category: 'Burgers', countries: ['US', 'GB', 'AU', 'NZ', 'CA', 'DE'], foodTypes: ['Burgers', 'Street Food'] },
-  { id: 'donut', isNew: true, accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_45_26-pm.png', label: '#18 Donuts', category: 'Donuts', countries: ['US', 'GB', 'AU', 'CA', 'ID', 'MY', 'SG', 'JP', 'KR'], foodTypes: ['Donuts', 'Dessert', 'Coffee'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_48_16-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_49_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'] },
-  { id: 'hotdog', isNew: true, accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png', label: '#19 Hot Dogs', category: 'Hot Dogs', countries: ['US', 'GB', 'AU', 'DE', 'CA'], foodTypes: ['Hot Dogs', 'Street Food'] },
-  { id: 'pizza', isNew: true, accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png', label: '#20 Pizza', category: 'Pizza', countries: ['US', 'GB', 'AU', 'DE', 'CA', 'FR', 'NL'], foodTypes: ['Pizza', 'Street Food'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-02_00_37-am.png'] },
-  { id: 'nescafe', isNew: true, accent: '#C8102E', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-03_26_14-am.png', label: '#21 Nescafe', category: 'Nescafe', countries: ['ID', 'MY', 'SG', 'TH', 'VN', 'PH', 'IN', 'BR', 'MX', 'GB', 'FR', 'DE'], foodTypes: ['Coffee', 'Nescafe'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-12_32_33-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-12_34_25-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-12_38_22-pm.png'] },
-  { id: 'cheesecake', isNew: true, accent: '#C8102E', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-12_50_56-pm.png', label: '#22 Cheese Cakes', category: 'Cheese Cakes', countries: ['US', 'GB', 'AU', 'CA', 'DE', 'FR', 'NL', 'ID', 'MY', 'SG', 'JP', 'KR'], foodTypes: ['Cheese Cakes', 'Dessert'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-12_53_57-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_02_54-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_05_20-pm.png'] },
-  { id: 'sweetbread', isNew: true, accent: '#D4A373', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_18_08-pm.png', label: '#23 Sweet Bread Cakes', category: 'Sweet Bread Cakes', countries: ['ID', 'MY', 'SG', 'TH', 'JP', 'KR', 'FR', 'DE', 'US', 'GB', 'AU', 'CA'], foodTypes: ['Sweet Bread Cakes', 'Dessert'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_21_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_24_02-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_26_47-pm.png'] },
-  { id: 'icecream', isNew: true, accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_30_22-pm.png', label: '#24 Ice Cream', category: 'Ice Cream', countries: ['US', 'GB', 'AU', 'CA', 'DE', 'FR', 'NL', 'ID', 'MY', 'SG', 'TH', 'JP', 'KR'], foodTypes: ['Ice Cream', 'Dessert'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_32_52-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_33_34-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_35_37-pm.png'] },
+  // Clothing & Fashion
+  { id: 'clothing', accent: '#4A90D9', img: themeImg('Clothing store display with folded shirts jeans and sneakers on dark wooden shelves warm lighting'), label: '#1 Clothing', category: 'Clothing', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH'], foodTypes: ['Clothing', 'Fashion'] },
+  { id: 'shoes', accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-shoes.png', label: '#2 Shoes', category: 'Shoes', countries: ['ID', 'MY', 'US', 'GB', 'AU'], foodTypes: ['Shoes', 'Fashion'] },
+  { id: 'raincoats', isNew: true, accent: '#2C5F8A', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-raincoats.png', label: '#3 Raincoats', category: 'Raincoats', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'DE', 'NL'], foodTypes: ['Raincoats', 'Clothing', 'Outdoor', 'Fashion'] },
+  { id: 'running', isNew: true, accent: '#1B2A4A', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-running-footwear.png', label: '#4 Running Footwear', category: 'Running Footwear', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'DE', 'JP', 'KR', 'TH'], foodTypes: ['Running Footwear', 'Shoes', 'Sports', 'Fashion'] },
+  { id: 'handbags', isNew: true, accent: '#8B4513', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags.png', label: '#4 Handbags', category: 'Handbags', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'FR'], foodTypes: ['Handbags', 'Fashion', 'Accessories'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags-v2.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags-v3.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags-v4.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags-v5.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handbags-v6.png'] },
+  { id: 'hijab', accent: '#9B59B6', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2004_57_19%20PM.png?updatedAt=1778407052888', label: '#4 Hijab & Scarves', category: 'Hijab & Scarves', countries: ['ID', 'MY', 'SG', 'AE', 'SA', 'EG'], foodTypes: ['Hijab & Scarves', 'Fashion'] },
+  { id: 'batik', isNew: true, accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2011_41_38%20AM.png?updatedAt=1778388112989', label: '#4 Batik', category: 'Batik', countries: ['ID', 'MY'], foodTypes: ['Batik', 'Fashion', 'Traditional'] },
+  { id: 'tshirts', isNew: true, accent: '#4A90D9', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasd.png?updatedAt=1778435998178', label: '#24 T-Shirts', category: 'T-Shirts', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN', 'PH', 'JP', 'KR', 'DE', 'FR'], foodTypes: ['T-Shirts', 'Clothing', 'Fashion'], variants: ['https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvv.png?updatedAt=1778434284405', 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdas.png?updatedAt=1778434574941'] },
+
+  // Electronics & Gadgets
+  { id: 'electronics', accent: '#2ECC71', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-electrical.png', label: '#5 Electronics', category: 'Electronics', countries: ['ID', 'MY', 'US', 'GB', 'SG', 'AU', 'JP', 'KR'], foodTypes: ['Electronics', 'Gadgets'] },
+  { id: 'comprepair', isNew: true, accent: '#1E90FF', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair.png', label: '#6 Computer Repair', category: 'Computer Repair', countries: ['ID', 'MY', 'US', 'GB', 'SG', 'AU', 'JP', 'KR', 'DE', 'TH', 'VN', 'PH'], foodTypes: ['Computer Repair', 'Electronics', 'Gadgets'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v2.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v3.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v4.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-computer-repair-v5.png'] },
+  { id: 'phoneacc', accent: '#3498DB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases.png', label: '#7 Phone Cases', category: 'Phone Cases', countries: ['ID', 'MY', 'US', 'GB', 'SG', 'TH', 'VN', 'PH'], foodTypes: ['Phone Cases', 'Phone Accessories', 'Electronics'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-phone-cases-v2.png'] },
+
+  // Beauty & Health
+  { id: 'skincare', accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png', label: '#7 Beauty Products', category: 'Beauty Products', countries: ['ID', 'MY', 'KR', 'JP', 'US', 'GB', 'TH'], foodTypes: ['Skincare', 'Beauty', 'Cosmetics'] },
+  { id: 'cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png', label: '#8 Cosmetics', category: 'Cosmetics', countries: ['ID', 'MY', 'US', 'GB', 'KR', 'JP'], foodTypes: ['Cosmetics', 'Beauty'] },
+  { id: 'perfume', isNew: true, accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png', label: '#9 Perfume', category: 'Perfume', countries: ['ID', 'MY', 'AE', 'SA', 'FR', 'US', 'GB'], foodTypes: ['Perfume', 'Beauty'] },
+
+  // Home & Living
+  { id: 'homedecor', accent: '#D4A373', img: themeImg('Home decor items candles vases cushions on wooden shelf cozy dark interior'), label: '#10 Home Decor', category: 'Home Decor', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG'], foodTypes: ['Home Decor', 'Home & Living'] },
+  { id: 'furniture', isNew: true, accent: '#8FB4A3', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-home-furniture.png', label: '#11 Home Furniture', category: 'Home Furniture', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'DE', 'FR', 'NL', 'TH'], foodTypes: ['Furniture', 'Home & Living', 'Home Decor'] },
+  { id: 'kitchenware', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png', label: '#12 Kitchenware', category: 'Kitchenware', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'JP'], foodTypes: ['Kitchenware', 'Home & Living'] },
+
+  // Packaging
+  { id: 'packaging', isNew: true, accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png', label: '#15 Packaging', category: 'Packaging', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN'], foodTypes: ['Packaging', 'Business Supplies'] },
+
+  // Crafts & Handmade
+  { id: 'handicraft', accent: '#e8992c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-handicrafts.png', label: '#13 Handicrafts', category: 'Handicrafts', countries: ['ID', 'MY', 'TH', 'VN', 'PH'], foodTypes: ['Handicrafts', 'Handmade'] },
+  { id: 'jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png', label: '#14 Jewelry', category: 'Jewelry', countries: ['ID', 'MY', 'US', 'GB', 'TH', 'IN'], foodTypes: ['Jewelry', 'Handmade', 'Fashion'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry-v2.png'] },
+  { id: 'candles', isNew: true, accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-candles.png', label: '#15 Candles', category: 'Candles', countries: ['ID', 'MY', 'US', 'GB', 'AU'], foodTypes: ['Candles', 'Handmade', 'Home & Living'], variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-candles-v2.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-candles-v3.png'] },
+
+  // Sports & Outdoor
+  { id: 'sports', accent: '#27AE60', img: themeImg('Sports equipment sneakers basketball dumbbells water bottle on dark gym floor'), label: '#16 Sports', category: 'Sports', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'DE'], foodTypes: ['Sports', 'Outdoor'] },
+
+  // Baby & Kids
+  { id: 'baby', isNew: true, accent: '#FF69B4', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-baby-clothes.png', label: '#17 Baby Clothes', category: 'Baby Clothes', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN', 'PH', 'JP', 'KR'], foodTypes: ['Baby Clothes', 'Baby & Kids', 'Fashion'] },
+  { id: 'toys', isNew: true, accent: '#FF6B35', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-childrens-toys.png', label: '#18 Children\'s Toys', category: 'Children\'s Toys', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'PH', 'DE', 'FR'], foodTypes: ['Children\'s Toys', 'Baby & Kids', 'Toys'] },
+
+  // School & Stationery
+  { id: 'school', accent: '#4A90D9', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-school-accessories.png', label: '#18 School Accessories', category: 'School Accessories', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'PH'], foodTypes: ['School Accessories', 'Books & Stationery'] },
+  { id: 'books', accent: '#2C3E50', img: themeImg('Stack of books notebooks and stationery on dark wooden desk warm lamp light'), label: '#19 Books & Stationery', category: 'Books & Stationery', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'JP'], foodTypes: ['Books & Stationery'] },
+
+  // Automotive
+  { id: 'motortyres', isNew: true, accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-motorbike-tyres.png', label: '#20 Motorbike Tyres', category: 'Motorbike Tyres', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'TH', 'VN', 'PH', 'IN'], foodTypes: ['Motorbike Tyres', 'Automotive'] },
+  { id: 'seatcovers', isNew: true, accent: '#795548', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2010,%202026,%2011_14_54%20AM.png?updatedAt=1778386510220', label: '#21 Seat Covers', category: 'Seat Covers', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'TH', 'VN', 'PH', 'IN', 'DE', 'JP'], foodTypes: ['Seat Covers', 'Automotive'] },
+  { id: 'bicycle', isNew: true, accent: '#2E86AB', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-bicycle.png', label: '#22 Bicycle', category: 'Bicycle', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR', 'TH', 'VN', 'DE', 'NL', 'FR'], foodTypes: ['Bicycle', 'Sports', 'Outdoor', 'Automotive'] },
+  { id: 'automotive', isNew: true, accent: '#dc2626', img: themeImg('Car accessories parts tools and detailing products on dark garage workbench'), label: '#23 Automotive', category: 'Automotive', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'DE', 'JP'], foodTypes: ['Automotive'] },
+  { id: 'helmets', isNew: true, accent: '#1a1a1a', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasdsdsasddd.png', label: '#25 Helmets', category: 'Helmets', countries: ['ID', 'MY', 'TH', 'VN', 'PH', 'IN', 'US', 'GB', 'AU', 'DE', 'JP'], foodTypes: ['Helmets', 'Motorcycle', 'Automotive', 'Sports', 'Outdoor'], variants: ['https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasdsdsasd.png', 'https://ik.imagekit.io/nepgaxllc/Untitledsdasdaaavvvsdasdasds.png?updatedAt=1778436294045'] },
+
+  // Pet Supplies
+  { id: 'pets', isNew: true, accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-pet-supplies.png', label: '#23 Pet Supplies', category: 'Pet Supplies', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG'], foodTypes: ['Pet Supplies'] },
+
+  // Grocery & Snacks
+  { id: 'grocery', accent: '#c15d15', img: themeImg('Packaged snacks chips cookies and grocery items displayed on dark shelves store'), label: '#24 Grocery & Snacks', category: 'Grocery & Snacks', countries: ['ID', 'MY', 'SG', 'TH', 'VN', 'PH'], foodTypes: ['Grocery & Snacks'] },
+
+  // Tobacco
+  { id: 'tobacco', isNew: true, accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-tobacco.png', label: '#25 Tobacco', category: 'Tobacco', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'DE', 'FR', 'TH', 'VN'], foodTypes: ['Tobacco'] },
+
+  // Herbal & Traditional
+  { id: 'herbal', isNew: true, accent: '#4d8a0f', img: themeImg('Traditional herbal medicine jamu bottles spices and natural remedies on dark wood'), label: '#26 Herbal & Jamu', category: 'Herbal & Jamu', countries: ['ID', 'MY'], foodTypes: ['Herbal & Jamu', 'Traditional'] },
+
+  // Digital Products
+  { id: 'digital', isNew: true, accent: '#8E44AD', img: themeImg('Digital products gift cards software boxes on futuristic dark desk with neon glow'), label: '#27 Digital Products', category: 'Digital Products', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'JP', 'KR'], foodTypes: ['Digital Products'] },
+
+  // General Merchandise
+  { id: 'general', accent: '#4A90D9', img: themeImg('Mixed merchandise products variety of items on dark display table organized'), label: '#28 General Store', category: 'General Store', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN', 'PH'], foodTypes: ['General Store'] },
 ]
-const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
+const PRODUCT_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
+
+/* Per-theme menu sub-categories (max 3, kept short to fit alongside "All" tab without scrolling) */
+const THEME_MENU_TABS = {
+  clothing:    ['Men', 'Women', 'Kids'],
+  shoes:       ['Men', 'Women', 'Kids'],
+  raincoats:   ['Men', 'Women', 'Kids'],
+  running:     ['Men', 'Women', 'Kids'],
+  handbags:    ['Bags', 'Wallets', 'Clutch'],
+  hijab:       ['Hijabs', 'Abaya', 'Scarves'],
+  batik:       ['Tops', 'Pants', 'Fabric'],
+  electronics: ['Phones', 'Audio', 'Accs'],
+  comprepair:  ['Phone', 'Laptop', 'Other'],
+  phoneacc:    ['Cases', 'Chargers', 'Cables'],
+  skincare:    ['Face', 'Body', 'Hair'],
+  cosmetics:   ['Face', 'Lips', 'Eyes'],
+  perfume:     ['Men', 'Women', 'Unisex'],
+  homedecor:   ['Wall', 'Lights', 'Vases'],
+  furniture:   ['Living', 'Bed', 'Dining'],
+  kitchenware: ['Pots', 'Utensils', 'Plates'],
+  packaging:   ['Boxes', 'Bags', 'Tape'],
+  handicraft:  ['Decor', 'Gifts', 'Wall'],
+  jewelry:     ['Rings', 'Necklace', 'Earring'],
+  candles:     ['Jar', 'Pillar', 'Votive'],
+  sports:      ['Gym', 'Outdoor', 'Team'],
+  baby:        ['Boys', 'Girls', 'Newborn'],
+  toys:        ['Boys', 'Girls', 'Both'],
+  school:      ['Bags', 'Pens', 'Books'],
+  books:       ['Books', 'Pens', 'Notes'],
+  motortyres:  ['Sport', 'Touring', 'Scooter'],
+  seatcovers:  ['Car', 'Motor', 'Truck'],
+  bicycle:     ['Mens', 'Womens', 'Kids'],
+  automotive:  ['Inside', 'Outside', 'Parts'],
+  pets:        ['Dogs', 'Cats', 'Birds'],
+  grocery:     ['Snacks', 'Drinks', 'Pantry'],
+  tobacco:     ['Cigars', 'Rolling', 'Accs'],
+  herbal:      ['Drinks', 'Powders', 'Capsules'],
+  digital:     ['Cards', 'Codes', 'eBooks'],
+  general:     ['Home', 'Personal', 'Daily'],
+}
+/* Legacy food categories — fallback for existing food-themed vendors (e.g. noodle/default) */
+const FOOD_MENU_TABS = ['Meal', 'Snack', 'Drink', 'Extra Sauce', 'Dessert']
+function getMenuTabsForTheme(themeId) {
+  return THEME_MENU_TABS[themeId] || FOOD_MENU_TABS
+}
 
 /* Helper: filter themes by country + food type */
 function getFilteredThemes(countryCode, foodType, langCountries) {
@@ -374,6 +466,21 @@ const S = {
   payBtn: (active) => ({ flex: 1, padding: '14px', borderRadius: 14, border: active ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.12)', background: active ? 'rgba(141,198,63,0.15)' : 'transparent', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center' }),
 }
 
+/* ─── Dev Page ID Badge (renders outside React tree via DOM for guaranteed visibility) ─── */
+function DevBadge({ n }) {
+  useEffect(() => {
+    let el = document.getElementById('dev-page-badge')
+    if (!el) {
+      el = document.createElement('div')
+      el.id = 'dev-page-badge'
+      Object.assign(el.style, { position:'fixed', bottom:'8px', left:'8px', width:'28px', height:'28px', borderRadius:'14px', background:'#FFD600', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'900', color:'#1a1a1a', zIndex:'99999', boxShadow:'0 2px 8px rgba(0,0,0,0.4)', pointerEvents:'none', fontFamily:'monospace' })
+      document.body.appendChild(el)
+    }
+    el.textContent = n
+  }, [n])
+  return null
+}
+
 /* ─── Main App ─── */
 export default function App() {
   // Route to admin or activate page
@@ -387,31 +494,31 @@ export default function App() {
   const APP_VERSION = '1.0.0'
   useEffect(() => {
     if (isDemo || isPreview || !supabase) return
-    const vid = localStorage.getItem('vendorbasic_vendorId')
+    const vid = localStorage.getItem('productslocalemail_vendorId')
     if (!vid || String(vid).startsWith('local')) return
 
     // Auto-heal: detect and fix broken states
     const errors = []
-    const theme = localStorage.getItem('vendorbasic_theme')
-    const accentColor = localStorage.getItem('vendorbasic_accentColor')
-    const themeBg = localStorage.getItem('vendorbasic_themeBg')
+    const theme = localStorage.getItem('productslocalemail_theme')
+    const accentColor = localStorage.getItem('productslocalemail_accentColor')
+    const themeBg = localStorage.getItem('productslocalemail_themeBg')
 
     // Fix invalid accent color
     if (accentColor && !/^#[0-9A-Fa-f]{6}$/.test(accentColor)) {
-      localStorage.setItem('vendorbasic_accentColor', '#8DC63F')
+      localStorage.setItem('productslocalemail_accentColor', '#8DC63F')
       errors.push('Invalid accent color reset')
     }
     // Fix missing theme background
     if (theme && theme !== 'custom' && !themeBg) {
       const preset = THEME_PRESETS.find(t => t.id === theme)
-      if (preset) { localStorage.setItem('vendorbasic_themeBg', preset.img); errors.push('Missing theme bg restored') }
+      if (preset) { localStorage.setItem('productslocalemail_themeBg', preset.img); errors.push('Missing theme bg restored') }
     }
     // Fix NaN prices in menu
     try {
-      const menu = JSON.parse(localStorage.getItem('vendorbasic_menu') || '[]')
+      const menu = JSON.parse(localStorage.getItem('productslocalemail_menu') || '[]')
       let fixed = false
       menu.forEach(item => { if (isNaN(item.price) || item.price < 0) { item.price = 0; fixed = true } })
-      if (fixed) { localStorage.setItem('vendorbasic_menu', JSON.stringify(menu)); errors.push('NaN prices fixed') }
+      if (fixed) { localStorage.setItem('productslocalemail_menu', JSON.stringify(menu)); errors.push('NaN prices fixed') }
     } catch { errors.push('Corrupt menu JSON') }
 
     // Check for remote config (force reset, maintenance, announcements)
@@ -421,9 +528,9 @@ export default function App() {
         const newAccent = data.reset_accent || '#8B0000'
         const preset = THEME_PRESETS.find(t => t.id === newTheme)
         if (preset) {
-          localStorage.setItem('vendorbasic_theme', newTheme)
-          localStorage.setItem('vendorbasic_themeBg', preset.img)
-          localStorage.setItem('vendorbasic_accentColor', newAccent)
+          localStorage.setItem('productslocalemail_theme', newTheme)
+          localStorage.setItem('productslocalemail_themeBg', preset.img)
+          localStorage.setItem('productslocalemail_accentColor', newAccent)
           const bgImg = document.getElementById('app-bg-img')
           if (bgImg) bgImg.src = preset.img
           supabase.from('vendor_status').update({ force_reset: false }).eq('vendor_id', vid)
@@ -433,7 +540,7 @@ export default function App() {
     })
 
     // Report health
-    const menuCount = JSON.parse(localStorage.getItem('vendorbasic_menu') || '[]').length
+    const menuCount = JSON.parse(localStorage.getItem('productslocalemail_menu') || '[]').length
     const status = errors.length > 0 ? 'warning' : 'healthy'
     supabase.from('vendor_health_logs').insert({
       vendor_id: vid, status, app_version: APP_VERSION,
@@ -484,7 +591,7 @@ export default function App() {
   const [publicVendorLogo, setPublicVendorLogo] = useState('')
   useEffect(() => {
     // Check if this is a vendor's public page (has slug in URL or stored vendor ID)
-    const storedId = localStorage.getItem('vendorbasic_vendorId')
+    const storedId = localStorage.getItem('productslocalemail_vendorId')
     if (storedId && !String(storedId).startsWith('local') && supabase) {
       supabase.from('vendor_accounts').select('status,shop_name,shop_logo').eq('id', storedId).single().then(({ data }) => {
         if (data) {
@@ -502,10 +609,10 @@ export default function App() {
   const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
   const [showLanding, setShowLanding] = useState(() => {
     if (isDemo) return demoPage === 'landing'
-    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
+    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocalemail_vendorId') || localStorage.getItem('productslocalemail_vendor_id')
     return !id
   })
-  const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('vendorbasic_menu', DEMO_MENU))
+  const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('productslocalemail_menu', DEMO_MENU))
   const [cart, setCart] = useState([])
   const [isVendor, setIsVendor] = useState(() => {
     if (isDemo) return false
@@ -514,23 +621,23 @@ export default function App() {
     const urlCity = params.get('city')
     const urlCountry = params.get('country')
     if (urlVendor) {
-      localStorage.setItem('vendorbasic_vendorId', urlVendor)
-      localStorage.setItem('indoo_vendor_id', urlVendor)
-      if (urlCity) localStorage.setItem('vendorbasic_shopCity', urlCity)
-      if (urlCountry) localStorage.setItem('vendorbasic_shopCountry', urlCountry)
+      localStorage.setItem('productslocalemail_vendorId', urlVendor)
+      localStorage.setItem('productslocalemail_vendor_id', urlVendor)
+      if (urlCity) localStorage.setItem('productslocalemail_shopCity', urlCity)
+      if (urlCountry) localStorage.setItem('productslocalemail_shopCountry', urlCountry)
       // Auto-set delivery rates for new vendors
       const countryCode = params.get('cc')
-      if (countryCode && !localStorage.getItem('vendorbasic_delRatesSet')) {
+      if (countryCode && !localStorage.getItem('productslocalemail_delRatesSet')) {
         const rates = getDeliveryDefaults(countryCode, urlCity)
-        localStorage.setItem('vendorbasic_delMin', rates.minCharge)
-        localStorage.setItem('vendorbasic_delMinKm', rates.minKm)
-        localStorage.setItem('vendorbasic_delPerKm', rates.perKm)
-        localStorage.setItem('vendorbasic_delMax', rates.maxKm)
-        localStorage.setItem('vendorbasic_delCurrency', rates.currency)
-        localStorage.setItem('vendorbasic_delRatesSet', 'true')
+        localStorage.setItem('productslocalemail_delMin', rates.minCharge)
+        localStorage.setItem('productslocalemail_delMinKm', rates.minKm)
+        localStorage.setItem('productslocalemail_delPerKm', rates.perKm)
+        localStorage.setItem('productslocalemail_delMax', rates.maxKm)
+        localStorage.setItem('productslocalemail_delCurrency', rates.currency)
+        localStorage.setItem('productslocalemail_delRatesSet', 'true')
       }
     }
-    const id = urlVendor || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
+    const id = urlVendor || localStorage.getItem('productslocalemail_vendorId') || localStorage.getItem('productslocalemail_vendor_id')
     return !!id
   })
   const [vendorLogin, setVendorLogin] = useState(false)
@@ -551,12 +658,13 @@ export default function App() {
   const [showDeliverySettings, setShowDeliverySettings] = useState(false)
   const [domainPage, setDomainPage] = useState(false)
   const [termsOfListing, setTermsOfListing] = useState(false)
+  const [orderEmailPage, setOrderEmailPage] = useState(false)
   const [vendorDrawer, setVendorDrawer] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
   const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
-  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : (isDemo || isPreview) ? 'noodle' : (localStorage.getItem('vendorbasic_theme') || 'default'))
-  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : (isDemo || isPreview) ? '#8B0000' : (localStorage.getItem('vendorbasic_accentColor') || '#8DC63F'))
+  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : (isDemo || isPreview) ? 'noodle' : (localStorage.getItem('productslocalemail_theme') || 'default'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : (isDemo || isPreview) ? '#8B0000' : (localStorage.getItem('productslocalemail_accentColor') || '#8DC63F'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
@@ -577,83 +685,90 @@ export default function App() {
   const accentLight = accent + '25'
   const accentBorder = accent + '40'
   const isCustomAccent = shopAccentColor !== '#8DC63F'
-  const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('vendorbasic_bgPos')) } catch { return null } })()
+  const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('productslocalemail_bgPos')) } catch { return null } })()
   const bgStyle = shopTheme === 'custom' && savedBgPos ? { objectFit: 'cover', objectPosition: `${savedBgPos.x}% ${savedBgPos.y}%` } : { objectFit: 'fill' }
-  const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('vendorbasic_delBase')) || 5000)
-  const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delPerKm')) || 2500)
-  const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMin')) || 7000)
-  const [delMaxKm, setDelMaxKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMax')) || 15)
-  const [delFreeAbove, setDelFreeAbove] = useState(() => parseInt(localStorage.getItem('vendorbasic_delFree')) || 0)
-  const [delCurrency, setDelCurrency] = useState(() => localStorage.getItem('vendorbasic_delCurrency') || 'Rp')
-  const [delMinKm, setDelMinKm] = useState(() => parseInt(localStorage.getItem('vendorbasic_delMinKm')) || 2)
-  const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('vendorbasic_delEnabled') !== 'false')
+  const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('productslocalemail_delBase')) || 5000)
+  const [delPerKm, setDelPerKm] = useState(() => parseInt(localStorage.getItem('productslocalemail_delPerKm')) || 2500)
+  const [delMinCharge, setDelMinCharge] = useState(() => parseInt(localStorage.getItem('productslocalemail_delMin')) || 7000)
+  const [delMaxKm, setDelMaxKm] = useState(() => parseInt(localStorage.getItem('productslocalemail_delMax')) || 15)
+  const [delFreeAbove, setDelFreeAbove] = useState(() => parseInt(localStorage.getItem('productslocalemail_delFree')) || 0)
+  const [delCurrency, setDelCurrency] = useState(() => localStorage.getItem('productslocalemail_delCurrency') || 'Rp')
+  const [delMinKm, setDelMinKm] = useState(() => parseInt(localStorage.getItem('productslocalemail_delMinKm')) || 2)
+  const [delEnabled, setDelEnabled] = useState(() => localStorage.getItem('productslocalemail_delEnabled') !== 'false')
 
   /* Shop info */
-  const [shopName, setShopName] = useState(() => localStorage.getItem('vendorbasic_shopName') || 'Street Noodle')
-  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('vendorbasic_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
-  const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('vendorbasic_logoStyle') || 'circle') // circle | bare | off
-  const [heroSize, setHeroSize] = useState(() => localStorage.getItem('vendorbasic_heroSize') || 'normal') // normal | large | xl
-  const [heroFont, setHeroFont] = useState(() => localStorage.getItem('vendorbasic_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
-  const [heroColor, setHeroColor] = useState(() => localStorage.getItem('vendorbasic_heroColor') || '#ffffff')
-  const [heroSubColor, setHeroSubColor] = useState(() => localStorage.getItem('vendorbasic_heroSubColor') || '') // empty = auto from heroColor
-  const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('vendorbasic_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
+  const [shopName, setShopName] = useState(() => localStorage.getItem('productslocalemail_shopName') || 'Your Store')
+  const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('productslocalemail_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
+  const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('productslocalemail_logoStyle') || 'circle') // circle | bare | off
+  const [heroSize, setHeroSize] = useState(() => localStorage.getItem('productslocalemail_heroSize') || 'normal') // normal | large | xl
+  const [heroFont, setHeroFont] = useState(() => localStorage.getItem('productslocalemail_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
+  const [heroColor, setHeroColor] = useState(() => localStorage.getItem('productslocalemail_heroColor') || '#ffffff')
+  const [heroSubColor, setHeroSubColor] = useState(() => localStorage.getItem('productslocalemail_heroSubColor') || '') // empty = auto from heroColor
+  const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('productslocalemail_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
   const [heroEditor, setHeroEditor] = useState(false) // full editor open
-  const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorbasic_shopPhone') || '6281234567890')
-  const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorbasic_shopOpen', true))
-  const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorbasic_shopAddress') || 'Jl. Malioboro, Yogyakarta')
-  const [shopHours, setShopHours] = useState(() => localStorage.getItem('vendorbasic_shopHours') || '17:00 – 23:00')
+  const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('productslocalemail_shopPhone') || '6281234567890')
+  const [shopOpen, setShopOpen] = useState(() => loadJSON('productslocalemail_shopOpen', true))
+  const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('productslocalemail_shopAddress') || 'Jl. Malioboro, Yogyakarta')
+  const [shopHours, setShopHours] = useState(() => localStorage.getItem('productslocalemail_shopHours') || '17:00 – 23:00')
   const defaultSchedule = { mon: { open: '17:00', close: '23:00', off: false }, tue: { open: '17:00', close: '23:00', off: false }, wed: { open: '17:00', close: '23:00', off: false }, thu: { open: '17:00', close: '23:00', off: false }, fri: { open: '17:00', close: '23:00', off: false }, sat: { open: '17:00', close: '23:00', off: false }, sun: { open: '17:00', close: '23:00', off: true } }
-  const [shopSchedule, setShopSchedule] = useState(() => loadJSON('vendorbasic_shopSchedule', defaultSchedule))
-  const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('vendorbasic_shopMaps') || '')
-  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('vendorbasic_shopIG') || 'lummeenoodles')
-  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('vendorbasic_shopTT') || 'lummeenoodles')
-  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('vendorbasic_shopFB') || 'lummeenoodles')
-  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('vendorbasic_shopYT') || 'lummeenoodles')
-  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('vendorbasic_shopWeb') || 'www.lummeenoodles.com')
-  const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('vendorbasic_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
-  const [shopBio, setShopBio] = useState(() => localStorage.getItem('vendorbasic_shopBio') || '')
-  const [shopCity, setShopCity] = useState(() => localStorage.getItem('vendorbasic_shopCity') || '')
-  const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('vendorbasic_shopCountry') || '')
-  const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('vendorbasic_shopFoodType') || 'Indonesian Street Food')
+  const [shopSchedule, setShopSchedule] = useState(() => loadJSON('productslocalemail_shopSchedule', defaultSchedule))
+  const [shopMapsLink, setShopMapsLink] = useState(() => localStorage.getItem('productslocalemail_shopMaps') || '')
+  const [shopInstagram, setShopInstagram] = useState(() => localStorage.getItem('productslocalemail_shopIG') || 'lummeenoodles')
+  const [shopTiktok, setShopTiktok] = useState(() => localStorage.getItem('productslocalemail_shopTT') || 'lummeenoodles')
+  const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('productslocalemail_shopFB') || 'lummeenoodles')
+  const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('productslocalemail_shopYT') || 'lummeenoodles')
+  const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('productslocalemail_shopWeb') || 'www.lummeenoodles.com')
+  const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('productslocalemail_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
+  const [shopBio, setShopBio] = useState(() => localStorage.getItem('productslocalemail_shopBio') || '')
+  const [shopCity, setShopCity] = useState(() => localStorage.getItem('productslocalemail_shopCity') || '')
+  const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('productslocalemail_shopCountry') || '')
+  const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('productslocalemail_shopFoodType') || 'General Store')
 
   /* ─── Customization Features (all optional) ─── */
-  const [btnShape, setBtnShape] = useState(() => localStorage.getItem('vendorbasic_btnShape') || 'rounded')
-  const [btnColor, setBtnColor] = useState(() => localStorage.getItem('vendorbasic_btnColor') || '')
-  const [btnText, setBtnText] = useState(() => localStorage.getItem('vendorbasic_btnText') || '')
-  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('vendorbasic_btnGlow') === 'true')
-  const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('vendorbasic_overlayOpacity')) || 40)
-  const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('vendorbasic_landingLayout') || 'center')
-  const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('vendorbasic_customTagline') || '')
-  const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('vendorbasic_menuCardStyle') || 'horizontal')
-  const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('vendorbasic_menuBanner') || '')
-  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('vendorbasic_showClosedBanner') === 'true')
-  const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('vendorbasic_promoBanner') || '')
-  const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('vendorbasic_promoBannerEnabled') === 'true')
-  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
-  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
+  const [btnShape, setBtnShape] = useState(() => localStorage.getItem('productslocalemail_btnShape') || 'rounded')
+  const [btnColor, setBtnColor] = useState(() => localStorage.getItem('productslocalemail_btnColor') || '')
+  const [btnText, setBtnText] = useState(() => localStorage.getItem('productslocalemail_btnText') || '')
+  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('productslocalemail_btnGlow') === 'true')
+  const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('productslocalemail_overlayOpacity')) || 40)
+  const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('productslocalemail_landingLayout') || 'center')
+  const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('productslocalemail_customTagline') || '')
+  const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('productslocalemail_menuCardStyle') || 'horizontal')
+  const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('productslocalemail_menuBanner') || '')
+  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('productslocalemail_showClosedBanner') === 'true')
+  const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('productslocalemail_promoBanner') || '')
+  const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('productslocalemail_promoBannerEnabled') === 'true')
+  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('productslocalemail_splashEnabled') === 'true')
+  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('productslocalemail_splashEnabled') === 'true')
   const [configPreviewTab, setConfigPreviewTab] = useState('landing')
-  const [configTool, setConfigTool] = useState(null) // null | 'layout' | 'button' | 'text' | 'cards' | 'promo' | 'splash'
+  const [configTool, setConfigTool] = useState(null) // null | 'color' | 'layout' | 'button' | 'text' | 'cards' | 'promo' | 'splash'
+  const [configColorRow, setConfigColorRow] = useState('Blue')
 
   const [showLocation, setShowLocation] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
   const [userDistance, setUserDistance] = useState(null)
   const [showDeals, setShowDeals] = useState(false)
   const [menuView, setMenuView] = useState('all') // 'all' or 'promo'
-  const [dailyDeals, setDailyDeals] = useState(() => loadJSON('vendorbasic_dailyDeals', []))
+  const [dailyDeals, setDailyDeals] = useState(() => loadJSON('productslocalemail_dailyDeals', []))
   const [showCustomers, setShowCustomers] = useState(false)
-  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('vendorbasic_installDismissed') === 'true')
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('productslocalemail_installDismissed') === 'true')
   const [customerSearch, setCustomerSearch] = useState('')
   const [promoMsg, setPromoMsg] = useState('')
 
   /* Checkout form */
   const [custName, setCustName] = useState('')
   const [custPhone, setCustPhone] = useState('')
+  const [custEmail, setCustEmail] = useState('')
   const [custAddress, setCustAddress] = useState('')
   const [payMethod, setPayMethod] = useState('cod')
   const [deliveryZones, setDeliveryZones] = useState(DEFAULT_DELIVERY_ZONES)
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailError, setEmailError] = useState('')
+
+  /* Vendor email config (where customer orders are delivered) */
+  const [vendorOrderEmail, setVendorOrderEmail] = useState(() => localStorage.getItem('productslocalemail_orderEmail') || '')
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -662,7 +777,7 @@ export default function App() {
   const [loginMode, setLoginMode] = useState('login') // 'login' or 'signup'
   const [signupName, setSignupName] = useState('')
   const [signupCategory, setSignupCategory] = useState('')
-  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id') || null)
+  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('productslocalemail_vendorId') || localStorage.getItem('productslocalemail_vendor_id') || null)
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
 
@@ -704,19 +819,19 @@ export default function App() {
   const [formSpice, setFormSpice] = useState(0)
   const [formHalal, setFormHalal] = useState(false)
   const [formPopular, setFormPopular] = useState(false)
-  const [formCategory, setFormCategory] = useState('Meal')
+  const [formCategory, setFormCategory] = useState(() => getMenuTabsForTheme(localStorage.getItem('productslocalemail_theme') || 'default')[0])
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formPrepTime, setFormPrepTime] = useState(0)
 
   /* --- Persist to localStorage + sync to Supabase --- */
-  useEffect(() => { if (vendorId) localStorage.setItem('vendorbasic_vendorId', vendorId) }, [vendorId])
-  useEffect(() => { saveJSON('vendorbasic_menu', menuItems) }, [menuItems])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopName', shopName) }, [shopName])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopLogo', shopLogo) }, [shopLogo])
-  useEffect(() => { localStorage.setItem('vendorbasic_logoStyle', shopLogoStyle) }, [shopLogoStyle])
-  useEffect(() => { localStorage.setItem('vendorbasic_heroSize', heroSize) }, [heroSize])
-  useEffect(() => { localStorage.setItem('vendorbasic_heroFont', heroFont) }, [heroFont])
+  useEffect(() => { if (vendorId) localStorage.setItem('productslocalemail_vendorId', vendorId) }, [vendorId])
+  useEffect(() => { saveJSON('productslocalemail_menu', menuItems) }, [menuItems])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopName', shopName) }, [shopName])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopLogo', shopLogo) }, [shopLogo])
+  useEffect(() => { localStorage.setItem('productslocalemail_logoStyle', shopLogoStyle) }, [shopLogoStyle])
+  useEffect(() => { localStorage.setItem('productslocalemail_heroSize', heroSize) }, [heroSize])
+  useEffect(() => { localStorage.setItem('productslocalemail_heroFont', heroFont) }, [heroFont])
   useEffect(() => {
     if (heroFont !== 'system') {
       const fontMap = { nunito: 'Nunito:wght@700;800;900', poppins: 'Poppins:wght@700;800;900', playfair: 'Playfair+Display:wght@700;800;900', caveat: 'Caveat:wght@700', bebas: 'Bebas+Neue' }
@@ -726,48 +841,48 @@ export default function App() {
       link.href = `https://fonts.googleapis.com/css2?family=${fontMap[heroFont]}&display=swap`
     }
   }, [heroFont])
-  useEffect(() => { localStorage.setItem('vendorbasic_heroColor', heroColor) }, [heroColor])
-  useEffect(() => { localStorage.setItem('vendorbasic_heroSubColor', heroSubColor) }, [heroSubColor])
-  useEffect(() => { localStorage.setItem('vendorbasic_heroEffect', heroEffect) }, [heroEffect])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopPhone', shopPhone) }, [shopPhone])
-  useEffect(() => { saveJSON('vendorbasic_shopOpen', shopOpen) }, [shopOpen])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopAddress', shopAddress) }, [shopAddress])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopHours', shopHours) }, [shopHours])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopSchedule', JSON.stringify(shopSchedule)) }, [shopSchedule])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopMaps', shopMapsLink) }, [shopMapsLink])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopIG', shopInstagram) }, [shopInstagram])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopTT', shopTiktok) }, [shopTiktok])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopFB', shopFacebook) }, [shopFacebook])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopYT', shopYoutube) }, [shopYoutube])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopWeb', shopWebsite) }, [shopWebsite])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopQris', shopQris) }, [shopQris])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopFoodType', shopFoodType) }, [shopFoodType])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopBio', shopBio) }, [shopBio])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopCity', shopCity) }, [shopCity])
-  useEffect(() => { localStorage.setItem('vendorbasic_shopCountry', shopCountry) }, [shopCountry])
-  useEffect(() => { localStorage.setItem('vendorbasic_delBase', delBaseFee) }, [delBaseFee])
-  useEffect(() => { localStorage.setItem('vendorbasic_delPerKm', delPerKm) }, [delPerKm])
-  useEffect(() => { localStorage.setItem('vendorbasic_delMin', delMinCharge) }, [delMinCharge])
-  useEffect(() => { localStorage.setItem('vendorbasic_delMax', delMaxKm) }, [delMaxKm])
-  useEffect(() => { localStorage.setItem('vendorbasic_delFree', delFreeAbove) }, [delFreeAbove])
-  useEffect(() => { localStorage.setItem('vendorbasic_delCurrency', delCurrency) }, [delCurrency])
-  useEffect(() => { localStorage.setItem('vendorbasic_delMinKm', delMinKm) }, [delMinKm])
-  useEffect(() => { localStorage.setItem('vendorbasic_delEnabled', delEnabled) }, [delEnabled])
+  useEffect(() => { localStorage.setItem('productslocalemail_heroColor', heroColor) }, [heroColor])
+  useEffect(() => { localStorage.setItem('productslocalemail_heroSubColor', heroSubColor) }, [heroSubColor])
+  useEffect(() => { localStorage.setItem('productslocalemail_heroEffect', heroEffect) }, [heroEffect])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopPhone', shopPhone) }, [shopPhone])
+  useEffect(() => { saveJSON('productslocalemail_shopOpen', shopOpen) }, [shopOpen])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopAddress', shopAddress) }, [shopAddress])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopHours', shopHours) }, [shopHours])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopSchedule', JSON.stringify(shopSchedule)) }, [shopSchedule])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopMaps', shopMapsLink) }, [shopMapsLink])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopIG', shopInstagram) }, [shopInstagram])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopTT', shopTiktok) }, [shopTiktok])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopFB', shopFacebook) }, [shopFacebook])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopYT', shopYoutube) }, [shopYoutube])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopWeb', shopWebsite) }, [shopWebsite])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopQris', shopQris) }, [shopQris])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopFoodType', shopFoodType) }, [shopFoodType])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopBio', shopBio) }, [shopBio])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopCity', shopCity) }, [shopCity])
+  useEffect(() => { localStorage.setItem('productslocalemail_shopCountry', shopCountry) }, [shopCountry])
+  useEffect(() => { localStorage.setItem('productslocalemail_delBase', delBaseFee) }, [delBaseFee])
+  useEffect(() => { localStorage.setItem('productslocalemail_delPerKm', delPerKm) }, [delPerKm])
+  useEffect(() => { localStorage.setItem('productslocalemail_delMin', delMinCharge) }, [delMinCharge])
+  useEffect(() => { localStorage.setItem('productslocalemail_delMax', delMaxKm) }, [delMaxKm])
+  useEffect(() => { localStorage.setItem('productslocalemail_delFree', delFreeAbove) }, [delFreeAbove])
+  useEffect(() => { localStorage.setItem('productslocalemail_delCurrency', delCurrency) }, [delCurrency])
+  useEffect(() => { localStorage.setItem('productslocalemail_delMinKm', delMinKm) }, [delMinKm])
+  useEffect(() => { localStorage.setItem('productslocalemail_delEnabled', delEnabled) }, [delEnabled])
 
   /* Customization features persistence */
-  useEffect(() => { localStorage.setItem('vendorbasic_btnShape', btnShape) }, [btnShape])
-  useEffect(() => { localStorage.setItem('vendorbasic_btnColor', btnColor) }, [btnColor])
-  useEffect(() => { localStorage.setItem('vendorbasic_btnText', btnText) }, [btnText])
-  useEffect(() => { localStorage.setItem('vendorbasic_btnGlow', btnGlow) }, [btnGlow])
-  useEffect(() => { localStorage.setItem('vendorbasic_overlayOpacity', overlayOpacity) }, [overlayOpacity])
-  useEffect(() => { localStorage.setItem('vendorbasic_landingLayout', landingLayout) }, [landingLayout])
-  useEffect(() => { localStorage.setItem('vendorbasic_customTagline', customTagline) }, [customTagline])
-  useEffect(() => { localStorage.setItem('vendorbasic_menuCardStyle', menuCardStyle) }, [menuCardStyle])
-  useEffect(() => { localStorage.setItem('vendorbasic_menuBanner', menuBanner) }, [menuBanner])
-  useEffect(() => { localStorage.setItem('vendorbasic_showClosedBanner', showClosedBanner) }, [showClosedBanner])
-  useEffect(() => { localStorage.setItem('vendorbasic_promoBanner', promoBanner) }, [promoBanner])
-  useEffect(() => { localStorage.setItem('vendorbasic_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
-  useEffect(() => { localStorage.setItem('vendorbasic_splashEnabled', splashEnabled) }, [splashEnabled])
+  useEffect(() => { localStorage.setItem('productslocalemail_btnShape', btnShape) }, [btnShape])
+  useEffect(() => { localStorage.setItem('productslocalemail_btnColor', btnColor) }, [btnColor])
+  useEffect(() => { localStorage.setItem('productslocalemail_btnText', btnText) }, [btnText])
+  useEffect(() => { localStorage.setItem('productslocalemail_btnGlow', btnGlow) }, [btnGlow])
+  useEffect(() => { localStorage.setItem('productslocalemail_overlayOpacity', overlayOpacity) }, [overlayOpacity])
+  useEffect(() => { localStorage.setItem('productslocalemail_landingLayout', landingLayout) }, [landingLayout])
+  useEffect(() => { localStorage.setItem('productslocalemail_customTagline', customTagline) }, [customTagline])
+  useEffect(() => { localStorage.setItem('productslocalemail_menuCardStyle', menuCardStyle) }, [menuCardStyle])
+  useEffect(() => { localStorage.setItem('productslocalemail_menuBanner', menuBanner) }, [menuBanner])
+  useEffect(() => { localStorage.setItem('productslocalemail_showClosedBanner', showClosedBanner) }, [showClosedBanner])
+  useEffect(() => { localStorage.setItem('productslocalemail_promoBanner', promoBanner) }, [promoBanner])
+  useEffect(() => { localStorage.setItem('productslocalemail_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
+  useEffect(() => { localStorage.setItem('productslocalemail_splashEnabled', splashEnabled) }, [splashEnabled])
   useEffect(() => { if (splashEnabled) { const t = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(t) } else { setShowSplash(false) } }, [splashEnabled])
 
   // Build delivery zones from vendor's own settings
@@ -824,8 +939,23 @@ export default function App() {
       if (data.delivery_free_above !== undefined) setDelFreeAbove(data.delivery_free_above)
       if (data.delivery_currency) setDelCurrency(data.delivery_currency)
       if (data.delivery_enabled !== undefined) setDelEnabled(data.delivery_enabled)
+      if (data.order_email) {
+        setVendorOrderEmail(data.order_email)
+        try { localStorage.setItem('productslocalemail_orderEmail', data.order_email) } catch {}
+      }
     })
   }, [vendorId])
+
+  /* Persist vendor order email to LS + Supabase */
+  useEffect(() => {
+    try { localStorage.setItem('productslocalemail_orderEmail', vendorOrderEmail || '') } catch {}
+    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+      const id = setTimeout(() => {
+        try { supabase.from('vendor_accounts').update({ order_email: vendorOrderEmail || null }).eq('id', vendorId).then(() => {}) } catch {}
+      }, 800)
+      return () => clearTimeout(id)
+    }
+  }, [vendorOrderEmail, vendorId])
 
   /* --- Cart helpers --- */
   const totalItems = cart.reduce((s, c) => s + c.qty, 0)
@@ -892,15 +1022,15 @@ export default function App() {
       if (items.length > 0) {
         setMenuItems(items.map(i => ({ id: i.id, supabaseId: i.id, name: i.name, price: i.price, photo: i.photo_url, desc: i.description, category: i.category, available: i.available, promoPrice: i.promo_price, prepTime: i.prep_time, spice: i.spice, halal: i.halal, popular: i.popular })))
       }
-      localStorage.setItem('indoo_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
-      localStorage.setItem('indoo_vendor_pass', loginPass)
+      localStorage.setItem('productslocalemail_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
+      localStorage.setItem('productslocalemail_vendor_pass', loginPass)
       setIsVendor(true); setVendorLogin(false)
       setLoginPhone(''); setLoginPass(''); setLoginError(''); setLoginMode('login')
       return
     }
     // Fallback to localStorage
-    const storedPhone = localStorage.getItem('indoo_vendor_phone') || shopPhone
-    const storedPass = localStorage.getItem('indoo_vendor_pass') || 'vendor123'
+    const storedPhone = localStorage.getItem('productslocalemail_vendor_phone') || shopPhone
+    const storedPass = localStorage.getItem('productslocalemail_vendor_pass') || 'vendor123'
     if (loginPhone.replace(/[^0-9]/g, '') === storedPhone.replace(/[^0-9]/g, '') && loginPass === storedPass) {
       setIsVendor(true); setVendorLogin(false)
       setLoginPhone(''); setLoginPass(''); setLoginError(''); setLoginMode('login')
@@ -918,18 +1048,18 @@ export default function App() {
     try {
       const vendor = await vendorSignup(loginPhone, loginPass, signupName)
       setVendorId(vendor.id)
-      localStorage.setItem('indoo_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
-      localStorage.setItem('indoo_vendor_pass', loginPass)
+      localStorage.setItem('productslocalemail_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
+      localStorage.setItem('productslocalemail_vendor_pass', loginPass)
       setShopName(signupName)
       setShopFoodType(signupCategory)
-      localStorage.setItem('vendorbasic_shopFoodType', signupCategory)
+      localStorage.setItem('productslocalemail_shopFoodType', signupCategory)
       setShopPhone(loginPhone.replace(/[^0-9]/g, ''))
       // Auto-set theme based on category
       const matchedTheme = THEME_PRESETS.find(t => t.category === signupCategory)
       if (matchedTheme) {
         setShopTheme(matchedTheme.id)
-        localStorage.setItem('vendorbasic_theme', matchedTheme.id)
-        localStorage.setItem('vendorbasic_themeBg', matchedTheme.img)
+        localStorage.setItem('productslocalemail_theme', matchedTheme.id)
+        localStorage.setItem('productslocalemail_themeBg', matchedTheme.img)
         const bgImg = document.getElementById('app-bg-img')
         if (bgImg) bgImg.src = matchedTheme.img
       }
@@ -956,7 +1086,7 @@ export default function App() {
     setFormPrice(String(item.price))
     setFormPhoto(item.photo)
     setFormDesc(item.desc)
-    setFormCategory(item.category || 'Meal')
+    setFormCategory(item.category || getMenuTabsForTheme(shopTheme)[0])
     setFormPrepTime(item.prepTime || 0)
     setEditItem(item)
   }
@@ -996,90 +1126,104 @@ export default function App() {
     setAddingItem(false)
   }
 
-  /* --- WhatsApp order --- */
-  const sendWhatsApp = () => {
-    const note = document.getElementById('orderNote')?.value?.trim()
+  /* --- Email order (productslocalemail) --- */
+  const sendOrderEmail = async () => {
+    if (emailSending) return
+    setEmailError('')
+    const note = document.getElementById('orderNote')?.value?.trim() || ''
     const now = new Date()
-    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
     const orderNum = String(Date.now()).slice(-6)
     const initials = shopName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-
-    // Calculate max prep time from cart items
     const maxPrep = Math.max(0, ...cart.map(c => c.prepTime || 0))
-
-    // Check if customer is returning
-    const customers = loadJSON('vendorbasic_customers', [])
-    const returning = customers.find(c => c.phone === custPhone)
-    const orderHistory = returning ? returning.orders || 0 : 0
-
     const subtotal = totalPrice
     const deliveryFee = delEnabled && deliveryZone ? (deliveryZone.fee || 0) : 0
     const grandTotal = subtotal + deliveryFee
 
-    const lines = [
-      `━━━━━━━━━━━━━━━━━━`,
-      `*${shopName.toUpperCase()}*`,
-      `Order Receipt`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      `${dateStr}  ${timeStr}`,
-      `Order #${initials}-${orderNum}`,
-      ``,
-      ...(custName ? [`*Customer:* ${custName}`] : []),
-      ...(orderHistory > 0 ? [`Returning customer (${orderHistory + 1} orders)`] : []),
-      ``,
-      `━━━━━━━━━━━━━━━━━━`,
-      `*ORDER ITEMS*`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      ...cart.map((c) => {
-        const itemTotal = (c.promoPrice || c.price) * c.qty
-        return `${c.qty}x  ${c.name}\n      ${fmt(itemTotal)}`
-      }),
-      ``,
-      ...(note ? [`━━━━━━━━━━━━━━━━━━`, `*Note:* ${note}`, ``] : []),
-      `━━━━━━━━━━━━━━━━━━`,
-      ...(deliveryFee > 0 ? [
-        `Subtotal:     ${fmt(subtotal)}`,
-        `Delivery:     ${fmt(deliveryFee)}${userDistance ? ` (${userDistance} km)` : ''}`,
-        `━━━━━━━━━━━━━━━━━━`,
-      ] : []),
-      `*TOTAL:  ${fmt(grandTotal)}*`,
-      `━━━━━━━━━━━━━━━━━━`,
-      ``,
-      ...(maxPrep > 0 ? [`Est. prep time: ~${maxPrep} min`, ``] : []),
-      ...(shopAddress ? [`${shopAddress}`, ``] : []),
-      `Placed via StreetLocal.live`,
-    ]
-    const msg = encodeURIComponent(lines.join('\n'))
-    const phone = shopPhone.replace(/[^0-9]/g, '')
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
-    // Save customer to directory (localStorage + Supabase)
+    // Validate
+    if (!custName || !custName.trim()) { setEmailError('Enter your name'); return }
+    const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
+    if (!cleanPhone) { setEmailError('Enter your phone number'); return }
+    const cleanEmail = String(custEmail || '').trim()
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setEmailError('Enter a valid email address'); return }
+    if (delEnabled && (!custAddress || !custAddress.trim())) { setEmailError('Enter your delivery address'); return }
+    if (!vendorId) { setEmailError('Vendor not set'); return }
+    if (!vendorOrderEmail) { setEmailError('This vendor has not configured an order email yet'); return }
+
+    const orderPayload = {
+      orderNumber: `${initials}-${orderNum}`,
+      placedAt: now.toISOString(),
+      customer: { name: custName, phone: cleanPhone, email: cleanEmail, address: custAddress || '' },
+      items: cart.map((c) => ({
+        id: c.id || null,
+        name: c.name,
+        qty: c.qty,
+        price: c.price,
+        promoPrice: c.promoPrice || null,
+        lineTotal: (c.promoPrice || c.price) * c.qty,
+      })),
+      subtotal,
+      delivery: {
+        enabled: !!delEnabled,
+        type: delEnabled ? 'delivery' : 'pickup',
+        zone: delEnabled && deliveryZone ? deliveryZone.label || null : null,
+        fee: deliveryFee,
+        distanceKm: userDistance || null,
+      },
+      payment: { method: payMethod || 'cod' },
+      note,
+      total: grandTotal,
+      prepMins: maxPrep,
+      shop: { name: shopName, address: shopAddress },
+    }
+
+    const summaryItems = cart.map(c => `${c.qty}x ${c.name}`).join(', ')
+    const summaryBody = `New order #${initials}-${orderNum}: ${summaryItems} · ${fmt(grandTotal)}${note ? ` · Note: ${note}` : ''}`
+
+    setEmailSending(true)
+    const res = await sendCustomerOrderEmail({
+      vendorId,
+      vendorEmail: vendorOrderEmail,
+      customerName: custName,
+      customerPhone: cleanPhone,
+      customerEmail: cleanEmail,
+      customerAddress: custAddress || '',
+      orderPayload,
+      summaryBody,
+    })
+    setEmailSending(false)
+    if (res.error) {
+      setEmailError(res.error)
+      return
+    }
+
+    // Save customer to directory
+    const customers = loadJSON('productslocalemail_customers', [])
+    const returning = customers.find(c => c.phone === cleanPhone)
     if (returning) {
       returning.orders = (returning.orders || 0) + 1
       returning.totalSpent = (returning.totalSpent || 0) + totalPrice
       returning.lastOrder = new Date().toISOString()
       returning.name = custName || returning.name
+      returning.email = cleanEmail
     } else {
-      customers.push({ phone: custPhone, name: custName, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
+      customers.push({ phone: cleanPhone, name: custName, email: cleanEmail, orders: 1, totalSpent: totalPrice, lastOrder: new Date().toISOString(), firstOrder: new Date().toISOString() })
     }
-    saveJSON('vendorbasic_customers', customers)
-    // Sync to Supabase
+    saveJSON('productslocalemail_customers', customers)
     if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-      supabase.from('vendor_customers').upsert({
-        vendor_id: vendorId, phone: custPhone, name: custName,
-        orders: existing ? existing.orders : 1,
-        total_spent: existing ? existing.totalSpent : totalPrice,
-        last_order: new Date().toISOString(),
-      }, { onConflict: 'vendor_id,phone' }).then(() => {})
-      // Save order
-      supabase.from('vendor_orders').insert({
-        vendor_id: vendorId, customer_name: custName, customer_phone: custPhone,
-        items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
-        subtotal: totalPrice, delivery_type: 'delivery', payment_method: 'cod',
-        note: document.getElementById('orderNote')?.value || '',
-      }).then(() => {})
+      try {
+        supabase.from('vendor_customers').upsert({
+          vendor_id: vendorId, phone: cleanPhone, name: custName,
+          orders: returning ? returning.orders : 1,
+          total_spent: returning ? returning.totalSpent : totalPrice,
+          last_order: new Date().toISOString(),
+        }, { onConflict: 'vendor_id,phone' }).then(() => {})
+        supabase.from('vendor_orders').insert({
+          vendor_id: vendorId, customer_name: custName, customer_phone: cleanPhone,
+          items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
+          subtotal: totalPrice, delivery_type: delEnabled ? 'delivery' : 'pickup', payment_method: payMethod || 'cod',
+          note,
+        }).then(() => {})
+      } catch {}
     }
     setOrderDone(true)
   }
@@ -1117,9 +1261,9 @@ export default function App() {
   /* ═══ LANDING PAGE — full screen, no content behind ═══ */
   if (showLanding) {
     return (
-      <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}><DevBadge n={1} />
         {/* Background image — uses vendor's selected theme */}
-        <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
+        <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
 
 
         {/* Language toggle — top right, single flag, tap to switch */}
@@ -1250,7 +1394,7 @@ export default function App() {
   }
 
   return (
-    <div style={S.page}>
+    <div style={S.page}><DevBadge n={2} />
 
       {/* --- Vendor mode bar --- */}
 
@@ -1399,9 +1543,9 @@ export default function App() {
         {/* Category text toggles + Visit Us */}
         <div style={{ display: 'flex', alignItems: 'center', padding: '20px 16px 0' }}>
           <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[{ label: 'Menu', filter: 'All' },
-            ...(['Snack', 'Drink', 'Extra Sauce'].filter(cat => menuItems.some(m => m.category === cat)).map(cat => ({
-              label: cat === 'Drink' ? 'Drinks' : cat === 'Snack' ? 'Snacks' : 'Extra',
+          {[{ label: 'All', filter: 'All' },
+            ...(getMenuTabsForTheme(shopTheme).filter(cat => menuItems.some(m => m.category === cat)).map(cat => ({
+              label: cat,
               filter: cat,
             })))
           ].map(tab => {
@@ -1544,10 +1688,10 @@ export default function App() {
 
       {/* ═══ ITEM DETAIL MODAL ═══ */}
       {itemModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200 }} onClick={() => setItemModal(null)}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200 }} onClick={() => setItemModal(null)}><DevBadge n={3} />
           {/* Fixed background + glass — stays in place while content scrolls */}
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
 
           {/* Content — scrollable over the fixed glass background */}
@@ -1653,8 +1797,8 @@ export default function App() {
         const closedDays = DAYS.filter(d => shopSchedule[d.key]?.off)
 
         return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}><DevBadge n={4} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -1903,7 +2047,7 @@ export default function App() {
                     {/* Dynamic island */}
                     <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
                     {/* Background image */}
-                    <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <img src={localStorage.getItem('productslocalemail_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
                     <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
@@ -2045,7 +2189,7 @@ export default function App() {
         const [hue, sat, lit] = hexToHsl(editorColor)
 
         return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#ffffff', display: 'flex', flexDirection: 'column' }}><DevBadge n={5} />
           <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-06_24_54-pm.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* Top bar — close + save */}
@@ -2098,8 +2242,8 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px 24px', gap: 12 }}>
             <button onClick={() => {
               setShopTheme('custom'); setShopAccentColor(editorColor)
-              localStorage.setItem('vendorbasic_theme', 'custom'); localStorage.setItem('vendorbasic_themeBg', themeEditor.url)
-              localStorage.setItem('vendorbasic_accentColor', editorColor); localStorage.setItem('vendorbasic_bgPos', JSON.stringify(editorPos))
+              localStorage.setItem('productslocalemail_theme', 'custom'); localStorage.setItem('productslocalemail_themeBg', themeEditor.url)
+              localStorage.setItem('productslocalemail_accentColor', editorColor); localStorage.setItem('productslocalemail_bgPos', JSON.stringify(editorPos))
               const bgImg = document.getElementById('app-bg-img')
               if (bgImg) { bgImg.src = themeEditor.url; bgImg.style.objectFit = 'cover'; bgImg.style.objectPosition = `${editorPos.x}% ${editorPos.y}%` }
               setThemeEditor(null); setShowLanding(true)
@@ -2188,8 +2332,8 @@ export default function App() {
         const qtyBg = isCustomAccent ? accent : '#FACC15'
         const qtyColor = isCustomAccent ? '#fff' : '#000'
         return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}><DevBadge n={6} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
@@ -2232,12 +2376,49 @@ export default function App() {
                     <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>{t.cartEmpty || 'Your cart is empty'}</p>
                   )}
 
+                  {/* Your details */}
+                  {cart.length > 0 && (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
+                      <input
+                        type="text"
+                        placeholder="Your name (required)"
+                        value={custName}
+                        onChange={e => setCustName(e.target.value)}
+                        style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
+                      />
+                      <input
+                        type="email"
+                        placeholder="Your email (required)"
+                        value={custEmail}
+                        onChange={e => setCustEmail(e.target.value)}
+                        style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="WhatsApp number (required)"
+                        value={custPhone}
+                        onChange={e => setCustPhone(e.target.value)}
+                        style={{ ...S.input, marginBottom: delEnabled ? 8 : 0, fontSize: 13 }}
+                      />
+                      {delEnabled && (
+                        <input
+                          type="text"
+                          placeholder="Delivery address (required)"
+                          value={custAddress}
+                          onChange={e => setCustAddress(e.target.value)}
+                          style={{ ...S.input, marginBottom: 0, fontSize: 13 }}
+                        />
+                      )}
+                    </div>
+                  )}
+
                   {/* Order note */}
                   {cart.length > 0 && (
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note</label>
                       <textarea
-                        placeholder="Extra spicy, no onions..."
+                        placeholder="Special requests, sizing, color..."
                         style={{ ...S.input, minHeight: 50, resize: 'none', marginBottom: 0, fontSize: 13 }}
                         id="orderNote"
                       />
@@ -2279,7 +2460,7 @@ export default function App() {
                   <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 4, color: '#fff' }}>{t.orderSent || 'Order Sent!'}</h2>
                   <div style={{ fontSize: 20, fontWeight: 900, color: '#FACC15', marginBottom: 10 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>
-                    {t.orderSentMsg || 'Your order has been sent via WhatsApp. The vendor will confirm shortly.'}
+                    {t.orderSentMsg || `Your order has been emailed to ${shopName}. They will reply by email shortly to ${custEmail || 'your email'}.`}
                   </p>
                   {/* QRIS Payment QR — if vendor uploaded */}
                   {shopQris && (
@@ -2305,11 +2486,13 @@ export default function App() {
               <div style={{ padding: '12px 14px 24px', flexShrink: 0 }}>
                 <button
                   style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                  onClick={sendWhatsApp}
+                  onClick={sendOrderEmail}
+                  disabled={emailSending}
                 >
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>Order WhatsApp — {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{emailSending ? 'Sending…' : `Email Order — ${fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}`}</span>
                 </button>
+                {emailError && <div style={{ marginTop: 8, color: '#FCA5A5', fontSize: 12, textAlign: 'center' }}>{emailError}</div>}
               </div>
             )}
           </div>
@@ -2318,9 +2501,44 @@ export default function App() {
       })()}
 
 
+      {/* ═══ ORDER EMAIL CONFIG PAGE ═══ */}
+      {isVendor && orderEmailPage && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Order Email</div>
+            <button onClick={() => setOrderEmailPage(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 }}>Close</button>
+          </div>
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Where should customer orders be sent?</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.5 }}>
+                When a customer places an order, we email a clean order receipt to this address. Customers can reply directly to that email and the reply lands in their own inbox.
+              </div>
+              <label htmlFor="vendor-order-email" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Order email address</label>
+              <input
+                id="vendor-order-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="orders@yourshop.com"
+                value={vendorOrderEmail}
+                onChange={(e) => setVendorOrderEmail(e.target.value.trim())}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, minHeight: 44 }}
+              />
+              <div style={{ marginTop: 10, fontSize: 12, color: vendorOrderEmail ? '#22C55E' : '#F59E0B' }}>
+                {vendorOrderEmail
+                  ? 'Saved. Customer orders will be delivered here.'
+                  : 'Customers cannot send orders until you set an order email.'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
         <>
+          <DevBadge n={7} />
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
           <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#0a0a0a', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: isCustomAccent ? `2px solid ${accent}30` : '1px solid rgba(255,255,255,0.08)' }}>
             {/* Header with logo */}
@@ -2365,6 +2583,7 @@ export default function App() {
             {/* Navigation items */}
             <div style={{ padding: '0 16px' }}>
               {[
+                { icon: '📧', label: 'Order Email', desc: 'Where customer orders are delivered', onClick: () => { setOrderEmailPage(true); setVendorDrawer(false) } },
                 { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
                 { icon: '🎨', label: 'Design Studio', desc: 'Layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
@@ -2405,9 +2624,9 @@ export default function App() {
                   <button onClick={() => {
                     setShopTheme(theme.id)
                     setShopAccentColor(theme.accent || '#8DC63F')
-                    localStorage.setItem('vendorbasic_theme', theme.id)
-                    localStorage.setItem('vendorbasic_themeBg', theme.img)
-                    localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                    localStorage.setItem('productslocalemail_theme', theme.id)
+                    localStorage.setItem('productslocalemail_themeBg', theme.img)
+                    localStorage.setItem('productslocalemail_accentColor', theme.accent || '#8DC63F')
                     const bgImg = document.getElementById('app-bg-img')
                     if (bgImg) bgImg.src = theme.img
                     setVendorDrawer(false)
@@ -2420,7 +2639,7 @@ export default function App() {
                       {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
                     </div>
                   </button>
-                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
+                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocalemail_theme', theme.id); localStorage.setItem('productslocalemail_themeBg', theme.img); localStorage.setItem('productslocalemail_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
                     <span style={{ fontSize: 9, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
                   </div>
                 </div>
@@ -2450,15 +2669,11 @@ export default function App() {
                     </>
                   )}
 
-                  {/* Section 3: More themes */}
-                  {rest.length > 0 && (
-                    <>
-                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>More themes</p>
-                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
-                        {rest.map(renderThemeCard)}
-                      </div>
-                    </>
-                  )}
+                  {/* Section 3: All themes */}
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>All Themes ({THEME_PRESETS.length})</p>
+                  <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
+                    {THEME_PRESETS.filter(t => !byFoodType.some(f => f.id === t.id) && !byCountry.some(c => c.id === t.id)).map(renderThemeCard)}
+                  </div>
 
                   {/* Custom upload */}
                   <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px); } 40% { transform: translateX(3px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }`}</style>
@@ -2522,7 +2737,7 @@ export default function App() {
       {/* ═══ DELIVERY SETTINGS ═══ */}
       {showDeliverySettings && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2676,8 +2891,8 @@ export default function App() {
 
       {/* ═══ VENDOR EDIT ITEM PAGE ═══ */}
       {editItem && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={8} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2767,11 +2982,9 @@ export default function App() {
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Category</label>
                   <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
+                    {getMenuTabsForTheme(shopTheme).map(cat => (
+                      <option key={cat} value={cat} style={{ background: '#1a1a1a' }}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -2838,7 +3051,7 @@ export default function App() {
       {/* ═══ VENDOR ADD ITEM PAGE ═══ */}
       {addingItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -2923,11 +3136,9 @@ export default function App() {
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Category</label>
                   <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
+                    {getMenuTabsForTheme(shopTheme).map(cat => (
+                      <option key={cat} value={cat} style={{ background: '#1a1a1a' }}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -2994,8 +3205,8 @@ export default function App() {
 
       {/* ═══ SHOP CONFIG PAGE ═══ */}
       {shopConfig && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={9} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
           {/* Header */}
@@ -3026,7 +3237,7 @@ export default function App() {
                   const file = e.target.files[0]
                   if (!file) return
                   const url = await uploadMenuImage(vendorId, file)
-                  if (url) { setShopLogo(url); localStorage.setItem('vendorbasic_shopLogo', url) }
+                  if (url) { setShopLogo(url); localStorage.setItem('productslocalemail_shopLogo', url) }
                 }} />
                 {shopLogo ? (
                   <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
@@ -3040,7 +3251,7 @@ export default function App() {
                 )}
               </label>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
-              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('vendorbasic_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
+              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('productslocalemail_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
 
             </div>
 
@@ -3179,7 +3390,7 @@ export default function App() {
                   const file = e.target.files[0]
                   if (!file) return
                   const url = await uploadMenuImage(vendorId, file)
-                  if (url) { setShopQris(url); localStorage.setItem('vendorbasic_shopQris', url) }
+                  if (url) { setShopQris(url); localStorage.setItem('productslocalemail_shopQris', url) }
                 }} />
                 {shopQris ? (
                   <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 8 }} />
@@ -3192,7 +3403,7 @@ export default function App() {
               </label>
               {shopQris && (
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => { setShopQris(''); localStorage.removeItem('vendorbasic_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
+                  <button onClick={() => { setShopQris(''); localStorage.removeItem('productslocalemail_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
                 </div>
               )}
             </div>
@@ -3216,7 +3427,7 @@ export default function App() {
         const COUNTRY_LABELS = { ID: 'Indonesia', MY: 'Malaysia', SG: 'Singapore', TH: 'Thailand', VN: 'Vietnam', PH: 'Philippines', US: 'USA', GB: 'UK', AU: 'Australia', NZ: 'New Zealand', CA: 'Canada', DE: 'Germany', FR: 'France', NL: 'Netherlands', AE: 'UAE', SA: 'Saudi', QA: 'Qatar', KW: 'Kuwait', EG: 'Egypt', KR: 'Korea' }
         const filtered = THEME_PRESETS.filter(t => {
           if (themeCountry !== 'all') {
-            if (FOOD_CATEGORIES.includes(themeCountry)) { if (t.category !== themeCountry) return false }
+            if (PRODUCT_CATEGORIES.includes(themeCountry)) { if (t.category !== themeCountry) return false }
             else { if (!t.countries.includes(themeCountry)) return false }
           }
           if (themeSearch && !t.label.toLowerCase().includes(themeSearch.toLowerCase()) && !t.category.toLowerCase().includes(themeSearch.toLowerCase()) && !t.foodTypes.some(ft => ft.toLowerCase().includes(themeSearch.toLowerCase()))) return false
@@ -3226,7 +3437,7 @@ export default function App() {
         const otherThemes = filtered.filter(t => !t.isNew)
 
         return (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#fff' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#fff' }}><DevBadge n={10} />
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
@@ -3254,7 +3465,7 @@ export default function App() {
               </div>
               {themeCountry !== 'all' && (
                 <div style={{ padding: '0 14px 8px', fontSize: 12, color: '#FFD600', fontWeight: 700 }}>
-                  {FOOD_CATEGORIES.includes(themeCountry) ? themeCountry : (COUNTRY_LABELS[themeCountry] || themeCountry)}
+                  {PRODUCT_CATEGORIES.includes(themeCountry) ? themeCountry : (COUNTRY_LABELS[themeCountry] || themeCountry)}
                   <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer', fontWeight: 600, marginLeft: 6 }}>Clear</button>
                 </div>
               )}
@@ -3277,7 +3488,7 @@ export default function App() {
 
                     {/* Food categories */}
                     <div style={{ padding: '12px 16px 6px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Food Type</div>
-                    {FOOD_CATEGORIES.map(cat => {
+                    {PRODUCT_CATEGORIES.map(cat => {
                       const count = THEME_PRESETS.filter(t => t.category === cat).length
                       return (
                         <button key={cat} onClick={() => { setThemeCountry(cat); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '11px 16px', border: 'none', background: themeCountry === cat ? '#FFD600' : 'transparent', color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3315,20 +3526,10 @@ export default function App() {
                     </div>
                     {/* Mini phone frame */}
                     <div style={{ width: 140, height: 250, borderRadius: 20, background: '#1a1a1a', padding: 2, position: 'relative', border: shopTheme === theme.id ? '2px solid #FFD600' : '2px solid #333', boxShadow: shopTheme === theme.id ? '0 0 12px rgba(255,214,0,0.3)' : '0 4px 12px rgba(0,0,0,0.3)' }}>
-                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
+                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('productslocalemail_theme', theme.id); localStorage.setItem('productslocalemail_themeBg', theme.img); localStorage.setItem('productslocalemail_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
                       <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', width: 32, height: 8, background: '#000', borderRadius: 6, zIndex: 3 }} />
                         <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
-                        {/* Mock landing content — scaled to card */}
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 14, background: theme.accent || '#8DC63F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>
-                            <span style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>SN</span>
-                          </div>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
-                          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)', marginTop: 2, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{theme.category}</div>
-                          <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', padding: '3px 12px', borderRadius: 6, background: theme.accent || '#8DC63F', fontSize: 8, fontWeight: 700, color: '#fff' }}>View Menu</div>
-                        </div>
                         <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 30, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
                       </div>
                     </div>
@@ -3396,8 +3597,8 @@ export default function App() {
                         <div style={{ position: 'absolute', inset: 0, background: themePreviewPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themePreviewPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
                         {themePreviewPage === 'landing' && (
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
-                            <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span></div>
-                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
+                            <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>LOGO</span></div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Your Name</div>
                             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{theme.category}</div>
                             <button onClick={() => setThemePreviewPage('menu')} style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
                           </div>
@@ -3406,10 +3607,10 @@ export default function App() {
                           <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
                             <div style={{ display: 'flex', alignItems: 'center', padding: '20px 8px 12px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', position: 'sticky', top: 0, zIndex: 5 }}>
                               <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
-                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6 }}><span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>SN</span></div>
-                              <div><div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div><div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div></div>
+                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6 }}><span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>LOGO</span></div>
+                              <div><div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Your Name</div><div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div></div>
                             </div>
-                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>{['Menu', 'Drinks', 'Snacks'].map((t, i) => (<div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>))}</div>
+                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>{['All', ...getMenuTabsForTheme(theme.id).slice(0, 3)].map((t, i) => (<div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>))}</div>
                             <div style={{ padding: '0 6px' }}>
                               {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 3).map(item => (
                                 <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
@@ -3448,7 +3649,7 @@ export default function App() {
                       <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
-                        localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', activeImg); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F')
+                        localStorage.setItem('productslocalemail_theme', theme.id); localStorage.setItem('productslocalemail_themeBg', activeImg); localStorage.setItem('productslocalemail_accentColor', theme.accent || '#8DC63F')
                         const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = activeImg
                         setThemePreviewId(null); setThemePreviewImg(null); setThemeBrowser(false); setShowLanding(true)
                       }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Use Theme</button>
@@ -3463,8 +3664,8 @@ export default function App() {
 
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
       {designStudio && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}><DevBadge n={11} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             {/* Header */}
@@ -3511,6 +3712,7 @@ export default function App() {
                 const bColor = btnColor || accent
                 const previewTab = configPreviewTab
                 const TOOLS = [
+                  { id: 'color', svg: 'M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1.01 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z', label: 'Color', page: 'landing' },
                   { id: 'layout', svg: 'M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z', label: 'Layout', page: 'landing' },
                   { id: 'button', svg: 'M19 6H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zm0 10H5V8h14v8z', label: 'Button', page: 'landing' },
                   { id: 'text', svg: 'M5 4v3h5.5v12h3V7H19V4H5z', label: 'Text', page: 'landing' },
@@ -3532,7 +3734,7 @@ export default function App() {
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
                           {previewTab === 'landing' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={localStorage.getItem('productslocalemail_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
                               {showClosedBanner && !shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
                               <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 36 : 0, paddingLeft: landingLayout === 'left' ? 10 : 0 }}>
@@ -3545,7 +3747,7 @@ export default function App() {
                           )}
                           {previewTab === 'menu' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('vendorbasic_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={localStorage.getItem('productslocalemail_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
@@ -3582,6 +3784,64 @@ export default function App() {
                     {/* Contextual Controls */}
                     {configTool && (
                       <div style={{ padding: 12, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08`, marginTop: 6 }}>
+                        {configTool === 'color' && (() => {
+                          const COLOR_ROWS = [
+                            { label: 'Red', h: 0 }, { label: 'Crimson', h: 345 }, { label: 'Rose', h: 330 },
+                            { label: 'Pink', h: 315 }, { label: 'Magenta', h: 300 }, { label: 'Fuchsia', h: 285 },
+                            { label: 'Purple', h: 270 }, { label: 'Violet', h: 255 }, { label: 'Indigo', h: 240 },
+                            { label: 'Blue', h: 220 }, { label: 'Sky', h: 200 }, { label: 'Cyan', h: 185 },
+                            { label: 'Teal', h: 170 }, { label: 'Mint', h: 155 }, { label: 'Green', h: 140 },
+                            { label: 'Emerald', h: 120 }, { label: 'Lime', h: 90 }, { label: 'Chartreuse', h: 75 },
+                            { label: 'Yellow', h: 55 }, { label: 'Gold', h: 45 }, { label: 'Amber', h: 35 },
+                            { label: 'Orange', h: 25 }, { label: 'Vermilion', h: 12 }, { label: 'Brown', h: 20, sat: 60 },
+                            { label: 'Maroon', h: 0, sat: 70 }, { label: 'Grey', h: 0, sat: 0 }, { label: 'Cool Grey', h: 210, sat: 10 },
+                          ]
+                          const selectedRow = COLOR_ROWS.find(r => r.label === (configColorRow || 'Blue')) || COLOR_ROWS[9]
+                          const s = selectedRow.sat !== undefined ? selectedRow.sat : 80
+                          const shades = selectedRow.sat === 0 || selectedRow.sat === 10
+                            ? [12, 20, 30, 40, 50, 60, 72, 85].map(l => hslToHex(selectedRow.h, selectedRow.sat, l))
+                            : [15, 22, 32, 42, 52, 62, 72, 82].map(l => hslToHex(selectedRow.h, l < 25 ? s + 10 : l > 70 ? s - 20 : s, l))
+                          return (
+                            <>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Accent Color</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: 8, background: accent, border: '2px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{accent}</span>
+                              </div>
+                              {/* Scrollable color strip */}
+                              <div style={{ overflowX: 'auto', scrollbarWidth: 'none', marginBottom: 10 }}>
+                                <div style={{ display: 'flex', gap: 4, width: 'max-content' }}>
+                                  {COLOR_ROWS.map(row => {
+                                    const baseColor = hslToHex(row.h, row.sat !== undefined ? row.sat : 80, 45)
+                                    const isSelected = (configColorRow || 'Blue') === row.label
+                                    return (
+                                      <button key={row.label} onClick={() => setConfigColorRow(row.label)} style={{
+                                        width: 36, height: 36, borderRadius: 10, border: isSelected ? '3px solid #FFD600' : '2px solid rgba(255,255,255,0.1)',
+                                        background: baseColor, cursor: 'pointer', padding: 0, flexShrink: 0,
+                                        boxShadow: isSelected ? '0 0 8px rgba(255,214,0,0.4)' : 'none',
+                                      }} title={row.label} />
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                              {/* Label */}
+                              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{selectedRow.label} — light to dark</div>
+                              {/* Shade scale bar */}
+                              <div style={{ display: 'flex', gap: 3 }}>
+                                {shades.map((c, i) => (
+                                  <button key={i} onClick={() => {
+                                    setShopAccentColor(c)
+                                    localStorage.setItem('productslocalemail_accentColor', c)
+                                  }} style={{
+                                    flex: 1, height: 40, borderRadius: 8, border: accent === c ? '3px solid #FFD600' : 'none',
+                                    background: c, cursor: 'pointer', padding: 0, minWidth: 0,
+                                    boxShadow: accent === c ? '0 0 8px rgba(255,214,0,0.4)' : 'none',
+                                  }} />
+                                ))}
+                              </div>
+                            </>
+                          )
+                        })()}
                         {configTool === 'layout' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Layout & Overlay</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'center', label: 'Center' }, { id: 'left', label: 'Left' }, { id: 'top', label: 'Top' }].map(opt => (<button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label><input type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ width: '100%', marginBottom: 8 }} /><div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}><button onClick={() => setShowClosedBanner(!showClosedBanner)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: showClosedBanner ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: showClosedBanner ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Show "Closed" banner</span></div></>)}
                         {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><div style={{ display: 'flex', gap: 10, marginBottom: 10 }}><div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />{btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}</div></div><div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Text</label><input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Glow Effect</span></div></>)}
                         {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} /><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page</div></>)}
@@ -3595,27 +3855,13 @@ export default function App() {
               })()}
             </div>
 
-            {/* Theme Backgrounds */}
-            {(() => {
-              const langCountries = LANG_TO_COUNTRIES[nativeLang] || []
-              const { byFoodType, byCountry, rest } = getFilteredThemes(countryCode, shopFoodType, langCountries)
-              const renderThemeCard = (theme) => (
-                <div key={theme.id} style={{ flexShrink: 0, width: 160, position: 'relative' }}>
-                  <button onClick={() => { setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('vendorbasic_theme', theme.id); localStorage.setItem('vendorbasic_themeBg', theme.img); localStorage.setItem('vendorbasic_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', width: '100%' }}>
-                    <div style={{ width: '100%', height: 240, position: 'relative' }}><img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>{shopTheme === theme.id ? '✓ ' : ''}{theme.label}</div>
-                  </button>
-                </div>
-              )
-              return (
-                <div style={{ padding: '0 14px 14px' }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: accent, marginBottom: 4 }}>App Theme</h3>
-                  {byFoodType.length > 0 && (<><p style={{ fontSize: 14, color: accent, fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Recommended for {shopFoodType}</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{byFoodType.map(renderThemeCard)}</div></>)}
-                  {byCountry.length > 0 && (<><p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{byCountry.filter(t => !byFoodType.some(f => f.id === t.id)).map(renderThemeCard)}</div></>)}
-                  {rest.length > 0 && (<><p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>All Themes</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{rest.filter(t => !byFoodType.some(f => f.id === t.id) && !byCountry.some(c => c.id === t.id)).map(renderThemeCard)}</div></>)}
-                </div>
-              )
-            })()}
+            {/* Current theme indicator */}
+            <div style={{ padding: '0 14px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ width: 10, height: 10, borderRadius: 5, background: accent, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Theme: {THEME_PRESETS.find(t => t.id === shopTheme)?.label || shopTheme || 'Custom'}</span>
+              </div>
+            </div>
 
             {/* Done button */}
             <div style={{ padding: '8px 14px 28px' }}>
@@ -3627,8 +3873,8 @@ export default function App() {
 
       {/* ─── Custom Domain Page ─── */}
       {domainPage && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}><DevBadge n={12} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -3771,7 +4017,7 @@ export default function App() {
       {/* ═══ TERMS OF LISTING PAGE ═══ */}
       {termsOfListing && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('productslocalemail_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', padding: '20px 16px 40px' }}>
             {/* Header */}

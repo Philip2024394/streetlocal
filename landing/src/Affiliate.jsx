@@ -21,7 +21,8 @@ const COUNTRIES = [
 ]
 
 const APPS = [
-  { id: 'basic', name: 'FoodLocal', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'From street carts to restaurants — your food ordering app', url: '/food/basic/' },
+  { id: 'basic', name: 'FoodLocal', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'From street carts to restaurants — your food ordering app', url: '/food/whatsapp/' },
+  { id: 'chat', name: 'FoodLocal Chat', tier: 'Software 1+', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: 'Same FoodLocal storefront with private in-app chat checkout', url: '/food/chat/' },
   { id: 'pro', name: 'Restaurant', tier: 'Software 2', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant ordering with themes & promos', url: '/food/pro/' },
 ]
 
@@ -984,7 +985,8 @@ export default function Affiliate({ onClose }) {
       icon: '🍜',
       color: '#FF6B35',
       apps: [
-        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — aplikasi pemesanan makanan' : 'From street carts to restaurants — your food ordering app', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/basic/' },
+        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — aplikasi pemesanan makanan' : 'From street carts to restaurants — your food ordering app', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/whatsapp/' },
+        { id: 'chat', name: 'FoodLocal Chat', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: locale === 'id' ? 'Storefront FoodLocal dengan checkout chat dalam aplikasi' : 'Same FoodLocal storefront with private in-app chat checkout', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/' },
         { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },
@@ -1002,7 +1004,8 @@ export default function Affiliate({ onClose }) {
 
   function getDemoUrl(app) {
     if (window.location.hostname === 'localhost') {
-      if (app.id === 'basic') return `http://localhost:5176/food/basic/?ref=${agent?.agent_code || ''}`
+      if (app.id === 'basic') return `http://localhost:5176/food/whatsapp/?ref=${agent?.agent_code || ''}`
+      if (app.id === 'chat') return `http://localhost:5177/food/chat/?ref=${agent?.agent_code || ''}`
       if (app.id === 'pro') return `http://localhost:5174/food/pro/?ref=${agent?.agent_code || ''}`
     }
     return `${app.url}?ref=${agent?.agent_code || ''}`

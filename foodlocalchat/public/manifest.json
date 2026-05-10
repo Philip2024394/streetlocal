@@ -1,13 +1,14 @@
 {
-  "name": "StreetLocal — FoodLocal",
-  "short_name": "StreetLocal",
-  "start_url": "/food/basic/",
+  "name": "StreetLocal — Food Local Chat",
+  "short_name": "FoodLocalChat",
+  "start_url": "/food/chat/",
+  "scope": "/food/chat/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "/food/basic/favicon.svg",
+      "src": "/food/chat/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

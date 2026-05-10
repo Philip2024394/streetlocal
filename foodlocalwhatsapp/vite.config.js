@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  base: '/food/basic/',
+  base: '/food/whatsapp/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -11,6 +11,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../dist/food-basic',
+    outDir: '../dist/foodlocalwhatsapp',
   },
 })
