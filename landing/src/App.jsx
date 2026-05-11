@@ -186,7 +186,7 @@ const TRANSLATIONS = {
       food: {
         name: 'Local Food Apps',
         description: 'Complete food business solutions',
-        bannerImage: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_48_14%20PM.png',
         apps: {
           basic: {
             name: 'FoodLocal',
@@ -335,7 +335,7 @@ const TRANSLATIONS = {
       food: {
         name: 'Software Pemesanan Makanan',
         description: 'Solusi lengkap bisnis makanan',
-        bannerImage: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
+        bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_48_14%20PM.png',
         apps: {
           basic: {
             name: 'FoodLocal',
