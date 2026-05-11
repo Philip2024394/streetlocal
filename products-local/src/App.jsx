@@ -185,7 +185,7 @@ const FOOD_TYPES = {
   'Digital': ['Digital Products'],
   'General': ['General Store'],
   'Baby & Kids': ['Baby Clothes', 'Baby & Kids'],
-  'Pet Supplies': ['Pet Supplies'],
+  'Pet Supplies': ['Pet Supplies', 'Pet Food'],
 }
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
@@ -754,6 +754,9 @@ const THEME_PRESETS = [
 
   // Pet Supplies
   { id: 'pets', isNew: true, accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-pet-supplies.png', label: '#23 Pet Supplies', category: 'Pet Supplies', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG'], foodTypes: ['Pet Supplies'] },
+
+  // Pet Food
+  { id: 'petfood', isNew: true, accent: '#c97800', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2012,%202026,%2003_01_45%20AM.png', label: '#23b Pet Food', category: 'Pet Food', countries: ['ID', 'MY', 'US', 'GB', 'AU', 'SG', 'TH', 'VN', 'PH', 'DE', 'JP'], foodTypes: ['Pet Food', 'Pet Supplies'], variants: ['https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2012,%202026,%2003_02_34%20AM.png'] },
 
   // Grocery & Snacks
   { id: 'grocery', accent: '#c15d15', img: themeImg('Packaged snacks chips cookies and grocery items displayed on dark shelves store'), label: '#24 Grocery & Snacks', category: 'Grocery & Snacks', countries: ['ID', 'MY', 'SG', 'TH', 'VN', 'PH'], foodTypes: ['Grocery & Snacks'] },
