@@ -8,6 +8,9 @@ import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/productsThemes'
 import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/productsDemoMenu'
+import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
+import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
+import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 import { sendCustomerOrderEmail } from './lib/email'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
@@ -109,73 +112,6 @@ async function uploadMenuImage(vendorId, file) {
   return data?.publicUrl || null
 }
 
-/* ─── Estimated Delivery Costs — built from admin settings ─── */
-function buildDeliveryZones(minCharge = 7000, minKm = 2, perKm = 2500, maxKm = 15, roundTo = 1000, currency = 'Rp') {
-  // minCharge covers 0 to minKm (flat fee)
-  // After minKm, each additional km adds perKm
-  const calc = (km) => {
-    if (km <= minKm) return minCharge
-    const extra = km - minKm
-    return Math.ceil((minCharge + extra * perKm) / roundTo) * roundTo
-  }
-  const zones = [
-    { name: 'Pickup', radius: 0, fee: 0, label: 'Pickup / Walk-in' },
-    { name: `0-${minKm} km`, radius: minKm, fee: minCharge, label: `~${currency} ${minCharge.toLocaleString()}` },
-  ]
-  if (maxKm > minKm) zones.push({ name: `${minKm}-5 km`, radius: 5, fee: calc(5), label: `~${currency} ${calc(5).toLocaleString()}` })
-  if (maxKm > 5) zones.push({ name: '5-10 km', radius: 10, fee: calc(10), label: `~${currency} ${calc(10).toLocaleString()}` })
-  if (maxKm > 10) zones.push({ name: '10-15 km', radius: 15, fee: calc(15), label: `~${currency} ${calc(15).toLocaleString()}` })
-  if (maxKm > 15) zones.push({ name: '15-20 km', radius: 20, fee: calc(20), label: `~${currency} ${calc(20).toLocaleString()}` })
-  return zones
-}
-
-const DEFAULT_DELIVERY_ZONES = buildDeliveryZones()
-
-/* ─── City/Country Delivery Defaults (GoJek/Grab research 2025) ─── */
-const DELIVERY_DEFAULTS = {
-  // Indonesia — based on GoJek/Grab bike rates per city
-  ID: {
-    currency: 'Rp', cities: {
-      Jakarta: { minCharge: 10000, minKm: 4, perKm: 2500, maxKm: 25 },
-      Surabaya: { minCharge: 8000, minKm: 3, perKm: 2000, maxKm: 20 },
-      Bandung: { minCharge: 8000, minKm: 3, perKm: 2000, maxKm: 20 },
-      Yogyakarta: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-      Semarang: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-      Medan: { minCharge: 8000, minKm: 3, perKm: 2000, maxKm: 20 },
-      Makassar: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-      Bali: { minCharge: 10000, minKm: 4, perKm: 2500, maxKm: 25 },
-      Malang: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-      Palembang: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-      Tangerang: { minCharge: 9000, minKm: 4, perKm: 2500, maxKm: 20 },
-      Bekasi: { minCharge: 9000, minKm: 4, perKm: 2500, maxKm: 20 },
-      Depok: { minCharge: 9000, minKm: 4, perKm: 2500, maxKm: 20 },
-      Bogor: { minCharge: 8000, minKm: 3, perKm: 2000, maxKm: 20 },
-      _default: { minCharge: 7000, minKm: 3, perKm: 2000, maxKm: 15 },
-    }
-  },
-  MY: { currency: 'RM', cities: { _default: { minCharge: 5, minKm: 3, perKm: 1.5, maxKm: 20 } } },
-  SG: { currency: 'S$', cities: { _default: { minCharge: 3, minKm: 3, perKm: 1, maxKm: 15 } } },
-  TH: { currency: '฿', cities: { _default: { minCharge: 25, minKm: 3, perKm: 8, maxKm: 20 } } },
-  VN: { currency: '₫', cities: { _default: { minCharge: 15000, minKm: 3, perKm: 5000, maxKm: 20 } } },
-  PH: { currency: '₱', cities: { _default: { minCharge: 49, minKm: 3, perKm: 15, maxKm: 20 } } },
-  IN: { currency: '₹', cities: { _default: { minCharge: 30, minKm: 3, perKm: 10, maxKm: 20 } } },
-  AU: { currency: 'A$', cities: { _default: { minCharge: 6, minKm: 3, perKm: 2, maxKm: 15 } } },
-  GB: { currency: '£', cities: { _default: { minCharge: 3, minKm: 3, perKm: 1.5, maxKm: 15 } } },
-  US: { currency: '$', cities: { _default: { minCharge: 4, minKm: 3, perKm: 1.5, maxKm: 15 } } },
-  AE: { currency: 'AED', cities: { _default: { minCharge: 8, minKm: 3, perKm: 2, maxKm: 20 } } },
-  SA: { currency: 'SAR', cities: { _default: { minCharge: 8, minKm: 3, perKm: 2, maxKm: 20 } } },
-  JP: { currency: '¥', cities: { _default: { minCharge: 300, minKm: 3, perKm: 100, maxKm: 15 } } },
-  KR: { currency: '₩', cities: { _default: { minCharge: 3000, minKm: 3, perKm: 1000, maxKm: 15 } } },
-  DE: { currency: '€', cities: { _default: { minCharge: 3, minKm: 3, perKm: 1.5, maxKm: 15 } } },
-  FR: { currency: '€', cities: { _default: { minCharge: 3, minKm: 3, perKm: 1.5, maxKm: 15 } } },
-}
-
-function getDeliveryDefaults(countryCode, city) {
-  const country = DELIVERY_DEFAULTS[countryCode] || DELIVERY_DEFAULTS.ID
-  const cityRates = country.cities[city] || country.cities._default
-  return { ...cityRates, currency: country.currency }
-}
-
 /* ─── Food Type Categories ─── */
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
@@ -213,78 +149,6 @@ const VENDOR_TYPES = {
     categories: ['Main', 'Accessories', 'New Arrivals', 'Sale', 'Promo'],
   },
 }
-
-/* ─── Demo Product Catalog ─── */
-
-/* ─── Helpers ─── */
-const fmt = (n) => 'Rp ' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-
-function loadJSON(key, fallback) {
-  try {
-    const v = localStorage.getItem(key)
-    return v ? JSON.parse(v) : fallback
-  } catch { return fallback }
-}
-
-function saveJSON(key, val) {
-  localStorage.setItem(key, JSON.stringify(val))
-}
-
-/* ─── GPS distance (Haversine) ─── */
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLon = ((lon2 - lon1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-/* Yogyakarta center as default shop location */
-const SHOP_LAT = -7.7956
-const SHOP_LON = 110.3695
-
-function getDeliveryFee(distKm, zones) {
-  const z = zones || DEFAULT_DELIVERY_ZONES
-  for (let i = z.length - 1; i >= 0; i--) {
-    if (distKm <= z[i].radius) return z[i]
-  }
-  return z[z.length - 1]
-}
-
-const PLACEHOLDER_SM = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2780%27 height=%2780%27%3E%3Crect width=%2780%27 height=%2780%27 fill=%27%23222%27/%3E%3C/svg%3E"
-const PLACEHOLDER_LG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect width=%27300%27 height=%27300%27 fill=%27%23222%27/%3E%3C/svg%3E"
-
-const ACCENT_PALETTE = [
-  { color: '#C8102E', label: 'Nescafe Red' },
-  { color: '#DC2626', label: 'Red' },
-  { color: '#8B0000', label: 'Dark Red' },
-  { color: '#FF6B35', label: 'Orange' },
-  { color: '#B8860B', label: 'Gold' },
-  { color: '#EAB308', label: 'Yellow' },
-  { color: '#8DC63F', label: 'Lime' },
-  { color: '#2d7a0e', label: 'Green' },
-  { color: '#0D9488', label: 'Teal' },
-  { color: '#1E40AF', label: 'Blue' },
-  { color: '#7C3AED', label: 'Purple' },
-  { color: '#DB2777', label: 'Pink' },
-  { color: '#1a1a1a', label: 'Black' },
-]
-
-// Adjust color brightness: factor > 1 = lighter, < 1 = darker
-function adjustColor(hex, factor) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  const nr = Math.min(255, Math.max(0, Math.round(r * factor)))
-  const ng = Math.min(255, Math.max(0, Math.round(g * factor)))
-  const nb = Math.min(255, Math.max(0, Math.round(b * factor)))
-  return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('')
-}
-
 const PRODUCT_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
 /* Per-theme menu sub-categories (max 3, kept short to fit alongside "All" tab without scrolling) */
