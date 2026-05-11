@@ -1731,6 +1731,9 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_overlayOpacity', overlayOpacity) }, [overlayOpacity])
   useEffect(() => { localStorage.setItem('foodlocalchat_landingLayout', landingLayout) }, [landingLayout])
   useEffect(() => { localStorage.setItem('foodlocalchat_customTagline', customTagline) }, [customTagline])
+  // Pre-fill the tagline field with what's currently shown on the phone (shopFoodType)
+  // the first time the user opens the Text tool, so they can delete and retype.
+  useEffect(() => { if (configTool === 'text' && !customTagline && shopFoodType) setCustomTagline(shopFoodType) }, [configTool])
   useEffect(() => { localStorage.setItem('foodlocalchat_menuCardStyle', menuCardStyle) }, [menuCardStyle])
   useEffect(() => { localStorage.setItem('foodlocalchat_menuBanners', JSON.stringify(menuBanners)) }, [menuBanners])
   useEffect(() => { if (menuBannerIdx >= menuBanners.length) setMenuBannerIdx(0) }, [menuBanners.length])
@@ -4430,7 +4433,6 @@ export default function App() {
               {[
                 { icon: '🔔', label: 'Orders', desc: 'In-app chat orders inbox', onClick: () => { setVendorTab('orders'); setVendorDrawer(false) }, badge: vendorConversations.reduce((s, c) => s + (c.unread_vendor_count || 0), 0) },
                 { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
-                { icon: '🎨', label: 'Design Studio', desc: 'Layout, effects, branding', onClick: () => { setDesignStudio(true); setVendorDrawer(false) } },
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
                 { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
@@ -4438,16 +4440,16 @@ export default function App() {
                 { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => { setVendorTab('settings'); setVendorDrawer(false) } },
                 { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
               ].map(item => (
-                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', minHeight: 44 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
+                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}40`, background: `${accent}10`, cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 44 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{item.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{item.desc}</div>
                   </div>
                   {item.badge ? (
                     <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.badge}</span>
                   ) : null}
-                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.2)' }}>›</span>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
                 </button>
               ))}
             </div>
@@ -5669,22 +5671,23 @@ export default function App() {
                               {!shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
                               <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: landingLayout === 'footer' ? 'flex-end' : 'center', paddingBottom: landingLayout === 'footer' ? 54 : 0 }}>
                                 {shopLogoStyle !== 'off' && shopLogo ? (() => {
-                                  // Preview phone is roughly 1/4 of a real phone viewport.
-                                  const sc = logoScale / 400
+                                  // Preview phone is 220px wide vs real ~360px → ratio 0.611 for WYSIWYG.
+                                  const PHONE_RATIO = 220 / 360
+                                  const sc = (logoScale / 100) * PHONE_RATIO
                                   const pBare = Math.round(200 * sc)
                                   const pOuter = Math.round(156 * sc)
                                   const pInner = Math.round(pOuter * logoInner / 100)
-                                  // Scale offsets to preview proportions (1/4)
-                                  const pX = logoOffsetX / 4
-                                  const pY = logoOffsetY / 4
+                                  const pX = logoOffsetX * PHONE_RATIO
+                                  const pY = logoOffsetY * PHONE_RATIO
                                   return shopLogoStyle === 'bare'
-                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: '70%', maxHeight: '40%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
-                                    : <div style={{ width: pOuter, height: pOuter, maxWidth: '70%', maxHeight: '40%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: '85%', maxHeight: '50%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
+                                    : <div style={{ width: pOuter, height: pOuter, maxWidth: '85%', maxHeight: '50%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
                                         <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pInner, height: pInner, objectFit: 'contain', transform: `translate(${pX}px, ${pY}px)` }} />
                                       </div>
                                 })() : shopLogoStyle !== 'off' ? (() => {
-                                  const fs = Math.round(90 * logoScale / 400)
-                                  return <div style={{ width: fs, height: fs, borderRadius: fs / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(40 * logoScale / 400), fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div>
+                                  const PHONE_RATIO = 220 / 360
+                                  const fs = Math.round(90 * (logoScale / 100) * PHONE_RATIO)
+                                  return <div style={{ width: fs, height: fs, borderRadius: fs / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(40 * (logoScale / 100) * PHONE_RATIO), fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div>
                                 })() : null}
                                 <div style={{ fontSize: 17, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1, padding: '0 8px' }}>{shopName}</div>
                                 <div style={{ fontSize: 9, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
@@ -5762,9 +5765,9 @@ export default function App() {
                         {TOOLS.map(t => {
                           const isActive = configTool === t.id
                           return (
-                            <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 46, height: 46, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.06)', background: isActive ? '#FFD600' : 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s' }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : 'rgba(255,255,255,0.4)'}><path d={t.svg} /></svg>
-                              <span style={{ fontSize: 7, fontWeight: 800, color: isActive ? '#1a1a1a' : 'rgba(255,255,255,0.35)', letterSpacing: 0.3 }}>{t.label}</span>
+                            <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 46, height: 46, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.08)', background: isActive ? '#FFD600' : '#000', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s', boxShadow: isActive ? '0 0 12px rgba(255,214,0,0.6), 0 0 20px rgba(255,214,0,0.3)' : 'none' }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : '#fff'}><path d={t.svg} /></svg>
+                              <span style={{ fontSize: 7, fontWeight: 800, color: isActive ? '#1a1a1a' : '#fff', letterSpacing: 0.3 }}>{t.label}</span>
                             </button>
                           )
                         })}
