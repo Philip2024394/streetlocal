@@ -1789,6 +1789,79 @@ export default function App() {
           </div>
         )}
 
+        {/* ServicesLocal Theme showcase strip */}
+        {(selectedApp.id === 'serviceslocal' || selectedApp.id === 'serviceschat' || selectedApp.id === 'servicesemail') && (
+          <div style={{ padding: '0 20px 16px' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Available in 38+ Service Themes</div>
+            <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
+            <div style={{ overflow: 'hidden', paddingBottom: 8 }}>
+            <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 60s linear infinite', width: 'max-content' }}>
+              {(() => {
+                const themes = [
+                  { id: 'cleaning', label: 'Cleaning', accent: '#3498DB', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_01_01%20PM.png' },
+                  { id: 'plumbing', label: 'Plumbing', accent: '#1B6BA8' },
+                  { id: 'electrician', label: 'Electrician', accent: '#F1C40F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_02_13%20PM.png' },
+                  { id: 'aircon', label: 'AC Service', accent: '#3498DB' },
+                  { id: 'carpenter', label: 'Carpenter', accent: '#8B4513' },
+                  { id: 'painter', label: 'Painter', accent: '#2ECC71' },
+                  { id: 'gardening', label: 'Gardening', accent: '#27AE60', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_36_46%20PM.png' },
+                  { id: 'locksmith', label: 'Locksmith', accent: '#7F8C8D' },
+                  { id: 'pest', label: 'Pest Control', accent: '#1ABC9C' },
+                  { id: 'massage', label: 'Massage', accent: '#E91E63', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_58_52%20PM.png' },
+                  { id: 'salon', label: 'Salon', accent: '#FF69B4' },
+                  { id: 'beautician', label: 'Beautician', accent: '#C0392B', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_57_31%20PM.png' },
+                  { id: 'laser', label: 'Laser Service', accent: '#8E44AD', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_03_33%20PM.png' },
+                  { id: 'tattoo', label: 'Tattoo', accent: '#1a1a1a' },
+                  { id: 'yoga', label: 'Yoga', accent: '#8E44AD' },
+                  { id: 'mechanic', label: 'Mechanic', accent: '#dc2626' },
+                  { id: 'carwash', label: 'Car Wash', accent: '#2980B9', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_54_50%20PM.png' },
+                  { id: 'driving', label: 'Driving Instructor', accent: '#FFD600' },
+                  { id: 'photographer', label: 'Photographer', accent: '#1a1a1a' },
+                  { id: 'tailor', label: 'Tailor', accent: '#8E44AD' },
+                  { id: 'petgroom', label: 'Pet Grooming', accent: '#F39C12' },
+                  { id: 'tutor', label: 'Tutor', accent: '#9B59B6', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_05_18%20PM.png' },
+                  { id: 'music', label: 'Music Lessons', accent: '#E74C3C' },
+                  { id: 'webdev', label: 'Web Developer', accent: '#3498DB' },
+                  { id: 'translator', label: 'Translator', accent: '#16A085' },
+                  { id: 'accountant', label: 'Accountant', accent: '#34495E' },
+                  { id: 'lawyer', label: 'Lawyer', accent: '#2C3E50' },
+                  { id: 'event', label: 'Event Planning', accent: '#E91E63' },
+                  { id: 'childcare', label: 'Childcare', accent: '#FF69B4' },
+                  { id: 'courier', label: 'Courier', accent: '#FF6B35' },
+                  { id: 'leather', label: 'Leather Supplier', accent: '#5D2E0D', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_11_10%20PM.png' },
+                  { id: 'maid', label: 'House Maid', accent: '#E91E63', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_12_00%20PM.png' },
+                  { id: 'motorrent', label: 'Motorbike Rental', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_13_32%20PM.png' },
+                  { id: 'tourguide', label: 'Tour Guide', accent: '#16A085', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_18_24%20PM.png' },
+                  { id: 'carrent', label: 'Car Rental', accent: '#34495E', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_20_35%20PM.png' },
+                  { id: 'wedding', label: 'Wedding Clothes', accent: '#FFD600', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_21_51%20PM.png' },
+                  { id: 'barber', label: 'Barber Shop', accent: '#1a1a1a', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_28_40%20PM.png' },
+                  { id: 'hairsalon', label: 'Hair Salon', accent: '#FF69B4', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_30_07%20PM.png' },
+                  { id: 'nailart', label: 'Nail Art', accent: '#E91E63', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_32_19%20PM.png' },
+                  { id: 'cardriver', label: 'Car Driver', accent: '#2C3E50', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_33_43%20PM.png' },
+                ]
+                const renderCard = (theme, i) => (
+                  <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
+                    <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', background: `linear-gradient(135deg, ${theme.accent}30, ${theme.accent}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {theme.img ? (
+                        <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                      ) : (
+                        <span style={{ fontSize: 28 }}>🛠️</span>
+                      )}
+                    </div>
+                    <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const id = selectedApp.id; const path = id === 'serviceschat' ? 'services/chat' : id === 'servicesemail' ? 'services/email' : 'services/whatsapp'; const portMap = { servicesvchat: 5184, servicesemail: 5185, serviceslocal: 5183 }; const port = portMap[id] || 5183; const base = isLocal ? `http://localhost:${port}/${path}/` : `/${path}/`; return base + '?demo=true&page=landing&theme=' + theme.id })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
+                  </div>
+                )
+                return [...themes.map((t, i) => renderCard(t, i)), ...themes.map((t, i) => renderCard(t, i + themes.length))]
+              })()}
+            </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 10 }}>
+              <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('service-themes') }} style={{ background: '#16A085', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
+            </div>
+          </div>
+        )}
+
         {/* Theme preview overlay */}
         {previewTheme && (() => {
           const activeImg = previewTheme.activeImg || previewTheme.img
