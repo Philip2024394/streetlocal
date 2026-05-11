@@ -458,7 +458,7 @@ function getCategories(t, cp) {
       name: t.productsCategory || 'Local Product Apps',
       icon: '📦',
       description: t.productsCategoryDesc || 'Sell any product — your own store app',
-      bannerImage: 'https://image.pollinations.ai/prompt/Modern%20product%20store%20display%20shelves%20dark%20moody%20background?width=480&height=300&nologo=true',
+      bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2002_00_29%20PM.png',
       apps: [
         {
           id: 'productslocal',
