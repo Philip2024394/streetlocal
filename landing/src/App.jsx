@@ -5352,6 +5352,23 @@ export default function App() {
             </FadeIn>
           ))}
         </div>
+
+        {/* Affiliate / Become an Agent — visible recruitment CTA */}
+        <FadeIn delay={0.6}>
+          <div
+            onClick={() => setCurrentPage('affiliate')}
+            style={{ marginTop: 24, padding: '18px 18px', borderRadius: 18, background: 'linear-gradient(135deg, #FFD600 0%, #FFAA00 100%)', cursor: 'pointer', boxShadow: '0 8px 24px rgba(255,214,0,0.25)', position: 'relative', overflow: 'hidden' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ fontSize: 32 }}>🤝</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a', marginBottom: 2 }}>Become an Agent</div>
+                <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', fontWeight: 600 }}>Earn Rp 35.000 – Rp 100.000 per vendor signup</div>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 900, color: '#1a1a1a', background: 'rgba(0,0,0,0.1)', padding: '6px 12px', borderRadius: 10 }}>Join →</span>
+            </div>
+          </div>
+        </FadeIn>
       </div>
 
 
