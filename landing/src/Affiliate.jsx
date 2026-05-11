@@ -143,6 +143,25 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
   )
 }
 
+/* ─── FAQ Accordion Item ─── */
+function FAQItem({ q, a }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ background: '#FAFAFA', borderRadius: 14, border: '1px solid #f0f0f0', marginBottom: 8, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', lineHeight: 1.4, flex: 1 }}>{q}</span>
+        <span style={{ fontSize: 18, color: '#FF6B35', fontWeight: 700, flexShrink: 0, transform: open ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>+</span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#555', lineHeight: 1.6 }}>{a}</div>
+      )}
+    </div>
+  )
+}
+
 function PromoCarousel({ promos, locale, agentCode, appName, appLink }) {
   const scrollRef = useRef(null)
   const [paused, setPaused] = useState(false)
@@ -587,12 +606,191 @@ export default function Affiliate({ onClose }) {
             ))}
           </div>
 
+          {/* What apps you can sell */}
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>What apps you can sell</h2>
+            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Three categories. Vendor picks WhatsApp, Chat, or Email at signup — you earn commission on any of them.</p>
+            {[
+              {
+                icon: '🍜',
+                color: '#FF6B35',
+                title: 'Food',
+                desc: 'Street carts, warungs, cafés, restaurants',
+                variants: [
+                  { tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' },
+                  { tag: 'Chat', desc: 'Orders go to in-app chat' },
+                ],
+              },
+              {
+                icon: '🛍️',
+                color: '#8B5CF6',
+                title: 'Products',
+                desc: 'Retail, fashion, electronics, anything physical',
+                variants: [
+                  { tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' },
+                  { tag: 'Chat', desc: 'Orders go to in-app chat' },
+                  { tag: 'Email', desc: 'Orders sent to vendor\'s email' },
+                ],
+              },
+              {
+                icon: '🛠️',
+                color: '#22C55E',
+                title: 'Services',
+                desc: 'AC, plumber, electrician, painter, hairdresser, tutor, mechanic — 40+ trades',
+                badge: 'NEW 2026',
+                variants: [
+                  { tag: 'WhatsApp', desc: 'Bookings go to vendor\'s WhatsApp' },
+                  { tag: 'Chat', desc: 'Bookings go to in-app chat' },
+                  { tag: 'Email', desc: 'Bookings sent to vendor\'s email' },
+                ],
+              },
+            ].map((cat, i) => (
+              <div key={i} style={{ background: '#FAFAFA', borderRadius: 14, padding: 14, border: '1px solid #f0f0f0', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: cat.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{cat.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{cat.title}</div>
+                      {cat.badge && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#22C55E', padding: '2px 6px', borderRadius: 4, letterSpacing: 0.5 }}>{cat.badge}</span>}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2, lineHeight: 1.4 }}>{cat.desc}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {cat.variants.map((v, j) => (
+                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid #f0f0f0', borderRadius: 8, padding: '6px 10px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: cat.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>{v.tag}</span>
+                      <span style={{ fontSize: 11, color: '#666' }}>{v.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* FAQ */}
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>Frequently asked questions</h2>
+            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>What new agents ask before signing up</p>
+            {[
+              {
+                q: 'How many app types can I sign vendors up for?',
+                a: 'All three — Food, Products, and Services. Each has WhatsApp, Chat, or Email order-channel variants. Vendor picks at signup; affiliate gets commission regardless of which.',
+              },
+              {
+                q: 'Do I get commission on Services apps too?',
+                a: 'Yes — same commission rate as Food and Products. Services is the newest category (launched 2026), so demand from agents/cleaners/photographers is wide open.',
+              },
+              {
+                q: 'What if my vendor wants to switch tiers later (Basic → Pro → Premium)?',
+                a: 'You earn commission on the upgrade difference for the first 12 months of the subscription.',
+              },
+              {
+                q: 'How do I get paid?',
+                a: 'Direct bank transfer for Indonesia affiliates (no processing fees). International affiliates via Stripe (fees deducted from commission — see pricing section).',
+              },
+              {
+                q: 'Can I sign up vendors in countries outside Indonesia?',
+                a: 'Yes — US, AU, EU, SG, TH, VN, PH, MY have local pricing. Use the lead-grab system to claim leads in any country.',
+              },
+              {
+                q: 'How do I claim leads from the shared pool?',
+                a: 'Use the "🎯 Leads to Contact" tab in your dashboard. Click "Grab Leads" — the system atomically assigns 5 leads to you. They\'re yours to work for 30 days.',
+              },
+              {
+                q: 'What happens if I don\'t contact a grabbed lead?',
+                a: 'After 30 days idle, leads return to the pool for other agents.',
+              },
+            ].map((item, i) => (
+              <FAQItem key={i} q={item.q} a={item.a} />
+            ))}
+          </div>
+
           {/* Fee notice */}
           <div style={s.feeNotice}>
             <span style={{ fontSize: 18 }}>🎫</span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>Agent App: {AGENT_FEE_LABEL}</div>
               <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>Monthly subscription for your agent app & dashboard</div>
+            </div>
+          </div>
+
+          {/* Indonesia Pricing Tiers */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 18 }}>🇮🇩</span>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', margin: 0 }}>Indonesia pricing tiers</h2>
+            </div>
+            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
+              Vendors pick a tier at signup. Your first-month commission matches whichever they choose.
+            </p>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                {
+                  name: 'Basic',
+                  price: 'Rp 35.000',
+                  color: '#FF6B35',
+                  features: ['Ordering app', 'WhatsApp checkout', 'Standard menu'],
+                },
+                {
+                  name: 'Pro',
+                  price: 'Rp 50.000',
+                  color: '#22C55E',
+                  features: ['Everything in Basic', 'Analytics dashboard', 'Daily deals', 'More themes'],
+                  popular: true,
+                },
+                {
+                  name: 'Premium',
+                  price: 'Rp 75.000',
+                  color: '#8B5CF6',
+                  features: ['Everything in Pro', 'Variants & modifiers', 'Multi-photo products', 'Vendor analytics'],
+                },
+              ].map(tier => (
+                <div key={tier.name} style={{ background: '#FAFAFA', border: `1px solid ${tier.popular ? tier.color : '#f0f0f0'}`, borderRadius: 14, padding: 14, position: 'relative' }}>
+                  {tier.popular && (
+                    <div style={{ position: 'absolute', top: -8, right: 12, background: tier.color, color: '#fff', fontSize: 9, fontWeight: 900, padding: '2px 8px', borderRadius: 8, letterSpacing: 0.5 }}>POPULAR</div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: tier.color }}>{tier.name}</div>
+                      <div style={{ fontSize: 10, color: '#888', marginTop: 1 }}>per vendor / month</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a' }}>{tier.price}</div>
+                      <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>You earn: {tier.price}</div>
+                    </div>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11, color: '#555', lineHeight: 1.6 }}>
+                    {tier.features.map(f => <li key={f}>{f}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Transaction Fee Disclosure */}
+          <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 14, padding: 14, marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 18 }}>💳</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E', marginBottom: 4 }}>How your commission is calculated</div>
+                <div style={{ fontSize: 11, color: '#78350F', lineHeight: 1.5 }}>
+                  Your commission is paid out <strong>after payment processing fees</strong> are deducted. For card or Stripe payments that's typically ~2.5–3.5% of the subscription. The processor fee comes out of the affiliate commission, not StreetLocal's share — so your real take-home reflects the net amount received.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Indonesia bank-transfer advantage */}
+          <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 14, padding: 14, marginBottom: 20 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 18 }}>🏦</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#065F46', marginBottom: 4 }}>Indonesia: zero processing fees</div>
+                <div style={{ fontSize: 11, color: '#065F46', lineHeight: 1.5 }}>
+                  Indonesian vendors pay via manual bank transfer with SL-XXXXXX reference codes — <strong>no Stripe, no card fees, no deductions</strong>. You keep the full Rp 35.000 / Rp 50.000 / Rp 75.000 on every first-month signup.
+                </div>
+              </div>
             </div>
           </div>
 

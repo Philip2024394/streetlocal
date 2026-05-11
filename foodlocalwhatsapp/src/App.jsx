@@ -184,6 +184,38 @@ const FOOD_TYPES = {
 }
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
+/* ─── Vendor type presets ─── */
+// Picked once at signup. Each type loads its own 6-8 category quick-chips.
+// Vendor can still type any custom category. Existing menu items are preserved
+// across switches — the preset is suggestions, not enforcement.
+const VENDOR_TYPES = {
+  warung: {
+    id: 'warung', label: 'Warung / Street Food', emoji: '🍜',
+    tagline: 'Indonesian everyday food',
+    categories: ['Nasi', 'Mie', 'Lauk', 'Sate', 'Cemilan', 'Minuman', 'Promo', 'Extra'],
+  },
+  bakery: {
+    id: 'bakery', label: 'Bakery / Cake Shop', emoji: '🍰',
+    tagline: 'Bread, cakes, pastries',
+    categories: ['Roti', 'Kue', 'Pastry', 'Sandwich', 'Kopi', 'Minuman', 'Promo'],
+  },
+  cafe: {
+    id: 'cafe', label: 'Cafe / Coffee', emoji: '☕',
+    tagline: 'Coffee, light food, snacks',
+    categories: ['Coffee', 'Tea', 'Cold Drinks', 'Pastry', 'Sandwich', 'Dessert', 'Promo'],
+  },
+  restaurant: {
+    id: 'restaurant', label: 'Restaurant', emoji: '🍽️',
+    tagline: 'Full-service dining',
+    categories: ['Appetizer', 'Main Course', 'Signature', 'Side Dish', 'Dessert', 'Drinks', 'Promo'],
+  },
+  general: {
+    id: 'general', label: 'General / Other', emoji: '🛒',
+    tagline: 'Mixed food and drinks',
+    categories: ['Main', 'Drinks', 'Snacks', 'Dessert', 'Promo', 'Extra'],
+  },
+}
+
 /* ─── Demo Menu ─── */
 const DEMO_MENU = [
   // Meals
@@ -542,6 +574,17 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [itemModal, setItemModal] = useState(null) // item being viewed
   const [modalQty, setModalQty] = useState(1)
+  const [modalVariant, setModalVariant] = useState(null)        // picked variant in the item modal
+  const [modalModifiers, setModalModifiers] = useState([])      // checked modifiers in the modal
+  const [modalPhotoIdx, setModalPhotoIdx] = useState(0)         // primary=0; gallery starts at 1
+  // Reset modal selections whenever a new item opens — auto-pick first variant if any
+  useEffect(() => {
+    if (itemModal) {
+      setModalVariant((itemModal.variants && itemModal.variants.length > 0) ? itemModal.variants[0] : null)
+      setModalModifiers([])
+      setModalPhotoIdx(0)
+    }
+  }, [itemModal])
   const [editItem, setEditItem] = useState(null) // item being edited by vendor
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
@@ -713,6 +756,144 @@ export default function App() {
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formPrepTime, setFormPrepTime] = useState(0)
+  // Progressive-disclosure fields — hidden by default, revealed via "+ feature" ghost button
+  const [formPhotos, setFormPhotos] = useState([])         // additional photos (primary stays in formPhoto)
+  const [formAllergens, setFormAllergens] = useState([])   // array of strings
+  const [formDietary, setFormDietary] = useState([])       // array of strings (halal/vegan/etc)
+  const [formPortion, setFormPortion] = useState('')       // "200g" / "Serves 2"
+  const [formStock, setFormStock] = useState('')           // empty = unlimited; number = count
+  const [formVariants, setFormVariants] = useState([])     // [{id, name, priceDelta}]
+  const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
+  // Which optional sections are expanded in the item form
+  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
+  const toggleSection = (k) => setExpandedSections(p => ({ ...p, [k]: !p[k] }))
+
+  // Shared progressive-disclosure block for both add + edit item forms
+  const renderItemOptionalFields = () => (
+    <div style={{ padding: '0 14px 4px' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        {[
+          { key: 'photos', label: '📷 Photos' },
+          { key: 'variants', label: '📏 Sizes' },
+          { key: 'modifiers', label: '➕ Add-ons' },
+          { key: 'allergens', label: '⚠️ Allergens' },
+          { key: 'dietary', label: '🌱 Dietary' },
+          { key: 'portion', label: '⚖️ Portion' },
+          { key: 'stock', label: '📦 Stock' },
+        ].map(opt => (
+          <button key={opt.key} type="button" onClick={() => toggleSection(opt.key)} style={{
+            background: expandedSections[opt.key] ? (isCustomAccent ? `${accent}30` : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.04)',
+            border: '1px dashed ' + (expandedSections[opt.key] ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.12)'),
+            color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            padding: '7px 11px', borderRadius: 12, minHeight: 32,
+          }}>{expandedSections[opt.key] ? '−' : '+'} {opt.label}</button>
+        ))}
+      </div>
+      {expandedSections.photos && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Gallery — up to 4 extra photos (primary is above)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {formPhotos.map((url, i) => (
+              <div key={i} style={{ position: 'relative', width: 64, height: 64, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={() => setFormPhotos(p => p.filter((_, j) => j !== i))} type="button" style={{ position: 'absolute', top: 2, right: 2, width: 22, height: 22, borderRadius: 11, border: 'none', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 14, cursor: 'pointer', lineHeight: 1, padding: 0 }}>&times;</button>
+              </div>
+            ))}
+            {formPhotos.length < 4 && (
+              <label style={{ width: 64, height: 64, borderRadius: 10, border: '1px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 24, background: 'rgba(255,255,255,0.02)' }}>
+                +
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => setFormPhotos(p => [...p, reader.result])
+                  reader.readAsDataURL(file)
+                }} />
+              </label>
+            )}
+          </div>
+        </div>
+      )}
+      {expandedSections.allergens && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy'].map(a => {
+              const isActive = formAllergens.includes(a)
+              return (
+                <button key={a} type="button" onClick={() => setFormAllergens(p => isActive ? p.filter(x => x !== a) : [...p, a])} style={{
+                  background: isActive ? '#EF4444' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                }}>{a}</button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {expandedSections.dietary && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Dietary tags</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {['Halal', 'Vegan', 'Vegetarian', 'Gluten-free', 'Dairy-free'].map(d => {
+              const isActive = formDietary.includes(d)
+              return (
+                <button key={d} type="button" onClick={() => setFormDietary(p => isActive ? p.filter(x => x !== d) : [...p, d])} style={{
+                  background: isActive ? '#22C55E' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                }}>{d}</button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {expandedSections.portion && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Portion / serving size</div>
+          <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · Serves 2 · 12oz' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+      )}
+      {expandedSections.stock && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
+            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Unlimited</button>
+          </div>
+        </div>
+      )}
+      {expandedSections.variants && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Sizes / variants — customer picks one. Price delta added to base.</div>
+          {formVariants.map((v, i) => (
+            <div key={v.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <input value={v.name} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Small / Large / Regular)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" value={v.priceDelta} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="button" onClick={() => setFormVariants(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setFormVariants(p => [...p, { id: 'v_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add size</button>
+        </div>
+      )}
+      {expandedSections.modifiers && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
+          {formModifiers.map((m, i) => (
+            <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <input value={m.name} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Extra cheese / No onion)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" value={m.priceDelta} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="button" onClick={() => setFormModifiers(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setFormModifiers(p => [...p, { id: 'm_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add modifier</button>
+        </div>
+      )}
+    </div>
+  )
 
   /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('vendorbasic_vendorId', vendorId) }, [vendorId])
@@ -836,15 +1017,42 @@ export default function App() {
   const totalItems = cart.reduce((s, c) => s + c.qty, 0)
   const totalPrice = cart.reduce((s, c) => s + c.price * c.qty, 0)
 
-  const addToCart = useCallback((item, qty = 1) => {
+  // Cart line ID is a composite key: itemId :: variantId :: sortedModifierIds — so identical combos merge
+  // but different variant/modifier picks become separate cart lines.
+  const buildCartLineId = (itemId, variant, modifiers) => {
+    const vid = variant ? variant.id : ''
+    const mids = (modifiers || []).map(m => m.id).sort().join(',')
+    return `${itemId}::${vid}::${mids}`
+  }
+
+  const addToCart = useCallback((item, qty = 1, variant = null, modifiers = []) => {
     setCart((prev) => {
-      const idx = prev.findIndex((c) => c.id === item.id)
+      const lineId = buildCartLineId(item.id, variant, modifiers)
+      const idx = prev.findIndex((c) => c.id === lineId)
       if (idx >= 0) {
         const next = [...prev]
         next[idx] = { ...next[idx], qty: next[idx].qty + qty }
         return next
       }
-      return [...prev, { id: item.id, name: item.name, desc: item.desc, photo: item.photo, price: item.price, promoPrice: item.promoPrice, prepTime: item.prepTime, qty }]
+      const basePrice = item.promoPrice || item.price
+      const variantDelta = variant ? (variant.priceDelta || 0) : 0
+      const modifiersDelta = (modifiers || []).reduce((s, m) => s + (m.priceDelta || 0), 0)
+      const unitPrice = basePrice + variantDelta + modifiersDelta
+      // Display name includes variant suffix; modifier list shown below in cart
+      const displayName = variant ? `${item.name} (${variant.name})` : item.name
+      return [...prev, {
+        id: lineId,
+        itemId: item.id,
+        name: displayName,
+        desc: item.desc,
+        photo: item.photo,
+        price: unitPrice,
+        promoPrice: item.promoPrice ? unitPrice : null,
+        prepTime: item.prepTime,
+        variant: variant,
+        modifiers: modifiers,
+        qty,
+      }]
     })
   }, [])
 
@@ -963,17 +1171,35 @@ export default function App() {
     setFormDesc(item.desc)
     setFormCategory(item.category || 'Meal')
     setFormPrepTime(item.prepTime || 0)
+    setFormPhotos(item.photos || [])
+    setFormAllergens(item.allergens || [])
+    setFormDietary(item.dietary || [])
+    setFormPortion(item.portion || '')
+    setFormStock(item.stock != null ? String(item.stock) : '')
+    setFormVariants(item.variants || [])
+    setFormModifiers(item.modifiers || [])
+    setExpandedSections({
+      photos: (item.photos || []).length > 0,
+      allergens: (item.allergens || []).length > 0,
+      dietary: (item.dietary || []).length > 0,
+      portion: !!item.portion,
+      stock: item.stock != null,
+      variants: (item.variants || []).length > 0,
+      modifiers: (item.modifiers || []).length > 0,
+    })
     setEditItem(item)
   }
 
   const saveEdit = () => {
     if (!formName || !formPrice) return
+    const stockNum = formStock === '' ? null : Number(formStock)
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) =>
       prev.map((m) =>
-        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 } : m
+        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
       )
     )
-    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras }).catch(() => {})
     setEditItem(null)
   }
 
@@ -988,6 +1214,14 @@ export default function App() {
     setFormPhoto('')
     setFormDesc('')
     setFormPrepTime(0)
+    setFormPhotos([])
+    setFormAllergens([])
+    setFormDietary([])
+    setFormPortion('')
+    setFormStock('')
+    setFormVariants([])
+    setFormModifiers([])
+    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
     setAddingItem(true)
   }
 
@@ -995,9 +1229,10 @@ export default function App() {
     if (!formName || !formPrice) return
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }
+    const stockNum = formStock === '' ? null : Number(formStock)
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) => [...prev, item])
-    if (vendorId) saveMenuItem(vendorId, { name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
   }
 
@@ -1091,10 +1326,43 @@ export default function App() {
 
   /* --- Menu category filter --- */
   const [menuFilter, setMenuFilter] = useState('All')
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
   const MENU_CATEGORIES = ['All', ...new Set(menuItems.map(m => m.category).filter(Boolean))]
 
+  /* --- Vendor type (warung / bakery / cafe / restaurant / general) --- */
+  const [vendorType, setVendorType] = useState(() => localStorage.getItem('vendorbasic_vendor_type') || null)
+  const [vendorTypePickerOpen, setVendorTypePickerOpen] = useState(false)
+  useEffect(() => {
+    if (vendorType) {
+      try { localStorage.setItem('vendorbasic_vendor_type', vendorType) } catch {}
+    }
+  }, [vendorType])
+  // Auto-open the picker once when vendor first enters admin without having chosen a type
+  useEffect(() => {
+    if (isVendor && !vendorType && !isDemo) setVendorTypePickerOpen(true)
+  }, [isVendor, vendorType, isDemo])
+
+  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu
+  const vendorPreset = vendorType ? VENDOR_TYPES[vendorType] : VENDOR_TYPES.warung
+  const categoryChips = [...new Set([
+    ...vendorPreset.categories,
+    ...menuItems.map(m => m.category).filter(Boolean),
+  ])]
+
+  /* --- Visit Us FAB — expanded with "Visit Us" label on first session, collapses to pin only --- */
+  const [fabExpanded, setFabExpanded] = useState(() => !localStorage.getItem('vendorbasic_visit_seen'))
+  useEffect(() => {
+    if (!fabExpanded) return
+    const t = setTimeout(() => {
+      setFabExpanded(false)
+      try { localStorage.setItem('vendorbasic_visit_seen', '1') } catch {}
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [fabExpanded])
+
   /* --- Visible menu --- */
-  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available)).filter(m => menuFilter === 'All' || m.category === menuFilter)
+  // Customers don't see items that are unavailable OR have stock === 0. Vendor admin sees everything.
+  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available && (m.stock == null || m.stock > 0))).filter(m => menuFilter === 'All' || m.category === menuFilter)
 
   // Active daily deals — filter by current time
   const activeDeals = dailyDeals.filter(d => {
@@ -1403,33 +1671,170 @@ export default function App() {
       <div style={{ paddingBottom: 12 }}>
         {/* Category text toggles + Visit Us */}
         <div style={{ display: 'flex', alignItems: 'center', padding: '20px 16px 0' }}>
-          <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[{ label: 'Menu', filter: 'All' },
-            ...(['Snack', 'Drink', 'Extra Sauce'].filter(cat => menuItems.some(m => m.category === cat)).map(cat => ({
-              label: cat === 'Drink' ? 'Drinks' : cat === 'Snack' ? 'Snacks' : 'Extra',
-              filter: cat,
-            })))
-          ].map(tab => {
-            const isActive = menuFilter === tab.filter
-            return (
-              <button key={tab.filter} onClick={() => setMenuFilter(tab.filter)} style={{
-                background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
-                fontSize: 15, fontWeight: 700,
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
-                borderBottom: isActive ? `2px solid ${isCustomAccent ? accent : '#fff'}` : '2px solid transparent',
-              }}>
-                {tab.label}
-              </button>
-            )
-          })}
+          <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none', alignItems: 'center' }}>
+          {(() => {
+            const allCats = MENU_CATEGORIES.slice(1)
+            const friendly = (c) => c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c
+            const topThree = allCats.slice(0, 3)
+            // Keep the active selection visible inline even if it's outside the top 3
+            const inlineCats = (menuFilter === 'All' || topThree.includes(menuFilter)) ? topThree : [...topThree, menuFilter]
+            const tabs = [{ label: 'Menu', filter: 'All' }, ...inlineCats.map(c => ({ label: friendly(c), filter: c }))]
+            return tabs.map(tab => {
+              const isActive = menuFilter === tab.filter
+              return (
+                <button key={tab.filter} onClick={() => setMenuFilter(tab.filter)} style={{
+                  background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
+                  fontSize: 15, fontWeight: 700,
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                  borderBottom: isActive ? `2px solid ${isCustomAccent ? accent : '#fff'}` : '2px solid transparent',
+                }}>
+                  {tab.label}
+                </button>
+              )
+            })
+          })()}
           </div>
-          {!isVendor && (
-            <button onClick={() => setShowLocation(true)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0, marginLeft: 12, minHeight: 44, ...(isCustomAccent ? { background: accent } : { background: 'rgba(255,255,255,0.15)' }) }}>
-              {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 10 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 2.5s ease-in-out infinite' }} /></div>}
-              <span style={{ position: 'relative', zIndex: 1 }}>Visit Us</span>
+          {MENU_CATEGORIES.length > 4 && (
+            <button onClick={() => setMenuDrawerOpen(true)} aria-label="All categories" title="All categories" style={{
+              background: isCustomAccent ? accent : 'rgba(255,255,255,0.18)',
+              border: 'none', padding: 8, marginLeft: 12, cursor: 'pointer', flexShrink: 0,
+              minHeight: 44, minWidth: 44, borderRadius: 10,
+              color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+            }}>
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
             </button>
           )}
         </div>
+
+        {/* Vendor-type picker — one-time question on signup, also reachable via item form */}
+        {vendorTypePickerOpen && (
+          <>
+            <div onClick={() => vendorType && setVendorTypePickerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000 }} />
+            <div role="dialog" aria-label="Pick vendor type" style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              width: 360, maxWidth: '92vw', maxHeight: '88vh', overflowY: 'auto',
+              background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)',
+              borderRadius: 22, padding: '26px 22px 22px', zIndex: 1001,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }} />
+              <div style={{ textAlign: 'center', marginBottom: 18 }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>What kind of vendor are you?</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>We'll set up your menu categories instantly.</div>
+              </div>
+              {Object.values(VENDOR_TYPES).map(vt => {
+                const isActive = vendorType === vt.id
+                return (
+                  <button key={vt.id} onClick={() => { setVendorType(vt.id); setVendorTypePickerOpen(false) }} style={{
+                    display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                    padding: '14px 14px', marginBottom: 10, borderRadius: 14,
+                    background: isActive
+                      ? (isCustomAccent ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)` : 'rgba(255,255,255,0.16)')
+                      : 'rgba(255,255,255,0.04)',
+                    border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)'),
+                    boxShadow: isActive && isCustomAccent ? `0 6px 18px ${accent}55` : 'none',
+                    cursor: 'pointer', textAlign: 'left', color: '#fff',
+                    transition: 'all 150ms ease',
+                  }}>
+                    <span style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }}>{vt.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{vt.label}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 4, fontWeight: 500 }}>{vt.tagline}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500, lineHeight: 1.4 }}>{vt.categories.slice(0, 5).join(' · ')}{vt.categories.length > 5 ? ' · …' : ''}</div>
+                    </div>
+                  </button>
+                )
+              })}
+              {vendorType && (
+                <button onClick={() => setVendorTypePickerOpen(false)} style={{
+                  width: '100%', padding: '10px 14px', marginTop: 4, borderRadius: 12,
+                  background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>Cancel</button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Visit Us FAB — bottom-right, always visible while scrolling. Expands on first session. */}
+        {!isVendor && (
+          <button onClick={() => setShowLocation(true)} aria-label="Visit us" title="Visit us" style={{
+            position: 'fixed', right: 16, bottom: 24, zIndex: 100,
+            height: 56, minWidth: 56,
+            padding: fabExpanded ? '0 22px 0 18px' : 0,
+            borderRadius: 28, border: 'none',
+            background: isCustomAccent ? accent : '#1f1f1f',
+            color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3)',
+            transition: 'padding 250ms ease, min-width 250ms ease',
+            overflow: 'hidden', whiteSpace: 'nowrap',
+          }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />
+            {fabExpanded && (
+              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.3 }}>Visit Us</span>
+            )}
+          </button>
+        )}
+
+        {/* Full-category drawer — slides in from right when burger pressed */}
+        {menuDrawerOpen && (
+          <>
+            <div onClick={() => setMenuDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 998, animation: 'menuOverlayIn 200ms ease-out' }} />
+            <div role="dialog" aria-label="Browse menu" style={{
+              position: 'fixed', top: 0, right: 0, width: 300, maxWidth: '88vw', height: '100vh',
+              background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)',
+              zIndex: 999, padding: '22px 18px 24px', overflowY: 'auto',
+              boxShadow: '-12px 0 40px rgba(0,0,0,0.55), inset 1px 0 0 rgba(255,255,255,0.06)',
+              borderTopLeftRadius: 18, borderBottomLeftRadius: 18,
+              animation: 'menuDrawerIn 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}>
+              <style>{`
+                @keyframes menuDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                @keyframes menuOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+              `}</style>
+              {/* Accent line on top — premium "title indicator" */}
+              <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14 }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Our Menu</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
+                </div>
+                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12 }}>&times;</button>
+              </div>
+              {[{ filter: 'All', label: 'Full Menu' }, ...MENU_CATEGORIES.slice(1).map(c => ({ filter: c, label: c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c }))].map(opt => {
+                const count = opt.filter === 'All' ? menuItems.length : menuItems.filter(m => m.category === opt.filter).length
+                const isActive = menuFilter === opt.filter
+                return (
+                  <button key={opt.filter} onClick={() => { setMenuFilter(opt.filter); setMenuDrawerOpen(false) }} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                    padding: '13px 14px', marginBottom: 8, borderRadius: 12,
+                    background: isActive
+                      ? (isCustomAccent ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)` : 'rgba(255,255,255,0.16)')
+                      : 'rgba(255,255,255,0.04)',
+                    border: isActive ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: isActive && isCustomAccent ? `0 4px 14px ${accent}55` : 'none',
+                    cursor: 'pointer', minHeight: 48,
+                    color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'left',
+                    transition: 'background 150ms ease, box-shadow 150ms ease',
+                  }}>
+                    <span>{opt.label}</span>
+                    <span style={{
+                      padding: '3px 9px', borderRadius: 11,
+                      background: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)',
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontSize: 11, fontWeight: 700, minWidth: 22, textAlign: 'center',
+                    }}>{count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
         <div style={{ height: 12 }} />
         <div style={menuCardStyle === 'grid' ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 12px' } : {}}>
         {visibleMenu.map((item) => (
@@ -1582,12 +1987,33 @@ export default function App() {
 
             {/* Hero image — with side padding + rounded */}
             <div style={{ padding: '0 14px', position: 'relative' }}>
-              <img
-                src={itemModal.photo || PLACEHOLDER_LG}
-                alt={itemModal.name}
-                onError={imgError('food')}
-                style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
-              />
+              {(() => {
+                const photoStrip = [itemModal.photo, ...(itemModal.photos || [])].filter(Boolean)
+                const activePhoto = photoStrip[modalPhotoIdx] || itemModal.photo || PLACEHOLDER_LG
+                return (
+                  <>
+                    <img
+                      src={activePhoto}
+                      alt={itemModal.name}
+                      onError={imgError('food')}
+                      style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
+                    />
+                    {photoStrip.length > 1 && (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                        {photoStrip.map((url, i) => (
+                          <button key={i} onClick={() => setModalPhotoIdx(i)} style={{
+                            flexShrink: 0, width: 56, height: 56, borderRadius: 10, padding: 0,
+                            border: '2px solid ' + (modalPhotoIdx === i ? (isCustomAccent ? accent : '#FACC15') : 'rgba(255,255,255,0.1)'),
+                            background: 'none', cursor: 'pointer', overflow: 'hidden',
+                          }}>
+                            <img src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
               {/* Category badge */}
               {itemModal.category && (
                 <span style={{ position: 'absolute', top: 12, right: 26, fontSize: 11, fontWeight: 700, color: '#fff', background: accent, padding: '4px 10px', borderRadius: 8 }}>{itemModal.category}</span>
@@ -1603,23 +2029,44 @@ export default function App() {
               {itemModal.spice > 0 && <span style={{ fontSize: 14 }}>{'🌶️'.repeat(itemModal.spice)}</span>}
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{itemModal.desc}</p>
 
-              {/* Badges */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                {itemModal.halal && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>Halal</span>}
-                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>Popular</span>}
+              {/* Badges — popular, halal, dietary tags */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>⭐ Popular</span>}
+                {(itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
+                {(itemModal.dietary || []).filter(d => d !== 'Halal').map(d => (
+                  <span key={d} style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '4px 10px', borderRadius: 8 }}>🌱 {d}</span>
+                ))}
+                {itemModal.portion && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: 8 }}>⚖️ {itemModal.portion}</span>}
+                {itemModal.stock != null && itemModal.stock > 0 && itemModal.stock <= 5 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#fca5a5', padding: '4px 10px', borderRadius: 8 }}>Only {itemModal.stock} left</span>
+                )}
               </div>
+              {/* Allergen warning — surfaces only if allergens present */}
+              {(itemModal.allergens || []).length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 14 }}>⚠️</span>
+                  <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 600 }}>Contains: {(itemModal.allergens || []).join(', ')}</span>
+                </div>
+              )}
 
               {/* Price + Qty */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  {itemModal.promoPrice ? (
-                    <>
-                      <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', marginRight: 8 }}>{fmt(itemModal.price)}</span>
-                      <span style={{ fontSize: 24, fontWeight: 900, color: '#EF4444' }}>{fmt(itemModal.promoPrice)}</span>
-                    </>
-                  ) : (
-                    <span style={{ fontSize: 24, fontWeight: 900, color: priceColor }}>{fmt(itemModal.price)}</span>
-                  )}
+                  {(() => {
+                    const basePrice = itemModal.promoPrice || itemModal.price
+                    const variantDelta = modalVariant ? (modalVariant.priceDelta || 0) : 0
+                    const modifiersDelta = modalModifiers.reduce((s, m) => s + (m.priceDelta || 0), 0)
+                    const livePrice = basePrice + variantDelta + modifiersDelta
+                    if (itemModal.promoPrice && !modalVariant && modalModifiers.length === 0) {
+                      return (
+                        <>
+                          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', marginRight: 8 }}>{fmt(itemModal.price)}</span>
+                          <span style={{ fontSize: 24, fontWeight: 900, color: '#EF4444' }}>{fmt(itemModal.promoPrice)}</span>
+                        </>
+                      )
+                    }
+                    return <span style={{ fontSize: 24, fontWeight: 900, color: priceColor }}>{fmt(livePrice)}</span>
+                  })()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: qtyBg, color: qtyColor, fontSize: 20, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
@@ -1629,18 +2076,76 @@ export default function App() {
               </div>
             </div>
 
-            {/* Add to Cart button */}
-            {shopOpen && itemModal.available && (
-              <div style={{ padding: '16px 12px 32px' }}>
-                <button
-                  style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: isCustomAccent ? accent : '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                  onClick={() => { addToCart(itemModal, modalQty); setItemModal(null) }}
-                >
-                  {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>{t.addToCart || 'Add to Cart'} &middot; {fmt((itemModal.promoPrice || itemModal.price) * modalQty)}</span>
-                </button>
+            {/* Variants picker — required choice if item has variants */}
+            {itemModal.variants && itemModal.variants.length > 0 && (
+              <div style={{ padding: '0 14px 12px' }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Size · choose one</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {itemModal.variants.map(v => {
+                    const isActive = modalVariant && modalVariant.id === v.id
+                    return (
+                      <button key={v.id} onClick={() => setModalVariant(v)} style={{
+                        flex: '1 1 calc(50% - 4px)', minWidth: 100, padding: '10px 12px',
+                        borderRadius: 12, border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                        background: isActive ? (isCustomAccent ? accent : 'rgba(255,255,255,0.18)') : 'rgba(255,255,255,0.04)',
+                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      }}>
+                        <span>{v.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.85 }}>{v.priceDelta > 0 ? `+${fmt(v.priceDelta)}` : v.priceDelta < 0 ? fmt(v.priceDelta) : 'base'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
+
+            {/* Modifiers — optional multi-select */}
+            {itemModal.modifiers && itemModal.modifiers.length > 0 && (
+              <div style={{ padding: '0 14px 12px' }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Add-ons · optional</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {itemModal.modifiers.map(m => {
+                    const isChecked = modalModifiers.some(x => x.id === m.id)
+                    return (
+                      <button key={m.id} onClick={() => setModalModifiers(p => isChecked ? p.filter(x => x.id !== m.id) : [...p, m])} style={{
+                        padding: '10px 12px', borderRadius: 12,
+                        border: '1px solid ' + (isChecked ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'),
+                        background: isChecked ? (isCustomAccent ? `${accent}30` : 'rgba(255,255,255,0.12)') : 'rgba(255,255,255,0.04)',
+                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)', background: isChecked ? (isCustomAccent ? accent : '#fff') : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: isCustomAccent ? '#fff' : '#000', fontWeight: 900 }}>{isChecked && '✓'}</span>
+                          {m.name}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: m.priceDelta > 0 ? '#FACC15' : 'rgba(255,255,255,0.5)' }}>{m.priceDelta > 0 ? `+${fmt(m.priceDelta)}` : m.priceDelta < 0 ? fmt(m.priceDelta) : 'free'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add to Cart button */}
+            {shopOpen && itemModal.available && (() => {
+              const basePrice = itemModal.promoPrice || itemModal.price
+              const variantDelta = modalVariant ? (modalVariant.priceDelta || 0) : 0
+              const modifiersDelta = modalModifiers.reduce((s, m) => s + (m.priceDelta || 0), 0)
+              const unitPrice = basePrice + variantDelta + modifiersDelta
+              const totalPriceForBtn = unitPrice * modalQty
+              return (
+                <div style={{ padding: '16px 12px 32px' }}>
+                  <button
+                    style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: isCustomAccent ? accent : '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                    onClick={() => { addToCart(itemModal, modalQty, modalVariant, modalModifiers); setItemModal(null) }}
+                  >
+                    {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                    <span style={{ position: 'relative', zIndex: 1 }}>{t.addToCart || 'Add to Cart'} &middot; {fmt(totalPriceForBtn)}</span>
+                  </button>
+                </div>
+              )
+            })()}
           </div>
             )
           })()}
@@ -2770,14 +3275,37 @@ export default function App() {
               {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Category</label>
-                  <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
-                  </select>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Category</span>
+                    <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                    {categoryChips.map(c => {
+                      const isActive = formCategory === c
+                      return (
+                        <button key={c} type="button" onClick={() => setFormCategory(c)} style={{
+                          background: isActive ? (isCustomAccent ? accent : 'rgba(255,255,255,0.18)') : 'rgba(255,255,255,0.06)',
+                          border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)'),
+                          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                          padding: '6px 10px', borderRadius: 14, minHeight: 30,
+                        }}>{c}</button>
+                      )
+                    })}
+                    <input
+                      placeholder="+ Add custom"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                          setFormCategory(e.currentTarget.value.trim())
+                          e.currentTarget.value = ''
+                        }
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
+                        color: '#fff', fontSize: 12, padding: '6px 10px', borderRadius: 14,
+                        outline: 'none', minWidth: 100, fontWeight: 500,
+                      }}
+                    />
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
@@ -2830,6 +3358,9 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            {/* Progressive-disclosure optional details */}
+            {renderItemOptionalFields()}
 
             {/* Buttons */}
             <div style={{ padding: '16px 14px 28px', display: 'flex', gap: 10 }}>
@@ -2985,6 +3516,9 @@ export default function App() {
                 onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
               />
             </div>
+
+            {/* Progressive-disclosure optional details */}
+            {renderItemOptionalFields()}
 
             {/* Add button — sticky bottom */}
             <div style={{ padding: '16px 14px 28px' }}>

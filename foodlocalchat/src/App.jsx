@@ -398,17 +398,18 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
   const scrollRef = useRef(null)
+  const isDemoConv = conversation?.id && String(conversation.id).startsWith('demo-')
 
-  // Subscribe to message inserts for this conversation
+  // Subscribe to message inserts for this conversation — skip in demo (no real Supabase row)
   useEffect(() => {
-    if (!conversation?.id) return
+    if (!conversation?.id || isDemoConv) return
     const unsub = subscribeToMessages(conversation.id, (msg) => {
       setMessages((prev) => prev.find(m => m.id === msg.id) ? prev : [...prev, msg])
     })
     // Mark customer's unread cleared when they view
     clearCustomerUnread(conversation.id)
     return unsub
-  }, [conversation?.id])
+  }, [conversation?.id, isDemoConv])
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -429,6 +430,15 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
     const optimistic = { id: 'tmp-' + Date.now(), conversation_id: conversation.id, sender_role: 'customer', body, created_at: new Date().toISOString() }
     setMessages((prev) => [...prev, optimistic])
     setDraft('')
+    // Demo mode: skip Supabase, simulate owner reply after 1.5s
+    if (isDemoConv) {
+      setTimeout(() => {
+        const reply = { id: 'demo-msg-' + Date.now(), conversation_id: conversation.id, sender_role: 'vendor', body: "Got it 👍 We'll handle that. Let me know if you need anything else!", created_at: new Date().toISOString() }
+        setMessages((prev) => [...prev, reply])
+      }, 1500)
+      setSending(false)
+      return
+    }
     const res = await sendChatText({ conversationId: conversation.id, senderRole: 'customer', body })
     setSending(false)
     if (res.error) {
@@ -1235,7 +1245,7 @@ export default function App() {
 
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
-    if (!vendorId) { setChatError('Vendor not set'); return }
+    if (!vendorId && !isDemo) { setChatError('Vendor not set'); return }
 
     const orderPayload = {
       orderNumber: `${initials}-${orderNum}`,
@@ -1268,6 +1278,21 @@ export default function App() {
     const summaryBody = `New order #${initials}-${orderNum}: ${summaryItems} · ${fmt(grandTotal)}${note ? ` · Note: ${note}` : ''}`
 
     setChatSending(true)
+    if (isDemo) {
+      // Demo mode: fake the conversation locally so customer sees the chat panel without Supabase
+      const fakeConvId = 'demo-conv-' + Date.now()
+      const nowIso = new Date().toISOString()
+      const fakeConv = { id: fakeConvId, vendor_id: 'demo', customer_phone: cleanPhone, customer_name: custName || 'Customer', created_at: nowIso }
+      const fakeMessage = { id: 'demo-msg-' + Date.now(), conversation_id: fakeConvId, sender_role: 'customer', body: summaryBody, created_at: nowIso }
+      const ownerAck = { id: 'demo-msg-' + (Date.now() + 1), conversation_id: fakeConvId, sender_role: 'vendor', body: `Thanks ${custName || 'there'}! We received your order #${initials}-${orderNum}. We'll prep it now — about ${maxPrep || 15} minutes. We'll ping you here when it's ready.`, created_at: new Date(Date.now() + 1500).toISOString() }
+      setChatConversation(fakeConv)
+      setChatMessages([fakeMessage])
+      // After 1.5s, simulate the vendor confirming the order so the user sees a 2-message thread
+      setTimeout(() => setChatMessages(prev => [...prev, ownerAck]), 1500)
+      setChatSending(false)
+      setOrderDone(true)
+      return
+    }
     const res = await sendCustomerOrder({
       vendorId,
       customerPhone: cleanPhone,
