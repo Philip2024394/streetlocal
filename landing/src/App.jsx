@@ -1170,6 +1170,10 @@ const THEME_INDEX = [
   { id: 'tourguide', label: 'Tour Guide', app: 'services', accent: '#16A085', keywords: ['tour guide', 'local guide', 'tour operator', 'pemandu wisata', 'city tour'] },
   { id: 'carrent', label: 'Car Rental', app: 'services', accent: '#34495E', keywords: ['car rental', 'sewa mobil', 'car hire', 'rental mobil', 'self drive'] },
   { id: 'wedding', label: 'Wedding Clothes', app: 'services', accent: '#FFD600', keywords: ['wedding', 'wedding dress', 'bridal', 'tuxedo', 'baju pengantin', 'wedding suit'] },
+  { id: 'barber', label: 'Barber Shop', app: 'services', accent: '#1a1a1a', keywords: ['barber', 'barber shop', 'mens haircut', 'pangkas rambut', 'tukang cukur'] },
+  { id: 'hairsalon', label: 'Hair Salon', app: 'services', accent: '#FF69B4', keywords: ['hair salon', 'hairdresser', 'hair styling', 'salon rambut', 'coloring', 'highlights'] },
+  { id: 'nailart', label: 'Nail Art', app: 'services', accent: '#E91E63', keywords: ['nail art', 'manicure', 'pedicure', 'nail salon', 'kuteks', 'gel nail'] },
+  { id: 'cardriver', label: 'Car Driver', app: 'services', accent: '#2C3E50', keywords: ['car driver', 'private driver', 'chauffeur', 'sopir pribadi', 'driver hire'] },
 ]
 
 // Return THEME_INDEX entries whose label/id/keywords contain the query.
