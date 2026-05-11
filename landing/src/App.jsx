@@ -484,6 +484,37 @@ function getCategories(t, cp) {
         },
       ],
     },
+    {
+      id: 'services',
+      name: t.servicesCategory || 'Local Service Apps',
+      icon: '🛠️',
+      description: t.servicesCategoryDesc || 'Offer any service — cleaning, plumbing, tutoring, your own booking app',
+      bannerImage: 'https://image.pollinations.ai/prompt/Professional%20service%20business%20workers%20uniform%20dark%20moody%20background?width=480&height=300&nologo=true',
+      apps: [
+        {
+          id: 'serviceslocal',
+          name: t.servicesName || 'ServicesLocal',
+          tier: t.servicesTier || 'Software 4',
+          price: cp ? `${cp.currency_symbol} ${cp.basic_monthly.toLocaleString()}` : 'Rp 35.000',
+          yearlyPrice: cp ? `${cp.currency_symbol} ${cp.basic_yearly.toLocaleString()}` : 'Rp 456.000',
+          tagline: t.servicesTagline || 'Run your service business — cleaners, plumbers, tutors, mechanics, salons',
+          description: t.servicesDesc || '',
+          features: [
+            { cat: 'Services & Booking', items: ['Service listings with photos & descriptions', 'Category management', 'Promo pricing with strikethrough display', 'Availability toggle', 'Service variants & options', 'Customer notes & special requests', 'WhatsApp booking — zero commission'] },
+            { cat: 'Design & Branding', items: ['Your own branded service app', '28 theme backgrounds (cleaning, plumbing, salon, tattoo, etc.)', 'Custom logo & business branding', 'Landing page with city & country display', 'Custom accent colors & theme editor', 'Button shape & style customization', 'Splash screen with logo'] },
+            { cat: 'Booking & Location', items: ['GPS-based callout estimates', 'City-based service rates', 'Multi-currency support (16 countries)', 'Configurable service area & pricing', 'Free callout threshold setting', 'In-shop / on-site service modes'] },
+            { cat: 'Business Management', items: ['Open / closed toggle — pause new bookings instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Business bio & social media links', 'QR code generator for your stall', 'QRIS payment QR code', 'Customer directory & booking history'] },
+            { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
+            { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync'] },
+          ],
+          screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
+          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5183/services/whatsapp/' : '/services/whatsapp/') + '?demo=true&page=' + p),
+          url: '/services/whatsapp/',
+          color: '#16A085',
+          checkoutChooser: 'services',
+        },
+      ],
+    },
   ]
 }
 
@@ -1097,6 +1128,35 @@ const THEME_INDEX = [
   { id: 'herbal', label: 'Herbal & Jamu', app: 'products', accent: '#4d8a0f', keywords: ['herbal', 'jamu', 'natural medicine', 'tradisional'] },
   { id: 'digital', label: 'Digital Products', app: 'products', accent: '#8E44AD', keywords: ['digital', 'software', 'online', 'gift card'] },
   { id: 'general', label: 'General Store', app: 'products', accent: '#4A90D9', keywords: ['general', 'mixed', 'variety', 'toko'] },
+  // Service themes — open the services/whatsapp demo
+  { id: 'cleaning', label: 'Cleaning', app: 'services', accent: '#3498DB', keywords: ['cleaning', 'cleaner', 'house cleaning', 'office cleaning', 'pembersih', 'jasa kebersihan'] },
+  { id: 'plumbing', label: 'Plumbing', app: 'services', accent: '#1B6BA8', keywords: ['plumbing', 'plumber', 'pipes', 'bathroom', 'tukang ledeng'] },
+  { id: 'electrician', label: 'Electrician', app: 'services', accent: '#F1C40F', keywords: ['electrician', 'electrical', 'wiring', 'tukang listrik'] },
+  { id: 'aircon', label: 'AC Service', app: 'services', accent: '#3498DB', keywords: ['ac', 'air conditioning', 'aircon', 'ac repair', 'service ac'] },
+  { id: 'carpenter', label: 'Carpenter', app: 'services', accent: '#8B4513', keywords: ['carpenter', 'woodwork', 'tukang kayu', 'furniture maker'] },
+  { id: 'painter', label: 'Painter', app: 'services', accent: '#2ECC71', keywords: ['painter', 'house painting', 'wall painting', 'tukang cat'] },
+  { id: 'gardening', label: 'Gardening', app: 'services', accent: '#27AE60', keywords: ['gardening', 'landscaping', 'gardener', 'tukang kebun'] },
+  { id: 'locksmith', label: 'Locksmith', app: 'services', accent: '#7F8C8D', keywords: ['locksmith', 'lock repair', 'key service', 'tukang kunci'] },
+  { id: 'pest', label: 'Pest Control', app: 'services', accent: '#1ABC9C', keywords: ['pest control', 'exterminator', 'fumigasi', 'jasa basmi hama'] },
+  { id: 'massage', label: 'Massage', app: 'services', accent: '#E91E63', keywords: ['massage', 'pijat', 'spa', 'therapy', 'reflexology'] },
+  { id: 'salon', label: 'Salon', app: 'services', accent: '#FF69B4', keywords: ['salon', 'hair', 'beauty', 'haircut', 'salon kecantikan'] },
+  { id: 'tattoo', label: 'Tattoo', app: 'services', accent: '#1a1a1a', keywords: ['tattoo', 'tattoo studio', 'body art', 'tato'] },
+  { id: 'yoga', label: 'Yoga Trainer', app: 'services', accent: '#8E44AD', keywords: ['yoga', 'fitness', 'personal trainer', 'yoga trainer', 'gym'] },
+  { id: 'mechanic', label: 'Mechanic', app: 'services', accent: '#dc2626', keywords: ['mechanic', 'bengkel', 'auto repair', 'car service', 'motor service'] },
+  { id: 'carwash', label: 'Car Wash', app: 'services', accent: '#2980B9', keywords: ['car wash', 'auto detailing', 'cuci mobil', 'detailing'] },
+  { id: 'driving', label: 'Driving Instructor', app: 'services', accent: '#FFD600', keywords: ['driving instructor', 'driving school', 'driving lessons', 'kursus mengemudi'] },
+  { id: 'photographer', label: 'Photographer', app: 'services', accent: '#1a1a1a', keywords: ['photographer', 'photography', 'wedding photo', 'photo studio', 'fotografer'] },
+  { id: 'tailor', label: 'Tailor', app: 'services', accent: '#8E44AD', keywords: ['tailor', 'sewing', 'alterations', 'penjahit', 'jahit'] },
+  { id: 'petgroom', label: 'Pet Grooming', app: 'services', accent: '#F39C12', keywords: ['pet grooming', 'dog grooming', 'pet care', 'salon hewan'] },
+  { id: 'tutor', label: 'Tutor', app: 'services', accent: '#9B59B6', keywords: ['tutor', 'tutoring', 'les privat', 'education', 'private teacher'] },
+  { id: 'music', label: 'Music Lessons', app: 'services', accent: '#E74C3C', keywords: ['music lessons', 'piano', 'guitar', 'music teacher', 'les musik'] },
+  { id: 'webdev', label: 'Web Developer', app: 'services', accent: '#3498DB', keywords: ['web developer', 'freelance', 'it service', 'programming', 'jasa website'] },
+  { id: 'translator', label: 'Translator', app: 'services', accent: '#16A085', keywords: ['translator', 'translation', 'interpreter', 'penerjemah'] },
+  { id: 'accountant', label: 'Accountant', app: 'services', accent: '#34495E', keywords: ['accountant', 'bookkeeping', 'tax', 'akuntan', 'pembukuan'] },
+  { id: 'lawyer', label: 'Lawyer', app: 'services', accent: '#2C3E50', keywords: ['lawyer', 'legal', 'notary', 'pengacara', 'jasa hukum'] },
+  { id: 'event', label: 'Event Planning', app: 'services', accent: '#E91E63', keywords: ['event planning', 'wedding', 'event organizer', 'eo'] },
+  { id: 'childcare', label: 'Childcare', app: 'services', accent: '#FF69B4', keywords: ['childcare', 'babysitter', 'nanny', 'pengasuh anak', 'baby sitter'] },
+  { id: 'courier', label: 'Courier', app: 'services', accent: '#FF6B35', keywords: ['courier', 'delivery', 'kurir', 'jasa antar', 'package delivery'] },
 ]
 
 // Return THEME_INDEX entries whose label/id/keywords contain the query.
@@ -1115,6 +1175,9 @@ function themeDemoUrl(theme) {
   const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   if (theme.app === 'food') {
     return (isLocal ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=landing&theme=' + theme.id
+  }
+  if (theme.app === 'services') {
+    return (isLocal ? 'http://localhost:5183/services/whatsapp/' : '/services/whatsapp/') + '?demo=true&page=landing&theme=' + theme.id
   }
   return (isLocal ? 'http://localhost:5178/products/local/' : '/products/local/') + '?demo=true&page=landing&theme=' + theme.id
 }
@@ -4997,6 +5060,7 @@ export default function App() {
         {(() => {
           const foodCat = CATEGORIES.find(c => c.id === 'food')
           const productsCat = CATEGORIES.find(c => c.id === 'products')
+          const servicesCat = CATEGORIES.find(c => c.id === 'services')
           const enterLabel = locale === 'id' || locale === 'ms' ? 'Masuk' : locale === 'vi' ? 'Vào' : locale === 'th' ? 'เข้า' : locale === 'fr' ? 'Entrer' : locale === 'de' ? 'Eintreten' : locale === 'es' ? 'Entrar' : locale === 'zh' ? '进入' : locale === 'ar' ? 'دخول' : 'Enter'
           return (
             <>
@@ -5049,6 +5113,34 @@ export default function App() {
                     />
                     <div style={{ ...styles.foodBannerBottom, background: '#0d1b2a' }}>
                       <button style={{ ...styles.foodBannerEnterBtn, background: '#4A90D9', color: '#fff' }}>
+                        {enterLabel} →
+                      </button>
+                    </div>
+                  </div>
+                </FadeIn>
+              )}
+
+              {/* ServicesLocal — banner card (third category) */}
+              {servicesCat && (
+                <FadeIn delay={0.5}>
+                  <div
+                    style={{ ...styles.foodBannerCard, marginTop: 16 }}
+                    onClick={() => setSelectedCategory(servicesCat)}
+                  >
+                    <div style={{ ...styles.foodBannerHeader, background: '#0e2a26' }}>
+                      <span style={styles.foodBannerHeaderText}>
+                        ServicesLocal<br />
+                        <span style={{ fontSize: 14 }}>Offer any service — your own booking app</span>
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#16A085' }}>{servicesCat.apps[0]?.price || 'Rp 35.000'}</span>
+                    </div>
+                    <img
+                      src={servicesCat.bannerImage}
+                      alt="ServicesLocal"
+                      style={styles.foodBannerImage}
+                    />
+                    <div style={{ ...styles.foodBannerBottom, background: '#0e2a26' }}>
+                      <button style={{ ...styles.foodBannerEnterBtn, background: '#16A085', color: '#fff' }}>
                         {enterLabel} →
                       </button>
                     </div>

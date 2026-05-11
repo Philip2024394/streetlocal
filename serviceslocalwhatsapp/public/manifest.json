@@ -1,0 +1,16 @@
+{
+  "name": "StreetLocal — Services Local WhatsApp",
+  "short_name": "ServicesLocalWA",
+  "start_url": "/services/whatsapp/",
+  "scope": "/services/whatsapp/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/services/whatsapp/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

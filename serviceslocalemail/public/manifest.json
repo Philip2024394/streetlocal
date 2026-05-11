@@ -1,0 +1,16 @@
+{
+  "name": "StreetLocal — ServicesLocal Email",
+  "short_name": "ServicesLocalEmail",
+  "start_url": "/services/email/",
+  "scope": "/services/email/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/services/email/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
