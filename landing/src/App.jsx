@@ -1089,6 +1089,7 @@ const THEME_INDEX = [
   { id: 'donut', label: 'Donuts', app: 'food', accent: '#DB2777', keywords: ['donut', 'doughnut', 'dessert'] },
   { id: 'hotdog', label: 'Hot Dogs', app: 'food', accent: '#dc2626', keywords: ['hot dog', 'hotdog', 'sausage'] },
   { id: 'pizza', label: 'Pizza', app: 'food', accent: '#dc2626', keywords: ['pizza', 'italian'] },
+  { id: 'vegetables', label: 'Vegetables', app: 'food', accent: '#27AE60', keywords: ['vegetables', 'fresh produce', 'greengrocer', 'sayur', 'sayuran', 'farm fresh', 'organic'] },
   { id: 'sweetbread', label: 'Sweet Bread', app: 'food', accent: '#D4A373', keywords: ['bread', 'roti', 'sweet bread', 'bakery', 'roti manis', 'sweet bun', 'bun'] },
   // Product themes — open the products/local demo
   { id: 'clothing', label: 'Clothing', app: 'products', accent: '#4A90D9', keywords: ['clothes', 'clothing', 'fashion', 'apparel'] },
@@ -1128,6 +1129,10 @@ const THEME_INDEX = [
   { id: 'herbal', label: 'Herbal & Jamu', app: 'products', accent: '#4d8a0f', keywords: ['herbal', 'jamu', 'natural medicine', 'tradisional'] },
   { id: 'digital', label: 'Digital Products', app: 'products', accent: '#8E44AD', keywords: ['digital', 'software', 'online', 'gift card'] },
   { id: 'general', label: 'General Store', app: 'products', accent: '#4A90D9', keywords: ['general', 'mixed', 'variety', 'toko'] },
+  { id: 'tradfurniture', label: 'Traditional Furniture', app: 'products', accent: '#6F4E37', keywords: ['traditional furniture', 'antique furniture', 'wooden furniture', 'heritage furniture', 'mebel tradisional'] },
+  { id: 'carvedwood', label: 'Carved Wood', app: 'products', accent: '#8B4513', keywords: ['carved wood', 'wood carving', 'woodwork', 'ukir kayu', 'ukiran'] },
+  { id: 'secondhand', label: 'Second Hand', app: 'products', accent: '#5D6D7E', keywords: ['second hand', 'thrift', 'preloved', 'used', 'bekas', 'loak'] },
+  { id: 'womensclothes', label: "Women's Clothes", app: 'products', accent: '#E91E63', keywords: ["women's clothes", 'womenswear', 'dress', 'baju wanita', 'pakaian wanita', 'gaun'] },
   // Service themes — open the services/whatsapp demo
   { id: 'cleaning', label: 'Cleaning', app: 'services', accent: '#3498DB', keywords: ['cleaning', 'cleaner', 'house cleaning', 'office cleaning', 'pembersih', 'jasa kebersihan'] },
   { id: 'plumbing', label: 'Plumbing', app: 'services', accent: '#1B6BA8', keywords: ['plumbing', 'plumber', 'pipes', 'bathroom', 'tukang ledeng'] },
@@ -1669,6 +1674,7 @@ export default function App() {
                   { id: 'donut', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png' },
                   { id: 'hotdog', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png' },
                   { id: 'pizza', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png' },
+                  { id: 'vegetables', label: 'Vegetables', accent: '#27AE60', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_46_34%20PM.png' },
                 ]
                 const renderCard = (theme, i) => (
                   <div key={`${theme.id}-${i}`} onClick={() => setPreviewTheme(theme)} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
@@ -1725,10 +1731,14 @@ export default function App() {
                   { id: 'beauty', label: 'Beauty', accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png' },
                   { id: 'cosmetics', label: 'Cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png' },
                   { id: 'perfume', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png' },
-                  { id: 'homedecor', label: 'Home Decor', accent: '#D4A373' },
+                  { id: 'homedecor', label: 'Home Decor', accent: '#D4A373', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_38_44%20PM.png' },
+                  { id: 'tradfurniture', label: 'Traditional Furniture', accent: '#6F4E37', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_43_17%20PM.png' },
                   { id: 'kitchenware', label: 'Kitchen', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png' },
                   { id: 'packaging', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png' },
-                  { id: 'handicraft', label: 'Handicrafts', accent: '#e8992c' },
+                  { id: 'handicraft', label: 'Handicrafts', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_40_27%20PM.png' },
+                  { id: 'carvedwood', label: 'Carved Wood', accent: '#8B4513', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_42_11%20PM.png' },
+                  { id: 'secondhand', label: 'Second Hand', accent: '#5D6D7E', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_44_25%20PM.png' },
+                  { id: 'womensclothes', label: "Women's Clothes", accent: '#E91E63', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_45_41%20PM.png' },
                   { id: 'jewelry', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png' },
                   { id: 'sports', label: 'Sports', accent: '#27AE60' },
                   { id: 'baby', label: 'Baby Clothes', accent: '#FF69B4', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-baby-clothes.png' },
@@ -3047,6 +3057,126 @@ export default function App() {
     )
   }
 
+  if (currentPage === 'checkoutChooser-services') {
+    const isDevHost = window.location.hostname === 'localhost'
+    const servicesCat = CATEGORIES.find(c => c.id === 'services')
+    const serviceslocalApp = servicesCat?.apps.find(a => a.id === 'serviceslocal')
+
+    const servicesWaApp = serviceslocalApp ? {
+      ...serviceslocalApp,
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By Whats App',
+    } : null
+
+    const servicesChatApp = serviceslocalApp ? {
+      ...serviceslocalApp,
+      id: 'serviceschat',
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By App Chat',
+      name: 'ServicesLocal',
+      tier: 'Software 4 — Chat',
+      price: 'Rp 50.000',
+      yearlyPrice: 'Rp 600.000',
+      tagline: 'Your WhatsApp stays private. Your team logs in to handle bookings together.',
+      description: 'Same ServicesLocal storefront. Bookings arrive in a private chat inside your app instead of going to your personal WhatsApp — your number stays private from customers. Invite your team: any staff member can install the app on their phone, log in, and pick up new bookings alongside you. Real-time sound and vibration alerts on every new booking so nobody misses one.',
+      liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (isDevHost ? 'http://localhost:5184/services/chat/' : '/services/chat/') + '?demo=true&page=' + p),
+      url: '/services/chat/',
+      color: '#1a1a1a',
+    } : null
+
+    const servicesEmailApp = serviceslocalApp ? {
+      ...serviceslocalApp,
+      id: 'servicesemail',
+      checkoutChooser: false,
+      checkoutLabel: 'Customers Order By Email',
+      name: 'ServicesLocal',
+      tier: 'Software 4 — Email',
+      price: 'Rp 75.000',
+      yearlyPrice: 'Rp 900.000',
+      tagline: 'Formal bookings, professional inbox flow — ideal for B2B and high-value services.',
+      description: 'Same ServicesLocal storefront. Customer bookings arrive as a clean, formatted HTML email in your business inbox — perfect for B2B, custom jobs, and high-value services that need a paper trail. Replies are threaded by email. Customers leave their email at checkout so you can quote, confirm, or follow up directly. No app login required to read bookings — they live in your normal email.',
+      liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (isDevHost ? 'http://localhost:5185/services/email/' : '/services/email/') + '?demo=true&page=' + p),
+      url: '/services/email/',
+      color: '#1a1a1a',
+    } : null
+
+    const cardBase = { background: '#fff', borderRadius: 18, padding: 18, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', gap: 10 }
+    const btnBase = { padding: '14px 20px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', minHeight: 44 }
+    return (
+      <div style={styles.page}>
+        <div style={styles.detailHeader}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal<span style={{ color: '#FFD600' }}>.live</span></div>
+            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Business at your finger tips</div>
+          </div>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png" alt="Home" onError={imgError('logo')} style={{ width: 42, height: 42, objectFit: 'contain' }} /></button>
+        </div>
+        <div style={{ padding: '24px 20px 60px', maxWidth: 720, margin: '0 auto' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 6, lineHeight: 1.2 }}>Select your preferred checkout system</h1>
+          <p style={{ fontSize: 13, color: '#666', marginBottom: 22, lineHeight: 1.5 }}>All three share the same ServicesLocal booking app. They differ only in how customer bookings reach you.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledddddccc-removebg-preview.png" alt="WhatsApp Checkout" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ServicesLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By Whats App</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#25D366', marginTop: 2 }}>Rp 35.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Bookings go straight to your WhatsApp. Familiar to your customers, zero learning curve. Best for everyday service work where chat and pricing happen on WhatsApp anyway.
+              </p>
+              <button
+                onClick={() => { if (!servicesWaApp) return; setCurrentPage(null); setSelectedApp(servicesWaApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#25D366', color: '#fff' }}
+              >Pick WhatsApp</button>
+            </div>
+
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🔔</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ServicesLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By App Chat</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginTop: 2 }}>Rp 50.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Your WhatsApp number stays private — customers never see it. Add your team: anyone you invite installs the app on their phone, logs in, and handles incoming bookings right beside you. Sound and vibration alerts on every new booking. Optionally show your WhatsApp on the Visit Us page.
+              </p>
+              <button
+                onClick={() => { if (!servicesChatApp) return; setCurrentPage(null); setSelectedApp(servicesChatApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#1a1a1a', color: '#FFD600' }}
+              >Pick Chat</button>
+            </div>
+
+            <div style={cardBase}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: '#16A085', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📧</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>ServicesLocal</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600, marginTop: 1 }}>Customers Order By Email</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#16A085', marginTop: 2 }}>Rp 75.000<span style={{ color: '#999', fontWeight: 600 }}> / month</span></div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.55, margin: 0 }}>
+                Customer bookings arrive as a clean, formatted HTML email in your business inbox — ideal for B2B, contract work, and high-value services that need a paper trail. Replies are threaded by email so the conversation lives where you already work. No app login required to read bookings.
+              </p>
+              <button
+                onClick={() => { if (!servicesEmailApp) return; setCurrentPage(null); setSelectedApp(servicesEmailApp); setDetailTab('details') }}
+                style={{ ...btnBase, background: '#16A085', color: '#fff' }}
+              >Pick Email</button>
+            </div>
+          </div>
+
+          <button onClick={() => setCurrentPage(null)} style={{ marginTop: 20, background: 'none', border: '1px solid #ddd', borderRadius: 12, padding: '10px 18px', fontSize: 13, color: '#666', cursor: 'pointer', minHeight: 44 }}>Back</button>
+        </div>
+      </div>
+    )
+  }
+
   /* ─── Sub Pages (About, FAQ, Services) ─── */
   if (currentPage) {
     return (
@@ -3442,6 +3572,7 @@ export default function App() {
               { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_49_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_48_16-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_45_26-pm.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_42_58%20PM.png?updatedAt=1778308994638'], isNew: false, popular: false, activations: 27 },
               { id: 'hotdog', ref: 'SL-019', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png', isNew: true, popular: false, activations: 5 },
               { id: 'pizza', ref: 'SL-020', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png', isNew: true, popular: false, activations: 3 },
+              { id: 'vegetables', ref: 'SL-021', label: 'Vegetables', accent: '#27AE60', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_46_34%20PM.png', isNew: true, popular: false, activations: 0 },
             ]
             const filtered = themeLibSearch ? allThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : allThemes
             const newThemes = filtered.filter(t => t.isNew)
@@ -3641,11 +3772,15 @@ export default function App() {
               { id: 'skincare', ref: 'PL-007', label: 'Beauty Products', accent: '#E91E90', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-beauty-products.png', isNew: false, popular: true, activations: 178 },
               { id: 'cosmetics', ref: 'PL-008', label: 'Cosmetics', accent: '#C0392B', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-cosmetics.png', isNew: false, popular: false, activations: 67 },
               { id: 'perfume', ref: 'PL-009', label: 'Perfume', accent: '#8E44AD', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-perfume.png', isNew: true, popular: false, activations: 19 },
-              { id: 'homedecor', ref: 'PL-010', label: 'Home Decor', accent: '#D4A373', isNew: false, popular: false, activations: 52 },
+              { id: 'homedecor', ref: 'PL-010', label: 'Home Decor', accent: '#D4A373', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_38_44%20PM.png', isNew: false, popular: false, activations: 52 },
+              { id: 'tradfurniture', ref: 'PL-029', label: 'Traditional Furniture', accent: '#6F4E37', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_43_17%20PM.png', isNew: true, popular: false, activations: 0 },
               { id: 'furniture', ref: 'PL-011', label: 'Furniture', accent: '#795548', isNew: true, popular: false, activations: 8 },
               { id: 'kitchenware', ref: 'PL-012', label: 'Kitchenware', accent: '#FF6B35', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511015514.png', isNew: false, popular: false, activations: 34 },
               { id: 'packaging', ref: 'PL-013', label: 'Packaging', accent: '#795548', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-packaging.png', isNew: true, popular: false, activations: 14 },
-              { id: 'handicraft', ref: 'PL-014', label: 'Handicrafts', accent: '#e8992c', isNew: false, popular: false, activations: 41 },
+              { id: 'handicraft', ref: 'PL-014', label: 'Handicrafts', accent: '#e8992c', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_40_27%20PM.png', isNew: false, popular: false, activations: 41 },
+              { id: 'carvedwood', ref: 'PL-030', label: 'Carved Wood', accent: '#8B4513', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_42_11%20PM.png', isNew: true, popular: false, activations: 0 },
+              { id: 'secondhand', ref: 'PL-031', label: 'Second Hand', accent: '#5D6D7E', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_44_25%20PM.png', isNew: true, popular: false, activations: 0 },
+              { id: 'womensclothes', ref: 'PL-032', label: "Women's Clothes", accent: '#E91E63', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_45_41%20PM.png', isNew: true, popular: false, activations: 0 },
               { id: 'jewelry', ref: 'PL-015', label: 'Jewelry', accent: '#FFD700', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/theme-jewelry-v2.png'], isNew: false, popular: false, activations: 56 },
               { id: 'candles', ref: 'PL-016', label: 'Candles', accent: '#e8b92c', isNew: true, popular: false, activations: 12 },
               { id: 'sports', ref: 'PL-017', label: 'Sports', accent: '#27AE60', isNew: false, popular: false, activations: 38 },
