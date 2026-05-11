@@ -5284,89 +5284,42 @@ export default function App() {
           const enterLabel = locale === 'id' || locale === 'ms' ? 'Masuk' : locale === 'vi' ? 'Vào' : locale === 'th' ? 'เข้า' : locale === 'fr' ? 'Entrer' : locale === 'de' ? 'Eintreten' : locale === 'es' ? 'Entrar' : locale === 'zh' ? '进入' : locale === 'ar' ? 'دخول' : 'Enter'
           return (
             <>
-              {foodCat && (
-                <FadeIn delay={0.3}>
-                  <div
-                    style={styles.foodBannerCard}
-                    onClick={() => setSelectedCategory(foodCat)}
-                  >
-                    <div style={styles.foodBannerHeader}>
-                      <span style={styles.foodBannerHeaderText}>
-                        FoodLocal<br />
-                        <span style={{ fontSize: 14 }}>From street carts to restaurants</span>
-                      </span>
-                      <style>{`@keyframes danceBounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-4px) rotate(-3deg); } 40% { transform: translateY(0) rotate(2deg); } 60% { transform: translateY(-3px) rotate(-2deg); } 80% { transform: translateY(0) rotate(1deg); } }`}</style>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', display: 'inline-block', animation: 'danceBounce 1.5s ease-in-out infinite', textShadow: '0 0 8px rgba(255,214,0,0.4)' }}>{foodCat.apps[0]?.price || 'Rp 35.000'}</span>
+              <style>{`@keyframes danceBounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-4px) rotate(-3deg); } 40% { transform: translateY(0) rotate(2deg); } 60% { transform: translateY(-3px) rotate(-2deg); } 80% { transform: translateY(0) rotate(1deg); } }`}</style>
+              {(() => {
+                // Three identical banners — black header, yellow dancing price,
+                // single-line title + small slogan, yellow View Apps button.
+                const banners = [
+                  { cat: foodCat, title: 'FoodLocal Apps', slogan: 'From street carts to restaurants', alt: 'FoodLocal', delay: 0.3 },
+                  { cat: servicesCat, title: 'ServicesLocal Apps', slogan: 'Offer any service — your own booking app', alt: 'ServicesLocal', delay: 0.4 },
+                  { cat: productsCat, title: 'ProductsLocal Apps', slogan: 'Sell any product — your own store', alt: 'ProductsLocal', delay: 0.5 },
+                ]
+                return banners.filter(b => b.cat).map((b, i) => (
+                  <FadeIn key={b.alt} delay={b.delay}>
+                    <div
+                      style={{ ...styles.foodBannerCard, marginTop: i === 0 ? 0 : 16 }}
+                      onClick={() => setSelectedCategory(b.cat)}
+                    >
+                      <div style={{ ...styles.foodBannerHeader, background: '#1a1a1a' }}>
+                        <span style={{ ...styles.foodBannerHeaderText, color: '#fff', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span style={{ fontSize: 18, fontWeight: 900, lineHeight: 1.1, whiteSpace: 'nowrap' }}>{b.title}</span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{b.slogan}</span>
+                        </span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#FFD600', display: 'inline-block', animation: 'danceBounce 1.5s ease-in-out infinite', textShadow: '0 0 8px rgba(255,214,0,0.4)', flexShrink: 0 }}>{b.cat.apps[0]?.price || 'Rp 35.000'}</span>
+                      </div>
+                      <img
+                        src={b.cat.bannerImage}
+                        alt={b.alt}
+                        style={styles.foodBannerImage}
+                      />
+                      <div style={{ ...styles.foodBannerBottom, background: '#1a1a1a' }}>
+                        <button style={{ ...styles.foodBannerEnterBtn, background: '#FFD600', color: '#1a1a1a' }}>
+                          View Apps →
+                        </button>
+                      </div>
                     </div>
-                    <img
-                      src={foodCat.bannerImage}
-                      alt="FoodLocal"
-                      style={styles.foodBannerImage}
-                    />
-                    <div style={styles.foodBannerBottom}>
-                      <button style={styles.foodBannerEnterBtn}>
-                        {enterLabel} →
-                      </button>
-                    </div>
-                  </div>
-                </FadeIn>
-              )}
-
-              {/* ProductsLocal — banner card (separate category) */}
-              {productsCat && (
-                <FadeIn delay={0.4}>
-                  <div
-                    style={{ ...styles.foodBannerCard, marginTop: 16 }}
-                    onClick={() => setSelectedCategory(productsCat)}
-                  >
-                    <div style={{ ...styles.foodBannerHeader, background: '#0d1b2a' }}>
-                      <span style={styles.foodBannerHeaderText}>
-                        ProductsLocal<br />
-                        <span style={{ fontSize: 14 }}>Sell any product — your own store</span>
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#4A90D9' }}>{productsCat.apps[0]?.price || 'Rp 35.000'}</span>
-                    </div>
-                    <img
-                      src={productsCat.bannerImage}
-                      alt="ProductsLocal"
-                      style={styles.foodBannerImage}
-                    />
-                    <div style={{ ...styles.foodBannerBottom, background: '#0d1b2a' }}>
-                      <button style={{ ...styles.foodBannerEnterBtn, background: '#4A90D9', color: '#fff' }}>
-                        {enterLabel} →
-                      </button>
-                    </div>
-                  </div>
-                </FadeIn>
-              )}
-
-              {/* ServicesLocal — banner card (third category) */}
-              {servicesCat && (
-                <FadeIn delay={0.5}>
-                  <div
-                    style={{ ...styles.foodBannerCard, marginTop: 16 }}
-                    onClick={() => setSelectedCategory(servicesCat)}
-                  >
-                    <div style={{ ...styles.foodBannerHeader, background: '#0e2a26' }}>
-                      <span style={styles.foodBannerHeaderText}>
-                        ServicesLocal<br />
-                        <span style={{ fontSize: 14 }}>Offer any service — your own booking app</span>
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#16A085' }}>{servicesCat.apps[0]?.price || 'Rp 35.000'}</span>
-                    </div>
-                    <img
-                      src={servicesCat.bannerImage}
-                      alt="ServicesLocal"
-                      style={styles.foodBannerImage}
-                    />
-                    <div style={{ ...styles.foodBannerBottom, background: '#0e2a26' }}>
-                      <button style={{ ...styles.foodBannerEnterBtn, background: '#16A085', color: '#fff' }}>
-                        {enterLabel} →
-                      </button>
-                    </div>
-                  </div>
-                </FadeIn>
-              )}
+                  </FadeIn>
+                ))
+              })()}
             </>
           )
         })()}
