@@ -1390,6 +1390,60 @@ export default function App() {
     return () => { cancelled = true }
   }, [paymentOpen, userAccount?.phone, selectedApp?.id, billingCycle])
 
+  // SEO: set document.title + meta description per landing page
+  useEffect(() => {
+    const seoMeta = {
+      'no-commission': {
+        title: 'Stop Paying 25% Commission to GoFood | StreetLocal',
+        desc: 'Your own branded ordering app for Rp 35.000/month. Zero commission, ever. Stop paying GoFood, GrabFood, and ShopeeFood — own your customers.',
+      },
+      'warung-app': {
+        title: 'Aplikasi Warung Online — Siap 24 Jam | StreetLocal',
+        desc: 'Buat aplikasi warung kamu sendiri. Pelanggan order via WhatsApp. Tanpa komisi. Mulai Rp 35.000/bulan. Cocok untuk warung makanan, warkop, dan kedai kopi.',
+      },
+      'online-store': {
+        title: 'Buka Toko Online Sendiri Tanpa Marketplace | StreetLocal',
+        desc: 'ProductsLocal — branded online store untuk bisnis Indonesia. Pelanggan order via WhatsApp. Rp 35.000/bulan. Tidak perlu Tokopedia atau Shopee.',
+      },
+      'whatsapp-booking': {
+        title: 'Aplikasi Booking via WhatsApp untuk Salon & Jasa | StreetLocal',
+        desc: 'ServicesLocal — aplikasi booking untuk salon, cleaning, tukang, dan jasa lainnya. Pelanggan booking langsung ke WhatsApp kamu. Rp 35.000/bulan.',
+      },
+    }
+    const m = seoMeta[currentPage]
+    if (!m) return
+    const prevTitle = document.title
+    document.title = m.title
+    let metaDesc = document.querySelector('meta[name="description"]')
+    const prevDesc = metaDesc ? metaDesc.getAttribute('content') : null
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.setAttribute('name', 'description')
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.setAttribute('content', m.desc)
+    // og:image
+    let ogImage = document.querySelector('meta[property="og:image"]')
+    if (!ogImage) {
+      ogImage = document.createElement('meta')
+      ogImage.setAttribute('property', 'og:image')
+      document.head.appendChild(ogImage)
+    }
+    ogImage.setAttribute('content', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png')
+    // og:title
+    let ogTitle = document.querySelector('meta[property="og:title"]')
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta')
+      ogTitle.setAttribute('property', 'og:title')
+      document.head.appendChild(ogTitle)
+    }
+    ogTitle.setAttribute('content', m.title)
+    return () => {
+      document.title = prevTitle
+      if (metaDesc && prevDesc != null) metaDesc.setAttribute('content', prevDesc)
+    }
+  }, [currentPage])
+
   // Local search — match against menu item tags, return best matching item image
   useEffect(() => {
     if (!searchActive) { setSearchResults([]); return }
@@ -1583,6 +1637,19 @@ export default function App() {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Product</div>
           {[{ label: 'Domains', page: 'domains' }, { label: 'Themes', page: 'themes' }, { label: 'Terms & Conditions', page: 'services' }, { label: 'Privacy Policy', page: 'privacy' }].map((link, i) => (
             <button key={i} onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(link.page) }} style={{ display: 'block', background: 'none', border: 'none', padding: '6px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontWeight: 500, textAlign: 'left' }}>{link.label}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>For Vendors</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+          {[
+            { label: 'Stop Paying Commission', page: 'no-commission' },
+            { label: 'Aplikasi Warung', page: 'warung-app' },
+            { label: 'Buka Toko Online', page: 'online-store' },
+            { label: 'Booking via WhatsApp', page: 'whatsapp-booking' },
+          ].map(link => (
+            <button key={link.page} onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage(link.page) }} style={{ display: 'block', background: 'none', border: 'none', padding: '6px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontWeight: 500, textAlign: 'left' }}>{link.label}</button>
           ))}
         </div>
       </div>
@@ -5003,6 +5070,311 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* ─── SEO Landing: No Commission ─── */}
+          {currentPage === 'no-commission' && (() => {
+            const jsonLd = {
+              '@context': 'https://schema.org',
+              '@type': 'Article',
+              headline: 'Stop Paying 25% Commission to GoFood. Own Your Customers.',
+              description: 'FoodLocal — Your own branded ordering app for Rp 35.000/month. Zero commission, ever.',
+              author: { '@type': 'Organization', name: 'StreetLocal' },
+              publisher: { '@type': 'Organization', name: 'StreetLocal', logo: { '@type': 'ImageObject', url: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddddvv-removebg-preview.png' } },
+              datePublished: '2026-05-11',
+              mainEntityOfPage: 'https://streetlocal.live/?p=no-commission',
+            }
+            const compareRows = [
+              { name: 'GoFood', commission: '20–25%', data: 'GoFood owns it', branding: 'GoFood branding', own: 'No' },
+              { name: 'GrabFood', commission: '20–30%', data: 'Grab owns it', branding: 'Grab branding', own: 'No' },
+              { name: 'ShopeeFood', commission: '20–25%', data: 'Shopee owns it', branding: 'Shopee branding', own: 'No' },
+              { name: 'StreetLocal', commission: '0%', data: 'You own it', branding: 'Your branding', own: 'Yes', highlight: true },
+            ]
+            return (
+              <div>
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb', marginBottom: 10, fontWeight: 600 }}>FOR FOOD VENDORS</div>
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, marginBottom: 12 }}>Stop Paying 25% Commission to GoFood. Own Your Customers.</h1>
+                <p style={{ fontSize: 15, color: '#555', lineHeight: 1.6, marginBottom: 20 }}>FoodLocal — Your own branded ordering app for <strong>Rp 35.000/bulan</strong>. Zero commission, ever.</p>
+
+                {/* The math */}
+                <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 20, marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#FFD600', fontWeight: 700, marginBottom: 8 }}>THE MATH</div>
+                  <div style={{ fontSize: 14, color: '#fff', lineHeight: 1.7 }}>
+                    Earn <strong>Rp 100,000,000</strong> in orders this year.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 14 }}>
+                    <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 12 }}>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>GoFood takes</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#ef4444' }}>Rp 25.000.000</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,214,0,0.1)', borderRadius: 12, padding: 12, border: '1px solid rgba(255,214,0,0.3)' }}>
+                      <div style={{ fontSize: 11, color: '#FFD600', marginBottom: 4 }}>StreetLocal takes</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>Rp 0</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 12, lineHeight: 1.5 }}>You keep <strong style={{ color: '#fff' }}>Rp 25 juta</strong> extra in your pocket. Every. Single. Year.</div>
+                </div>
+
+                {/* Comparison table */}
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Why vendors are switching</h2>
+                <div style={{ border: '1px solid #f0f0f0', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+                  {compareRows.map((row, i) => (
+                    <div key={i} style={{ padding: 14, background: row.highlight ? '#fffde7' : (i % 2 ? '#fafafa' : '#fff'), borderTop: i ? '1px solid #f0f0f0' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{row.name}</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: row.commission === '0%' ? '#15803d' : '#ef4444' }}>{row.commission} commission</div>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>
+                        <div>Customer data: <strong style={{ color: '#1a1a1a' }}>{row.data}</strong></div>
+                        <div>Branding: <strong style={{ color: '#1a1a1a' }}>{row.branding}</strong></div>
+                        <div>You own the business: <strong style={{ color: row.own === 'Yes' ? '#15803d' : '#ef4444' }}>{row.own}</strong></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Testimonial */}
+                <div style={{ background: '#f8f9fa', borderRadius: 14, padding: 18, marginBottom: 20, border: '1px solid #e8e8e8' }}>
+                  <div style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 8, fontStyle: 'italic' }}>"Saya jualan nasi goreng sebulan kira-kira Rp 30 juta. Kalau lewat aplikasi besar, potongan komisi sekitar Rp 7 juta hilang. Sekarang pelanggan order langsung ke WhatsApp lewat aplikasi saya sendiri. Yang penting, mereka tahu nama warung saya, bukan nama aplikasi lain."</div>
+                  <div style={{ fontSize: 11, color: '#888', fontWeight: 600 }}>— Warung vendor in Jakarta Selatan</div>
+                </div>
+
+                {/* CTA */}
+                <button onClick={() => { setCurrentPage(null); setSelectedCategory(CATEGORIES.find(c => c.id === 'food')) }} style={{ width: '100%', background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44, marginBottom: 28 }}>See FoodLocal Demo →</button>
+
+                {/* Related SEO pages */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 20 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', fontWeight: 700, marginBottom: 10 }}>RELATED</div>
+                  {[
+                    { label: 'Aplikasi Warung Online', page: 'warung-app' },
+                    { label: 'Buka Toko Online Tanpa Marketplace', page: 'online-store' },
+                    { label: 'Booking via WhatsApp untuk Jasa', page: 'whatsapp-booking' },
+                  ].map(l => (
+                    <button key={l.page} onClick={() => setCurrentPage(l.page)} style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f0f0f0', padding: '12px 0', fontSize: 14, color: '#1a73e8', cursor: 'pointer', fontWeight: 600 }}>{l.label} →</button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ─── SEO Landing: Warung App (Bahasa Indonesia) ─── */}
+          {currentPage === 'warung-app' && (() => {
+            const jsonLd = {
+              '@context': 'https://schema.org',
+              '@type': 'Product',
+              name: 'FoodLocal — Aplikasi Warung',
+              description: 'Aplikasi sendiri untuk warung kamu. Pelanggan order via WhatsApp. Tanpa komisi.',
+              brand: { '@type': 'Brand', name: 'StreetLocal' },
+              offers: { '@type': 'Offer', price: '35000', priceCurrency: 'IDR', availability: 'https://schema.org/InStock', url: 'https://streetlocal.live/?p=warung-app' },
+            }
+            const features = [
+              { icon: '💰', title: 'Zero komisi', body: 'Kamu simpan 100% pendapatan. Tidak ada potongan per order.' },
+              { icon: '🏷️', title: 'Branding sendiri', body: 'Logo, warna, dan nama warung kamu. Bukan logo aplikasi lain.' },
+              { icon: '💬', title: 'Checkout WhatsApp', body: 'Pelanggan klik order, kamu langsung dapat pesanan di WhatsApp.' },
+              { icon: '📸', title: 'Menu dengan foto', body: 'Tampilkan setiap menu dengan foto, harga, dan deskripsi.' },
+              { icon: '🕐', title: 'Jam buka per hari', body: 'Atur jam operasional berbeda untuk setiap hari dalam seminggu.' },
+              { icon: '🎯', title: 'Promo banner', body: 'Tampilkan promo, diskon, dan menu spesial di halaman utama kamu.' },
+            ]
+            return (
+              <div>
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb', marginBottom: 10, fontWeight: 600 }}>UNTUK PEMILIK WARUNG</div>
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, marginBottom: 12 }}>Aplikasi Sendiri untuk Warung Kamu — Siap dalam 24 Jam</h1>
+                <p style={{ fontSize: 15, color: '#555', lineHeight: 1.6, marginBottom: 20 }}>Pelanggan order langsung lewat WhatsApp. Tanpa komisi. Branding kamu sendiri.</p>
+
+                {/* Target audience */}
+                <div style={{ background: '#fffde7', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #fde68a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 6 }}>Cocok untuk warung makanan, warkop, dan kedai kopi</div>
+                  <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>Buat aplikasi ordering online dalam hitungan jam. Tidak perlu ribet, tidak perlu komputer, semuanya dari HP.</div>
+                </div>
+
+                {/* Features */}
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Fitur lengkap untuk warung kamu</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                  {features.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: 14, background: '#f8f9fa', borderRadius: 12, border: '1px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{f.title}</div>
+                        <div style={{ fontSize: 12, color: '#666', lineHeight: 1.5 }}>{f.body}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pricing */}
+                <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#FFD600', fontWeight: 700, marginBottom: 8 }}>HARGA</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Rp 35.000<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>/bulan</span></div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>atau Rp 456.000/tahun (hemat 2 bulan)</div>
+                  <div style={{ fontSize: 12, color: '#FFD600', fontWeight: 700 }}>Tanpa kontrak. Bisa berhenti kapan saja.</div>
+                </div>
+
+                {/* CTA */}
+                <button onClick={() => { setCurrentPage(null); setSelectedCategory(CATEGORIES.find(c => c.id === 'food')) }} style={{ width: '100%', background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44, marginBottom: 28 }}>Coba Demo Gratis →</button>
+
+                {/* Related */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 20 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', fontWeight: 700, marginBottom: 10 }}>BACA JUGA</div>
+                  {[
+                    { label: 'Stop Bayar Komisi ke GoFood', page: 'no-commission' },
+                    { label: 'Buka Toko Online Tanpa Marketplace', page: 'online-store' },
+                    { label: 'Booking via WhatsApp untuk Jasa', page: 'whatsapp-booking' },
+                  ].map(l => (
+                    <button key={l.page} onClick={() => setCurrentPage(l.page)} style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f0f0f0', padding: '12px 0', fontSize: 14, color: '#1a73e8', cursor: 'pointer', fontWeight: 600 }}>{l.label} →</button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ─── SEO Landing: Online Store ─── */}
+          {currentPage === 'online-store' && (() => {
+            const jsonLd = {
+              '@context': 'https://schema.org',
+              '@type': 'Product',
+              name: 'ProductsLocal — Toko Online Sendiri',
+              description: 'Branded online store untuk bisnis kecil di Indonesia. Pelanggan order via WhatsApp.',
+              brand: { '@type': 'Brand', name: 'StreetLocal' },
+              offers: { '@type': 'Offer', price: '35000', priceCurrency: 'IDR', availability: 'https://schema.org/InStock', url: 'https://streetlocal.live/?p=online-store' },
+            }
+            const features = [
+              { icon: '🛍️', title: 'Katalog produk lengkap', body: 'Tampilkan produk dengan foto, harga, deskripsi, dan varian.' },
+              { icon: '💬', title: 'Order via WhatsApp', body: 'Pelanggan checkout, pesanan masuk langsung ke WhatsApp kamu.' },
+              { icon: '🎨', title: 'Branding kamu sendiri', body: 'Domain sendiri, logo sendiri, warna sendiri. Bukan toko marketplace.' },
+              { icon: '🚚', title: 'Kirim ke mana saja', body: 'Atur ongkir per area atau pakai kurir favorit kamu (JNE, J&T, Anteraja).' },
+              { icon: '🏷️', title: 'Promo & diskon', body: 'Buat promo spesial, harga coret, dan badge "Best Seller" sendiri.' },
+              { icon: '📱', title: 'Mobile-first', body: '90% pelanggan order dari HP. Aplikasi kamu dirancang untuk itu.' },
+            ]
+            return (
+              <div>
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb', marginBottom: 10, fontWeight: 600 }}>UNTUK PENJUAL ONLINE</div>
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, marginBottom: 12 }}>Buka Toko Online Sendiri — Tidak Perlu Marketplace</h1>
+                <p style={{ fontSize: 15, color: '#555', lineHeight: 1.6, marginBottom: 20 }}>ProductsLocal — branded online store untuk bisnis Indonesia. Pelanggan order via WhatsApp. <strong>Rp 35.000/bulan</strong>.</p>
+
+                {/* Pain hook */}
+                <div style={{ background: '#fef2f2', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #fecaca' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#dc2626', marginBottom: 6 }}>Capek dengan biaya admin Tokopedia/Shopee?</div>
+                  <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>Biaya admin, biaya layanan, biaya iklan, biaya kirim, biaya gratis ongkir. Kamu jualan, mereka untung. Saatnya punya toko online sendiri.</div>
+                </div>
+
+                {/* Features */}
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Fitur lengkap untuk toko online kamu</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                  {features.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: 14, background: '#f8f9fa', borderRadius: 12, border: '1px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{f.title}</div>
+                        <div style={{ fontSize: 12, color: '#666', lineHeight: 1.5 }}>{f.body}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pricing */}
+                <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#FFD600', fontWeight: 700, marginBottom: 8 }}>HARGA</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Rp 35.000<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>/bulan</span></div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>atau Rp 456.000/tahun (hemat 2 bulan)</div>
+                  <div style={{ fontSize: 12, color: '#FFD600', fontWeight: 700 }}>Zero komisi. Zero biaya admin. Selamanya.</div>
+                </div>
+
+                {/* CTA */}
+                <button onClick={() => { setCurrentPage(null); setSelectedCategory(CATEGORIES.find(c => c.id === 'products')) }} style={{ width: '100%', background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44, marginBottom: 28 }}>Lihat Demo ProductsLocal →</button>
+
+                {/* Related */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 20 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', fontWeight: 700, marginBottom: 10 }}>BACA JUGA</div>
+                  {[
+                    { label: 'Stop Bayar Komisi ke GoFood', page: 'no-commission' },
+                    { label: 'Aplikasi Warung Online', page: 'warung-app' },
+                    { label: 'Booking via WhatsApp untuk Jasa', page: 'whatsapp-booking' },
+                  ].map(l => (
+                    <button key={l.page} onClick={() => setCurrentPage(l.page)} style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f0f0f0', padding: '12px 0', fontSize: 14, color: '#1a73e8', cursor: 'pointer', fontWeight: 600 }}>{l.label} →</button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ─── SEO Landing: WhatsApp Booking ─── */}
+          {currentPage === 'whatsapp-booking' && (() => {
+            const jsonLd = {
+              '@context': 'https://schema.org',
+              '@type': 'Product',
+              name: 'ServicesLocal — Aplikasi Booking via WhatsApp',
+              description: 'Aplikasi booking untuk salon, cleaning, jasa apa saja. Pelanggan booking langsung ke WhatsApp.',
+              brand: { '@type': 'Brand', name: 'StreetLocal' },
+              offers: { '@type': 'Offer', price: '35000', priceCurrency: 'IDR', availability: 'https://schema.org/InStock', url: 'https://streetlocal.live/?p=whatsapp-booking' },
+            }
+            const targetServices = ['Salon & Barbershop', 'Cleaning Service', 'Tukang & Handyman', 'Photographer', 'Tutor Privat', 'Spa & Massage', 'Laundry', 'Mobile Mechanic', 'Wedding Service', 'Event Planner', 'Personal Trainer', 'Pet Grooming']
+            const features = [
+              { icon: '📅', title: 'Booking via WhatsApp', body: 'Pelanggan pilih jadwal, langsung masuk ke WhatsApp kamu sebagai pesan booking.' },
+              { icon: '🛠️', title: 'Daftar layanan & harga', body: 'Tampilkan semua jasa dengan harga, durasi, dan deskripsi yang jelas.' },
+              { icon: '🕐', title: 'Jam kerja per hari', body: 'Atur jam operasional. Pelanggan hanya bisa book saat kamu buka.' },
+              { icon: '📍', title: 'Lokasi & area servis', body: 'Tampilkan alamat di Google Maps atau area jangkauan jasa kamu.' },
+              { icon: '🎨', title: 'Branding profesional', body: 'Logo, foto kerja, testimoni — bikin pelanggan percaya sebelum book.' },
+              { icon: '💬', title: 'Tanpa komisi', body: 'Kamu simpan 100% bayaran. Tidak ada potongan per booking.' },
+            ]
+            return (
+              <div>
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb', marginBottom: 10, fontWeight: 600 }}>UNTUK BISNIS JASA</div>
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, marginBottom: 12 }}>Booking via WhatsApp untuk Bisnis Jasa Kamu</h1>
+                <p style={{ fontSize: 15, color: '#555', lineHeight: 1.6, marginBottom: 20 }}>ServicesLocal — Aplikasi booking untuk salon, cleaning, jasa apa saja. Pelanggan booking langsung ke WhatsApp.</p>
+
+                {/* Target services */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>Cocok untuk 40+ jenis jasa:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {targetServices.map(s => (
+                      <span key={s} style={{ fontSize: 11, fontWeight: 700, padding: '6px 10px', background: '#f8f9fa', border: '1px solid #e8e8e8', borderRadius: 16, color: '#444' }}>{s}</span>
+                    ))}
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '6px 10px', background: '#fffde7', border: '1px solid #fde68a', borderRadius: 16, color: '#1a1a1a' }}>+ lainnya</span>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Fitur lengkap untuk bisnis jasa</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                  {features.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: 14, background: '#f8f9fa', borderRadius: 12, border: '1px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 3 }}>{f.title}</div>
+                        <div style={{ fontSize: 12, color: '#666', lineHeight: 1.5 }}>{f.body}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pricing */}
+                <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#FFD600', fontWeight: 700, marginBottom: 8 }}>HARGA</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Rp 35.000<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>/bulan</span></div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>atau Rp 456.000/tahun (hemat 2 bulan)</div>
+                  <div style={{ fontSize: 12, color: '#FFD600', fontWeight: 700 }}>Booking tanpa batas. Komisi nol persen.</div>
+                </div>
+
+                {/* CTA */}
+                <button onClick={() => { setCurrentPage(null); setSelectedCategory(CATEGORIES.find(c => c.id === 'services')) }} style={{ width: '100%', background: '#16A085', color: '#fff', border: 'none', borderRadius: 14, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44, marginBottom: 28 }}>Lihat Demo ServicesLocal →</button>
+
+                {/* Related */}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 20 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', fontWeight: 700, marginBottom: 10 }}>BACA JUGA</div>
+                  {[
+                    { label: 'Stop Bayar Komisi ke GoFood', page: 'no-commission' },
+                    { label: 'Aplikasi Warung Online', page: 'warung-app' },
+                    { label: 'Buka Toko Online Tanpa Marketplace', page: 'online-store' },
+                  ].map(l => (
+                    <button key={l.page} onClick={() => setCurrentPage(l.page)} style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f0f0f0', padding: '12px 0', fontSize: 14, color: '#1a73e8', cursor: 'pointer', fontWeight: 600 }}>{l.label} →</button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
 
         </div>
 

@@ -285,6 +285,10 @@ export default function Affiliate({ onClose }) {
 
   // Dashboard
   const [tab, setTab] = useState('apps') // apps | stats | earnings | verify
+  const [myLeads, setMyLeads] = useState([])
+  const [leadsLoading, setLeadsLoading] = useState(false)
+  const [leadsMessage, setLeadsMessage] = useState('')
+  const [agentBoard, setAgentBoard] = useState([])
   const [referrals, setReferrals] = useState([])
   const [stats, setStats] = useState({ totalClicks: 0, totalSignups: 0, totalEarnings: 0, pendingPayout: 0 })
   const [copied, setCopied] = useState(false)
@@ -1285,6 +1289,8 @@ export default function Affiliate({ onClose }) {
             {!drawerPage && (
               <div style={{ padding: '8px 0' }}>
                 {[
+                  { id: 'leads', icon: '🎯', label: locale === 'id' ? 'Leads untuk Dihubungi' : 'Leads to Contact' },
+                  { id: 'leaderboard', icon: '🥇', label: locale === 'id' ? 'Papan Peringkat' : 'Leaderboard' },
                   { id: 'stats', icon: '📊', label: L.stats },
                   { id: 'earnings', icon: '💰', label: L.earnings },
                   { id: 'community', icon: '🏆', label: locale === 'id' ? 'Komunitas' : 'Community' },
@@ -1300,6 +1306,106 @@ export default function Affiliate({ onClose }) {
                 <button onClick={() => { logout(); setDrawer(false) }} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 600, color: '#EF4444', textAlign: 'left' }}>
                   <span style={{ fontSize: 20 }}>🚪</span> {L.logout}
                 </button>
+              </div>
+            )}
+
+            {/* ── DRAWER: LEADS TO CONTACT ── */}
+            {drawerPage === 'leads' && (
+              <div style={{ padding: 20 }}>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 8 }}>{locale === 'id' ? 'Leads untuk Dihubungi' : 'Leads to Contact'}</h3>
+                <p style={{ fontSize: 12, color: '#666', marginBottom: 12, lineHeight: 1.5 }}>
+                  {locale === 'id'
+                    ? 'Klik "Ambil 25 Leads" untuk dapat daftar bisnis dengan nomor WhatsApp. Klik tombol WA untuk kirim pesan template. Setiap signup = komisi.'
+                    : 'Click "Grab 25 Leads" to get businesses with WhatsApp numbers. Click WA to send a template message. Every signup = your commission.'}
+                </p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <button
+                    disabled={leadsLoading}
+                    onClick={async () => {
+                      if (!agent?.id || !supabase) return
+                      setLeadsLoading(true); setLeadsMessage('')
+                      try {
+                        const { data, error } = await supabase.rpc('grab_leads', { p_agent_id: agent.id, p_count: 25 })
+                        if (error) setLeadsMessage('⚠️ ' + error.message)
+                        else setLeadsMessage(`✓ Ditambahkan ${(data || []).length} leads ke daftar kamu`)
+                        const { data: mine } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                        setMyLeads(mine || [])
+                      } catch (e) { setLeadsMessage('⚠️ ' + e.message) }
+                      setLeadsLoading(false)
+                    }}
+                    style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: 'pointer', flex: 1 }}
+                  >{leadsLoading ? '⏳ ...' : (locale === 'id' ? '🎯 Ambil 25 Leads' : '🎯 Grab 25 Leads')}</button>
+                  <button
+                    onClick={async () => {
+                      if (!agent?.id || !supabase) return
+                      setLeadsLoading(true)
+                      const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                      setMyLeads(data || []); setLeadsLoading(false)
+                    }}
+                    style={{ background: '#f0f0f0', color: '#1a1a1a', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+                  >🔄</button>
+                </div>
+                {leadsMessage && <div style={{ padding: 10, background: leadsMessage.includes('⚠️') ? '#FFE4E1' : '#E8F5E9', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{leadsMessage}</div>}
+                {myLeads.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 30, color: '#aaa' }}>
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>🎯</div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{locale === 'id' ? 'Belum ada leads. Klik "Ambil 25 Leads"' : 'No leads yet. Click "Grab 25 Leads"'}</div>
+                  </div>
+                ) : (
+                  myLeads.map((l) => {
+                    const phone = (l.whatsapp || l.phone || '').replace(/[^0-9+]/g, '')
+                    const wa = phone ? `https://wa.me/${phone.startsWith('+') ? phone.slice(1) : phone}?text=${encodeURIComponent(`Halo ${l.business_name.split(' ')[0]}! Saya dari StreetLocal — aplikasi pemesanan untuk bisnis kamu. Tanpa komisi seperti GoFood. Pelanggan order langsung ke WhatsApp. Hanya Rp 35.000/bulan. Mau lihat demonya?`)}` : null
+                    const statusColors = { queued: '#888', contacted: '#3498db', responded: '#1abc9c', interested: '#22c55e', signed: '#22c55e', not_interested: '#888', dead: '#666' }
+                    const sc = statusColors[l.status] || '#888'
+                    return (
+                      <div key={l.id} style={{ padding: 12, background: '#FAFAFA', borderRadius: 12, marginBottom: 8, borderLeft: `3px solid ${sc}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{l.business_name}</div>
+                            <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{l.business_type} · {l.city}</div>
+                            {phone && <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>📞 {l.whatsapp || l.phone}</div>}
+                          </div>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: sc, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>{l.status}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
+                          {wa && <a href={wa} target="_blank" rel="noopener noreferrer" onClick={async () => { if (supabase) await supabase.rpc('agent_update_lead_status', { p_agent_id: agent.id, p_lead_id: l.id, p_status: 'contacted' }); setTimeout(async () => { const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200); setMyLeads(data || []) }, 500) }} style={{ background: '#25D366', color: '#fff', textDecoration: 'none', padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800 }}>💬 WA</a>}
+                          {['contacted','responded','interested','dead'].map(s => (
+                            <button key={s} onClick={async () => {
+                              if (!supabase) return
+                              const { error } = await supabase.rpc('agent_update_lead_status', { p_agent_id: agent.id, p_lead_id: l.id, p_status: s })
+                              if (error) { alert(error.message); return }
+                              const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                              setMyLeads(data || [])
+                            }} style={{ background: s === 'dead' ? '#EF4444' : s === 'interested' ? '#22c55e' : '#888', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.replace('_',' ')}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )}
+
+            {/* ── DRAWER: LEADERBOARD ── */}
+            {drawerPage === 'leaderboard' && (
+              <div style={{ padding: 20 }}>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>{locale === 'id' ? '🥇 Top Agent' : '🥇 Top Agents'}</h3>
+                <button onClick={async () => { if (!supabase) return; const { data } = await supabase.rpc('agent_leaderboard'); setAgentBoard(data || []) }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer', marginBottom: 12 }}>🔄 {locale === 'id' ? 'Refresh' : 'Refresh'}</button>
+                {agentBoard.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#aaa', fontSize: 12 }}>{locale === 'id' ? 'Klik Refresh' : 'Click Refresh'}</div>
+                ) : (
+                  agentBoard.map((row, i) => (
+                    <div key={row.agent_id} style={{ padding: 12, background: i === 0 ? 'linear-gradient(135deg, #FFD60020, #FFD60005)' : '#FAFAFA', borderRadius: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 16, background: i === 0 ? '#FFD600' : i < 3 ? '#FFE4A0' : '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900 }}>{i + 1}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800 }}>{row.agent_name}{row.agent_id === agent?.id ? ' (you)' : ''}</div>
+                        <div style={{ fontSize: 10, color: '#888' }}>{row.signed} signed · {row.contacted} contacted · {row.leads_assigned} total</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
