@@ -198,6 +198,415 @@ const FOOD_TYPES = {
 }
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
+/* ─── Vendor type presets ─── */
+// Picked once at signup. Each type loads its own 6-8 category quick-chips.
+// Vendor can still type any custom category. Existing menu items are preserved
+// across switches — the preset is suggestions, not enforcement.
+// Payment gateway catalog — every gateway StreetLocal supports for vendors to connect.
+// Vendor brings their OWN account; we never touch funds. UI mirrors Shopify/eBay/Amazon polish.
+// `countries` is an ISO-like list shown to vendors so they know where it works. `logoUrl`
+// uses public CDNs for real brand marks; falls back to colored letter avatar if it fails.
+const SUPPORTED_GATEWAYS = [
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    tagline: 'Cards · Apple Pay · Google Pay · Klarna',
+    color: '#635BFF',
+    logoUrl: 'https://cdn.simpleicons.org/stripe/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇫🇷 🇸🇬 🇯🇵 🇭🇰 🇲🇾 🇹🇭 🇲🇽 🇧🇷',
+    countryCount: '46 countries',
+    fees: '2.9% + fixed fee · 0.5% extra for non-US cards',
+    bestFor: 'International vendors · global reach',
+    method: 'oauth-or-keys',
+    fields: [
+      { key: 'publishableKey', label: 'Publishable Key', placeholder: 'pk_test_... or pk_live_...', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_test_... or sk_live_...', type: 'password', required: true, secret: true },
+      { key: 'webhookSecret', label: 'Webhook signing secret (optional)', placeholder: 'whsec_...', type: 'password', secret: true },
+    ],
+    docUrl: 'https://dashboard.stripe.com/apikeys',
+    setupSteps: ['Sign up free at stripe.com', 'Complete business verification (KYC)', 'Copy your API keys from Dashboard → Developers → API keys', 'Paste them here'],
+  },
+  {
+    id: 'midtrans',
+    name: 'Midtrans',
+    tagline: 'GoPay · OVO · DANA · ShopeePay · cards · bank',
+    color: '#1A6FE8',
+    logoUrl: 'https://midtrans.com/blog/wp-content/uploads/2018/05/cropped-Midtrans-website-fav-32x32.png',
+    countryFlags: '🇮🇩',
+    countryCount: 'Indonesia only',
+    fees: '~2.5% per transaction · varies by method',
+    bestFor: 'Indonesian vendors · local customers',
+    method: 'api-keys',
+    fields: [
+      { key: 'serverKey', label: 'Server Key', placeholder: 'Mid-server-...', type: 'password', required: true, secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'Mid-client-...', type: 'text', required: true },
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'M01234', type: 'text' },
+    ],
+    docUrl: 'https://dashboard.midtrans.com/settings/config_info',
+    setupSteps: ['Register at midtrans.com', 'Complete merchant verification', 'Settings → Access Keys', 'Copy Server Key + Client Key here'],
+  },
+  {
+    id: 'xendit',
+    name: 'Xendit',
+    tagline: 'Cards · e-wallets · virtual accounts · QRIS',
+    color: '#EB5E28',
+    logoUrl: 'https://cdn.simpleicons.org/xendit/white',
+    countryFlags: '🇮🇩 🇵🇭 🇲🇾 🇸🇬 🇹🇭 🇻🇳',
+    countryCount: '6 SEA countries',
+    fees: '~2.5% · multi-currency',
+    bestFor: 'Regional SEA sellers',
+    method: 'api-keys',
+    fields: [
+      { key: 'secretKey', label: 'Secret API Key', placeholder: 'xnd_development_... or xnd_production_...', type: 'password', required: true, secret: true },
+      { key: 'publicKey', label: 'Public Key (optional)', placeholder: 'xnd_public_...', type: 'text' },
+    ],
+    docUrl: 'https://dashboard.xendit.co/settings/developers#api-keys',
+    setupSteps: ['Sign up at xendit.co', 'Complete onboarding + KYC', 'Settings → Developers → API Keys', 'Generate and paste your Secret Key'],
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    tagline: 'Cards + PayPal balance · world\'s most familiar',
+    color: '#0070BA',
+    logoUrl: 'https://cdn.simpleicons.org/paypal/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇪🇺 🇮🇳 🇮🇩 🇲🇾 🇸🇬 🇵🇭 🇯🇵 🇲🇽 🇧🇷',
+    countryCount: '200+ countries',
+    fees: '3.49% + fixed fee · varies by country',
+    bestFor: 'International customers · PayPal-preferring buyers',
+    method: 'oauth-or-email',
+    fields: [
+      { key: 'merchantEmail', label: 'PayPal Business Email', placeholder: 'shop@example.com', type: 'email', required: true },
+      { key: 'clientId', label: 'REST API Client ID', placeholder: 'AeA1QIZX...', type: 'text' },
+      { key: 'secret', label: 'REST API Secret', placeholder: '••••••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://developer.paypal.com/dashboard/applications',
+    setupSteps: ['Upgrade to PayPal Business at paypal.com', 'Create REST API app at developer.paypal.com', 'Copy Client ID + Secret', 'Paste here'],
+  },
+  {
+    id: 'braintree',
+    name: 'Braintree',
+    tagline: 'Cards + PayPal + Venmo · PayPal-owned',
+    color: '#00ADEF',
+    logoUrl: 'https://cdn.simpleicons.org/braintree/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇸🇬 🇲🇾 🇪🇺 🇭🇰',
+    countryCount: '45+ countries',
+    fees: '2.59% + $0.49 (US) · varies by region',
+    bestFor: 'Vendors who want cards + Venmo + PayPal in one integration',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'xxxxxxxxxxxxxxxx', type: 'text', required: true },
+      { key: 'publicKey', label: 'Public Key', placeholder: 'xxxxxxxxxxxxxxxx', type: 'text', required: true },
+      { key: 'privateKey', label: 'Private Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://www.braintreepayments.com/sandbox',
+    setupSteps: ['Sign up at braintreepayments.com', 'Complete business verification', 'Account → Settings → API Keys', 'Generate and paste your Merchant ID + keys'],
+  },
+  {
+    id: 'checkout-com',
+    name: 'Checkout.com',
+    tagline: 'Modern API · global cards + alternative methods',
+    color: '#1A1F36',
+    logoUrl: null,
+    countryFlags: '🇬🇧 🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇳🇱 🇸🇬 🇦🇺 🇦🇪 🇸🇦',
+    countryCount: '150+ currencies · global',
+    fees: 'Custom · ~1.95% + $0.20 typical',
+    bestFor: 'SaaS · subscriptions · EMEA/APAC merchants',
+    method: 'api-keys',
+    fields: [
+      { key: 'publicKey', label: 'Public Key', placeholder: 'pk_sbox_... or pk_...', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_sbox_... or sk_...', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.checkout.com/developers/keys',
+    setupSteps: ['Apply at checkout.com (KYC required)', 'Wait for approval (3–7 days typical)', 'Dashboard → Developers → Keys', 'Copy Public + Secret keys'],
+  },
+  {
+    id: 'authorize-net',
+    name: 'Authorize.net',
+    tagline: 'Veteran US gateway · Visa-owned',
+    color: '#0066B2',
+    logoUrl: null,
+    countryFlags: '🇺🇸 🇨🇦 🇬🇧 🇦🇺',
+    countryCount: '4 countries',
+    fees: '2.9% + $0.30 + $25/mo gateway fee',
+    bestFor: 'US-based merchants with existing card processor',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiLoginId', label: 'API Login ID', placeholder: '5KP3u95bQpv', type: 'text', required: true },
+      { key: 'transactionKey', label: 'Transaction Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'signatureKey', label: 'Signature Key (for webhooks)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://account.authorize.net/',
+    setupSteps: ['Sign up at authorize.net (US merchant account required)', 'Complete KYC and business verification', 'Account → Settings → API Credentials & Keys', 'Copy API Login ID + Transaction Key'],
+  },
+  {
+    id: 'mollie',
+    name: 'Mollie',
+    tagline: 'iDEAL · Bancontact · SEPA · cards · easy onboarding',
+    color: '#06D6A0',
+    logoUrl: null,
+    countryFlags: '🇳🇱 🇩🇪 🇫🇷 🇧🇪 🇬🇧 🇮🇹 🇪🇸 🇦🇹 🇨🇭 🇩🇰 🇫🇮 🇳🇴 🇸🇪',
+    countryCount: 'Europe · 13 countries',
+    fees: '~1.8% + €0.25 (iDEAL: €0.29 fixed)',
+    bestFor: 'European vendors · local methods preferred',
+    method: 'api-keys',
+    fields: [
+      { key: 'liveApiKey', label: 'Live API Key', placeholder: 'live_...', type: 'password', required: true, secret: true },
+      { key: 'testApiKey', label: 'Test API Key (sandbox)', placeholder: 'test_...', type: 'password', secret: true },
+    ],
+    docUrl: 'https://my.mollie.com/dashboard/developers/api-keys',
+    setupSteps: ['Sign up at mollie.com', 'Complete short business verification (~24h)', 'Dashboard → Developers → API keys', 'Copy your live + test keys'],
+  },
+  {
+    id: '2checkout',
+    name: '2Checkout (Verifone)',
+    tagline: 'Subscriptions · digital products · global',
+    color: '#FF6700',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '200+ countries · 100+ currencies',
+    fees: '3.5% + $0.35 + monthly fees',
+    bestFor: 'SaaS · digital products · subscription billing',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantCode', label: 'Merchant Code', placeholder: '255000000000', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'publishableKey', label: 'Publishable Key', placeholder: '••••', type: 'text' },
+    ],
+    docUrl: 'https://secure.2checkout.com/cpanel/',
+    setupSteps: ['Sign up at 2checkout.com (now Verifone)', 'Complete merchant verification', 'Dashboard → Integrations → Webhooks & API', 'Copy Merchant Code + Secret Key'],
+  },
+  {
+    id: 'razorpay',
+    name: 'Razorpay',
+    tagline: 'India\'s #1 · UPI · Cards · NetBanking · Wallets',
+    color: '#3395FF',
+    logoUrl: 'https://cdn.simpleicons.org/razorpay/white',
+    countryFlags: '🇮🇳',
+    countryCount: 'India only',
+    fees: '2% cards · 0% UPI · 0% NetBanking',
+    bestFor: 'Indian merchants · UPI/RuPay focus',
+    method: 'api-keys',
+    fields: [
+      { key: 'keyId', label: 'Key ID', placeholder: 'rzp_test_... or rzp_live_...', type: 'text', required: true },
+      { key: 'keySecret', label: 'Key Secret', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.razorpay.com/app/keys',
+    setupSteps: ['Sign up at razorpay.com (Indian PAN + bank account required)', 'Complete merchant KYC', 'Dashboard → Account & Settings → API Keys', 'Generate and paste your Key ID + Secret'],
+  },
+  {
+    id: 'hitpay',
+    name: 'HitPay',
+    tagline: 'SMB-friendly · same-day signup · SG/MY/HK/AU',
+    color: '#E62D6E',
+    logoUrl: null,
+    countryFlags: '🇸🇬 🇲🇾 🇭🇰 🇦🇺',
+    countryCount: '4 countries',
+    fees: '~3.4% + SGD 0.50 · no monthly fee',
+    bestFor: 'SEA small biz · cafes · F&B · fast signup',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'salt', label: 'Salt (HMAC verification)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://dashboard.hitpayapp.com/settings/api-keys',
+    setupSteps: ['Sign up at hitpayapp.com (SG business or local address)', 'Complete light KYC (~1 day)', 'Dashboard → Settings → API Keys', 'Generate API Key + Salt'],
+  },
+  {
+    id: 'fomo-pay',
+    name: 'FOMO Pay',
+    tagline: 'WeChat · AliPay · GrabPay · Asia digital wallets',
+    color: '#F0392B',
+    logoUrl: null,
+    countryFlags: '🇸🇬 🇭🇰 🇲🇾 🇵🇭 🇹🇭',
+    countryCount: '5 Asian markets',
+    fees: 'Custom · varies by method',
+    bestFor: 'Asian merchants · Chinese tourist payment methods',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'M0123456', type: 'text', required: true },
+      { key: 'apiKey', label: 'API Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'signKey', label: 'Sign Key (HMAC)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://www.fomopay.com/contact',
+    setupSteps: ['Contact FOMO Pay sales at fomopay.com', 'Complete merchant onboarding (5–10 business days)', 'Receive Merchant ID + API credentials', 'Paste them here'],
+  },
+  {
+    id: 'rapyd',
+    name: 'Rapyd',
+    tagline: '900+ local payment methods · global coverage',
+    color: '#3A23E0',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '100+ countries · 900+ methods',
+    fees: 'Custom per method · contact sales',
+    bestFor: 'Local payment methods worldwide · emerging markets',
+    method: 'api-keys',
+    fields: [
+      { key: 'accessKey', label: 'Access Key', placeholder: '••••', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.rapyd.net/account/api-credentials',
+    setupSteps: ['Sign up at rapyd.net (business KYC required)', 'Approval takes 5–10 business days', 'Dashboard → Developers → Credentials', 'Copy Access Key + Secret Key'],
+  },
+  {
+    id: 'adyen',
+    name: 'Adyen',
+    tagline: 'Enterprise-grade · 250+ payment methods',
+    color: '#0ABF53',
+    logoUrl: 'https://cdn.simpleicons.org/adyen/white',
+    countryFlags: '🌍',
+    countryCount: '40+ countries · 150+ currencies',
+    fees: 'Custom contract · $0.12 + interchange typical',
+    bestFor: 'High-volume merchants (>$1M/yr)',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: 'AQEyhmf...', type: 'password', required: true, secret: true },
+      { key: 'merchantAccount', label: 'Merchant Account name', placeholder: 'YourCompanyECOM', type: 'text', required: true },
+      { key: 'hmacKey', label: 'HMAC Key (webhook)', placeholder: '••••', type: 'password', secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'live_... or test_...', type: 'text' },
+    ],
+    docUrl: 'https://ca-test.adyen.com/ca/ca/overview/default.shtml',
+    setupSteps: ['Contact Adyen sales (enterprise application)', 'Full enterprise KYC (~30 days)', 'Customer Area → Developers → API Credentials', 'Generate API Key + HMAC + Client Key'],
+  },
+  {
+    id: 'cybersource',
+    name: 'CyberSource',
+    tagline: 'Visa-owned · enterprise fraud screening',
+    color: '#1A5490',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '190+ countries',
+    fees: 'Custom enterprise contract',
+    bestFor: 'Visa-network enterprise · fraud screening priority',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'your-merchant-id', type: 'text', required: true },
+      { key: 'apiKeyId', label: 'API Key ID', placeholder: '••••', type: 'text', required: true },
+      { key: 'sharedSecret', label: 'Shared Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://ebc2.cybersource.com/',
+    setupSteps: ['Apply for CyberSource merchant account (sales contact)', 'Enterprise KYC process (4–8 weeks)', 'Business Center → Key Management', 'Generate REST API key set'],
+  },
+  {
+    id: 'worldpay',
+    name: 'Worldpay (FIS)',
+    tagline: 'Enterprise · omnichannel · 146 countries',
+    color: '#E5251F',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '146 countries · 126 currencies',
+    fees: 'Custom enterprise contract',
+    bestFor: 'High-volume retail · physical + online combined',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'serviceKey', label: 'Service Key (test/live)', placeholder: 'T_S_... or L_S_...', type: 'password', required: true, secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'T_C_... or L_C_...', type: 'text', required: true },
+    ],
+    docUrl: 'https://online.worldpay.com/',
+    setupSteps: ['Apply for Worldpay/FIS merchant account (sales)', 'Enterprise KYC (~6–12 weeks)', 'Dashboard → Integration → Keys', 'Copy Service Key + Client Key'],
+  },
+  {
+    id: 'ewallet',
+    name: 'QRIS / E-Wallet',
+    tagline: 'GoPay · OVO · DANA · ShopeePay (direct QR)',
+    color: '#22C55E',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Logo_QRIS.svg/240px-Logo_QRIS.svg.png',
+    countryFlags: '🇮🇩',
+    countryCount: 'Indonesia',
+    fees: '0% — customer pays you direct',
+    bestFor: 'Indonesian street vendors · warung · cafe',
+    method: 'manual',
+    fields: [
+      { key: 'qrUrl', label: 'QRIS image URL', placeholder: 'https://...', type: 'url', required: true },
+      { key: 'merchantName', label: 'Merchant name on QR', placeholder: 'Warung Bu Tini', type: 'text' },
+    ],
+    docUrl: null,
+    setupSteps: ['Get a QRIS from your bank or e-wallet (free)', 'Upload the QR image to ImageKit or similar', 'Paste the image URL here', 'Customers scan to pay you directly'],
+  },
+  {
+    id: 'bank',
+    name: 'Bank Transfer',
+    tagline: 'Direct deposit · works in every country',
+    color: '#475569',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: 'Global',
+    fees: '0%',
+    bestFor: 'High-trust repeat customers · large orders',
+    method: 'manual',
+    bankPicker: true,   // tells the setup form to show a bank-picker dropdown
+    fields: [
+      { key: 'bankName', label: 'Bank', placeholder: 'Pick or type your bank', type: 'bank-picker', required: true },
+      { key: 'accountNumber', label: 'Account number', placeholder: '1234567890', type: 'text', required: true },
+      { key: 'accountName', label: 'Account holder name', placeholder: 'PT Street Local', type: 'text', required: true },
+      { key: 'swift', label: 'SWIFT/BIC (international only)', placeholder: 'BNINIDJA', type: 'text' },
+    ],
+    docUrl: null,
+    setupSteps: ['Enter your business bank account details', 'Customer copies the number from the order confirmation', 'They transfer from their banking app', 'You confirm receipt manually inside StreetLocal'],
+  },
+  {
+    id: 'escrow',
+    name: 'Escrow Hold',
+    tagline: 'Funds held until customer confirms delivery',
+    color: '#F59E0B',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: 'Wherever Stripe works',
+    fees: 'Same as your Stripe rate · holds funds 1–30 days',
+    bestFor: 'High-value products · new customers · marketplaces',
+    method: 'requires-stripe',
+    fields: [
+      { key: 'holdDays', label: 'Hold period (days)', placeholder: '7', type: 'number' },
+    ],
+    docUrl: 'https://stripe.com/docs/connect/manual-payouts',
+    setupSteps: ['Connect Stripe first', 'Choose hold duration (1–30 days)', 'Customer pays → Stripe holds → released to you after period or on confirmation'],
+    comingSoon: true,
+  },
+]
+
+// Common Indonesian banks (shown in the Bank Transfer setup). Logos sourced from Wikimedia / official.
+const ID_BANKS = [
+  { code: 'BCA', name: 'BCA', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/240px-Bank_Central_Asia.svg.png' },
+  { code: 'MANDIRI', name: 'Bank Mandiri', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Bank_Mandiri_logo_2016.svg/320px-Bank_Mandiri_logo_2016.svg.png' },
+  { code: 'BNI', name: 'BNI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/BNI_logo.svg/200px-BNI_logo.svg.png' },
+  { code: 'BRI', name: 'BRI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/BANK_BRI_logo.svg/240px-BANK_BRI_logo.svg.png' },
+  { code: 'PERMATA', name: 'Permata', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Permata_Bank_logo.svg/240px-Permata_Bank_logo.svg.png' },
+  { code: 'CIMB', name: 'CIMB Niaga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/CIMB_Niaga_logo.svg/240px-CIMB_Niaga_logo.svg.png' },
+  { code: 'DANAMON', name: 'Danamon', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Logo_Bank_Danamon.svg/240px-Logo_Bank_Danamon.svg.png' },
+  { code: 'OTHER', name: 'Other / International', logo: null },
+]
+
+const VENDOR_TYPES = {
+  warung: {
+    id: 'warung', label: 'Warung / Street Food', emoji: '🍜',
+    tagline: 'Indonesian everyday food',
+    categories: ['Nasi', 'Mie', 'Lauk', 'Sate', 'Cemilan', 'Minuman', 'Promo', 'Extra'],
+  },
+  bakery: {
+    id: 'bakery', label: 'Bakery / Cake Shop', emoji: '🍰',
+    tagline: 'Bread, cakes, pastries',
+    categories: ['Roti', 'Kue', 'Pastry', 'Sandwich', 'Kopi', 'Minuman', 'Promo'],
+  },
+  cafe: {
+    id: 'cafe', label: 'Cafe / Coffee', emoji: '☕',
+    tagline: 'Coffee, light food, snacks',
+    categories: ['Coffee', 'Tea', 'Cold Drinks', 'Pastry', 'Sandwich', 'Dessert', 'Promo'],
+  },
+  restaurant: {
+    id: 'restaurant', label: 'Restaurant', emoji: '🍽️',
+    tagline: 'Full-service dining',
+    categories: ['Appetizer', 'Main Course', 'Signature', 'Side Dish', 'Dessert', 'Drinks', 'Promo'],
+  },
+  general: {
+    id: 'general', label: 'General / Other', emoji: '🛒',
+    tagline: 'Mixed food and drinks',
+    categories: ['Main', 'Drinks', 'Snacks', 'Dessert', 'Promo', 'Extra'],
+  },
+}
+
 /* ─── Demo Menu ─── */
 const DEMO_MENU = [
   // Meals
@@ -394,7 +803,7 @@ const S = {
 }
 
 /* ─── Customer Chat Panel (inline below cart confirmation) ─── */
-function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt }) {
+function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopName }) {
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
   const scrollRef = useRef(null)
@@ -450,23 +859,32 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
   }
 
   const sStyle = {
-    panel: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 12, marginTop: 16, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' },
-    header: { fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 },
-    orderCard: { background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: 10, marginBottom: 10, fontSize: 12, color: 'rgba(255,255,255,0.85)' },
-    msgList: { maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8, paddingRight: 4 },
-    msgRow: (role) => ({ display: 'flex', justifyContent: role === 'customer' ? 'flex-end' : role === 'system' ? 'center' : 'flex-start' }),
+    // Panel is a flex column that fills whatever vertical space its parent gives it.
+    // Combined with parent's flex:1, this makes the chat absorb available space on
+    // any phone size — small phones get a smaller msgList, large phones get a bigger one.
+    panel: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 10, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, width: '100%', boxSizing: 'border-box' },
+    header: { fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 6, flexShrink: 0 },
+    orderCard: { background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: 10, marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.85)', flexShrink: 0 },
+    // flex:1 so the message list absorbs whatever vertical space is left over after the
+    // other rows (header/order-card/input). Internal overflow gives the chat its own
+    // scrollbar — the OUTER page never scrolls.
+    msgList: { flex: 1, minHeight: 80, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8, paddingRight: 4 },
+    msgRow: (role) => ({ display: 'flex', alignItems: 'flex-end', gap: 6, justifyContent: role === 'customer' ? 'flex-end' : role === 'system' ? 'center' : 'flex-start' }),
     bubble: (role) => ({
       maxWidth: '78%',
       padding: '8px 12px',
       borderRadius: 14,
       fontSize: 13,
       lineHeight: 1.4,
-      background: role === 'customer' ? accent : role === 'system' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.14)',
+      background: role === 'customer' ? accent : role === 'system' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.55)',
       color: role === 'system' ? 'rgba(255,255,255,0.7)' : '#fff',
+      border: role === 'vendor' ? '1px solid rgba(255,255,255,0.06)' : 'none',
       fontStyle: role === 'system' ? 'italic' : 'normal',
       wordBreak: 'break-word',
     }),
-    inputRow: { display: 'flex', gap: 8 },
+    avatar: { width: 26, height: 26, borderRadius: 13, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)' },
+    avatarFallback: { width: 26, height: 26, borderRadius: 13, flexShrink: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)' },
+    inputRow: { display: 'flex', gap: 8, flexShrink: 0 },
     input: { flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, minHeight: 44 },
     sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
   }
@@ -476,18 +894,51 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
       <div style={sStyle.header}>Chat with the vendor</div>
       {op && op.items && (
         <div style={sStyle.orderCard}>
-          <div style={{ fontWeight: 800, marginBottom: 4 }}>Order {op.orderNumber || ''}</div>
+          <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13, color: '#FACC15' }}>Order {op.orderNumber || ''}</div>
+          {/* Customer info — tidy single-block with icons */}
+          {op.customer && (
+            <div style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 11, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
+              {op.customer.name && <div>👤 {op.customer.name}</div>}
+              {op.customer.phone && <div>📱 {op.customer.phone}</div>}
+              {op.customer.address && <div>📍 {op.customer.address}</div>}
+            </div>
+          )}
+          {/* Items + per-item notes/modifiers */}
           {op.items.map((it, i) => (
-            <div key={i}>{it.qty}x {it.name} — {fmt ? fmt(it.lineTotal) : it.lineTotal}</div>
+            <div key={i} style={{ marginBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.qty}× {it.name}</span>
+                <span style={{ flexShrink: 0, color: 'rgba(255,255,255,0.65)' }}>{fmt ? fmt(it.lineTotal) : it.lineTotal}</span>
+              </div>
+              {(it.modifiers && it.modifiers.length > 0) && (
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginLeft: 14 }}>+ {it.modifiers.join(' · ')}</div>
+              )}
+              {it.note && (
+                <div style={{ fontSize: 10, color: '#FACC15', marginLeft: 14, fontStyle: 'italic' }}>📝 {it.note}</div>
+              )}
+            </div>
           ))}
-          {op.delivery?.fee > 0 && <div style={{ marginTop: 4 }}>Delivery: {fmt ? fmt(op.delivery.fee) : op.delivery.fee}</div>}
-          <div style={{ marginTop: 4, fontWeight: 800 }}>Total: {fmt ? fmt(op.total) : op.total}</div>
-          {op.note && <div style={{ marginTop: 4, opacity: 0.8 }}>Note: {op.note}</div>}
+          {op.delivery?.fee > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+              <span>Delivery {op.delivery.zone ? `(${op.delivery.zone})` : ''}</span>
+              <span>{fmt ? fmt(op.delivery.fee) : op.delivery.fee}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)', fontWeight: 800, fontSize: 13 }}>
+            <span>Total</span>
+            <span style={{ color: '#FACC15' }}>{fmt ? fmt(op.total) : op.total}</span>
+          </div>
+          {op.note && <div style={{ marginTop: 4, opacity: 0.7, fontSize: 11, fontStyle: 'italic' }}>"{op.note}"</div>}
         </div>
       )}
       <div style={sStyle.msgList} ref={scrollRef}>
         {messages.filter(m => !m.order_payload).map((m) => (
           <div key={m.id} style={sStyle.msgRow(m.sender_role)}>
+            {m.sender_role === 'vendor' && (
+              shopLogo
+                ? <img src={shopLogo} alt="" style={sStyle.avatar} />
+                : <div style={sStyle.avatarFallback}>{(shopName || '?').charAt(0).toUpperCase()}</div>
+            )}
             <div style={sStyle.bubble(m.sender_role)}>{m.body}</div>
           </div>
         ))}
@@ -750,6 +1201,21 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [itemModal, setItemModal] = useState(null) // item being viewed
   const [modalQty, setModalQty] = useState(1)
+  const [modalVariant, setModalVariant] = useState(null)        // picked variant in the item modal
+  const [modalModifiers, setModalModifiers] = useState([])      // checked modifiers in the modal
+  const [modalPhotoIdx, setModalPhotoIdx] = useState(0)         // primary=0; gallery starts at 1
+  const [modalNote, setModalNote] = useState('')                 // per-item note set by customer in the modal
+  const [modalNoteOpen, setModalNoteOpen] = useState(false)      // progressive disclosure — note field hidden until tapped
+  // Reset modal selections whenever a new item opens — auto-pick first variant if any
+  useEffect(() => {
+    if (itemModal) {
+      setModalVariant((itemModal.variants && itemModal.variants.length > 0) ? itemModal.variants[0] : null)
+      setModalModifiers([])
+      setModalPhotoIdx(0)
+      setModalNote('')
+      setModalNoteOpen(false)
+    }
+  }, [itemModal])
   const [editItem, setEditItem] = useState(null) // item being edited by vendor
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
@@ -862,6 +1328,44 @@ export default function App() {
   const [custName, setCustName] = useState('')
   const [custPhone, setCustPhone] = useState('')
   const [custAddress, setCustAddress] = useState('')
+  const [addressLoading, setAddressLoading] = useState(false)
+  const [qrModalOpen, setQrModalOpen] = useState(false)
+  // GPS → reverse-geocode via Nominatim (free, no key). Fills the address but stays editable.
+  const detectAddress = () => {
+    if (!navigator.geolocation) {
+      alert('Location not available on this device')
+      return
+    }
+    setAddressLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=18`, {
+            headers: { 'Accept-Language': 'id,en' }
+          })
+          const data = await r.json()
+          const a = data.address || {}
+          // Build a clean line: house# + road + suburb + city — skip blanks
+          const parts = [
+            a.house_number ? `${a.house_number} ${a.road || ''}`.trim() : a.road,
+            a.suburb || a.neighbourhood || a.village,
+            a.city || a.town || a.county,
+          ].filter(Boolean)
+          const line = parts.length ? parts.join(', ') : (data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`)
+          setCustAddress(line)
+        } catch (e) {
+          setCustAddress(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`)
+        }
+        setAddressLoading(false)
+      },
+      (err) => {
+        setAddressLoading(false)
+        alert('Could not get location: ' + (err.message || 'permission denied'))
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
   const [payMethod, setPayMethod] = useState('cod')
   const [deliveryZones, setDeliveryZones] = useState(DEFAULT_DELIVERY_ZONES)
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
@@ -885,6 +1389,16 @@ export default function App() {
   const [vendorPushEnabled, setVendorPushEnabled] = useState(false)
   const [vendorPushBusy, setVendorPushBusy] = useState(false)
   const [vendorPushMsg, setVendorPushMsg] = useState('')
+
+  // Payment Methods — vendor connects their OWN gateway accounts. StreetLocal never touches funds.
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false)
+  const [setupGatewayId, setSetupGatewayId] = useState(null)        // which gateway is being configured
+  const [paymentGateways, setPaymentGateways] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_payment_gateways') || '{}') } catch { return {} }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_payment_gateways', JSON.stringify(paymentGateways)) } catch {}
+  }, [paymentGateways])
   const [showVisitUsWA, setShowVisitUsWA] = useState(() => localStorage.getItem('foodlocalchat_showVisitUsWA') === 'true')
   const [flashConvId, setFlashConvId] = useState(null)
   const chimeAudioRef = useRef(null)
@@ -942,6 +1456,144 @@ export default function App() {
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formPrepTime, setFormPrepTime] = useState(0)
+  // Progressive-disclosure fields — hidden by default, revealed via "+ feature" ghost button
+  const [formPhotos, setFormPhotos] = useState([])         // additional photos (primary stays in formPhoto)
+  const [formAllergens, setFormAllergens] = useState([])   // array of strings
+  const [formDietary, setFormDietary] = useState([])       // array of strings (halal/vegan/etc)
+  const [formPortion, setFormPortion] = useState('')       // "200g" / "Serves 2"
+  const [formStock, setFormStock] = useState('')           // empty = unlimited; number = count
+  const [formVariants, setFormVariants] = useState([])     // [{id, name, priceDelta}]
+  const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
+  // Which optional sections are expanded in the item form
+  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
+  const toggleSection = (k) => setExpandedSections(p => ({ ...p, [k]: !p[k] }))
+
+  // Shared progressive-disclosure block for both add + edit item forms
+  const renderItemOptionalFields = () => (
+    <div style={{ padding: '0 14px 4px' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        {[
+          { key: 'photos', label: '📷 Photos' },
+          { key: 'variants', label: '📏 Sizes' },
+          { key: 'modifiers', label: '➕ Add-ons' },
+          { key: 'allergens', label: '⚠️ Allergens' },
+          { key: 'dietary', label: '🌱 Dietary' },
+          { key: 'portion', label: '⚖️ Portion' },
+          { key: 'stock', label: '📦 Stock' },
+        ].map(opt => (
+          <button key={opt.key} type="button" onClick={() => toggleSection(opt.key)} style={{
+            background: expandedSections[opt.key] ? (isCustomAccent ? `${accent}30` : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.04)',
+            border: '1px dashed ' + (expandedSections[opt.key] ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.12)'),
+            color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            padding: '7px 11px', borderRadius: 12, minHeight: 32,
+          }}>{expandedSections[opt.key] ? '−' : '+'} {opt.label}</button>
+        ))}
+      </div>
+      {expandedSections.photos && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Gallery — up to 4 extra photos (primary is above)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {formPhotos.map((url, i) => (
+              <div key={i} style={{ position: 'relative', width: 64, height: 64, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={() => setFormPhotos(p => p.filter((_, j) => j !== i))} type="button" style={{ position: 'absolute', top: 2, right: 2, width: 22, height: 22, borderRadius: 11, border: 'none', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 14, cursor: 'pointer', lineHeight: 1, padding: 0 }}>&times;</button>
+              </div>
+            ))}
+            {formPhotos.length < 4 && (
+              <label style={{ width: 64, height: 64, borderRadius: 10, border: '1px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 24, background: 'rgba(255,255,255,0.02)' }}>
+                +
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => setFormPhotos(p => [...p, reader.result])
+                  reader.readAsDataURL(file)
+                }} />
+              </label>
+            )}
+          </div>
+        </div>
+      )}
+      {expandedSections.allergens && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy'].map(a => {
+              const isActive = formAllergens.includes(a)
+              return (
+                <button key={a} type="button" onClick={() => setFormAllergens(p => isActive ? p.filter(x => x !== a) : [...p, a])} style={{
+                  background: isActive ? '#EF4444' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                }}>{a}</button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {expandedSections.dietary && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Dietary tags</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {['Halal', 'Vegan', 'Vegetarian', 'Gluten-free', 'Dairy-free'].map(d => {
+              const isActive = formDietary.includes(d)
+              return (
+                <button key={d} type="button" onClick={() => setFormDietary(p => isActive ? p.filter(x => x !== d) : [...p, d])} style={{
+                  background: isActive ? '#22C55E' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                }}>{d}</button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {expandedSections.portion && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Portion / serving size</div>
+          <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · Serves 2 · 12oz' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+      )}
+      {expandedSections.stock && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
+            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Unlimited</button>
+          </div>
+        </div>
+      )}
+      {expandedSections.variants && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Sizes / variants — customer picks one. Price delta added to base.</div>
+          {formVariants.map((v, i) => (
+            <div key={v.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <input value={v.name} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Small / Large / Regular)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" value={v.priceDelta} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="button" onClick={() => setFormVariants(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setFormVariants(p => [...p, { id: 'v_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add size</button>
+        </div>
+      )}
+      {expandedSections.modifiers && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
+          {formModifiers.map((m, i) => (
+            <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <input value={m.name} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Extra cheese / No onion)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" value={m.priceDelta} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="button" onClick={() => setFormModifiers(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setFormModifiers(p => [...p, { id: 'm_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add modifier</button>
+        </div>
+      )}
+    </div>
+  )
 
   /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('foodlocalchat_vendorId', vendorId) }, [vendorId])
@@ -1065,15 +1717,43 @@ export default function App() {
   const totalItems = cart.reduce((s, c) => s + c.qty, 0)
   const totalPrice = cart.reduce((s, c) => s + c.price * c.qty, 0)
 
-  const addToCart = useCallback((item, qty = 1) => {
+  // Cart line ID is a composite key: itemId :: variantId :: sortedModifierIds :: noteHash —
+  // so identical combos with same note merge, but a different note creates a new line.
+  const buildCartLineId = (itemId, variant, modifiers, note) => {
+    const vid = variant ? variant.id : ''
+    const mids = (modifiers || []).map(m => m.id).sort().join(',')
+    const nh = (note || '').trim() ? '~' + (note || '').trim().slice(0, 30).toLowerCase().replace(/\s+/g, '_') : ''
+    return `${itemId}::${vid}::${mids}${nh}`
+  }
+
+  const addToCart = useCallback((item, qty = 1, variant = null, modifiers = [], note = '') => {
     setCart((prev) => {
-      const idx = prev.findIndex((c) => c.id === item.id)
+      const lineId = buildCartLineId(item.id, variant, modifiers, note)
+      const idx = prev.findIndex((c) => c.id === lineId)
       if (idx >= 0) {
         const next = [...prev]
         next[idx] = { ...next[idx], qty: next[idx].qty + qty }
         return next
       }
-      return [...prev, { id: item.id, name: item.name, desc: item.desc, photo: item.photo, price: item.price, promoPrice: item.promoPrice, prepTime: item.prepTime, qty }]
+      const basePrice = item.promoPrice || item.price
+      const variantDelta = variant ? (variant.priceDelta || 0) : 0
+      const modifiersDelta = (modifiers || []).reduce((s, m) => s + (m.priceDelta || 0), 0)
+      const unitPrice = basePrice + variantDelta + modifiersDelta
+      const displayName = variant ? `${item.name} (${variant.name})` : item.name
+      return [...prev, {
+        id: lineId,
+        itemId: item.id,
+        name: displayName,
+        desc: item.desc,
+        photo: item.photo,
+        price: unitPrice,
+        promoPrice: item.promoPrice ? unitPrice : null,
+        prepTime: item.prepTime,
+        variant: variant,
+        modifiers: modifiers,
+        note: (note || '').trim(),
+        qty,
+      }]
     })
   }, [])
 
@@ -1192,17 +1872,35 @@ export default function App() {
     setFormDesc(item.desc)
     setFormCategory(item.category || 'Meal')
     setFormPrepTime(item.prepTime || 0)
+    setFormPhotos(item.photos || [])
+    setFormAllergens(item.allergens || [])
+    setFormDietary(item.dietary || [])
+    setFormPortion(item.portion || '')
+    setFormStock(item.stock != null ? String(item.stock) : '')
+    setFormVariants(item.variants || [])
+    setFormModifiers(item.modifiers || [])
+    setExpandedSections({
+      photos: (item.photos || []).length > 0,
+      allergens: (item.allergens || []).length > 0,
+      dietary: (item.dietary || []).length > 0,
+      portion: !!item.portion,
+      stock: item.stock != null,
+      variants: (item.variants || []).length > 0,
+      modifiers: (item.modifiers || []).length > 0,
+    })
     setEditItem(item)
   }
 
   const saveEdit = () => {
     if (!formName || !formPrice) return
+    const stockNum = formStock === '' ? null : Number(formStock)
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) =>
       prev.map((m) =>
-        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 } : m
+        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
       )
     )
-    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0 }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras }).catch(() => {})
     setEditItem(null)
   }
 
@@ -1217,6 +1915,14 @@ export default function App() {
     setFormPhoto('')
     setFormDesc('')
     setFormPrepTime(0)
+    setFormPhotos([])
+    setFormAllergens([])
+    setFormDietary([])
+    setFormPortion('')
+    setFormStock('')
+    setFormVariants([])
+    setFormModifiers([])
+    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
     setAddingItem(true)
   }
 
@@ -1224,9 +1930,10 @@ export default function App() {
     if (!formName || !formPrice) return
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }
+    const stockNum = formStock === '' ? null : Number(formStock)
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) => [...prev, item])
-    if (vendorId) saveMenuItem(vendorId, { name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
   }
 
@@ -1258,6 +1965,8 @@ export default function App() {
         price: c.price,
         promoPrice: c.promoPrice || null,
         lineTotal: (c.promoPrice || c.price) * c.qty,
+        note: c.note || '',
+        modifiers: (c.modifiers || []).map(m => m.name).filter(Boolean),
       })),
       subtotal,
       delivery: {
@@ -1283,7 +1992,7 @@ export default function App() {
       const fakeConvId = 'demo-conv-' + Date.now()
       const nowIso = new Date().toISOString()
       const fakeConv = { id: fakeConvId, vendor_id: 'demo', customer_phone: cleanPhone, customer_name: custName || 'Customer', created_at: nowIso }
-      const fakeMessage = { id: 'demo-msg-' + Date.now(), conversation_id: fakeConvId, sender_role: 'customer', body: summaryBody, created_at: nowIso }
+      const fakeMessage = { id: 'demo-msg-' + Date.now(), conversation_id: fakeConvId, sender_role: 'customer', body: summaryBody, order_payload: orderPayload, created_at: nowIso }
       const ownerAck = { id: 'demo-msg-' + (Date.now() + 1), conversation_id: fakeConvId, sender_role: 'vendor', body: `Thanks ${custName || 'there'}! We received your order #${initials}-${orderNum}. We'll prep it now — about ${maxPrep || 15} minutes. We'll ping you here when it's ready.`, created_at: new Date(Date.now() + 1500).toISOString() }
       setChatConversation(fakeConv)
       setChatMessages([fakeMessage])
@@ -1483,10 +2192,43 @@ export default function App() {
 
   /* --- Menu category filter --- */
   const [menuFilter, setMenuFilter] = useState('All')
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
   const MENU_CATEGORIES = ['All', ...new Set(menuItems.map(m => m.category).filter(Boolean))]
 
+  /* --- Vendor type (warung / bakery / cafe / restaurant / general) --- */
+  const [vendorType, setVendorType] = useState(() => localStorage.getItem('vendorbasic_vendor_type') || null)
+  const [vendorTypePickerOpen, setVendorTypePickerOpen] = useState(false)
+  useEffect(() => {
+    if (vendorType) {
+      try { localStorage.setItem('vendorbasic_vendor_type', vendorType) } catch {}
+    }
+  }, [vendorType])
+  // Auto-open the picker once when vendor first enters admin without having chosen a type
+  useEffect(() => {
+    if (isVendor && !vendorType && !isDemo) setVendorTypePickerOpen(true)
+  }, [isVendor, vendorType, isDemo])
+
+  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu
+  const vendorPreset = vendorType ? VENDOR_TYPES[vendorType] : VENDOR_TYPES.warung
+  const categoryChips = [...new Set([
+    ...vendorPreset.categories,
+    ...menuItems.map(m => m.category).filter(Boolean),
+  ])]
+
+  /* --- Visit Us FAB — expanded with "Visit Us" label on first session, collapses to pin only --- */
+  const [fabExpanded, setFabExpanded] = useState(() => !localStorage.getItem('vendorbasic_visit_seen'))
+  useEffect(() => {
+    if (!fabExpanded) return
+    const t = setTimeout(() => {
+      setFabExpanded(false)
+      try { localStorage.setItem('vendorbasic_visit_seen', '1') } catch {}
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [fabExpanded])
+
   /* --- Visible menu --- */
-  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available)).filter(m => menuFilter === 'All' || m.category === menuFilter)
+  // Customers don't see items that are unavailable OR have stock === 0. Vendor admin sees everything.
+  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available && (m.stock == null || m.stock > 0))).filter(m => menuFilter === 'All' || m.category === menuFilter)
 
   // Active daily deals — filter by current time
   const activeDeals = dailyDeals.filter(d => {
@@ -1720,11 +2462,15 @@ export default function App() {
         </div>
       )}
 
-      {/* --- Promo Banner (marquee) --- */}
+      {/* --- Promo Banner (marquee) — edge-safe via inner padded overflow-hidden box --- */}
       {promoBannerEnabled && promoBanner && (
-        <div style={{ overflow: 'hidden', background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
-          <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-          <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 12s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>{promoBanner}</div>
+        <div style={{ background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
+          <div style={{ overflow: 'hidden', padding: '0 16px' }}>
+            <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
+            <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 14s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>
+              {promoBanner.split('\n').map(s => s.trim()).filter(Boolean).join('   ·   ')}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1795,33 +2541,170 @@ export default function App() {
       <div style={{ paddingBottom: 12 }}>
         {/* Category text toggles + Visit Us */}
         <div style={{ display: 'flex', alignItems: 'center', padding: '20px 16px 0' }}>
-          <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[{ label: 'Menu', filter: 'All' },
-            ...(['Snack', 'Drink', 'Extra Sauce'].filter(cat => menuItems.some(m => m.category === cat)).map(cat => ({
-              label: cat === 'Drink' ? 'Drinks' : cat === 'Snack' ? 'Snacks' : 'Extra',
-              filter: cat,
-            })))
-          ].map(tab => {
-            const isActive = menuFilter === tab.filter
-            return (
-              <button key={tab.filter} onClick={() => setMenuFilter(tab.filter)} style={{
-                background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
-                fontSize: 15, fontWeight: 700,
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
-                borderBottom: isActive ? `2px solid ${isCustomAccent ? accent : '#fff'}` : '2px solid transparent',
-              }}>
-                {tab.label}
-              </button>
-            )
-          })}
+          <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none', alignItems: 'center' }}>
+          {(() => {
+            const allCats = MENU_CATEGORIES.slice(1)
+            const friendly = (c) => c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c
+            const topThree = allCats.slice(0, 3)
+            // Keep the active selection visible inline even if it's outside the top 3
+            const inlineCats = (menuFilter === 'All' || topThree.includes(menuFilter)) ? topThree : [...topThree, menuFilter]
+            const tabs = [{ label: 'Menu', filter: 'All' }, ...inlineCats.map(c => ({ label: friendly(c), filter: c }))]
+            return tabs.map(tab => {
+              const isActive = menuFilter === tab.filter
+              return (
+                <button key={tab.filter} onClick={() => setMenuFilter(tab.filter)} style={{
+                  background: 'none', border: 'none', padding: '12px 0 10px', cursor: 'pointer', flexShrink: 0, minHeight: 44,
+                  fontSize: 15, fontWeight: 700,
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                  borderBottom: isActive ? `2px solid ${isCustomAccent ? accent : '#fff'}` : '2px solid transparent',
+                }}>
+                  {tab.label}
+                </button>
+              )
+            })
+          })()}
           </div>
-          {!isVendor && (
-            <button onClick={() => setShowLocation(true)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0, marginLeft: 12, minHeight: 44, ...(isCustomAccent ? { background: accent } : { background: 'rgba(255,255,255,0.15)' }) }}>
-              {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 10 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 2.5s ease-in-out infinite' }} /></div>}
-              <span style={{ position: 'relative', zIndex: 1 }}>Visit Us</span>
+          {MENU_CATEGORIES.length > 4 && (
+            <button onClick={() => setMenuDrawerOpen(true)} aria-label="All categories" title="All categories" style={{
+              background: isCustomAccent ? accent : 'rgba(255,255,255,0.18)',
+              border: 'none', padding: 8, marginLeft: 12, cursor: 'pointer', flexShrink: 0,
+              minHeight: 44, minWidth: 44, borderRadius: 10,
+              color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+            }}>
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
+              <span style={{ width: 20, height: 2, background: '#fff', borderRadius: 1 }} />
             </button>
           )}
         </div>
+
+        {/* Vendor-type picker — one-time question on signup, also reachable via item form */}
+        {vendorTypePickerOpen && (
+          <>
+            <div onClick={() => vendorType && setVendorTypePickerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000 }} />
+            <div role="dialog" aria-label="Pick vendor type" style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              width: 360, maxWidth: '92vw', maxHeight: '88vh', overflowY: 'auto',
+              background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)',
+              borderRadius: 22, padding: '26px 22px 22px', zIndex: 1001,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }} />
+              <div style={{ textAlign: 'center', marginBottom: 18 }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>What kind of vendor are you?</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>We'll set up your menu categories instantly.</div>
+              </div>
+              {Object.values(VENDOR_TYPES).map(vt => {
+                const isActive = vendorType === vt.id
+                return (
+                  <button key={vt.id} onClick={() => { setVendorType(vt.id); setVendorTypePickerOpen(false) }} style={{
+                    display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                    padding: '14px 14px', marginBottom: 10, borderRadius: 14,
+                    background: isActive
+                      ? (isCustomAccent ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)` : 'rgba(255,255,255,0.16)')
+                      : 'rgba(255,255,255,0.04)',
+                    border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)'),
+                    boxShadow: isActive && isCustomAccent ? `0 6px 18px ${accent}55` : 'none',
+                    cursor: 'pointer', textAlign: 'left', color: '#fff',
+                    transition: 'all 150ms ease',
+                  }}>
+                    <span style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }}>{vt.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{vt.label}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 4, fontWeight: 500 }}>{vt.tagline}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500, lineHeight: 1.4 }}>{vt.categories.slice(0, 5).join(' · ')}{vt.categories.length > 5 ? ' · …' : ''}</div>
+                    </div>
+                  </button>
+                )
+              })}
+              {vendorType && (
+                <button onClick={() => setVendorTypePickerOpen(false)} style={{
+                  width: '100%', padding: '10px 14px', marginTop: 4, borderRadius: 12,
+                  background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>Cancel</button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Visit Us FAB — bottom-right, always visible while scrolling. Expands on first session. */}
+        {!isVendor && (
+          <button onClick={() => setShowLocation(true)} aria-label="Visit us" title="Visit us" style={{
+            position: 'fixed', right: 16, bottom: 24, zIndex: 100,
+            height: 56, minWidth: 56,
+            padding: fabExpanded ? '0 22px 0 18px' : 0,
+            borderRadius: 28, border: 'none',
+            background: isCustomAccent ? accent : '#1f1f1f',
+            color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3)',
+            transition: 'padding 250ms ease, min-width 250ms ease',
+            overflow: 'hidden', whiteSpace: 'nowrap',
+          }}>
+            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />
+            {fabExpanded && (
+              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.3 }}>Visit Us</span>
+            )}
+          </button>
+        )}
+
+        {/* Full-category drawer — slides in from right when burger pressed */}
+        {menuDrawerOpen && (
+          <>
+            <div onClick={() => setMenuDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 998, animation: 'menuOverlayIn 200ms ease-out' }} />
+            <div role="dialog" aria-label="Browse menu" style={{
+              position: 'fixed', top: 0, right: 0, width: 300, maxWidth: '88vw', height: '100vh',
+              background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)',
+              zIndex: 999, padding: '22px 18px 24px', overflowY: 'auto',
+              boxShadow: '-12px 0 40px rgba(0,0,0,0.55), inset 1px 0 0 rgba(255,255,255,0.06)',
+              borderTopLeftRadius: 18, borderBottomLeftRadius: 18,
+              animation: 'menuDrawerIn 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}>
+              <style>{`
+                @keyframes menuDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                @keyframes menuOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+              `}</style>
+              {/* Accent line on top — premium "title indicator" */}
+              <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14 }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Our Menu</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
+                </div>
+                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12 }}>&times;</button>
+              </div>
+              {[{ filter: 'All', label: 'Full Menu' }, ...MENU_CATEGORIES.slice(1).map(c => ({ filter: c, label: c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c }))].map(opt => {
+                const count = opt.filter === 'All' ? menuItems.length : menuItems.filter(m => m.category === opt.filter).length
+                const isActive = menuFilter === opt.filter
+                return (
+                  <button key={opt.filter} onClick={() => { setMenuFilter(opt.filter); setMenuDrawerOpen(false) }} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                    padding: '13px 14px', marginBottom: 8, borderRadius: 12,
+                    background: isActive
+                      ? (isCustomAccent ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)` : 'rgba(255,255,255,0.16)')
+                      : 'rgba(255,255,255,0.04)',
+                    border: isActive ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: isActive && isCustomAccent ? `0 4px 14px ${accent}55` : 'none',
+                    cursor: 'pointer', minHeight: 48,
+                    color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'left',
+                    transition: 'background 150ms ease, box-shadow 150ms ease',
+                  }}>
+                    <span>{opt.label}</span>
+                    <span style={{
+                      padding: '3px 9px', borderRadius: 11,
+                      background: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)',
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontSize: 11, fontWeight: 700, minWidth: 22, textAlign: 'center',
+                    }}>{count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
         <div style={{ height: 12 }} />
         <div style={menuCardStyle === 'grid' ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 12px' } : {}}>
         {visibleMenu.map((item) => (
@@ -1974,12 +2857,33 @@ export default function App() {
 
             {/* Hero image — with side padding + rounded */}
             <div style={{ padding: '0 14px', position: 'relative' }}>
-              <img
-                src={itemModal.photo || PLACEHOLDER_LG}
-                alt={itemModal.name}
-                onError={imgError('food')}
-                style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
-              />
+              {(() => {
+                const photoStrip = [itemModal.photo, ...(itemModal.photos || [])].filter(Boolean)
+                const activePhoto = photoStrip[modalPhotoIdx] || itemModal.photo || PLACEHOLDER_LG
+                return (
+                  <>
+                    <img
+                      src={activePhoto}
+                      alt={itemModal.name}
+                      onError={imgError('food')}
+                      style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
+                    />
+                    {photoStrip.length > 1 && (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
+                        {photoStrip.map((url, i) => (
+                          <button key={i} onClick={() => setModalPhotoIdx(i)} style={{
+                            flexShrink: 0, width: 56, height: 56, borderRadius: 10, padding: 0,
+                            border: '2px solid ' + (modalPhotoIdx === i ? (isCustomAccent ? accent : '#FACC15') : 'rgba(255,255,255,0.1)'),
+                            background: 'none', cursor: 'pointer', overflow: 'hidden',
+                          }}>
+                            <img src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
               {/* Category badge */}
               {itemModal.category && (
                 <span style={{ position: 'absolute', top: 12, right: 26, fontSize: 11, fontWeight: 700, color: '#fff', background: accent, padding: '4px 10px', borderRadius: 8 }}>{itemModal.category}</span>
@@ -1995,23 +2899,44 @@ export default function App() {
               {itemModal.spice > 0 && <span style={{ fontSize: 14 }}>{'🌶️'.repeat(itemModal.spice)}</span>}
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{itemModal.desc}</p>
 
-              {/* Badges */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                {itemModal.halal && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>Halal</span>}
-                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>Popular</span>}
+              {/* Badges — popular, halal, dietary tags */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>⭐ Popular</span>}
+                {(itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
+                {(itemModal.dietary || []).filter(d => d !== 'Halal').map(d => (
+                  <span key={d} style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '4px 10px', borderRadius: 8 }}>🌱 {d}</span>
+                ))}
+                {itemModal.portion && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: 8 }}>⚖️ {itemModal.portion}</span>}
+                {itemModal.stock != null && itemModal.stock > 0 && itemModal.stock <= 5 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#fca5a5', padding: '4px 10px', borderRadius: 8 }}>Only {itemModal.stock} left</span>
+                )}
               </div>
+              {/* Allergen warning — surfaces only if allergens present */}
+              {(itemModal.allergens || []).length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 14 }}>⚠️</span>
+                  <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 600 }}>Contains: {(itemModal.allergens || []).join(', ')}</span>
+                </div>
+              )}
 
               {/* Price + Qty */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  {itemModal.promoPrice ? (
-                    <>
-                      <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', marginRight: 8 }}>{fmt(itemModal.price)}</span>
-                      <span style={{ fontSize: 24, fontWeight: 900, color: '#EF4444' }}>{fmt(itemModal.promoPrice)}</span>
-                    </>
-                  ) : (
-                    <span style={{ fontSize: 24, fontWeight: 900, color: priceColor }}>{fmt(itemModal.price)}</span>
-                  )}
+                  {(() => {
+                    const basePrice = itemModal.promoPrice || itemModal.price
+                    const variantDelta = modalVariant ? (modalVariant.priceDelta || 0) : 0
+                    const modifiersDelta = modalModifiers.reduce((s, m) => s + (m.priceDelta || 0), 0)
+                    const livePrice = basePrice + variantDelta + modifiersDelta
+                    if (itemModal.promoPrice && !modalVariant && modalModifiers.length === 0) {
+                      return (
+                        <>
+                          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', marginRight: 8 }}>{fmt(itemModal.price)}</span>
+                          <span style={{ fontSize: 24, fontWeight: 900, color: '#EF4444' }}>{fmt(itemModal.promoPrice)}</span>
+                        </>
+                      )
+                    }
+                    return <span style={{ fontSize: 24, fontWeight: 900, color: priceColor }}>{fmt(livePrice)}</span>
+                  })()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: qtyBg, color: qtyColor, fontSize: 20, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
@@ -2022,17 +2947,108 @@ export default function App() {
             </div>
 
             {/* Add to Cart button */}
-            {shopOpen && itemModal.available && (
-              <div style={{ padding: '16px 12px 32px' }}>
-                <button
-                  style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: isCustomAccent ? accent : '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                  onClick={() => { addToCart(itemModal, modalQty); setItemModal(null) }}
-                >
-                  {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>{t.addToCart || 'Add to Cart'} &middot; {fmt((itemModal.promoPrice || itemModal.price) * modalQty)}</span>
-                </button>
+            {/* Variants picker — required choice if item has variants */}
+            {itemModal.variants && itemModal.variants.length > 0 && (
+              <div style={{ padding: '0 14px 12px' }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Size · choose one</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {itemModal.variants.map(v => {
+                    const isActive = modalVariant && modalVariant.id === v.id
+                    return (
+                      <button key={v.id} onClick={() => setModalVariant(v)} style={{
+                        flex: '1 1 calc(50% - 4px)', minWidth: 100, padding: '10px 12px',
+                        borderRadius: 12, border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                        background: isActive ? (isCustomAccent ? accent : 'rgba(255,255,255,0.18)') : 'rgba(255,255,255,0.04)',
+                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      }}>
+                        <span>{v.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.85 }}>{v.priceDelta > 0 ? `+${fmt(v.priceDelta)}` : v.priceDelta < 0 ? fmt(v.priceDelta) : 'base'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
+
+            {/* Modifiers — optional multi-select */}
+            {itemModal.modifiers && itemModal.modifiers.length > 0 && (
+              <div style={{ padding: '0 14px 12px' }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Add-ons · optional</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {itemModal.modifiers.map(m => {
+                    const isChecked = modalModifiers.some(x => x.id === m.id)
+                    return (
+                      <button key={m.id} onClick={() => setModalModifiers(p => isChecked ? p.filter(x => x.id !== m.id) : [...p, m])} style={{
+                        padding: '10px 12px', borderRadius: 12,
+                        border: '1px solid ' + (isChecked ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'),
+                        background: isChecked ? (isCustomAccent ? `${accent}30` : 'rgba(255,255,255,0.12)') : 'rgba(255,255,255,0.04)',
+                        color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)', background: isChecked ? (isCustomAccent ? accent : '#fff') : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: isCustomAccent ? '#fff' : '#000', fontWeight: 900 }}>{isChecked && '✓'}</span>
+                          {m.name}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: m.priceDelta > 0 ? '#FACC15' : 'rgba(255,255,255,0.5)' }}>{m.priceDelta > 0 ? `+${fmt(m.priceDelta)}` : m.priceDelta < 0 ? fmt(m.priceDelta) : 'free'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Per-item note — progressive disclosure ghost button + collapsible textarea */}
+            {shopOpen && itemModal.available && (
+              <div style={{ padding: '0 12px 8px' }}>
+                {!modalNoteOpen ? (
+                  <button onClick={() => setModalNoteOpen(true)} type="button" style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.18)',
+                    color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}>
+                    <span style={{ fontSize: 14 }}>📝</span>
+                    <span>{modalNote.trim() ? `Note: ${modalNote.slice(0, 30)}${modalNote.length > 30 ? '…' : ''}` : 'Add note for this item'}</span>
+                  </button>
+                ) : (
+                  <div style={{ padding: 10, background: 'rgba(0,0,0,0.4)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>📝 Note for vendor</span>
+                      <button onClick={() => setModalNoteOpen(false)} type="button" style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer', padding: 0, lineHeight: 1, width: 24, height: 24 }}>&times;</button>
+                    </div>
+                    <textarea
+                      value={modalNote}
+                      onChange={(e) => setModalNote(e.target.value.slice(0, 100))}
+                      placeholder="Extra spicy · no onion · less sugar"
+                      autoFocus
+                      style={{ width: '100%', minHeight: 50, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, textAlign: 'right' }}>{modalNote.length}/100</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Add to Cart button */}
+            {shopOpen && itemModal.available && (() => {
+              const basePrice = itemModal.promoPrice || itemModal.price
+              const variantDelta = modalVariant ? (modalVariant.priceDelta || 0) : 0
+              const modifiersDelta = modalModifiers.reduce((s, m) => s + (m.priceDelta || 0), 0)
+              const unitPrice = basePrice + variantDelta + modifiersDelta
+              const totalPriceForBtn = unitPrice * modalQty
+              return (
+                <div style={{ padding: '8px 12px 32px' }}>
+                  <button
+                    style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: isCustomAccent ? accent : '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                    onClick={() => { addToCart(itemModal, modalQty, modalVariant, modalModifiers, modalNote); setItemModal(null) }}
+                  >
+                    {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
+                    <span style={{ position: 'relative', zIndex: 1 }}>{t.addToCart || 'Add to Cart'} &middot; {fmt(totalPriceForBtn)}</span>
+                  </button>
+                </div>
+              )
+            })()}
           </div>
             )
           })()}
@@ -2612,8 +3628,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px 0' }}>
+            {/* Scrollable content — but in orderDone state we lock the outer page (chat scrolls internally) */}
+            <div style={{ flex: 1, overflowY: orderDone ? 'hidden' : 'auto', padding: orderDone ? 0 : '12px 14px 0', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {!orderDone ? (
                 <>
                   {/* Cart items */}
@@ -2636,51 +3652,9 @@ export default function App() {
                     <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>{t.cartEmpty || 'Your cart is empty'}</p>
                   )}
 
-                  {/* Your details */}
+                  {/* Summary — moved up to sit under cart items so customer sees the price total first */}
                   {cart.length > 0 && (
-                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
-                      <input
-                        type="text"
-                        placeholder="Your name"
-                        value={custName}
-                        onChange={e => setCustName(e.target.value)}
-                        style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
-                      />
-                      <input
-                        type="tel"
-                        placeholder="WhatsApp number (required)"
-                        value={custPhone}
-                        onChange={e => setCustPhone(e.target.value)}
-                        style={{ ...S.input, marginBottom: delEnabled ? 8 : 0, fontSize: 13 }}
-                      />
-                      {delEnabled && (
-                        <input
-                          type="text"
-                          placeholder="Delivery address"
-                          value={custAddress}
-                          onChange={e => setCustAddress(e.target.value)}
-                          style={{ ...S.input, marginBottom: 0, fontSize: 13 }}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Order note */}
-                  {cart.length > 0 && (
-                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 4, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 4 }}>Order Note</label>
-                      <textarea
-                        placeholder="Extra spicy, no onions..."
-                        style={{ ...S.input, minHeight: 50, resize: 'none', marginBottom: 0, fontSize: 13 }}
-                        id="orderNote"
-                      />
-                    </div>
-                  )}
-
-                  {/* Summary */}
-                  {cart.length > 0 && (
-                    <div style={{ background: isCustomAccent ? `${accent}25` : 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ background: isCustomAccent ? `${accent}25` : 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginBottom: 8, border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)' }}>
                       {cart.map(c => (
                         <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
                           <span>{c.name} x{c.qty}</span>
@@ -2703,18 +3677,73 @@ export default function App() {
                       </div>
                     </div>
                   )}
+
+                  {/* Your details — moved to bottom, the LAST thing customer fills before sending */}
+                  {cart.length > 0 && (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={custName}
+                        onChange={e => setCustName(e.target.value)}
+                        style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="WhatsApp number (required)"
+                        value={custPhone}
+                        onChange={e => setCustPhone(e.target.value)}
+                        style={{ ...S.input, marginBottom: delEnabled ? 8 : 0, fontSize: 13 }}
+                      />
+                      {delEnabled && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input
+                            type="text"
+                            placeholder="Delivery address"
+                            value={custAddress}
+                            onChange={e => setCustAddress(e.target.value)}
+                            style={{ ...S.input, marginBottom: 0, fontSize: 13, flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={detectAddress}
+                            disabled={addressLoading}
+                            title="Use my current location"
+                            style={{
+                              flexShrink: 0, padding: '0 12px', minHeight: 44, borderRadius: 10,
+                              border: 'none', background: isCustomAccent ? accent : 'rgba(255,255,255,0.18)',
+                              color: '#fff', fontSize: 12, fontWeight: 700, cursor: addressLoading ? 'wait' : 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
+                              opacity: addressLoading ? 0.6 : 1,
+                            }}
+                          >
+                            <span style={{ fontSize: 14, lineHeight: 1 }}>📍</span>
+                            <span>{addressLoading ? 'Locating…' : 'Set'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
-                /* Order Confirmation */
-                <div style={{ textAlign: 'center', padding: '60px 16px' }}>
-                  <div style={{ width: 80, height: 80, borderRadius: 40, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                    <span style={{ fontSize: 36 }}>✓</span>
+                /* Order Confirmation — locked-height, only chat scrolls internally */
+                <div style={{ padding: '12px 14px 12px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minHeight: 0 }}>
+                  {/* Merged status header — was 4 stacked blocks, now 1 row */}
+                  <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}55` }}>
+                      <span style={{ fontSize: 16, color: '#fff', fontWeight: 900, lineHeight: 1 }}>✓</span>
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                        <span>{t.orderSent || 'Order Sent'}</span>
+                        <span style={{ color: '#FACC15', fontWeight: 900, fontSize: 14 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
+                        {t.orderSentMsg || 'Vendor will reply shortly'}
+                      </div>
+                    </div>
                   </div>
-                  <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 4, color: '#fff' }}>{t.orderSent || 'Order Sent!'}</h2>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#FACC15', marginBottom: 10 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
-                    {t.orderSentMsg || 'Your order has been sent. The vendor will reply shortly in this chat.'}
-                  </p>
 
                   {/* Inline customer chat panel */}
                   <CustomerChatPanel
@@ -2725,23 +3754,48 @@ export default function App() {
                     setDraft={setChatDraft}
                     accent={accent}
                     fmt={fmt}
+                    shopLogo={shopLogo}
+                    shopName={shopName}
                   />
 
-                  {/* QRIS Payment QR — if vendor uploaded */}
+                  {/* QRIS Payment QR — landscape row: small QR on left, payment apps on right */}
                   {shopQris && (
-                    <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Scan to Pay</div>
-                      <div style={{ background: '#fff', borderRadius: 20, padding: 14, display: 'inline-block' }}>
-                        <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 180, height: 180, objectFit: 'contain', borderRadius: 12 }} />
+                    <button
+                      type="button"
+                      onClick={() => setQrModalOpen(true)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 10, cursor: 'pointer',
+                        textAlign: 'left', width: '100%',
+                      }}
+                    >
+                      <div style={{ background: '#fff', borderRadius: 8, padding: 4, flexShrink: 0, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                        <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 4, display: 'block' }} />
                       </div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>QRIS — GoPay, OVO, DANA, ShopeePay, Bank</div>
-                    </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Scan to Pay</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
+                        <div style={{ fontSize: 10, color: '#FACC15', fontWeight: 700, marginTop: 3 }}>Tap to enlarge ›</div>
+                      </div>
+                    </button>
                   )}
 
-                  <button style={{ padding: '14px 40px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginTop: -30 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false); setChatConversation(null); setChatMessages([]); setChatDraft('') }}>
+                  <button style={{ padding: '12px 30px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', alignSelf: 'center', minHeight: 44 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false); setChatConversation(null); setChatMessages([]); setChatDraft('') }}>
                     Back To Menu
                   </button>
-                  <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfffddfsdfsdfff-removebg-preview.png" alt="" onError={imgError('generic')} style={{ position: 'fixed', bottom: 16, right: 16, width: 100, height: 'auto', opacity: 0.8, pointerEvents: 'none' }} />
+
+                  {/* QR popup — large scannable view */}
+                  {qrModalOpen && shopQris && (
+                    <div onClick={() => setQrModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, padding: 18, boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}>
+                        <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 280, height: 280, maxWidth: '70vw', maxHeight: '70vw', objectFit: 'contain', display: 'block' }} />
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginTop: 16 }}>Scan to Pay</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
+                      <button onClick={() => setQrModalOpen(false)} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Close</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2818,52 +3872,378 @@ export default function App() {
 
       {/* ═══ VENDOR ORDER ALERTS / SETTINGS ═══ */}
       {isVendor && vendorTab === 'settings' && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Order Alerts</div>
-            <button onClick={() => setVendorTab('shop')} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 }}>Close</button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+          {/* Premium header — accent back button + title + subtitle, matches drawer pattern */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <button onClick={() => setVendorTab('shop')} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Order Alerts</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1, fontWeight: 500 }}>Sound · vibration · push notifications</div>
+            </div>
           </div>
-          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Sound + vibration</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
-                When the inbox is open and a new customer order arrives, the app plays a chime and vibrates. Tap below once to allow audio playback.
+
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Accent indicator — premium "you're here" mark */}
+            <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 2 }} />
+
+            {/* Sound + vibration */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, boxShadow: '0 4px 14px rgba(0,0,0,0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: `${accent}25`, border: `1px solid ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>🔔</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Sound &amp; Vibration</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Audio chime when inbox is open</div>
+                </div>
               </div>
-              <button onClick={() => { primeVendorChime(); playVendorChime(); try { navigator.vibrate && navigator.vibrate([200,100,200]) } catch {} }} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
+                When the orders inbox is open and a new order arrives, the app plays a chime and vibrates. Tap below once to allow audio playback on this device.
+              </div>
+              <button onClick={() => { primeVendorChime(); playVendorChime(); try { navigator.vibrate && navigator.vibrate([200,100,200]) } catch {} }} style={{ padding: '11px 16px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, boxShadow: `0 4px 12px ${accent}50` }}>
                 Test chime &amp; vibration
               </button>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Push notifications (app closed)</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
+            {/* Push notifications */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, boxShadow: '0 4px 14px rgba(0,0,0,0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(34,197,94,0.18)', border: '1px solid rgba(34,197,94,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📱</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    Push Notifications
+                    {vendorPushEnabled && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)' }}>ON</span>}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Alerts when app is closed</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
                 Receive a system notification when a new order arrives even if the app is closed or the phone is asleep.
               </div>
               {!vendorPushEnabled ? (
-                <button onClick={onEnableVendorPush} disabled={vendorPushBusy} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#22C55E', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
-                  {vendorPushBusy ? 'Enabling…' : 'Enable order alerts'}
+                <button onClick={onEnableVendorPush} disabled={vendorPushBusy} style={{ padding: '11px 16px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: vendorPushBusy ? 'wait' : 'pointer', minHeight: 44, boxShadow: '0 4px 12px rgba(34,197,94,0.4)', opacity: vendorPushBusy ? 0.7 : 1 }}>
+                  {vendorPushBusy ? 'Enabling…' : 'Enable Order Alerts'}
                 </button>
               ) : (
-                <button onClick={onDisableVendorPush} disabled={vendorPushBusy} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
-                  {vendorPushBusy ? 'Disabling…' : 'Disable order alerts'}
+                <button onClick={onDisableVendorPush} disabled={vendorPushBusy} style={{ padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: vendorPushBusy ? 'wait' : 'pointer', minHeight: 44, opacity: vendorPushBusy ? 0.7 : 1 }}>
+                  {vendorPushBusy ? 'Disabling…' : 'Disable Order Alerts'}
                 </button>
               )}
-              {vendorPushMsg && <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{vendorPushMsg}</div>}
+              {vendorPushMsg && <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', fontSize: 11, color: 'rgba(255,255,255,0.75)', borderLeft: `3px solid ${accent}` }}>{vendorPushMsg}</div>}
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Show WhatsApp on Visit Us page</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.5 }}>
-                Off by default. When ON, your WhatsApp link/icon appears on the public Visit Us page so customers can message you directly.
+            {/* Show WhatsApp toggle */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, boxShadow: '0 4px 14px rgba(0,0,0,0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>💬</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>WhatsApp on Visit Us</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Public contact channel</div>
+                </div>
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', minHeight: 44 }}>
-                <input type="checkbox" checked={!!showVisitUsWA} onChange={(e) => setShowVisitUsWA(e.target.checked)} style={{ width: 22, height: 22 }} />
-                <span style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>Show WhatsApp on Visit Us</span>
-              </label>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.55 }}>
+                Off by default. When ON, your WhatsApp link appears on the public Visit Us page so customers can message you directly.
+              </div>
+              {/* Custom toggle pill matching app pattern */}
+              <button type="button" onClick={() => setShowVisitUsWA(!showVisitUsWA)} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                padding: '10px 14px', borderRadius: 12, minHeight: 44,
+                background: showVisitUsWA ? `${accent}20` : 'rgba(255,255,255,0.04)',
+                border: showVisitUsWA ? `1px solid ${accent}55` : '1px solid rgba(255,255,255,0.1)',
+                color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}>
+                <span>Show WhatsApp link</span>
+                <span style={{
+                  width: 38, height: 22, borderRadius: 11, padding: 2,
+                  background: showVisitUsWA ? accent : 'rgba(255,255,255,0.18)',
+                  position: 'relative', transition: 'background 150ms ease',
+                  display: 'inline-block',
+                }}>
+                  <span style={{
+                    display: 'block', width: 18, height: 18, borderRadius: 9, background: '#fff',
+                    transform: showVisitUsWA ? 'translateX(16px)' : 'translateX(0)',
+                    transition: 'transform 150ms ease',
+                  }} />
+                </span>
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ═══ PAYMENT METHODS — vendor connects their own gateways ═══ */}
+      {isVendor && paymentMethodsOpen && (() => {
+        const connectedCount = SUPPORTED_GATEWAYS.filter(g => paymentGateways[g.id]?.connected).length
+        const liveOnes = SUPPORTED_GATEWAYS.filter(g => paymentGateways[g.id]?.connected)
+        const availableOnes = SUPPORTED_GATEWAYS.filter(g => !paymentGateways[g.id]?.connected)
+        // Clean fintech list row — no card chrome, just dotted divider between rows.
+        // Brand color is preserved only on the small logo chip. App background bleeds through.
+        const renderCard = (g, isLive, isLast) => (
+          <button key={g.id} type="button" onClick={() => !g.comingSoon && setSetupGatewayId(g.id)} disabled={g.comingSoon}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',
+              padding: '14px 4px', border: 'none', background: 'transparent', cursor: g.comingSoon ? 'not-allowed' : 'pointer',
+              borderBottom: isLast ? 'none' : '1px dashed rgba(255,255,255,0.10)',
+              opacity: g.comingSoon ? 0.45 : 1,
+              transition: 'background 120ms ease',
+            }}
+          >
+            {/* Logo chip — keeps brand color identity */}
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: g.color, color: '#fff', fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 6px ${g.color}40`, overflow: 'hidden' }}>
+              {g.logoUrl
+                ? <img src={g.logoUrl} alt={g.name} onError={(e) => { e.currentTarget.parentElement.textContent = g.name.charAt(0) }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                : g.name.charAt(0)
+              }
+            </div>
+
+            {/* Middle column — name + tagline + country count */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: 0.1 }}>{g.name}</span>
+                {isLive && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86efac', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>LIVE</span>}
+                {g.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.16)', color: '#D8B4FE', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>ENTERPRISE</span>}
+                {g.comingSoon && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245,158,11,0.18)', color: '#FCD34D', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>SOON</span>}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 2 }}>{g.tagline}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{g.countryCount}</div>
+            </div>
+
+            {/* Right arrow — high-end "tap to enter" affordance */}
+            <div style={{ flexShrink: 0, color: g.comingSoon ? 'rgba(255,255,255,0.2)' : (isLive ? '#22c55e' : 'rgba(255,255,255,0.5)'), fontSize: 20, fontWeight: 300, lineHeight: 1, paddingRight: 4 }}>
+              {g.comingSoon ? '·' : '›'}
+            </div>
+          </button>
+        )
+        return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* App theme background + glass overlay (matches the rest of the app) */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+
+          {/* Scrollable foreground content */}
+          <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
+          {/* Header — transparent, no dark container */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
+            <button onClick={() => setPaymentMethodsOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Payment Methods</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
+            </div>
+          </div>
+
+          {/* Trust banner */}
+          <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 14, background: `linear-gradient(135deg, ${accent}18 0%, rgba(0,0,0,0.35) 100%)`, border: `1px solid ${accent}33`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>🔒</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 3 }}>Your money goes directly to you</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>StreetLocal never holds or processes your funds. Each gateway sends payouts straight to your own account. We're just the checkout UI.</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14, marginTop: 4 }} />
+
+            {liveOnes.length > 0 && (
+              <>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(34,197,94,0.85)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+                  Live · Accepting Payments
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 18 }}>
+                  {liveOnes.map((g, i) => renderCard(g, true, i === liveOnes.length - 1))}
+                </div>
+              </>
+            )}
+
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available</div>
+            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {availableOnes.map((g, i) => renderCard(g, false, i === availableOnes.length - 1))}
+            </div>
+
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>How payments work</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+                1. Sign up directly with the gateway (Stripe, Midtrans, etc.)<br />
+                2. Paste your keys / account ID here<br />
+                3. Customers checkout in your app and pay via the gateway<br />
+                4. Funds go straight into your own gateway account<br />
+                5. You manage refunds, disputes, and payouts from the gateway's dashboard
+              </div>
+            </div>
+          </div>
+          </div>{/* close scrollable foreground */}
+        </div>
+        )
+      })()}
+
+      {/* ═══ GATEWAY SETUP — full page (matches Order Alerts chrome) ═══ */}
+      {isVendor && setupGatewayId && (() => {
+        const gw = SUPPORTED_GATEWAYS.find(g => g.id === setupGatewayId)
+        if (!gw) return null
+        const current = paymentGateways[gw.id] || {}
+        const updateField = (key, value) => setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), [key]: value } }))
+        const isConnected = !!current.connected
+        const save = () => {
+          const missing = gw.fields.filter(f => f.required && !(current[f.key] || '').toString().trim())
+          if (missing.length) { alert('Required: ' + missing.map(m => m.label).join(', ')); return }
+          setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: current.mode || 'test', connectedAt: new Date().toISOString() } }))
+          setSetupGatewayId(null)
+        }
+        const disconnect = () => {
+          if (!confirm(`Disconnect ${gw.name}? Your keys will be removed and payments via this gateway will stop working.`)) return
+          setPaymentGateways(p => { const next = { ...p }; delete next[gw.id]; return next })
+          setSetupGatewayId(null)
+        }
+        return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* App theme background — clear, no blur overlay on setup page */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+
+          <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
+          {/* Header — transparent, no shade */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
+            <button onClick={() => setSetupGatewayId(null)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {gw.name}
+                {isConnected && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.22)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.4)' }}>CONNECTED</span>}
+                {gw.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.18)', color: '#C084FC', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(168,85,247,0.35)' }}>ENTERPRISE</span>}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{gw.countryCount} active</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ width: 36, height: 3, borderRadius: 2, background: gw.color, marginBottom: 2 }} />
+
+            {/* Brand hero card */}
+            <div style={{ background: `linear-gradient(135deg, ${gw.color}28 0%, rgba(0,0,0,0.4) 100%)`, border: `1px solid ${gw.color}40`, borderRadius: 16, padding: '18px 16px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 4px 18px ${gw.color}30` }}>
+              <div style={{ width: 54, height: 54, borderRadius: 14, background: gw.color, color: '#fff', fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${gw.color}55`, overflow: 'hidden' }}>
+                {gw.logoUrl
+                  ? <img src={gw.logoUrl} alt={gw.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                  : gw.name.charAt(0)
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{gw.tagline}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Best for: {gw.bestFor}</div>
+              </div>
+            </div>
+
+            {/* Country availability — count only, no flags */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 22 }}>🌍</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>Coverage</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{gw.countryCount} active</div>
+              </div>
+            </div>
+
+            {/* Setup steps */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>How to set up</div>
+              {gw.setupSteps.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, background: `${gw.color}30`, border: `1px solid ${gw.color}60`, color: '#fff', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ flex: 1, lineHeight: 1.55 }}>{s}</span>
+                </div>
+              ))}
+              {gw.docUrl && (
+                <a href={gw.docUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, padding: '8px 12px', borderRadius: 10, background: `${gw.color}25`, border: `1px solid ${gw.color}45`, color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                  Open {gw.name} dashboard ↗
+                </a>
+              )}
+            </div>
+
+            {/* Test/Live mode + Fields */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>Your credentials</div>
+
+              {/* Test/Live mode pill */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14, padding: 3, borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                {['test', 'live'].map(m => (
+                  <button key={m} onClick={() => updateField('mode', m)} style={{
+                    flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none',
+                    background: (current.mode || 'test') === m ? (m === 'live' ? '#22C55E' : 'rgba(255,255,255,0.15)') : 'transparent',
+                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
+                  }}>{m === 'test' ? '🧪 Test' : '🚀 Live'}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 12, lineHeight: 1.5 }}>
+                {(current.mode || 'test') === 'test'
+                  ? 'Test mode uses fake transactions. Use it to verify the setup before going live.'
+                  : '⚠️ Live mode processes real customer payments. Make sure your business is fully verified with the gateway.'}
+              </div>
+
+              {/* Form fields */}
+              {gw.fields.map(f => (
+                <div key={f.key} style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 5 }}>
+                    {f.label} {f.required && <span style={{ color: '#EF4444' }}>*</span>}
+                    {f.secret && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>🔒 encrypted</span>}
+                  </label>
+                  {f.type === 'bank-picker' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 4 }}>
+                      {ID_BANKS.map(b => {
+                        const picked = current.bankName === b.name
+                        return (
+                          <button key={b.code} type="button" onClick={() => updateField('bankName', b.name)} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '8px 10px', borderRadius: 10, minHeight: 44,
+                            background: picked ? `${accent}25` : 'rgba(255,255,255,0.04)',
+                            border: picked ? `1px solid ${accent}60` : '1px solid rgba(255,255,255,0.08)',
+                            color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
+                          }}>
+                            {b.logo
+                              ? <img src={b.logo} alt={b.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 24, height: 16, objectFit: 'contain', flexShrink: 0, background: '#fff', borderRadius: 3, padding: 2 }} />
+                              : <span style={{ width: 24, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>🏦</span>
+                            }
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <input
+                      type={f.type === 'password' ? 'password' : (f.type === 'email' ? 'email' : f.type === 'url' ? 'url' : f.type === 'number' ? 'number' : 'text')}
+                      placeholder={f.placeholder || ''}
+                      value={current[f.key] || ''}
+                      onChange={(e) => updateField(f.key, e.target.value)}
+                      style={{
+                        width: '100%', padding: '11px 14px', borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)',
+                        color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                        fontFamily: f.secret ? 'monospace' : 'inherit',
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, paddingBottom: 24 }}>
+              {isConnected && (
+                <button onClick={disconnect} style={{
+                  padding: '13px 16px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.4)',
+                  background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 48,
+                }}>Disconnect</button>
+              )}
+              <button onClick={save} style={{
+                flex: 1, padding: '13px 16px', borderRadius: 12, border: 'none',
+                background: `linear-gradient(135deg, ${gw.color} 0%, ${gw.color}dd 100%)`,
+                color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48,
+                boxShadow: `0 4px 14px ${gw.color}55`,
+              }}>
+                {isConnected ? `Update ${gw.name}` : `Connect ${gw.name}`}
+              </button>
+            </div>
+          </div>
+          </div>{/* close scrollable foreground */}
+        </div>
+        )
+      })()}
 
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
@@ -2920,6 +4300,7 @@ export default function App() {
                 { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
                 { icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements', onClick: () => { setTermsOfListing(true); setVendorDrawer(false) } },
                 { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => { setVendorTab('settings'); setVendorDrawer(false) } },
+                { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', minHeight: 44 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
@@ -3317,14 +4698,37 @@ export default function App() {
               {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Category</label>
-                  <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
-                  </select>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Category</span>
+                    <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                    {categoryChips.map(c => {
+                      const isActive = formCategory === c
+                      return (
+                        <button key={c} type="button" onClick={() => setFormCategory(c)} style={{
+                          background: isActive ? (isCustomAccent ? accent : 'rgba(255,255,255,0.18)') : 'rgba(255,255,255,0.06)',
+                          border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)'),
+                          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                          padding: '6px 10px', borderRadius: 14, minHeight: 30,
+                        }}>{c}</button>
+                      )
+                    })}
+                    <input
+                      placeholder="+ Add custom"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                          setFormCategory(e.currentTarget.value.trim())
+                          e.currentTarget.value = ''
+                        }
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
+                        color: '#fff', fontSize: 12, padding: '6px 10px', borderRadius: 14,
+                        outline: 'none', minWidth: 100, fontWeight: 500,
+                      }}
+                    />
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
@@ -3377,6 +4781,9 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            {/* Progressive-disclosure optional details */}
+            {renderItemOptionalFields()}
 
             {/* Buttons */}
             <div style={{ padding: '16px 14px 28px', display: 'flex', gap: 10 }}>
@@ -3532,6 +4939,9 @@ export default function App() {
                 onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
               />
             </div>
+
+            {/* Progressive-disclosure optional details */}
+            {renderItemOptionalFields()}
 
             {/* Add button — sticky bottom */}
             <div style={{ padding: '16px 14px 28px' }}>
@@ -4128,7 +5538,38 @@ export default function App() {
                         {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><div style={{ display: 'flex', gap: 10, marginBottom: 10 }}><div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />{btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}</div></div><div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Text</label><input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Glow Effect</span></div></>)}
                         {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} /><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page</div></>)}
                         {configTool === 'cards' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards & Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Card Style</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (<button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label><div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Upload<input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} /></label>{menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}</div>{menuBanner && <img src={menuBanner} alt="" onError={imgError('banner')} style={{ width: '100%', height: 50, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}</>)}
-                        {configTool === 'promo' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 }} value={promoBanner} onChange={(e) => setPromoBanner(e.target.value)} placeholder="e.g. Free delivery this week!" maxLength={80} /><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span></div></>)}
+                        {configTool === 'promo' && (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label>
+                            <textarea
+                              value={promoBanner}
+                              onChange={(e) => setPromoBanner(e.target.value.slice(0, 300))}
+                              placeholder={"Free delivery this week!\nPress Enter for another promo\n10% off first order"}
+                              rows={3}
+                              style={{
+                                width: '100%', boxSizing: 'border-box',
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 8, padding: '6px 12px',
+                                color: '#fff', fontSize: 13, lineHeight: '28px',
+                                outline: 'none', resize: 'vertical', fontFamily: 'inherit',
+                                minHeight: 90, marginBottom: 6,
+                                backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(255,255,255,0.15) 27px, rgba(255,255,255,0.15) 28px)',
+                                backgroundAttachment: 'local',
+                              }}
+                            />
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
+                              Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 9 }}>Enter</kbd> for another promo line. Lines join with <span style={{ color: accent, fontWeight: 700 }}> · </span> in the banner. {promoBanner.length}/300
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                                <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} />
+                              </button>
+                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span>
+                            </div>
+                          </>
+                        )}
                         {configTool === 'splash' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Extra Features</div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s branded loading)</span></div></>)}
                       </div>
                     )}

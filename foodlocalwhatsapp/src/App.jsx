@@ -188,6 +188,383 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 // Picked once at signup. Each type loads its own 6-8 category quick-chips.
 // Vendor can still type any custom category. Existing menu items are preserved
 // across switches — the preset is suggestions, not enforcement.
+// Payment gateway catalog — every gateway StreetLocal supports for vendors to connect.
+// Vendor brings their OWN account; we never touch funds. UI mirrors Shopify/eBay/Amazon polish.
+// `countries` is an ISO-like list shown to vendors so they know where it works. `logoUrl`
+// uses public CDNs for real brand marks; falls back to colored letter avatar if it fails.
+const SUPPORTED_GATEWAYS = [
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    tagline: 'Cards · Apple Pay · Google Pay · Klarna',
+    color: '#635BFF',
+    logoUrl: 'https://cdn.simpleicons.org/stripe/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇩🇪 🇫🇷 🇸🇬 🇯🇵 🇭🇰 🇲🇾 🇹🇭 🇲🇽 🇧🇷',
+    countryCount: '46 countries',
+    fees: '2.9% + fixed fee · 0.5% extra for non-US cards',
+    bestFor: 'International vendors · global reach',
+    method: 'oauth-or-keys',
+    fields: [
+      { key: 'publishableKey', label: 'Publishable Key', placeholder: 'pk_test_... or pk_live_...', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_test_... or sk_live_...', type: 'password', required: true, secret: true },
+      { key: 'webhookSecret', label: 'Webhook signing secret (optional)', placeholder: 'whsec_...', type: 'password', secret: true },
+    ],
+    docUrl: 'https://dashboard.stripe.com/apikeys',
+    setupSteps: ['Sign up free at stripe.com', 'Complete business verification (KYC)', 'Copy your API keys from Dashboard → Developers → API keys', 'Paste them here'],
+  },
+  {
+    id: 'midtrans',
+    name: 'Midtrans',
+    tagline: 'GoPay · OVO · DANA · ShopeePay · cards · bank',
+    color: '#1A6FE8',
+    logoUrl: 'https://midtrans.com/blog/wp-content/uploads/2018/05/cropped-Midtrans-website-fav-32x32.png',
+    countryFlags: '🇮🇩',
+    countryCount: 'Indonesia only',
+    fees: '~2.5% per transaction · varies by method',
+    bestFor: 'Indonesian vendors · local customers',
+    method: 'api-keys',
+    fields: [
+      { key: 'serverKey', label: 'Server Key', placeholder: 'Mid-server-...', type: 'password', required: true, secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'Mid-client-...', type: 'text', required: true },
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'M01234', type: 'text' },
+    ],
+    docUrl: 'https://dashboard.midtrans.com/settings/config_info',
+    setupSteps: ['Register at midtrans.com', 'Complete merchant verification', 'Settings → Access Keys', 'Copy Server Key + Client Key here'],
+  },
+  {
+    id: 'xendit',
+    name: 'Xendit',
+    tagline: 'Cards · e-wallets · virtual accounts · QRIS',
+    color: '#EB5E28',
+    logoUrl: 'https://cdn.simpleicons.org/xendit/white',
+    countryFlags: '🇮🇩 🇵🇭 🇲🇾 🇸🇬 🇹🇭 🇻🇳',
+    countryCount: '6 SEA countries',
+    fees: '~2.5% · multi-currency',
+    bestFor: 'Regional SEA sellers',
+    method: 'api-keys',
+    fields: [
+      { key: 'secretKey', label: 'Secret API Key', placeholder: 'xnd_development_... or xnd_production_...', type: 'password', required: true, secret: true },
+      { key: 'publicKey', label: 'Public Key (optional)', placeholder: 'xnd_public_...', type: 'text' },
+    ],
+    docUrl: 'https://dashboard.xendit.co/settings/developers#api-keys',
+    setupSteps: ['Sign up at xendit.co', 'Complete onboarding + KYC', 'Settings → Developers → API Keys', 'Generate and paste your Secret Key'],
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    tagline: 'Cards + PayPal balance · world\'s most familiar',
+    color: '#0070BA',
+    logoUrl: 'https://cdn.simpleicons.org/paypal/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇪🇺 🇮🇳 🇮🇩 🇲🇾 🇸🇬 🇵🇭 🇯🇵 🇲🇽 🇧🇷',
+    countryCount: '200+ countries',
+    fees: '3.49% + fixed fee · varies by country',
+    bestFor: 'International customers · PayPal-preferring buyers',
+    method: 'oauth-or-email',
+    fields: [
+      { key: 'merchantEmail', label: 'PayPal Business Email', placeholder: 'shop@example.com', type: 'email', required: true },
+      { key: 'clientId', label: 'REST API Client ID', placeholder: 'AeA1QIZX...', type: 'text' },
+      { key: 'secret', label: 'REST API Secret', placeholder: '••••••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://developer.paypal.com/dashboard/applications',
+    setupSteps: ['Upgrade to PayPal Business at paypal.com', 'Create REST API app at developer.paypal.com', 'Copy Client ID + Secret', 'Paste here'],
+  },
+  {
+    id: 'braintree',
+    name: 'Braintree',
+    tagline: 'Cards + PayPal + Venmo · PayPal-owned',
+    color: '#00ADEF',
+    logoUrl: 'https://cdn.simpleicons.org/braintree/white',
+    countryFlags: '🇺🇸 🇬🇧 🇨🇦 🇦🇺 🇸🇬 🇲🇾 🇪🇺 🇭🇰',
+    countryCount: '45+ countries',
+    fees: '2.59% + $0.49 (US) · varies by region',
+    bestFor: 'Vendors who want cards + Venmo + PayPal in one integration',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'xxxxxxxxxxxxxxxx', type: 'text', required: true },
+      { key: 'publicKey', label: 'Public Key', placeholder: 'xxxxxxxxxxxxxxxx', type: 'text', required: true },
+      { key: 'privateKey', label: 'Private Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://www.braintreepayments.com/sandbox',
+    setupSteps: ['Sign up at braintreepayments.com', 'Complete business verification', 'Account → Settings → API Keys', 'Generate and paste your Merchant ID + keys'],
+  },
+  {
+    id: 'checkout-com',
+    name: 'Checkout.com',
+    tagline: 'Modern API · global cards + alternative methods',
+    color: '#1A1F36',
+    logoUrl: null,
+    countryFlags: '🇬🇧 🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇳🇱 🇸🇬 🇦🇺 🇦🇪 🇸🇦',
+    countryCount: '150+ currencies · global',
+    fees: 'Custom · ~1.95% + $0.20 typical',
+    bestFor: 'SaaS · subscriptions · EMEA/APAC merchants',
+    method: 'api-keys',
+    fields: [
+      { key: 'publicKey', label: 'Public Key', placeholder: 'pk_sbox_... or pk_...', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_sbox_... or sk_...', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.checkout.com/developers/keys',
+    setupSteps: ['Apply at checkout.com (KYC required)', 'Wait for approval (3–7 days typical)', 'Dashboard → Developers → Keys', 'Copy Public + Secret keys'],
+  },
+  {
+    id: 'authorize-net',
+    name: 'Authorize.net',
+    tagline: 'Veteran US gateway · Visa-owned',
+    color: '#0066B2',
+    logoUrl: null,
+    countryFlags: '🇺🇸 🇨🇦 🇬🇧 🇦🇺',
+    countryCount: '4 countries',
+    fees: '2.9% + $0.30 + $25/mo gateway fee',
+    bestFor: 'US-based merchants with existing card processor',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiLoginId', label: 'API Login ID', placeholder: '5KP3u95bQpv', type: 'text', required: true },
+      { key: 'transactionKey', label: 'Transaction Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'signatureKey', label: 'Signature Key (for webhooks)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://account.authorize.net/',
+    setupSteps: ['Sign up at authorize.net (US merchant account required)', 'Complete KYC and business verification', 'Account → Settings → API Credentials & Keys', 'Copy API Login ID + Transaction Key'],
+  },
+  {
+    id: 'mollie',
+    name: 'Mollie',
+    tagline: 'iDEAL · Bancontact · SEPA · cards · easy onboarding',
+    color: '#06D6A0',
+    logoUrl: null,
+    countryFlags: '🇳🇱 🇩🇪 🇫🇷 🇧🇪 🇬🇧 🇮🇹 🇪🇸 🇦🇹 🇨🇭 🇩🇰 🇫🇮 🇳🇴 🇸🇪',
+    countryCount: 'Europe · 13 countries',
+    fees: '~1.8% + €0.25 (iDEAL: €0.29 fixed)',
+    bestFor: 'European vendors · local methods preferred',
+    method: 'api-keys',
+    fields: [
+      { key: 'liveApiKey', label: 'Live API Key', placeholder: 'live_...', type: 'password', required: true, secret: true },
+      { key: 'testApiKey', label: 'Test API Key (sandbox)', placeholder: 'test_...', type: 'password', secret: true },
+    ],
+    docUrl: 'https://my.mollie.com/dashboard/developers/api-keys',
+    setupSteps: ['Sign up at mollie.com', 'Complete short business verification (~24h)', 'Dashboard → Developers → API keys', 'Copy your live + test keys'],
+  },
+  {
+    id: '2checkout',
+    name: '2Checkout (Verifone)',
+    tagline: 'Subscriptions · digital products · global',
+    color: '#FF6700',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '200+ countries · 100+ currencies',
+    fees: '3.5% + $0.35 + monthly fees',
+    bestFor: 'SaaS · digital products · subscription billing',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantCode', label: 'Merchant Code', placeholder: '255000000000', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'publishableKey', label: 'Publishable Key', placeholder: '••••', type: 'text' },
+    ],
+    docUrl: 'https://secure.2checkout.com/cpanel/',
+    setupSteps: ['Sign up at 2checkout.com (now Verifone)', 'Complete merchant verification', 'Dashboard → Integrations → Webhooks & API', 'Copy Merchant Code + Secret Key'],
+  },
+  {
+    id: 'razorpay',
+    name: 'Razorpay',
+    tagline: 'India\'s #1 · UPI · Cards · NetBanking · Wallets',
+    color: '#3395FF',
+    logoUrl: 'https://cdn.simpleicons.org/razorpay/white',
+    countryFlags: '🇮🇳',
+    countryCount: 'India only',
+    fees: '2% cards · 0% UPI · 0% NetBanking',
+    bestFor: 'Indian merchants · UPI/RuPay focus',
+    method: 'api-keys',
+    fields: [
+      { key: 'keyId', label: 'Key ID', placeholder: 'rzp_test_... or rzp_live_...', type: 'text', required: true },
+      { key: 'keySecret', label: 'Key Secret', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.razorpay.com/app/keys',
+    setupSteps: ['Sign up at razorpay.com (Indian PAN + bank account required)', 'Complete merchant KYC', 'Dashboard → Account & Settings → API Keys', 'Generate and paste your Key ID + Secret'],
+  },
+  {
+    id: 'hitpay',
+    name: 'HitPay',
+    tagline: 'SMB-friendly · same-day signup · SG/MY/HK/AU',
+    color: '#E62D6E',
+    logoUrl: null,
+    countryFlags: '🇸🇬 🇲🇾 🇭🇰 🇦🇺',
+    countryCount: '4 countries',
+    fees: '~3.4% + SGD 0.50 · no monthly fee',
+    bestFor: 'SEA small biz · cafes · F&B · fast signup',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'salt', label: 'Salt (HMAC verification)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://dashboard.hitpayapp.com/settings/api-keys',
+    setupSteps: ['Sign up at hitpayapp.com (SG business or local address)', 'Complete light KYC (~1 day)', 'Dashboard → Settings → API Keys', 'Generate API Key + Salt'],
+  },
+  {
+    id: 'fomo-pay',
+    name: 'FOMO Pay',
+    tagline: 'WeChat · AliPay · GrabPay · Asia digital wallets',
+    color: '#F0392B',
+    logoUrl: null,
+    countryFlags: '🇸🇬 🇭🇰 🇲🇾 🇵🇭 🇹🇭',
+    countryCount: '5 Asian markets',
+    fees: 'Custom · varies by method',
+    bestFor: 'Asian merchants · Chinese tourist payment methods',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'M0123456', type: 'text', required: true },
+      { key: 'apiKey', label: 'API Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'signKey', label: 'Sign Key (HMAC)', placeholder: '••••', type: 'password', secret: true },
+    ],
+    docUrl: 'https://www.fomopay.com/contact',
+    setupSteps: ['Contact FOMO Pay sales at fomopay.com', 'Complete merchant onboarding (5–10 business days)', 'Receive Merchant ID + API credentials', 'Paste them here'],
+  },
+  {
+    id: 'rapyd',
+    name: 'Rapyd',
+    tagline: '900+ local payment methods · global coverage',
+    color: '#3A23E0',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '100+ countries · 900+ methods',
+    fees: 'Custom per method · contact sales',
+    bestFor: 'Local payment methods worldwide · emerging markets',
+    method: 'api-keys',
+    fields: [
+      { key: 'accessKey', label: 'Access Key', placeholder: '••••', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://dashboard.rapyd.net/account/api-credentials',
+    setupSteps: ['Sign up at rapyd.net (business KYC required)', 'Approval takes 5–10 business days', 'Dashboard → Developers → Credentials', 'Copy Access Key + Secret Key'],
+  },
+  {
+    id: 'adyen',
+    name: 'Adyen',
+    tagline: 'Enterprise-grade · 250+ payment methods',
+    color: '#0ABF53',
+    logoUrl: 'https://cdn.simpleicons.org/adyen/white',
+    countryFlags: '🌍',
+    countryCount: '40+ countries · 150+ currencies',
+    fees: 'Custom contract · $0.12 + interchange typical',
+    bestFor: 'High-volume merchants (>$1M/yr)',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'apiKey', label: 'API Key', placeholder: 'AQEyhmf...', type: 'password', required: true, secret: true },
+      { key: 'merchantAccount', label: 'Merchant Account name', placeholder: 'YourCompanyECOM', type: 'text', required: true },
+      { key: 'hmacKey', label: 'HMAC Key (webhook)', placeholder: '••••', type: 'password', secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'live_... or test_...', type: 'text' },
+    ],
+    docUrl: 'https://ca-test.adyen.com/ca/ca/overview/default.shtml',
+    setupSteps: ['Contact Adyen sales (enterprise application)', 'Full enterprise KYC (~30 days)', 'Customer Area → Developers → API Credentials', 'Generate API Key + HMAC + Client Key'],
+  },
+  {
+    id: 'cybersource',
+    name: 'CyberSource',
+    tagline: 'Visa-owned · enterprise fraud screening',
+    color: '#1A5490',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '190+ countries',
+    fees: 'Custom enterprise contract',
+    bestFor: 'Visa-network enterprise · fraud screening priority',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'your-merchant-id', type: 'text', required: true },
+      { key: 'apiKeyId', label: 'API Key ID', placeholder: '••••', type: 'text', required: true },
+      { key: 'sharedSecret', label: 'Shared Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+    ],
+    docUrl: 'https://ebc2.cybersource.com/',
+    setupSteps: ['Apply for CyberSource merchant account (sales contact)', 'Enterprise KYC process (4–8 weeks)', 'Business Center → Key Management', 'Generate REST API key set'],
+  },
+  {
+    id: 'worldpay',
+    name: 'Worldpay (FIS)',
+    tagline: 'Enterprise · omnichannel · 146 countries',
+    color: '#E5251F',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: '146 countries · 126 currencies',
+    fees: 'Custom enterprise contract',
+    bestFor: 'High-volume retail · physical + online combined',
+    tier: 'enterprise',
+    method: 'api-keys',
+    fields: [
+      { key: 'serviceKey', label: 'Service Key (test/live)', placeholder: 'T_S_... or L_S_...', type: 'password', required: true, secret: true },
+      { key: 'clientKey', label: 'Client Key', placeholder: 'T_C_... or L_C_...', type: 'text', required: true },
+    ],
+    docUrl: 'https://online.worldpay.com/',
+    setupSteps: ['Apply for Worldpay/FIS merchant account (sales)', 'Enterprise KYC (~6–12 weeks)', 'Dashboard → Integration → Keys', 'Copy Service Key + Client Key'],
+  },
+  {
+    id: 'ewallet',
+    name: 'QRIS / E-Wallet',
+    tagline: 'GoPay · OVO · DANA · ShopeePay (direct QR)',
+    color: '#22C55E',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Logo_QRIS.svg/240px-Logo_QRIS.svg.png',
+    countryFlags: '🇮🇩',
+    countryCount: 'Indonesia',
+    fees: '0% — customer pays you direct',
+    bestFor: 'Indonesian street vendors · warung · cafe',
+    method: 'manual',
+    fields: [
+      { key: 'qrUrl', label: 'QRIS image URL', placeholder: 'https://...', type: 'url', required: true },
+      { key: 'merchantName', label: 'Merchant name on QR', placeholder: 'Warung Bu Tini', type: 'text' },
+    ],
+    docUrl: null,
+    setupSteps: ['Get a QRIS from your bank or e-wallet (free)', 'Upload the QR image to ImageKit or similar', 'Paste the image URL here', 'Customers scan to pay you directly'],
+  },
+  {
+    id: 'bank',
+    name: 'Bank Transfer',
+    tagline: 'Direct deposit · works in every country',
+    color: '#475569',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: 'Global',
+    fees: '0%',
+    bestFor: 'High-trust repeat customers · large orders',
+    method: 'manual',
+    bankPicker: true,   // tells the setup form to show a bank-picker dropdown
+    fields: [
+      { key: 'bankName', label: 'Bank', placeholder: 'Pick or type your bank', type: 'bank-picker', required: true },
+      { key: 'accountNumber', label: 'Account number', placeholder: '1234567890', type: 'text', required: true },
+      { key: 'accountName', label: 'Account holder name', placeholder: 'PT Street Local', type: 'text', required: true },
+      { key: 'swift', label: 'SWIFT/BIC (international only)', placeholder: 'BNINIDJA', type: 'text' },
+    ],
+    docUrl: null,
+    setupSteps: ['Enter your business bank account details', 'Customer copies the number from the order confirmation', 'They transfer from their banking app', 'You confirm receipt manually inside StreetLocal'],
+  },
+  {
+    id: 'escrow',
+    name: 'Escrow Hold',
+    tagline: 'Funds held until customer confirms delivery',
+    color: '#F59E0B',
+    logoUrl: null,
+    countryFlags: '🌍',
+    countryCount: 'Wherever Stripe works',
+    fees: 'Same as your Stripe rate · holds funds 1–30 days',
+    bestFor: 'High-value products · new customers · marketplaces',
+    method: 'requires-stripe',
+    fields: [
+      { key: 'holdDays', label: 'Hold period (days)', placeholder: '7', type: 'number' },
+    ],
+    docUrl: 'https://stripe.com/docs/connect/manual-payouts',
+    setupSteps: ['Connect Stripe first', 'Choose hold duration (1–30 days)', 'Customer pays → Stripe holds → released to you after period or on confirmation'],
+    comingSoon: true,
+  },
+]
+
+// Common Indonesian banks (shown in the Bank Transfer setup). Logos sourced from Wikimedia / official.
+const ID_BANKS = [
+  { code: 'BCA', name: 'BCA', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/240px-Bank_Central_Asia.svg.png' },
+  { code: 'MANDIRI', name: 'Bank Mandiri', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Bank_Mandiri_logo_2016.svg/320px-Bank_Mandiri_logo_2016.svg.png' },
+  { code: 'BNI', name: 'BNI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/BNI_logo.svg/200px-BNI_logo.svg.png' },
+  { code: 'BRI', name: 'BRI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/BANK_BRI_logo.svg/240px-BANK_BRI_logo.svg.png' },
+  { code: 'PERMATA', name: 'Permata', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Permata_Bank_logo.svg/240px-Permata_Bank_logo.svg.png' },
+  { code: 'CIMB', name: 'CIMB Niaga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/CIMB_Niaga_logo.svg/240px-CIMB_Niaga_logo.svg.png' },
+  { code: 'DANAMON', name: 'Danamon', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Logo_Bank_Danamon.svg/240px-Logo_Bank_Danamon.svg.png' },
+  { code: 'OTHER', name: 'Other / International', logo: null },
+]
+
 const VENDOR_TYPES = {
   warung: {
     id: 'warung', label: 'Warung / Street Food', emoji: '🍜',
@@ -677,6 +1054,12 @@ export default function App() {
   const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('vendorbasic_showClosedBanner') === 'true')
   const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('vendorbasic_promoBanner') || '')
   const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('vendorbasic_promoBannerEnabled') === 'true')
+  // Payment Methods — vendor connects their OWN gateway accounts. StreetLocal never touches funds.
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false)
+  const [setupGatewayId, setSetupGatewayId] = useState(null)        // which gateway is being configured
+  const [paymentGateways, setPaymentGateways] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vendorbasic_payment_gateways') || '{}') } catch { return {} }
+  })
   const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
   const [showSplash, setShowSplash] = useState(() => localStorage.getItem('vendorbasic_splashEnabled') === 'true')
   const [configPreviewTab, setConfigPreviewTab] = useState('landing')
@@ -953,6 +1336,9 @@ export default function App() {
   useEffect(() => { localStorage.setItem('vendorbasic_showClosedBanner', showClosedBanner) }, [showClosedBanner])
   useEffect(() => { localStorage.setItem('vendorbasic_promoBanner', promoBanner) }, [promoBanner])
   useEffect(() => { localStorage.setItem('vendorbasic_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
+  useEffect(() => {
+    try { localStorage.setItem('vendorbasic_payment_gateways', JSON.stringify(paymentGateways)) } catch {}
+  }, [paymentGateways])
   useEffect(() => { localStorage.setItem('vendorbasic_splashEnabled', splashEnabled) }, [splashEnabled])
   useEffect(() => { if (splashEnabled) { const t = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(t) } else { setShowSplash(false) } }, [splashEnabled])
 
@@ -1596,11 +1982,15 @@ export default function App() {
         </div>
       )}
 
-      {/* --- Promo Banner (marquee) --- */}
+      {/* --- Promo Banner (marquee) — edge-safe via inner padded overflow-hidden box --- */}
       {promoBannerEnabled && promoBanner && (
-        <div style={{ overflow: 'hidden', background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
-          <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-          <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 12s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>{promoBanner}</div>
+        <div style={{ background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
+          <div style={{ overflow: 'hidden', padding: '0 16px' }}>
+            <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
+            <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 14s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>
+              {promoBanner.split('\n').map(s => s.trim()).filter(Boolean).join('   ·   ')}
+            </div>
+          </div>
         </div>
       )}
 
@@ -2828,6 +3218,281 @@ export default function App() {
       })()}
 
 
+      {/* ═══ PAYMENT METHODS — vendor connects their own gateways ═══ */}
+      {isVendor && paymentMethodsOpen && (() => {
+        const connectedCount = SUPPORTED_GATEWAYS.filter(g => paymentGateways[g.id]?.connected).length
+        const liveOnes = SUPPORTED_GATEWAYS.filter(g => paymentGateways[g.id]?.connected)
+        const availableOnes = SUPPORTED_GATEWAYS.filter(g => !paymentGateways[g.id]?.connected)
+        // Clean fintech list row — no card chrome, just dotted divider between rows.
+        // Brand color is preserved only on the small logo chip. App background bleeds through.
+        const renderCard = (g, isLive, isLast) => (
+          <button key={g.id} type="button" onClick={() => !g.comingSoon && setSetupGatewayId(g.id)} disabled={g.comingSoon}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',
+              padding: '14px 4px', border: 'none', background: 'transparent', cursor: g.comingSoon ? 'not-allowed' : 'pointer',
+              borderBottom: isLast ? 'none' : '1px dashed rgba(255,255,255,0.10)',
+              opacity: g.comingSoon ? 0.45 : 1,
+              transition: 'background 120ms ease',
+            }}
+          >
+            {/* Logo chip — keeps brand color identity */}
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: g.color, color: '#fff', fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 6px ${g.color}40`, overflow: 'hidden' }}>
+              {g.logoUrl
+                ? <img src={g.logoUrl} alt={g.name} onError={(e) => { e.currentTarget.parentElement.textContent = g.name.charAt(0) }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                : g.name.charAt(0)
+              }
+            </div>
+
+            {/* Middle column — name + tagline + country count */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: 0.1 }}>{g.name}</span>
+                {isLive && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86efac', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>LIVE</span>}
+                {g.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.16)', color: '#D8B4FE', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>ENTERPRISE</span>}
+                {g.comingSoon && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245,158,11,0.18)', color: '#FCD34D', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>SOON</span>}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 2 }}>{g.tagline}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{g.countryCount}</div>
+            </div>
+
+            {/* Right arrow — high-end "tap to enter" affordance */}
+            <div style={{ flexShrink: 0, color: g.comingSoon ? 'rgba(255,255,255,0.2)' : (isLive ? '#22c55e' : 'rgba(255,255,255,0.5)'), fontSize: 20, fontWeight: 300, lineHeight: 1, paddingRight: 4 }}>
+              {g.comingSoon ? '·' : '›'}
+            </div>
+          </button>
+        )
+        return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* App theme background + glass overlay (matches the rest of the app) */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+
+          {/* Scrollable foreground content */}
+          <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
+          {/* Header — transparent, no dark container */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
+            <button onClick={() => setPaymentMethodsOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Payment Methods</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
+            </div>
+          </div>
+
+          {/* Trust banner */}
+          <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 14, background: `linear-gradient(135deg, ${accent}18 0%, rgba(0,0,0,0.35) 100%)`, border: `1px solid ${accent}33`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>🔒</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 3 }}>Your money goes directly to you</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>StreetLocal never holds or processes your funds. Each gateway sends payouts straight to your own account. We're just the checkout UI.</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14, marginTop: 4 }} />
+
+            {liveOnes.length > 0 && (
+              <>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(34,197,94,0.85)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+                  Live · Accepting Payments
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 18 }}>
+                  {liveOnes.map((g, i) => renderCard(g, true, i === liveOnes.length - 1))}
+                </div>
+              </>
+            )}
+
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available</div>
+            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {availableOnes.map((g, i) => renderCard(g, false, i === availableOnes.length - 1))}
+            </div>
+
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>How payments work</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+                1. Sign up directly with the gateway (Stripe, Midtrans, etc.)<br />
+                2. Paste your keys / account ID here<br />
+                3. Customers checkout in your app and pay via the gateway<br />
+                4. Funds go straight into your own gateway account<br />
+                5. You manage refunds, disputes, and payouts from the gateway's dashboard
+              </div>
+            </div>
+          </div>
+          </div>{/* close scrollable foreground */}
+        </div>
+        )
+      })()}
+
+      {/* ═══ GATEWAY SETUP — full page (matches Order Alerts chrome) ═══ */}
+      {isVendor && setupGatewayId && (() => {
+        const gw = SUPPORTED_GATEWAYS.find(g => g.id === setupGatewayId)
+        if (!gw) return null
+        const current = paymentGateways[gw.id] || {}
+        const updateField = (key, value) => setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), [key]: value } }))
+        const isConnected = !!current.connected
+        const save = () => {
+          const missing = gw.fields.filter(f => f.required && !(current[f.key] || '').toString().trim())
+          if (missing.length) { alert('Required: ' + missing.map(m => m.label).join(', ')); return }
+          setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: current.mode || 'test', connectedAt: new Date().toISOString() } }))
+          setSetupGatewayId(null)
+        }
+        const disconnect = () => {
+          if (!confirm(`Disconnect ${gw.name}? Your keys will be removed and payments via this gateway will stop working.`)) return
+          setPaymentGateways(p => { const next = { ...p }; delete next[gw.id]; return next })
+          setSetupGatewayId(null)
+        }
+        return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* App theme background — clear, no blur overlay on setup page */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
+          <img src={localStorage.getItem('vendorbasic_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+
+          <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
+          {/* Header — transparent, no shade */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
+            <button onClick={() => setSetupGatewayId(null)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {gw.name}
+                {isConnected && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.22)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.4)' }}>CONNECTED</span>}
+                {gw.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.18)', color: '#C084FC', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(168,85,247,0.35)' }}>ENTERPRISE</span>}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{gw.countryCount} active</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ width: 36, height: 3, borderRadius: 2, background: gw.color, marginBottom: 2 }} />
+
+            {/* Brand hero card */}
+            <div style={{ background: `linear-gradient(135deg, ${gw.color}28 0%, rgba(0,0,0,0.4) 100%)`, border: `1px solid ${gw.color}40`, borderRadius: 16, padding: '18px 16px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 4px 18px ${gw.color}30` }}>
+              <div style={{ width: 54, height: 54, borderRadius: 14, background: gw.color, color: '#fff', fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${gw.color}55`, overflow: 'hidden' }}>
+                {gw.logoUrl
+                  ? <img src={gw.logoUrl} alt={gw.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                  : gw.name.charAt(0)
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{gw.tagline}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Best for: {gw.bestFor}</div>
+              </div>
+            </div>
+
+            {/* Country availability — count only, no flags */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 22 }}>🌍</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>Coverage</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{gw.countryCount} active</div>
+              </div>
+            </div>
+
+            {/* Setup steps */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>How to set up</div>
+              {gw.setupSteps.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, background: `${gw.color}30`, border: `1px solid ${gw.color}60`, color: '#fff', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ flex: 1, lineHeight: 1.55 }}>{s}</span>
+                </div>
+              ))}
+              {gw.docUrl && (
+                <a href={gw.docUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, padding: '8px 12px', borderRadius: 10, background: `${gw.color}25`, border: `1px solid ${gw.color}45`, color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                  Open {gw.name} dashboard ↗
+                </a>
+              )}
+            </div>
+
+            {/* Test/Live mode + Fields */}
+            <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>Your credentials</div>
+
+              {/* Test/Live mode pill */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14, padding: 3, borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                {['test', 'live'].map(m => (
+                  <button key={m} onClick={() => updateField('mode', m)} style={{
+                    flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none',
+                    background: (current.mode || 'test') === m ? (m === 'live' ? '#22C55E' : 'rgba(255,255,255,0.15)') : 'transparent',
+                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
+                  }}>{m === 'test' ? '🧪 Test' : '🚀 Live'}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 12, lineHeight: 1.5 }}>
+                {(current.mode || 'test') === 'test'
+                  ? 'Test mode uses fake transactions. Use it to verify the setup before going live.'
+                  : '⚠️ Live mode processes real customer payments. Make sure your business is fully verified with the gateway.'}
+              </div>
+
+              {/* Form fields */}
+              {gw.fields.map(f => (
+                <div key={f.key} style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 5 }}>
+                    {f.label} {f.required && <span style={{ color: '#EF4444' }}>*</span>}
+                    {f.secret && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>🔒 encrypted</span>}
+                  </label>
+                  {f.type === 'bank-picker' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 4 }}>
+                      {ID_BANKS.map(b => {
+                        const picked = current.bankName === b.name
+                        return (
+                          <button key={b.code} type="button" onClick={() => updateField('bankName', b.name)} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '8px 10px', borderRadius: 10, minHeight: 44,
+                            background: picked ? `${accent}25` : 'rgba(255,255,255,0.04)',
+                            border: picked ? `1px solid ${accent}60` : '1px solid rgba(255,255,255,0.08)',
+                            color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
+                          }}>
+                            {b.logo
+                              ? <img src={b.logo} alt={b.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 24, height: 16, objectFit: 'contain', flexShrink: 0, background: '#fff', borderRadius: 3, padding: 2 }} />
+                              : <span style={{ width: 24, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>🏦</span>
+                            }
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <input
+                      type={f.type === 'password' ? 'password' : (f.type === 'email' ? 'email' : f.type === 'url' ? 'url' : f.type === 'number' ? 'number' : 'text')}
+                      placeholder={f.placeholder || ''}
+                      value={current[f.key] || ''}
+                      onChange={(e) => updateField(f.key, e.target.value)}
+                      style={{
+                        width: '100%', padding: '11px 14px', borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)',
+                        color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                        fontFamily: f.secret ? 'monospace' : 'inherit',
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, paddingBottom: 24 }}>
+              {isConnected && (
+                <button onClick={disconnect} style={{
+                  padding: '13px 16px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.4)',
+                  background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 48,
+                }}>Disconnect</button>
+              )}
+              <button onClick={save} style={{
+                flex: 1, padding: '13px 16px', borderRadius: 12, border: 'none',
+                background: `linear-gradient(135deg, ${gw.color} 0%, ${gw.color}dd 100%)`,
+                color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48,
+                boxShadow: `0 4px 14px ${gw.color}55`,
+              }}>
+                {isConnected ? `Update ${gw.name}` : `Connect ${gw.name}`}
+              </button>
+            </div>
+          </div>
+          </div>{/* close scrollable foreground */}
+        </div>
+        )
+      })()}
+
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
         <>
@@ -2881,6 +3546,7 @@ export default function App() {
                 { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
                 { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
                 { icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements', onClick: () => { setTermsOfListing(true); setVendorDrawer(false) } },
+                { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={item.onClick} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: isCustomAccent ? `${accent}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
@@ -4115,7 +4781,38 @@ export default function App() {
                         {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><div style={{ display: 'flex', gap: 10, marginBottom: 10 }}><div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />{btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}</div></div><div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Text</label><input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Glow Effect</span></div></>)}
                         {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} /><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page</div></>)}
                         {configTool === 'cards' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards & Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Card Style</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (<button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label><div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Upload<input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} /></label>{menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}</div>{menuBanner && <img src={menuBanner} alt="" onError={imgError('banner')} style={{ width: '100%', height: 50, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}</>)}
-                        {configTool === 'promo' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 }} value={promoBanner} onChange={(e) => setPromoBanner(e.target.value)} placeholder="e.g. Free delivery this week!" maxLength={80} /><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span></div></>)}
+                        {configTool === 'promo' && (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label>
+                            <textarea
+                              value={promoBanner}
+                              onChange={(e) => setPromoBanner(e.target.value.slice(0, 300))}
+                              placeholder={"Free delivery this week!\nPress Enter for another promo\n10% off first order"}
+                              rows={3}
+                              style={{
+                                width: '100%', boxSizing: 'border-box',
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 8, padding: '6px 12px',
+                                color: '#fff', fontSize: 13, lineHeight: '28px',
+                                outline: 'none', resize: 'vertical', fontFamily: 'inherit',
+                                minHeight: 90, marginBottom: 6,
+                                backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(255,255,255,0.15) 27px, rgba(255,255,255,0.15) 28px)',
+                                backgroundAttachment: 'local',
+                              }}
+                            />
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
+                              Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 9 }}>Enter</kbd> for another promo line. Lines join with <span style={{ color: accent, fontWeight: 700 }}> · </span> in the banner. {promoBanner.length}/300
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                                <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} />
+                              </button>
+                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span>
+                            </div>
+                          </>
+                        )}
                         {configTool === 'splash' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Extra Features</div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s branded loading)</span></div></>)}
                       </div>
                     )}
