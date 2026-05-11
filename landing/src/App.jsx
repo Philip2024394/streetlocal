@@ -1164,6 +1164,12 @@ const THEME_INDEX = [
   { id: 'event', label: 'Event Planning', app: 'services', accent: '#E91E63', keywords: ['event planning', 'wedding', 'event organizer', 'eo'] },
   { id: 'childcare', label: 'Childcare', app: 'services', accent: '#FF69B4', keywords: ['childcare', 'babysitter', 'nanny', 'pengasuh anak', 'baby sitter'] },
   { id: 'courier', label: 'Courier', app: 'services', accent: '#FF6B35', keywords: ['courier', 'delivery', 'kurir', 'jasa antar', 'package delivery'] },
+  { id: 'leather', label: 'Leather Supplier', app: 'services', accent: '#5D2E0D', keywords: ['leather', 'leather supplier', 'leather goods', 'tanner', 'kulit'] },
+  { id: 'maid', label: 'House Maid', app: 'services', accent: '#E91E63', keywords: ['maid', 'house maid', 'housekeeper', 'pembantu', 'domestic helper', 'cleaning service'] },
+  { id: 'motorrent', label: 'Motorbike Rental', app: 'services', accent: '#FF6B35', keywords: ['motorbike rental', 'scooter rental', 'sewa motor', 'bike rental', 'rent motor'] },
+  { id: 'tourguide', label: 'Tour Guide', app: 'services', accent: '#16A085', keywords: ['tour guide', 'local guide', 'tour operator', 'pemandu wisata', 'city tour'] },
+  { id: 'carrent', label: 'Car Rental', app: 'services', accent: '#34495E', keywords: ['car rental', 'sewa mobil', 'car hire', 'rental mobil', 'self drive'] },
+  { id: 'wedding', label: 'Wedding Clothes', app: 'services', accent: '#FFD600', keywords: ['wedding', 'wedding dress', 'bridal', 'tuxedo', 'baju pengantin', 'wedding suit'] },
 ]
 
 // Return THEME_INDEX entries whose label/id/keywords contain the query.
