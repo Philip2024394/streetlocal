@@ -6,6 +6,8 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
+import { S } from '@shared/constants/styles'
+import { DEMO_MENU } from '@shared/data/foodDemoMenu'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -211,42 +213,6 @@ const VENDOR_TYPES = {
 }
 
 /* ─── Demo Menu ─── */
-const DEMO_MENU = [
-  // Meals
-  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1 },
-  { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
-  { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
-  { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },
-  { id: 5, name: 'Ayam Geprek', price: 20000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Crispy smashed chicken with sambal', category: 'Meal', available: true },
-  // Drinks
-  { id: 6, name: 'Es Teh Manis', price: 5000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Sweet iced tea', category: 'Drink', available: true },
-  { id: 7, name: 'Es Jeruk', price: 7000, photo: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=300', desc: 'Fresh orange juice', category: 'Drink', available: true },
-  { id: 8, name: 'Kopi Hitam', price: 5000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Black coffee, strong Indonesian brew', category: 'Drink', available: true },
-  { id: 9, name: 'Es Alpukat', price: 10000, photo: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=300', desc: 'Creamy avocado smoothie with chocolate', category: 'Drink', available: true },
-  { id: 10, name: 'Air Mineral', price: 3000, photo: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300', desc: 'Bottled mineral water', category: 'Drink', available: true },
-  { id: 23, name: 'Es Kelapa Muda', price: 8000, photo: 'https://images.unsplash.com/photo-1544252890-c8e1a1080400?w=300', desc: 'Fresh young coconut water with ice', category: 'Drink', available: true },
-  { id: 24, name: 'Jus Mangga', price: 10000, photo: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=300', desc: 'Fresh mango juice blended smooth', category: 'Drink', available: true },
-  { id: 25, name: 'Es Cendol', price: 8000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Pandan jelly with coconut milk and palm sugar', category: 'Drink', available: true },
-  { id: 26, name: 'Teh Tarik', price: 7000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Pulled milk tea, hot or iced', category: 'Drink', available: true },
-  // Snacks
-  { id: 11, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
-  { id: 12, name: 'Kerupuk', price: 3000, photo: 'https://images.unsplash.com/photo-1630384060421-cb20aed56993?w=300', desc: 'Crispy prawn crackers', category: 'Snack', available: true },
-  { id: 13, name: 'Pisang Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Fried banana fritters with crispy batter', category: 'Snack', available: true },
-  { id: 14, name: 'Tahu Crispy', price: 4000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Crispy fried tofu bites', category: 'Snack', available: true },
-  { id: 19, name: 'Tempe Mendoan', price: 5000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Thinly sliced fried tempeh', category: 'Snack', available: true },
-  { id: 20, name: 'Cireng Isi', price: 6000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Fried tapioca balls with filling', category: 'Snack', available: true },
-  { id: 21, name: 'Lumpia Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Crispy fried spring rolls', category: 'Snack', available: true },
-  { id: 22, name: 'Bakwan Jagung', price: 4000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Corn fritters with vegetables', category: 'Snack', available: true },
-  { id: 27, name: 'Roti Manis', price: 10000, photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_15_32%20PM.png?updatedAt=1778307350320', desc: 'Soft sweet bread, freshly baked', category: 'Snack', available: true },
-  { id: 28, name: 'Sweet Bun Classic', price: 8000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_21_47-pm.png', desc: 'Classic soft sweet bun', category: 'Snack', available: true },
-  { id: 29, name: 'Sweet Bun Cream', price: 10000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_24_02-pm.png', desc: 'Cream-filled sweet bun', category: 'Snack', available: true },
-  { id: 30, name: 'Sweet Bun Chocolate', price: 10000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_26_47-pm.png', desc: 'Chocolate-filled sweet bun', category: 'Snack', available: true },
-  // Extra Sauce
-  { id: 15, name: 'Sambal Extra', price: 2000, photo: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=300', desc: 'Extra portion of spicy chili sambal', category: 'Extra Sauce', available: true },
-  { id: 16, name: 'Kecap Manis', price: 1000, photo: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300', desc: 'Sweet soy sauce', category: 'Extra Sauce', available: true },
-  { id: 17, name: 'Saus Kacang', price: 3000, photo: 'https://images.unsplash.com/photo-1635321593217-40050ad13c74?w=300', desc: 'Creamy peanut sauce for satay and gado-gado', category: 'Extra Sauce', available: true },
-  { id: 18, name: 'Sambal Matah', price: 3000, photo: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=300', desc: 'Fresh Balinese shallot and lemongrass sambal', category: 'Extra Sauce', available: true },
-]
 
 /* ─── Helpers ─── */
 const fmt = (n) => 'Rp ' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -340,42 +306,6 @@ function getFilteredThemes(countryCode, foodType, langCountries) {
 }
 
 /* ─── Styles ─── */
-const S = {
-  page: { background: 'transparent', minHeight: '100%', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, paddingBottom: 80, position: 'relative' },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 16px', position: 'sticky', top: 0, zIndex: 10, background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', paddingBottom: 24 },
-  shopLogo: { width: 44, height: 44, borderRadius: 12, objectFit: 'cover', marginRight: 12 },
-  shopName: { fontSize: 22, fontWeight: 700, flex: 1, textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.5)' },
-  gearBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  vendorBar: { background: 'rgba(0,0,0,0.4)', padding: '4px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' },
-  card: { background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', padding: 12, display: 'flex', gap: 12, alignItems: 'center', position: 'relative', transition: 'all 0.3s ease', minHeight: 104, overflow: 'hidden' },
-  cardImg: { width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
-  cardBody: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' },
-  cardName: { fontSize: 16, fontWeight: 600, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  cardDesc: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', paddingRight: 30 },
-  cardPrice: { fontSize: 16, fontWeight: 700, color: '#FACC15' },
-  addBtn: { position: 'absolute', right: 10, bottom: 10, width: 28, height: 28, borderRadius: 14, background: '#FFD600', border: 'none', color: '#1a1a1a', fontSize: 18, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  stickyCart: { position: 'fixed', bottom: 0, left: 0, right: 0, background: 'linear-gradient(135deg,#2d7a0e,#8DC63F)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100, minHeight: 56 },
-  cartText: { fontSize: 15, fontWeight: 600 },
-  checkoutBtn: { background: '#fff', color: '#2d7a0e', border: 'none', borderRadius: 12, padding: '10px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer' },
-  overlay: { position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 200, overflowY: 'auto', display: 'flex', justifyContent: 'center' },
-  modal: { background: '#111', borderRadius: 20, maxWidth: 420, width: '100%', margin: '24px 12px', padding: 20, position: 'relative', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto' },
-  input: { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 15, outline: 'none', marginBottom: 10, boxSizing: 'border-box' },
-  btnGreen: { width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#8DC63F', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 },
-  btnOutline: { width: '100%', padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
-  closeBtnX: { position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#8B0000', fontSize: 24, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  unavailable: {},
-  toggle: (on) => ({ width: 48, height: 26, borderRadius: 13, background: on ? '#8DC63F' : 'rgba(255,255,255,0.15)', position: 'relative', cursor: 'pointer', border: 'none', flexShrink: 0, transition: 'background 0.2s' }),
-  toggleDot: (on) => ({ position: 'absolute', top: 3, left: on ? 24 : 3, width: 20, height: 20, borderRadius: 10, background: '#fff', transition: 'left 0.2s' }),
-  vendorBtns: { display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' },
-  smallBtn: (bg) => ({ padding: '6px 12px', borderRadius: 8, border: 'none', background: bg || 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, cursor: 'pointer', minHeight: 36 }),
-  fab: { position: 'fixed', bottom: 90, right: 16, width: 56, height: 56, borderRadius: 28, background: '#8DC63F', border: 'none', color: '#fff', fontSize: 28, fontWeight: 700, cursor: 'pointer', zIndex: 90, boxShadow: '0 4px 20px rgba(141,198,63,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  closedBanner: { background: 'rgba(255,0,0,0.15)', border: '1px solid rgba(255,0,0,0.3)', borderRadius: 12, margin: '8px 12px', padding: '12px 16px', textAlign: 'center', color: '#ff6b6b', fontSize: 15, fontWeight: 600 },
-  qtyRow: { display: 'flex', alignItems: 'center', gap: 16, justifyContent: 'center', margin: '16px 0' },
-  qtyBtn: { width: 44, height: 44, borderRadius: 22, border: 'none', background: '#1a1a1a', color: '#FFD600', fontSize: 22, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  qtyNum: { fontSize: 20, fontWeight: 700, minWidth: 30, textAlign: 'center' },
-  zoneBtn: (active) => ({ flex: 1, padding: '10px 6px', borderRadius: 10, border: active ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.12)', background: active ? 'rgba(141,198,63,0.15)' : 'transparent', color: '#fff', fontSize: 13, cursor: 'pointer', textAlign: 'center' }),
-  payBtn: (active) => ({ flex: 1, padding: '14px', borderRadius: 14, border: active ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.12)', background: active ? 'rgba(141,198,63,0.15)' : 'transparent', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center' }),
-}
 
 /* ─── Main App ─── */
 export default function App() {
