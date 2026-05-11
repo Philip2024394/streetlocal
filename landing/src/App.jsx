@@ -1799,9 +1799,9 @@ export default function App() {
               {(() => {
                 const themes = [
                   { id: 'cleaning', label: 'Cleaning', accent: '#3498DB', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_01_01%20PM.png' },
-                  { id: 'plumbing', label: 'Plumbing', accent: '#1B6BA8' },
+                  { id: 'plumbing', label: 'Plumbing', accent: '#1B6BA8', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2002_35_55%20PM.png' },
                   { id: 'electrician', label: 'Electrician', accent: '#F1C40F', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_02_13%20PM.png' },
-                  { id: 'aircon', label: 'AC Service', accent: '#3498DB' },
+                  { id: 'aircon', label: 'AC Service', accent: '#3498DB', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2002_28_18%20PM.png' },
                   { id: 'carpenter', label: 'Carpenter', accent: '#8B4513' },
                   { id: 'painter', label: 'Painter', accent: '#2ECC71' },
                   { id: 'gardening', label: 'Gardening', accent: '#27AE60', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_36_46%20PM.png' },
