@@ -26,6 +26,9 @@ const TRANSLATIONS = {
       { q: 'Can I customize my app?', a: 'Yes — your brand name, menu, prices, photos, and promotions are all under your control.' },
       { q: 'Can I have my own branded domain name?', a: 'Yes! We offer three domain plans: a subdomain (shopname.streetlocal.live), a custom domain (menu.yourbrand.com), or a full domain (yourbrand.com) where we handle everything. Domain plans are optional — your app works perfectly without one. See the Domains page in your dashboard for pricing.' },
       { q: 'Can I buy the app and host it myself?', a: 'No — StreetLocal is a service, not a product for sale. Your subscription includes hosting, updates, new features, security, and support. Building this from scratch would cost Rp 15-30 million and you would still need to pay hosting and maintenance.' },
+      { q: 'Can my customers pay by credit card?', a: 'Yes — connect a payment gateway in your app\'s vendor admin (Settings → Payment Methods). We support Stripe, PayPal, Braintree, Checkout.com, Authorize.net, Mollie, Razorpay, HitPay, FOMO Pay, Rapyd, Adyen, CyberSource, Worldpay, 2Checkout, Midtrans, and Xendit — 16 gateways across 200+ countries. Customers see card / Apple Pay / Google Pay / wallet options at checkout. The gateway connection is optional; you can run on cash, bank transfer, or QRIS without it.' },
+      { q: 'Does StreetLocal process the payments?', a: 'No. Each vendor connects their own gateway account directly. Customer card data and funds flow through the gateway you signed up with — StreetLocal never sees or holds your money. We provide the software that connects your app\'s checkout to your gateway. You manage refunds, disputes, and payouts from the gateway\'s own dashboard.' },
+      { q: 'How do I add credit card payments to my app?', a: 'Inside your app\'s vendor admin, open Payment Methods, pick your gateway, and paste your API keys. Most gateways take 10 minutes to sign up (Stripe, HitPay, Mollie). Some need full business verification (Adyen, CyberSource, Worldpay — these are tagged "Enterprise"). Once connected, your customers see a Pay button at checkout. We never charge a fee for this connection — it\'s part of every StreetLocal plan.' },
     ],
     termsTitle: 'Terms & Conditions',
     termsLastUpdated: 'Last updated: 5 May 2026',
@@ -236,6 +239,9 @@ const TRANSLATIONS = {
       { q: 'Bisa kustomisasi aplikasi?', a: 'Ya — nama brand, menu, harga, foto, dan promosi semuanya di bawah kendali kamu.' },
       { q: 'Bisa pakai domain sendiri?', a: 'Ya! Kami menawarkan tiga paket domain: subdomain (namamu.streetlocal.live), domain kustom (menu.brandmu.com), atau domain penuh (brandmu.com) dimana kami mengurus semuanya. Paket domain opsional — aplikasi kamu tetap berfungsi sempurna tanpanya. Lihat halaman Domain di dashboard untuk harga.' },
       { q: 'Bisa beli aplikasinya dan hosting sendiri?', a: 'Tidak — StreetLocal adalah layanan, bukan produk dijual. Langganan kamu termasuk hosting, update, fitur baru, keamanan, dan dukungan. Membangun ini dari nol akan memakan biaya Rp 15-30 juta dan kamu masih perlu bayar hosting dan pemeliharaan.' },
+      { q: 'Bisakah pelanggan saya bayar dengan kartu kredit?', a: 'Ya — hubungkan payment gateway di admin vendor aplikasi (Settings → Payment Methods). Kami mendukung Stripe, PayPal, Braintree, Checkout.com, Authorize.net, Mollie, Razorpay, HitPay, FOMO Pay, Rapyd, Adyen, CyberSource, Worldpay, 2Checkout, Midtrans, dan Xendit — 16 gateway di 200+ negara. Pelanggan melihat opsi kartu / Apple Pay / Google Pay / dompet digital saat checkout. Koneksi gateway bersifat opsional; Anda bisa pakai uang tunai, transfer bank, atau QRIS tanpa itu.' },
+      { q: 'Apakah StreetLocal memproses pembayaran?', a: 'Tidak. Setiap vendor menghubungkan akun gateway sendiri secara langsung. Data kartu pelanggan dan dana mengalir melalui gateway yang Anda daftarkan — StreetLocal tidak pernah melihat atau menyimpan uang Anda. Kami menyediakan software yang menghubungkan checkout aplikasi Anda ke gateway Anda. Anda mengelola refund, sengketa, dan payout dari dashboard gateway sendiri.' },
+      { q: 'Bagaimana cara menambahkan pembayaran kartu kredit ke aplikasi saya?', a: 'Di admin vendor aplikasi, buka Payment Methods, pilih gateway Anda, dan tempel API key. Sebagian besar gateway butuh 10 menit untuk daftar (Stripe, HitPay, Mollie). Beberapa perlu verifikasi bisnis lengkap (Adyen, CyberSource, Worldpay — bertanda "Enterprise"). Setelah terhubung, pelanggan Anda melihat tombol Pay saat checkout. Kami tidak pernah memungut biaya untuk koneksi ini — sudah termasuk di semua paket StreetLocal.' },
     ],
     termsTitle: 'Syarat & Ketentuan',
     termsLastUpdated: 'Terakhir diperbarui: 5 Mei 2026',
@@ -427,6 +433,7 @@ function getCategories(t, cp) {
             { cat: 'Business Management', items: ['Shop open/close toggle — pause orders instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Shop bio & social media links', 'QR code generator for your stall', 'QRIS payment QR code', 'Customer directory & order history', 'Daily deals with time scheduling'] },
             { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
             { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync', 'Terms Of Listing compliance checker'] },
+            { cat: 'Payments', items: ['Online payments accepted (optional) — Connect Stripe, PayPal, Midtrans, or 16 other gateways'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=' + p),
@@ -475,6 +482,7 @@ function getCategories(t, cp) {
             { cat: 'Business Management', items: ['Shop open/close toggle — pause orders instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Shop bio & social media links', 'QR code generator for your store', 'QRIS payment QR code', 'Customer directory & order history'] },
             { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
             { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync'] },
+            { cat: 'Payments', items: ['Online payments accepted (optional) — Connect Stripe, PayPal, Midtrans, or 16 other gateways'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5178/products/local/' : '/products/local/') + '?demo=true&page=' + p),
@@ -506,6 +514,7 @@ function getCategories(t, cp) {
             { cat: 'Business Management', items: ['Open / closed toggle — pause new bookings instantly', 'Per-day opening hours schedule', 'Visit Us page with map link & contact', 'Business bio & social media links', 'QR code generator for your stall', 'QRIS payment QR code', 'Customer directory & booking history'] },
             { cat: 'Marketing & Social', items: ['WhatsApp share & promo templates', 'Auto-reply text for WhatsApp Business', 'Instagram & TikTok bio link generator', 'Shareable app URL (streetlocal.live/your-name)', 'Promo banner with scrolling text', 'Search listing on StreetLocal.live'] },
             { cat: 'Technical', items: ['2 language support (Indonesian & English)', 'Auto SEO — Google & social media optimised', 'Mobile-first PWA — works on any phone', 'No app store needed — instant access via link', 'Automatic cloud backup & sync'] },
+            { cat: 'Payments', items: ['Online payments accepted (optional) — Connect Stripe, PayPal, Midtrans, or 16 other gateways'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5183/services/whatsapp/' : '/services/whatsapp/') + '?demo=true&page=' + p),
@@ -5704,6 +5713,42 @@ export default function App() {
                   </FadeIn>
                 ))
               })()}
+
+              {/* Online Payments — Optional Integration */}
+              <FadeIn delay={0.55}>
+                <div style={{ marginTop: 18, padding: 16, background: '#1a1a1a', borderRadius: 18, border: '1px solid #2a2a2a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 18 }}>💳</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#FFD600', letterSpacing: 0.3 }}>
+                      {locale === 'id' ? 'Pembayaran Online — Integrasi Opsional' : 'Online Payments — Optional Integration'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.78)', lineHeight: 1.55, margin: '0 0 12px' }}>
+                    {locale === 'id'
+                      ? 'Setiap aplikasi StreetLocal mendukung koneksi Payment Gateway opsional sehingga pelanggan dapat membayar dengan kartu kredit atau dompet digital langsung di aplikasi Anda. Anda menggunakan gateway sendiri (Stripe, PayPal, Midtrans, Razorpay, Mollie, HitPay, dan 13 lainnya) — kami menyediakan software integrasinya. Dana mengalir langsung ke akun gateway Anda; StreetLocal tidak pernah menyentuh uang Anda. Pengaturan bersifat opsional — aplikasi Anda tetap berfungsi dengan tunai, transfer bank, atau QRIS.'
+                      : 'Every StreetLocal app supports an optional Payment Gateway connection so customers can pay by credit card or digital wallet directly in your app. You bring your own gateway (Stripe, PayPal, Midtrans, Razorpay, Mollie, HitPay, and 13 more) — we provide the integration software. Funds flow directly to your gateway account; StreetLocal never touches your money. Set up is optional — your app works fine with cash, bank transfer, or QRIS too.'}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {[
+                      { slug: 'visa', alt: 'Visa' },
+                      { slug: 'mastercard', alt: 'Mastercard' },
+                      { slug: 'americanexpress', alt: 'American Express' },
+                      { slug: 'stripe', alt: 'Stripe' },
+                      { slug: 'paypal', alt: 'PayPal' },
+                      { slug: 'applepay', alt: 'Apple Pay' },
+                      { slug: 'googlepay', alt: 'Google Pay' },
+                    ].map(p => (
+                      <div key={p.slug} style={{ width: 36, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+                        <img
+                          src={`https://cdn.simpleicons.org/${p.slug}/white`}
+                          alt={p.alt}
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
             </>
           )
         })()}

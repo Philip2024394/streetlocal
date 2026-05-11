@@ -1251,6 +1251,21 @@ export default function App() {
     }
   }, [])
 
+  // Keep the global app-bg-img in sync with shopTheme on EVERY change, no matter the path.
+  // Without this, the landing page (React <img>) shows the current theme but the
+  // app-shell <img id="app-bg-img"> stays on whatever it was loaded with at first paint.
+  useEffect(() => {
+    const preset = THEME_PRESETS.find(t => t.id === shopTheme)
+    const bgUrl = preset?.img || localStorage.getItem('foodlocalchat_themeBg')
+    if (!bgUrl) return
+    try { localStorage.setItem('foodlocalchat_themeBg', bgUrl) } catch {}
+    const bgImg = document.getElementById('app-bg-img')
+    if (bgImg && bgImg.src !== bgUrl) {
+      bgImg.src = bgUrl
+      bgImg.style.objectFit = shopTheme === 'custom' ? 'cover' : 'fill'
+    }
+  }, [shopTheme])
+
   // Derive accent color from theme or custom selection
   const accent = shopAccentColor
   const accentLight = accent + '25'
@@ -1271,6 +1286,11 @@ export default function App() {
   const [shopName, setShopName] = useState(() => localStorage.getItem('foodlocalchat_shopName') || 'Street Noodle')
   const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('foodlocalchat_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
   const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('foodlocalchat_logoStyle') || 'circle') // circle | bare | off
+  const [logoScale, setLogoScale] = useState(() => Number(localStorage.getItem('foodlocalchat_logoScale')) || 200) // 50-300, default 200 (2x)
+  // Logo positioning INSIDE the circle so the uploaded image fits comfortably and the vendor can nudge it
+  const [logoInner, setLogoInner] = useState(() => Number(localStorage.getItem('foodlocalchat_logoInner')) || 75) // 40-100% of outer circle
+  const [logoOffsetX, setLogoOffsetX] = useState(() => Number(localStorage.getItem('foodlocalchat_logoOffsetX')) || 0)
+  const [logoOffsetY, setLogoOffsetY] = useState(() => Number(localStorage.getItem('foodlocalchat_logoOffsetY')) || 0)
   const [heroSize, setHeroSize] = useState(() => localStorage.getItem('foodlocalchat_heroSize') || 'normal') // normal | large | xl
   const [heroFont, setHeroFont] = useState(() => localStorage.getItem('foodlocalchat_heroFont') || 'system') // system | nunito | poppins | playfair | caveat | bebas
   const [heroColor, setHeroColor] = useState(() => localStorage.getItem('foodlocalchat_heroColor') || '#ffffff')
@@ -1299,13 +1319,26 @@ export default function App() {
   const [btnShape, setBtnShape] = useState(() => localStorage.getItem('foodlocalchat_btnShape') || 'rounded')
   const [btnColor, setBtnColor] = useState(() => localStorage.getItem('foodlocalchat_btnColor') || '')
   const [btnText, setBtnText] = useState(() => localStorage.getItem('foodlocalchat_btnText') || '')
-  const [btnGlow, setBtnGlow] = useState(() => localStorage.getItem('foodlocalchat_btnGlow') === 'true')
+  const [btnSize, setBtnSize] = useState(() => Number(localStorage.getItem('foodlocalchat_btnSize')) || 100)
+  // Button effect: 'none' | 'glow' | 'shake' | 'signal' | 'heartbeat' — only one active at a time.
+  // Migrate from legacy btnGlow/btnDance booleans.
+  const [btnEffect, setBtnEffect] = useState(() => {
+    const saved = localStorage.getItem('foodlocalchat_btnEffect')
+    if (saved) return saved
+    if (localStorage.getItem('foodlocalchat_btnGlow') === 'true') return 'glow'
+    if (localStorage.getItem('foodlocalchat_btnDance') === 'true') return 'shake'
+    return 'none'
+  })
+  // Keep legacy variables alive so any unmigrated render lines still work
+  const btnGlow = btnEffect === 'glow'
+  const btnDance = btnEffect === 'shake'
   const [overlayOpacity, setOverlayOpacity] = useState(() => parseInt(localStorage.getItem('foodlocalchat_overlayOpacity')) || 40)
   const [landingLayout, setLandingLayout] = useState(() => localStorage.getItem('foodlocalchat_landingLayout') || 'center')
   const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('foodlocalchat_customTagline') || '')
   const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('foodlocalchat_menuCardStyle') || 'horizontal')
   const [menuBanner, setMenuBanner] = useState(() => localStorage.getItem('foodlocalchat_menuBanner') || '')
-  const [showClosedBanner, setShowClosedBanner] = useState(() => localStorage.getItem('foodlocalchat_showClosedBanner') === 'true')
+  // (Removed showClosedBanner toggle — when shop is closed, the banner now always shows.
+  // It's basic UX clarity; vendors have no good reason to hide it.)
   const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('foodlocalchat_promoBanner') || '')
   const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('foodlocalchat_promoBannerEnabled') === 'true')
   const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('foodlocalchat_splashEnabled') === 'true')
@@ -1601,6 +1634,10 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_shopName', shopName) }, [shopName])
   useEffect(() => { localStorage.setItem('foodlocalchat_shopLogo', shopLogo) }, [shopLogo])
   useEffect(() => { localStorage.setItem('foodlocalchat_logoStyle', shopLogoStyle) }, [shopLogoStyle])
+  useEffect(() => { localStorage.setItem('foodlocalchat_logoScale', String(logoScale)) }, [logoScale])
+  useEffect(() => { localStorage.setItem('foodlocalchat_logoInner', String(logoInner)) }, [logoInner])
+  useEffect(() => { localStorage.setItem('foodlocalchat_logoOffsetX', String(logoOffsetX)) }, [logoOffsetX])
+  useEffect(() => { localStorage.setItem('foodlocalchat_logoOffsetY', String(logoOffsetY)) }, [logoOffsetY])
   useEffect(() => { localStorage.setItem('foodlocalchat_heroSize', heroSize) }, [heroSize])
   useEffect(() => { localStorage.setItem('foodlocalchat_heroFont', heroFont) }, [heroFont])
   useEffect(() => {
@@ -1644,17 +1681,64 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_btnShape', btnShape) }, [btnShape])
   useEffect(() => { localStorage.setItem('foodlocalchat_btnColor', btnColor) }, [btnColor])
   useEffect(() => { localStorage.setItem('foodlocalchat_btnText', btnText) }, [btnText])
-  useEffect(() => { localStorage.setItem('foodlocalchat_btnGlow', btnGlow) }, [btnGlow])
+  useEffect(() => { localStorage.setItem('foodlocalchat_btnSize', String(btnSize)) }, [btnSize])
+  useEffect(() => { localStorage.setItem('foodlocalchat_btnEffect', btnEffect) }, [btnEffect])
+
+  // Inject button effect keyframes globally — placing them inside the <button> element
+  // worked inconsistently across browsers. Mount once into document.head.
+  useEffect(() => {
+    const id = 'foodlocalchat-btn-effect-keyframes'
+    if (document.getElementById(id)) return
+    const style = document.createElement('style')
+    style.id = id
+    style.textContent = `
+      @keyframes btnShake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+        20%, 40%, 60%, 80% { transform: translateX(3px); }
+      }
+      @keyframes btnHeartbeat {
+        0%, 100% { transform: scale(1); }
+        14% { transform: scale(1.10); }
+        28% { transform: scale(1); }
+        42% { transform: scale(1.08); }
+        70% { transform: scale(1); }
+      }
+      @keyframes btnRunningGlow {
+        0% { transform: translateX(-150%) skewX(-20deg); }
+        100% { transform: translateX(250%) skewX(-20deg); }
+      }
+      @keyframes btnSignalPing {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+        100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+      }
+      .overlay-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; cursor: pointer; }
+      .overlay-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 13px; background: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.25); cursor: pointer; margin-top: -10px; }
+      .overlay-slider::-moz-range-thumb { width: 26px; height: 26px; border-radius: 13px; background: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.4); cursor: pointer; }
+      .overlay-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; }
+      .overlay-slider::-moz-range-track { height: 6px; border-radius: 3px; }
+    `
+    document.head.appendChild(style)
+  }, [])
   useEffect(() => { localStorage.setItem('foodlocalchat_overlayOpacity', overlayOpacity) }, [overlayOpacity])
   useEffect(() => { localStorage.setItem('foodlocalchat_landingLayout', landingLayout) }, [landingLayout])
   useEffect(() => { localStorage.setItem('foodlocalchat_customTagline', customTagline) }, [customTagline])
   useEffect(() => { localStorage.setItem('foodlocalchat_menuCardStyle', menuCardStyle) }, [menuCardStyle])
   useEffect(() => { localStorage.setItem('foodlocalchat_menuBanner', menuBanner) }, [menuBanner])
-  useEffect(() => { localStorage.setItem('foodlocalchat_showClosedBanner', showClosedBanner) }, [showClosedBanner])
   useEffect(() => { localStorage.setItem('foodlocalchat_promoBanner', promoBanner) }, [promoBanner])
   useEffect(() => { localStorage.setItem('foodlocalchat_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
   useEffect(() => { localStorage.setItem('foodlocalchat_splashEnabled', splashEnabled) }, [splashEnabled])
-  useEffect(() => { if (splashEnabled) { const t = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(t) } else { setShowSplash(false) } }, [splashEnabled])
+  // When splash is enabled (initially OR via toggle), show it for 2 seconds then auto-hide.
+  // When disabled, hide immediately.
+  useEffect(() => {
+    if (splashEnabled) {
+      setShowSplash(true)
+      const t = setTimeout(() => setShowSplash(false), 2000)
+      return () => clearTimeout(t)
+    } else {
+      setShowSplash(false)
+    }
+  }, [splashEnabled])
 
   // Build delivery zones from vendor's own settings
   useEffect(() => {
@@ -2274,25 +2358,32 @@ export default function App() {
         {/* Background overlay */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: `rgba(0,0,0,${overlayOpacity / 100})`, zIndex: 1 }} />
 
-        {/* Closed banner overlay */}
-        {showClosedBanner && !shopOpen && (
+        {/* Closed banner overlay — always shown when shop is closed */}
+        {!shopOpen && (
           <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: 'rgba(220,38,38,0.9)', color: '#fff', padding: '10px 28px', borderRadius: 10, fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>CLOSED</div>
         )}
 
         {/* Content */}
-        <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 80 : 0, paddingLeft: landingLayout === 'left' ? 24 : 0 }}>
-          {/* Shop logo */}
-          {shopLogoStyle !== 'off' && shopLogo ? (
-            shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 200, height: 200, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+        <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: landingLayout === 'footer' ? 'flex-end' : 'center', paddingBottom: landingLayout === 'footer' ? 120 : 0 }}>
+          {/* Shop logo — scaled by logoScale. Base sizes = original; 200% slider = real 2x */}
+          {shopLogoStyle !== 'off' && shopLogo ? (() => {
+            const scale = logoScale / 100
+            const heroBare = Math.round(200 * scale)
+            const heroOuter = Math.round(156 * scale)
+            // Inner image fills (logoInner)% of the circle, leaving safe padding so it doesn't
+            // touch the edges. objectFit:contain keeps the entire logo visible (no cropping).
+            const innerPx = Math.round(heroOuter * logoInner / 100)
+            return shopLogoStyle === 'bare' ? (
+              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: heroBare, height: heroBare, maxWidth: '85vw', maxHeight: '50vh', objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
             ) : (
-              <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 160, height: 160, borderRadius: 80, objectFit: 'cover', marginTop: 18 }} />
+              <div style={{ width: heroOuter, height: heroOuter, maxWidth: '85vw', maxHeight: '50vh', borderRadius: heroOuter / 2, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: innerPx, height: innerPx, objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
               </div>
             )
-          ) : shopLogoStyle !== 'off' ? (
-            <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
-          ) : null}
+          })() : shopLogoStyle !== 'off' ? (() => {
+            const fallSz = Math.round(90 * logoScale / 100)
+            return <div style={{ width: fallSz, height: fallSz, borderRadius: fallSz / 2, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(40 * logoScale / 100), fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
+          })() : null}
 
           {/* Shop name + tagline + city */}
           {(() => {
@@ -2365,14 +2456,34 @@ export default function App() {
               () => setShowLanding(false)
             )
           }} style={{
-            padding: '14px 44px', border: 'none',
+            padding: `${Math.round(14 * btnSize / 100)}px ${Math.round(44 * btnSize / 100)}px`, border: 'none',
             borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12,
-            cursor: 'pointer', fontSize: 15, fontWeight: 700,
-            position: 'relative', overflow: 'hidden',
+            cursor: 'pointer', fontSize: Math.round(15 * btnSize / 100), fontWeight: 700,
+            position: 'relative', overflow: 'visible',
             background: btnColor || (isCustomAccent ? accent : '#FACC15'),
             color: (btnColor || (isCustomAccent ? accent : '#FACC15')) === '#FACC15' ? '#000' : '#fff',
-            ...(btnGlow ? { boxShadow: `0 0 16px ${btnColor || accent}80, 0 0 32px ${btnColor || accent}40` } : {}),
+            transformOrigin: 'center',
+            whiteSpace: 'nowrap',
+            ...(btnEffect === 'shake' ? { animation: 'btnShake 1s ease-in-out infinite' } : {}),
+            ...(btnEffect === 'heartbeat' ? { animation: 'btnHeartbeat 1.2s ease-in-out infinite' } : {}),
           }}>
+            {/* Running glow — bright shine sweeping across the button face */}
+            {btnEffect === 'glow' && (
+              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12, pointerEvents: 'none' }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.65) 50%, transparent 100%)',
+                  animation: 'btnRunningGlow 2s linear infinite',
+                }} />
+              </div>
+            )}
+            {/* Signal rings — 2 staggered pings behind */}
+            {btnEffect === 'signal' && (
+              <>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: '100%', height: '100%', transform: 'translate(-50%, -50%)', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12, border: `2px solid ${btnColor || accent}`, zIndex: -1, pointerEvents: 'none', animation: 'btnSignalPing 1.6s ease-out infinite' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: '100%', height: '100%', transform: 'translate(-50%, -50%)', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12, border: `2px solid ${btnColor || accent}`, zIndex: -1, pointerEvents: 'none', animation: 'btnSignalPing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
+              </>
+            )}
             <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12 }}>
               <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} />
             </div>
@@ -3323,7 +3434,7 @@ export default function App() {
                     {/* Dynamic island */}
                     <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
                     {/* Background image */}
-                    <img src={localStorage.getItem('foodlocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
                     <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
@@ -5416,7 +5527,7 @@ export default function App() {
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
       {designStudio && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             {/* Header */}
@@ -5431,7 +5542,7 @@ export default function App() {
             {/* Logo Style */}
             <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Logo Style</div>
-              <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
                 {[
                   { id: 'circle', label: 'Circle' },
                   { id: 'bare', label: 'No Circle' },
@@ -5440,6 +5551,50 @@ export default function App() {
                   <button type="button" key={opt.id} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShopLogoStyle(opt.id) }} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: shopLogoStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: shopLogoStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 44 }}>{opt.label}</button>
                 ))}
               </div>
+              {shopLogoStyle !== 'off' && (
+                <>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{shopLogoStyle === 'circle' ? 'Circle Size' : 'Logo Size'} ({logoScale}%)</label>
+                  <input className="overlay-slider" type="range" min="50" max="300" step="10" value={logoScale} onChange={(e) => setLogoScale(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${((logoScale - 50) / 250) * 100}%, rgba(255,255,255,0.15) ${((logoScale - 50) / 250) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 10 }} />
+                  {shopLogoStyle === 'circle' && (
+                    <>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Logo Inside Circle ({logoInner}%)</label>
+                      <input className="overlay-slider" type="range" min="40" max="100" step="2" value={logoInner} onChange={(e) => setLogoInner(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 10 }} />
+                      <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 6, display: 'block' }}>Logo Position</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6, minHeight: 150 }}>
+                        {/* Live circle preview — scales with logoScale, just like the phone */}
+                        {(() => {
+                          const prevOuter = Math.min(140, Math.max(30, Math.round(0.5 * logoScale)))
+                          const prevInner = Math.round(prevOuter * logoInner / 100)
+                          const prevOffX = logoOffsetX * prevOuter / 250
+                          const prevOffY = logoOffsetY * prevOuter / 250
+                          return (
+                            <div style={{ flexShrink: 0, width: prevOuter, height: prevOuter, borderRadius: prevOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', transition: 'width 0.15s ease, height 0.15s ease' }}>
+                              {shopLogo ? (
+                                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: prevInner, height: prevInner, objectFit: 'contain', transform: `translate(${prevOffX}px, ${prevOffY}px)`, transition: 'width 0.15s ease, height 0.15s ease' }} />
+                              ) : (
+                                <div style={{ fontSize: Math.round(prevOuter * 0.32), fontWeight: 900, color: '#fff' }}>{(shopName || '?').charAt(0)}</div>
+                              )}
+                            </div>
+                          )
+                        })()}
+                        {/* Arrow pad — right */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, flex: 1, maxWidth: 144 }}>
+                          <div />
+                          <button type="button" onClick={() => setLogoOffsetY(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↑</button>
+                          <div />
+                          <button type="button" onClick={() => setLogoOffsetX(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>←</button>
+                          <button type="button" onClick={() => { setLogoOffsetX(0); setLogoOffsetY(0) }} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.25)' }}>•</button>
+                          <button type="button" onClick={() => setLogoOffsetX(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>→</button>
+                          <div />
+                          <button type="button" onClick={() => setLogoOffsetY(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↓</button>
+                          <div />
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>X: {logoOffsetX}px · Y: {logoOffsetY}px · tap • to reset</div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Hero Text Editor — open button */}
@@ -5454,8 +5609,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* Phone Preview + Toolbar */}
-            <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 14, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            {/* Phone Preview + Toolbar — no wrapping container, sits directly on glass bg */}
+            <div style={{ margin: '0 14px 12px', padding: 0 }}>
               {(() => {
                 const HERO_FONTS_C = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
                 const ffC = HERO_FONTS_C[heroFont] || HERO_FONTS_C.system
@@ -5474,7 +5629,7 @@ export default function App() {
                 return (
                   <>
                     <style>{`@keyframes promoScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 14, marginBottom: 10 }}>
                       {/* iPhone Frame */}
                       <div style={{ width: 220, height: 420, borderRadius: 32, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333', flexShrink: 0 }}>
                         <div style={{ position: 'absolute', right: -3, top: 85, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
@@ -5484,24 +5639,69 @@ export default function App() {
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
                           {previewTab === 'landing' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('foodlocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={(THEME_PRESETS.find(t => t.id === shopTheme) || {}).img || localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
-                              {showClosedBanner && !shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
-                              <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: landingLayout === 'left' ? 'flex-start' : 'center', justifyContent: landingLayout === 'top' ? 'flex-start' : 'center', paddingTop: landingLayout === 'top' ? 36 : 0, paddingLeft: landingLayout === 'left' ? 10 : 0 }}>
-                                {shopLogoStyle !== 'off' && shopLogo ? (shopLogoStyle === 'bare' ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', marginBottom: 6 }} /> : <div style={{ width: 40, height: 40, borderRadius: 20, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}><img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 34, height: 34, borderRadius: 17, objectFit: 'cover' }} /></div>) : shopLogoStyle !== 'off' ? <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div> : null}
+                              {!shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
+                              <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: landingLayout === 'footer' ? 'flex-end' : 'center', paddingBottom: landingLayout === 'footer' ? 54 : 0 }}>
+                                {shopLogoStyle !== 'off' && shopLogo ? (() => {
+                                  // Preview phone is roughly 1/4 of a real phone viewport.
+                                  const sc = logoScale / 400
+                                  const pBare = Math.round(200 * sc)
+                                  const pOuter = Math.round(156 * sc)
+                                  const pInner = Math.round(pOuter * logoInner / 100)
+                                  // Scale offsets to preview proportions (1/4)
+                                  const pX = logoOffsetX / 4
+                                  const pY = logoOffsetY / 4
+                                  return shopLogoStyle === 'bare'
+                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: '70%', maxHeight: '40%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
+                                    : <div style={{ width: pOuter, height: pOuter, maxWidth: '70%', maxHeight: '40%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pInner, height: pInner, objectFit: 'contain', transform: `translate(${pX}px, ${pY}px)` }} />
+                                      </div>
+                                })() : shopLogoStyle !== 'off' ? (() => {
+                                  const fs = Math.round(90 * logoScale / 400)
+                                  return <div style={{ width: fs, height: fs, borderRadius: fs / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(40 * logoScale / 400), fontWeight: 900, color: '#fff', marginBottom: 6 }}>{shopName.charAt(0)}</div>
+                                })() : null}
                                 <div style={{ fontSize: 17, fontWeight: 800, color: heroColor, fontFamily: ffC, textAlign: landingLayout === 'left' ? 'left' : 'center', textShadow: '0 1px 3px rgba(0,0,0,0.9)', lineHeight: 1.1, padding: '0 8px' }}>{shopName}</div>
                                 <div style={{ fontSize: 9, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{customTagline || shopFoodType}</div>
-                                <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '5px 16px', borderRadius: 8, background: bColor, fontSize: 9, fontWeight: 700, color: '#fff', overflow: 'hidden' }}>{btnGlow && <div style={{ position: 'absolute', inset: 0, boxShadow: `0 0 8px ${bColor}80`, borderRadius: 8 }} />}<span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span></div>
+                                <div style={{
+                                  position: 'absolute', bottom: 20, left: 0, right: 0,
+                                  display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+                                }}>
+                                  <div style={{
+                                    position: 'relative', pointerEvents: 'auto',
+                                    padding: `${Math.round(5 * btnSize / 100)}px ${Math.round(16 * btnSize / 100)}px`,
+                                    borderRadius: btnR,
+                                    background: bColor,
+                                    fontSize: Math.round(9 * btnSize / 100), fontWeight: 700, color: '#fff', overflow: 'visible',
+                                    whiteSpace: 'nowrap',
+                                    transformOrigin: 'center center',
+                                    ...(btnEffect === 'shake' ? { animation: 'btnShake 1s ease-in-out infinite' } : {}),
+                                    ...(btnEffect === 'heartbeat' ? { animation: 'btnHeartbeat 1.2s ease-in-out infinite' } : {}),
+                                  }}>
+                                    {btnEffect === 'glow' && (
+                                      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: btnR, pointerEvents: 'none' }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '40%', height: '100%', background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%)', animation: 'btnRunningGlow 2s linear infinite' }} />
+                                      </div>
+                                    )}
+                                    {btnEffect === 'signal' && (
+                                      <>
+                                        <div style={{ position: 'absolute', top: '50%', left: '50%', width: '100%', height: '100%', transform: 'translate(-50%, -50%)', borderRadius: btnR, border: `1.5px solid ${bColor}`, zIndex: -1, pointerEvents: 'none', animation: 'btnSignalPing 1.6s ease-out infinite' }} />
+                                        <div style={{ position: 'absolute', top: '50%', left: '50%', width: '100%', height: '100%', transform: 'translate(-50%, -50%)', borderRadius: btnR, border: `1.5px solid ${bColor}`, zIndex: -1, pointerEvents: 'none', animation: 'btnSignalPing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
+                                      </>
+                                    )}
+                                    <span style={{ position: 'relative' }}>{btnText || 'View Menu'}</span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
                           {previewTab === 'menu' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('foodlocalchat_themeBg') || ''} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
-                                {promoBannerEnabled && promoBanner && <div style={{ background: accent, padding: '2px 8px', borderRadius: 4, marginBottom: 5, overflow: 'hidden' }}><div style={{ fontSize: 7, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div></div>}
+                                {promoBanner && <div style={{ background: accent, padding: '2px 8px', borderRadius: 4, marginBottom: 5, overflow: 'hidden', opacity: promoBannerEnabled ? 1 : 0.35, position: 'relative' }}><div style={{ fontSize: 7, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div>{!promoBannerEnabled && <div style={{ position: 'absolute', top: 1, right: 3, fontSize: 6, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '0 3px', borderRadius: 2, letterSpacing: 0.5 }}>OFF</div>}</div>}
                                 {menuBanner && <img src={menuBanner} alt="" onError={imgError('banner')} style={{ width: '100%', height: 36, objectFit: 'cover', borderRadius: 5, marginBottom: 5 }} />}
                                 {menuCardStyle === 'grid' ? (
                                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>{[1,2,3,4].map(i => <div key={i} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: 4 }}><div style={{ width: '100%', height: 32, background: 'rgba(255,255,255,0.1)', borderRadius: 4, marginBottom: 3 }} /><div style={{ height: 5, width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: 2, marginBottom: 2 }} /><div style={{ height: 5, width: '40%', background: '#FACC15', borderRadius: 2, opacity: 0.7 }} /></div>)}</div>
@@ -5534,10 +5734,10 @@ export default function App() {
                     {/* Contextual Controls */}
                     {configTool && (
                       <div style={{ padding: 12, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08`, marginTop: 6 }}>
-                        {configTool === 'layout' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Layout & Overlay</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'center', label: 'Center' }, { id: 'left', label: 'Left' }, { id: 'top', label: 'Top' }].map(opt => (<button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label><input type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ width: '100%', marginBottom: 8 }} /><div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}><button onClick={() => setShowClosedBanner(!showClosedBanner)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: showClosedBanner ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: showClosedBanner ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Show "Closed" banner</span></div></>)}
-                        {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><div style={{ display: 'flex', gap: 10, marginBottom: 10 }}><div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="color" value={btnColor || accent} onChange={(e) => setBtnColor(e.target.value)} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'none' }} />{btnColor && <button onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Reset</button>}</div></div><div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Text</label><input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setBtnGlow(!btnGlow)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: btnGlow ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: btnGlow ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Glow Effect</span></div></>)}
+                        {configTool === 'layout' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Layout & Overlay</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'center', label: 'Center' }, { id: 'footer', label: 'Footer' }].map(opt => (<button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label><style>{`.overlay-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.overlay-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.25);cursor:pointer;margin-top:-10px;}.overlay-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.overlay-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.overlay-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="overlay-slider" type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 8 }} /></>)}
+                        {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 4 }}>{[{c: accent, label: 'Theme'}, {c: '#FACC15'}, {c: '#F59E0B'}, {c: '#EF4444'}, {c: '#DC2626'}, {c: '#EC4899'}, {c: '#A855F7'}, {c: '#3B82F6'}, {c: '#06B6D4'}, {c: '#22C55E'}, {c: '#10B981'}, {c: '#1A1A1A'}, {c: '#FFFFFF'}, {c: '#F97316'}].map(({c, label}, i) => { const isPicked = btnColor === c || (i === 0 && !btnColor); return (<button key={i + c} type="button" onClick={() => setBtnColor(i === 0 ? '' : c)} aria-label={label || c} title={label || c} style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', background: c, border: isPicked ? `3px solid #fff` : (i === 0 ? '2px solid rgba(255,215,0,0.6)' : '1px solid rgba(255,255,255,0.18)'), cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 8, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)', letterSpacing: 0.5 }}>T</span>}</button>) })}</div><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>The "T" swatch matches your theme accent exactly.</div>{btnColor && <button type="button" onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '0 6px', marginBottom: 8 }}>Reset to theme</button>}<label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label><input style={{ ...S.input, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Effect</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginBottom: 10 }}>{[{ id: 'none', label: 'None' }, { id: 'glow', label: 'Glow' }, { id: 'shake', label: 'Shake' }, { id: 'signal', label: 'Signal' }, { id: 'heartbeat', label: 'Heart' }].map(opt => (<button key={opt.id} onClick={() => setBtnEffect(opt.id)} style={{ padding: '8px 2px', borderRadius: 8, border: 'none', fontSize: 10, fontWeight: 700, cursor: 'pointer', background: btnEffect === opt.id ? accent : 'rgba(255,255,255,0.06)', color: btnEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)', minHeight: 36 }}>{opt.label}</button>))}</div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Size ({btnSize}%)</label><style>{`.size-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.size-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.4);cursor:pointer;margin-top:-10px;}.size-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.size-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.size-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="size-slider" type="range" min="60" max="160" step="5" value={btnSize} onChange={(e) => setBtnSize(Number(e.target.value))} style={{ background: `linear-gradient(to right, #DC2626 0%, #DC2626 ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) 100%)`, marginBottom: 8 }} /></>)}
                         {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline</label><input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={customTagline} onChange={(e) => setCustomTagline(e.target.value)} placeholder="Leave empty to use food type" maxLength={40} /><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page</div></>)}
-                        {configTool === 'cards' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards & Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Card Style</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (<button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Menu Banner Image</label><div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Upload<input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} /></label>{menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}</div>{menuBanner && <img src={menuBanner} alt="" onError={imgError('banner')} style={{ width: '100%', height: 50, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}</>)}
+                        {configTool === 'cards' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards & Banner</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Card Style</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (<button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 2, display: 'block' }}>Promo Strip Above Menu</label><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 6, lineHeight: 1.4 }}>Wide image shown across the top of your menu page, above the food items. Use it for today's special, opening hours, or a brand photo. Recommended 1200×280px landscape.</div><div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><label style={{ padding: '8px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Upload<input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; const url = await uploadMenuImage(vendorId, file); if (url) setMenuBanner(url) }} /></label>{menuBanner && <button onClick={() => setMenuBanner('')} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Remove</button>}</div>{menuBanner && <img src={menuBanner} alt="" onError={imgError('banner')} style={{ width: '100%', height: 50, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}</>)}
                         {configTool === 'promo' && (
                           <>
                             <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div>
@@ -5551,12 +5751,10 @@ export default function App() {
                                 width: '100%', boxSizing: 'border-box',
                                 background: 'rgba(255,255,255,0.06)',
                                 border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: 8, padding: '6px 12px',
-                                color: '#fff', fontSize: 13, lineHeight: '28px',
+                                borderRadius: 8, padding: '8px 12px',
+                                color: '#fff', fontSize: 13, lineHeight: 1.5,
                                 outline: 'none', resize: 'vertical', fontFamily: 'inherit',
                                 minHeight: 90, marginBottom: 6,
-                                backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(255,255,255,0.15) 27px, rgba(255,255,255,0.15) 28px)',
-                                backgroundAttachment: 'local',
                               }}
                             />
                             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
@@ -5577,28 +5775,6 @@ export default function App() {
                 )
               })()}
             </div>
-
-            {/* Theme Backgrounds */}
-            {(() => {
-              const langCountries = LANG_TO_COUNTRIES[nativeLang] || []
-              const { byFoodType, byCountry, rest } = getFilteredThemes(countryCode, shopFoodType, langCountries)
-              const renderThemeCard = (theme) => (
-                <div key={theme.id} style={{ flexShrink: 0, width: 160, position: 'relative' }}>
-                  <button onClick={() => { setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', width: '100%' }}>
-                    <div style={{ width: '100%', height: 240, position: 'relative' }}><img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} /></div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>{shopTheme === theme.id ? '✓ ' : ''}{theme.label}</div>
-                  </button>
-                </div>
-              )
-              return (
-                <div style={{ padding: '0 14px 14px' }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: accent, marginBottom: 4 }}>App Theme</h3>
-                  {byFoodType.length > 0 && (<><p style={{ fontSize: 14, color: accent, fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Recommended for {shopFoodType}</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{byFoodType.map(renderThemeCard)}</div></>)}
-                  {byCountry.length > 0 && (<><p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{byCountry.filter(t => !byFoodType.some(f => f.id === t.id)).map(renderThemeCard)}</div></>)}
-                  {rest.length > 0 && (<><p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>All Themes</p><div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>{rest.filter(t => !byFoodType.some(f => f.id === t.id) && !byCountry.some(c => c.id === t.id)).map(renderThemeCard)}</div></>)}
-                </div>
-              )
-            })()}
 
             {/* Done button */}
             <div style={{ padding: '8px 14px 28px' }}>
