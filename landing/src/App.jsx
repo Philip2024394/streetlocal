@@ -1145,6 +1145,8 @@ const THEME_INDEX = [
   { id: 'pest', label: 'Pest Control', app: 'services', accent: '#1ABC9C', keywords: ['pest control', 'exterminator', 'fumigasi', 'jasa basmi hama'] },
   { id: 'massage', label: 'Massage', app: 'services', accent: '#E91E63', keywords: ['massage', 'pijat', 'spa', 'therapy', 'reflexology'] },
   { id: 'salon', label: 'Salon', app: 'services', accent: '#FF69B4', keywords: ['salon', 'hair', 'beauty', 'haircut', 'salon kecantikan'] },
+  { id: 'beautician', label: 'Beautician', app: 'services', accent: '#C0392B', keywords: ['beautician', 'facial', 'makeup', 'makeup artist', 'eyebrow', 'eyelash', 'mua', 'kecantikan'] },
+  { id: 'laser', label: 'Laser Service', app: 'services', accent: '#8E44AD', keywords: ['laser', 'laser hair removal', 'aesthetic', 'skin treatment', 'laser service', 'beauty laser'] },
   { id: 'tattoo', label: 'Tattoo', app: 'services', accent: '#1a1a1a', keywords: ['tattoo', 'tattoo studio', 'body art', 'tato'] },
   { id: 'yoga', label: 'Yoga Trainer', app: 'services', accent: '#8E44AD', keywords: ['yoga', 'fitness', 'personal trainer', 'yoga trainer', 'gym'] },
   { id: 'mechanic', label: 'Mechanic', app: 'services', accent: '#dc2626', keywords: ['mechanic', 'bengkel', 'auto repair', 'car service', 'motor service'] },
