@@ -410,7 +410,7 @@ function getCategories(t, cp) {
       name: t.foodCategory || 'Local Food Apps',
       icon: '🍜',
       description: t.foodCategoryDesc || 'Complete food business solutions',
-      bannerImage: (t.categories?.food?.bannerImage) || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-10_12_27-pm.png',
+      bannerImage: (t.categories?.food?.bannerImage) || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_48_14%20PM.png',
       apps: [
         {
           id: 'basic',
@@ -489,7 +489,7 @@ function getCategories(t, cp) {
       name: t.servicesCategory || 'Local Service Apps',
       icon: '🛠️',
       description: t.servicesCategoryDesc || 'Offer any service — cleaning, plumbing, tutoring, your own booking app',
-      bannerImage: 'https://image.pollinations.ai/prompt/Professional%20service%20business%20workers%20uniform%20dark%20moody%20background?width=480&height=300&nologo=true',
+      bannerImage: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2001_50_15%20PM.png',
       apps: [
         {
           id: 'serviceslocal',
