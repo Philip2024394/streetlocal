@@ -6,12 +6,12 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -21,6 +21,7 @@ const GATEWAY_FIELD_MAP = {
   paypal:    { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
   razorpay:  { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
   braintree: { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
+  mollie:    { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -971,6 +972,21 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  // Customer-side: Mollie hosted checkout redirect. Same pattern as Stripe/Xendit/PayPal/Razorpay.
+  const payWithMollie = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('mollie-create-payment', {
+      body: { vendorId, orderId, amount, currency: currency || 'EUR', items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl, description },
+    })
+    if (error || !data?.url) {
+      console.error('Mollie payment failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingMollieOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   const payWithBraintree = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
     if (!supabase) return 'failed'
     try {
@@ -1038,6 +1054,7 @@ export default function App() {
   const [vendorPayPalLive, setVendorPayPalLive] = useState(false)
   const [vendorRazorpayLive, setVendorRazorpayLive] = useState(false)
   const [vendorBraintreeLive, setVendorBraintreeLive] = useState(false)
+  const [vendorMollieLive, setVendorMollieLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1050,11 +1067,12 @@ export default function App() {
     probe('paypal', setVendorPayPalLive)
     probe('razorpay', setVendorRazorpayLive)
     probe('braintree', setVendorBraintreeLive)
+    probe('mollie', setVendorMollieLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -1064,6 +1082,7 @@ export default function App() {
         localStorage.removeItem('foodlocalchat_pendingXenditOrder')
         localStorage.removeItem('foodlocalchat_pendingPayPalOrder')
         localStorage.removeItem('foodlocalchat_pendingRazorpayOrder')
+        localStorage.removeItem('foodlocalchat_pendingMollieOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -1883,8 +1902,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe → PayPal → Razorpay → Braintree.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe → PayPal → Razorpay → Braintree → Mollie.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -1962,6 +1981,18 @@ export default function App() {
             return
           }
           orderPayload.payment = { method: 'braintree', status: payRes, gatewayOrderId }
+        } else if (activeGateway === 'mollie') {
+          // Mollie hosted checkout redirect (iDEAL / Bancontact / SEPA / cards / PayPal / Klarna).
+          orderPayload.payment = { method: 'mollie', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Mollie payment',
+          }).catch(() => {})
+          await payWithMollie({ ...payArgs, customerEmail: '', description: summaryItems })
+          return // browser is now navigating to Mollie
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
