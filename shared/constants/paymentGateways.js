@@ -168,11 +168,11 @@ export const SUPPORTED_GATEWAYS = [
     method: 'api-keys',
     fields: [
       { key: 'merchantCode', label: 'Merchant Code', placeholder: '255000000000', type: 'text', required: true },
-      { key: 'secretKey', label: 'Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
-      { key: 'publishableKey', label: 'Publishable Key', placeholder: '••••', type: 'text' },
+      { key: 'secretKey', label: 'Secret Key (API)', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'secretWord', label: 'INS Secret Word (webhook)', placeholder: 'Set in dashboard → Notifications', type: 'password', required: true, secret: true },
     ],
     docUrl: 'https://secure.2checkout.com/cpanel/',
-    setupSteps: ['Sign up at 2checkout.com (now Verifone)', 'Complete merchant verification', 'Dashboard → Integrations → Webhooks & API', 'Copy Merchant Code + Secret Key'],
+    setupSteps: ['Sign up at 2checkout.com (now Verifone)', 'Complete merchant verification', 'Dashboard → Integrations → Webhooks & API → copy Merchant Code + Secret Key', 'Dashboard → Notifications → Settings → set the INS Secret Word and paste the same value here', 'Dashboard → Notifications → Add new IPN URL: https://<your-supabase>.functions.supabase.co/functions/v1/twocheckout-webhook'],
   },
   {
     id: 'razorpay',
