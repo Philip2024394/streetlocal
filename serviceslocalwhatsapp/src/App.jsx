@@ -9,6 +9,7 @@ import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/servicesDemoMenu'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
+import { VENDOR_TYPES } from '@shared/data/servicesVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 
@@ -121,33 +122,6 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 // Picked once at signup. Each type loads its own 5-7 category quick-chips.
 // Vendor can still type any custom category. Existing menu items are preserved
 // across switches — the preset is suggestions, not enforcement.
-const VENDOR_TYPES = {
-  home: {
-    id: 'home', label: 'Home Services', emoji: '🏠',
-    tagline: 'AC, plumbing, cleaning, repair',
-    categories: ['AC', 'Plumbing', 'Electrical', 'Cleaning', 'Painting', 'Pest Control', 'Promo'],
-  },
-  beauty: {
-    id: 'beauty', label: 'Beauty / Wellness', emoji: '💆',
-    tagline: 'Salon, massage, beauty treatments',
-    categories: ['Hair', 'Massage', 'Facial', 'Nails', 'Spa', 'Makeup', 'Promo'],
-  },
-  automotive: {
-    id: 'automotive', label: 'Automotive', emoji: '🚗',
-    tagline: 'Car wash, repair, rental',
-    categories: ['Wash', 'Repair', 'Detail', 'Tire', 'Rental', 'Inspection', 'Promo'],
-  },
-  professional: {
-    id: 'professional', label: 'Professional', emoji: '💼',
-    tagline: 'Tutoring, photography, legal',
-    categories: ['Tutoring', 'Photography', 'Translation', 'Legal', 'Accounting', 'Consulting', 'Promo'],
-  },
-  general: {
-    id: 'general', label: 'General Services', emoji: '🔧',
-    tagline: 'Mixed service offerings',
-    categories: ['Main Service', 'Add-ons', 'Packages', 'Consultation', 'Promo'],
-  },
-}
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
 /* Helper: filter themes by country + food type */

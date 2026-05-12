@@ -9,6 +9,7 @@ import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/servicesDemoMenu'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
+import { VENDOR_TYPES } from '@shared/data/servicesVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 import { sendCustomerOrderEmail } from './lib/email'
@@ -123,33 +124,6 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 // Common Indonesian banks (shown in the Bank Transfer setup). Logos sourced from Wikimedia / official.
 
 /* ─── Vendor type presets (services) ─── */
-const VENDOR_TYPES = {
-  home: {
-    id: 'home', label: 'Home Services', emoji: '🏠',
-    tagline: 'AC, plumbing, cleaning, repair',
-    categories: ['AC', 'Plumbing', 'Electrical', 'Cleaning', 'Painting', 'Pest Control', 'Promo'],
-  },
-  beauty: {
-    id: 'beauty', label: 'Beauty / Wellness', emoji: '💆',
-    tagline: 'Salon, massage, beauty treatments',
-    categories: ['Hair', 'Massage', 'Facial', 'Nails', 'Spa', 'Makeup', 'Promo'],
-  },
-  automotive: {
-    id: 'automotive', label: 'Automotive', emoji: '🚗',
-    tagline: 'Car wash, repair, rental',
-    categories: ['Wash', 'Repair', 'Detail', 'Tire', 'Rental', 'Inspection', 'Promo'],
-  },
-  professional: {
-    id: 'professional', label: 'Professional', emoji: '💼',
-    tagline: 'Tutoring, photography, legal',
-    categories: ['Tutoring', 'Photography', 'Translation', 'Legal', 'Accounting', 'Consulting', 'Promo'],
-  },
-  general: {
-    id: 'general', label: 'General Services', emoji: '🔧',
-    tagline: 'Mixed service offerings',
-    categories: ['Main Service', 'Add-ons', 'Packages', 'Consultation', 'Promo'],
-  },
-}
 const PRODUCT_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
 /* Per-theme menu sub-categories (max 3, kept short to fit alongside "All" tab without scrolling) */

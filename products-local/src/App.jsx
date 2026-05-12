@@ -9,6 +9,7 @@ import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/productsDemoMenu'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
+import { VENDOR_TYPES } from '@shared/data/productsVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 
@@ -121,33 +122,6 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 // Picked once at signup. Each type loads its own 6-7 category quick-chips.
 // Vendor can still type any custom category. Existing menu items are preserved
 // across switches — the preset is suggestions, not enforcement.
-const VENDOR_TYPES = {
-  fashion: {
-    id: 'fashion', label: 'Fashion / Clothing', emoji: '👗',
-    tagline: 'Apparel, shoes, accessories',
-    categories: ['Tops', 'Bottoms', 'Dresses', 'Shoes', 'Bags', 'Accessories', 'Promo'],
-  },
-  electronics: {
-    id: 'electronics', label: 'Electronics / Tech', emoji: '📱',
-    tagline: 'Phones, gadgets, accessories',
-    categories: ['Phones', 'Accessories', 'Audio', 'Computers', 'Gaming', 'Cables', 'Promo'],
-  },
-  grocery: {
-    id: 'grocery', label: 'Grocery / Sembako', emoji: '🛒',
-    tagline: 'Daily essentials and food items',
-    categories: ['Sembako', 'Beverages', 'Snacks', 'Frozen', 'Fresh', 'Household', 'Promo'],
-  },
-  beauty: {
-    id: 'beauty', label: 'Beauty / Cosmetics', emoji: '💄',
-    tagline: 'Skincare, makeup, fragrance',
-    categories: ['Skincare', 'Makeup', 'Hair Care', 'Fragrance', 'Tools', 'Promo'],
-  },
-  general: {
-    id: 'general', label: 'General / Other', emoji: '🛍️',
-    tagline: 'Mixed product retail',
-    categories: ['Main', 'Accessories', 'New Arrivals', 'Sale', 'Promo'],
-  },
-}
 const PRODUCT_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 
 /* Per-theme menu sub-categories (max 3, kept short to fit alongside "All" tab without scrolling) */

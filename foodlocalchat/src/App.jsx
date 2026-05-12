@@ -9,6 +9,7 @@ import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
+import { VENDOR_TYPES } from '@shared/data/foodVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 import {
@@ -134,33 +135,6 @@ const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
 
 // Common Indonesian banks (shown in the Bank Transfer setup). Logos sourced from Wikimedia / official.
 
-const VENDOR_TYPES = {
-  warung: {
-    id: 'warung', label: 'Warung / Street Food', emoji: '🍜',
-    tagline: 'Indonesian everyday food',
-    categories: ['Nasi', 'Mie', 'Lauk', 'Sate', 'Cemilan', 'Minuman', 'Promo', 'Extra'],
-  },
-  bakery: {
-    id: 'bakery', label: 'Bakery / Cake Shop', emoji: '🍰',
-    tagline: 'Bread, cakes, pastries',
-    categories: ['Roti', 'Kue', 'Pastry', 'Sandwich', 'Kopi', 'Minuman', 'Promo'],
-  },
-  cafe: {
-    id: 'cafe', label: 'Cafe / Coffee', emoji: '☕',
-    tagline: 'Coffee, light food, snacks',
-    categories: ['Coffee', 'Tea', 'Cold Drinks', 'Pastry', 'Sandwich', 'Dessert', 'Promo'],
-  },
-  restaurant: {
-    id: 'restaurant', label: 'Restaurant', emoji: '🍽️',
-    tagline: 'Full-service dining',
-    categories: ['Appetizer', 'Main Course', 'Signature', 'Side Dish', 'Dessert', 'Drinks', 'Promo'],
-  },
-  general: {
-    id: 'general', label: 'General / Other', emoji: '🛒',
-    tagline: 'Mixed food and drinks',
-    categories: ['Main', 'Drinks', 'Snacks', 'Dessert', 'Promo', 'Extra'],
-  },
-}
 
 const FOOD_CATEGORIES = [...new Set(THEME_PRESETS.map(t => t.category))]
 

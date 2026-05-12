@@ -1,40 +1,37 @@
 // Shared demo menu data for services family apps (serviceslocalchat, serviceslocalwhatsapp, serviceslocalemail).
-// Canonical version derived from serviceslocalchat — services-email previously drifted (had products-style data, only 25 lines).
+// Service-business items: each entry represents a bookable service the vendor can offer.
+// Categories: Service (main offerings), Add-On (extras), Package (bundles).
+
+const svcImg = (q) => 'https://image.pollinations.ai/prompt/' + encodeURIComponent(q + ', professional service, clean modern style, soft lighting, 4k') + '?width=300&height=300&nologo=true&seed=42'
 
 export const DEMO_MENU = [
-  // Meals
-  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1 },
-  { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
-  { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
-  { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },
-  { id: 5, name: 'Ayam Geprek', price: 20000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Crispy smashed chicken with sambal', category: 'Meal', available: true },
-  // Drinks
-  { id: 6, name: 'Es Teh Manis', price: 5000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Sweet iced tea', category: 'Drink', available: true },
-  { id: 7, name: 'Es Jeruk', price: 7000, photo: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=300', desc: 'Fresh orange juice', category: 'Drink', available: true },
-  { id: 8, name: 'Kopi Hitam', price: 5000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Black coffee, strong Indonesian brew', category: 'Drink', available: true },
-  { id: 9, name: 'Es Alpukat', price: 10000, photo: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=300', desc: 'Creamy avocado smoothie with chocolate', category: 'Drink', available: true },
-  { id: 10, name: 'Air Mineral', price: 3000, photo: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300', desc: 'Bottled mineral water', category: 'Drink', available: true },
-  { id: 23, name: 'Es Kelapa Muda', price: 8000, photo: 'https://images.unsplash.com/photo-1544252890-c8e1a1080400?w=300', desc: 'Fresh young coconut water with ice', category: 'Drink', available: true },
-  { id: 24, name: 'Jus Mangga', price: 10000, photo: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=300', desc: 'Fresh mango juice blended smooth', category: 'Drink', available: true },
-  { id: 25, name: 'Es Cendol', price: 8000, photo: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300', desc: 'Pandan jelly with coconut milk and palm sugar', category: 'Drink', available: true },
-  { id: 26, name: 'Teh Tarik', price: 7000, photo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300', desc: 'Pulled milk tea, hot or iced', category: 'Drink', available: true },
-  // Snacks
-  { id: 11, name: 'Gorengan', price: 5000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Assorted fried snacks — tempe, tahu, bakwan', category: 'Snack', available: true },
-  { id: 12, name: 'Kerupuk', price: 3000, photo: 'https://images.unsplash.com/photo-1630384060421-cb20aed56993?w=300', desc: 'Crispy prawn crackers', category: 'Snack', available: true },
-  { id: 13, name: 'Pisang Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Fried banana fritters with crispy batter', category: 'Snack', available: true },
-  { id: 14, name: 'Tahu Crispy', price: 4000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Crispy fried tofu bites', category: 'Snack', available: true },
-  { id: 19, name: 'Tempe Mendoan', price: 5000, photo: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300', desc: 'Thinly sliced fried tempeh', category: 'Snack', available: true },
-  { id: 20, name: 'Cireng Isi', price: 6000, photo: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300', desc: 'Fried tapioca balls with filling', category: 'Snack', available: true },
-  { id: 21, name: 'Lumpia Goreng', price: 5000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Crispy fried spring rolls', category: 'Snack', available: true },
-  { id: 22, name: 'Bakwan Jagung', price: 4000, photo: 'https://images.unsplash.com/photo-1600326145552-327f74b9c189?w=300', desc: 'Corn fritters with vegetables', category: 'Snack', available: true },
-  { id: 27, name: 'Roti Manis', price: 10000, photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_15_32%20PM.png?updatedAt=1778307350320', desc: 'Soft sweet bread, freshly baked', category: 'Snack', available: true },
-  { id: 28, name: 'Sweet Bun Classic', price: 8000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_21_47-pm.png', desc: 'Classic soft sweet bun', category: 'Snack', available: true },
-  { id: 29, name: 'Sweet Bun Cream', price: 10000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_24_02-pm.png', desc: 'Cream-filled sweet bun', category: 'Snack', available: true },
-  { id: 30, name: 'Sweet Bun Chocolate', price: 10000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_26_47-pm.png', desc: 'Chocolate-filled sweet bun', category: 'Snack', available: true },
-  // Extra Sauce
-  { id: 15, name: 'Sambal Extra', price: 2000, photo: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=300', desc: 'Extra portion of spicy chili sambal', category: 'Extra Sauce', available: true },
-  { id: 16, name: 'Kecap Manis', price: 1000, photo: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300', desc: 'Sweet soy sauce', category: 'Extra Sauce', available: true },
-  { id: 17, name: 'Saus Kacang', price: 3000, photo: 'https://images.unsplash.com/photo-1635321593217-40050ad13c74?w=300', desc: 'Creamy peanut sauce for satay and gado-gado', category: 'Extra Sauce', available: true },
-  { id: 18, name: 'Sambal Matah', price: 3000, photo: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=300', desc: 'Fresh Balinese shallot and lemongrass sambal', category: 'Extra Sauce', available: true },
-]
+  // Services — main bookable items
+  { id: 1, name: 'Hair Cut & Style', price: 50000, photo: svcImg('barber giving a clean haircut to a man in modern salon'), desc: 'Classic cut + wash + blow dry, 45 min appointment', category: 'Service', available: true },
+  { id: 2, name: 'Hair Wash & Treatment', price: 75000, photo: svcImg('woman getting hair washed with conditioner treatment salon basin'), desc: 'Deep cleanse, scalp massage, nourishing mask, 30 min', category: 'Service', available: true },
+  { id: 3, name: 'AC Service & Clean', price: 120000, photo: svcImg('technician cleaning air conditioner indoor unit on apartment wall'), desc: 'Indoor + outdoor unit clean, freon check, drainage flush', category: 'Service', available: true },
+  { id: 4, name: 'Plumbing Call-Out', price: 80000, photo: svcImg('plumber fixing a sink pipe with wrench under kitchen sink'), desc: 'Diagnostic visit, basic repairs included, parts extra', category: 'Service', available: true },
+  { id: 5, name: 'Tailor Alteration', price: 35000, photo: svcImg('tailor using sewing machine to alter trouser hem in workshop'), desc: 'Hem, take-in, basic alteration on shirts/pants/dresses', category: 'Service', available: true },
+  { id: 6, name: 'Pet Grooming (Small Dog)', price: 150000, photo: svcImg('small dog being groomed and bathed at pet salon clean white background'), desc: 'Wash + dry + trim + nail clip, dogs up to 10kg', category: 'Service', available: true },
+  { id: 7, name: 'Pet Grooming (Large Dog)', price: 250000, photo: svcImg('large dog being groomed at professional pet salon'), desc: 'Wash + dry + trim + nail clip, dogs over 10kg', category: 'Service', available: true },
+  { id: 8, name: 'Photo Session (1 hour)', price: 500000, photo: svcImg('photographer with camera taking portrait shot in studio'), desc: 'One hour studio or location shoot, ~30 edited photos delivered', category: 'Service', available: true },
+  { id: 9, name: 'Home Cleaning (3 hours)', price: 200000, photo: svcImg('woman cleaning house dusting living room professional cleaner'), desc: '3-hour deep clean, supplies included', category: 'Service', available: true },
+  { id: 10, name: 'Massage (60 min)', price: 150000, photo: svcImg('woman receiving relaxing massage at clean modern spa'), desc: 'Full body relaxation massage, oil included', category: 'Service', available: true },
+  { id: 11, name: 'Maths Tutoring (1 hour)', price: 100000, photo: svcImg('teacher tutoring student with notebook and laptop at desk'), desc: 'One-on-one tutoring, primary and secondary level', category: 'Service', available: true },
+  { id: 12, name: 'English Conversation Class', price: 90000, photo: svcImg('two people having English conversation lesson with notebooks at table'), desc: '60-min conversation practice with feedback', category: 'Service', available: true },
+  { id: 13, name: 'Manicure', price: 60000, photo: svcImg('woman getting manicure with red nail polish at clean salon'), desc: 'Shape + cuticle care + colour, ~40 min', category: 'Service', available: true },
+  { id: 14, name: 'Pedicure', price: 80000, photo: svcImg('woman getting pedicure with foot soak at salon spa'), desc: 'Foot soak + scrub + nail care + colour', category: 'Service', available: true },
+  { id: 15, name: 'Facial Treatment', price: 180000, photo: svcImg('woman receiving facial treatment with skincare products at spa'), desc: 'Cleanse + steam + mask + moisturise, 60 min', category: 'Service', available: true },
 
+  // Add-Ons — extras the customer can attach to a booking
+  { id: 21, name: 'Home Visit Fee', price: 25000, photo: svcImg('professional service van arriving at customer house'), desc: 'Add to any service to have the vendor come to you (within 5km)', category: 'Add-On', available: true },
+  { id: 22, name: 'Express / Same-Day', price: 30000, photo: svcImg('rush express service same day delivery clock urgent'), desc: 'Skip the queue — same-day booking surcharge', category: 'Add-On', available: true },
+  { id: 23, name: 'Weekend Booking', price: 20000, photo: svcImg('calendar showing weekend saturday sunday circled service appointment'), desc: 'Saturday or Sunday appointment surcharge', category: 'Add-On', available: true },
+  { id: 24, name: 'Extra Time (+30 min)', price: 35000, photo: svcImg('clock timer extra time service appointment'), desc: 'Add 30 min to any booked service', category: 'Add-On', available: true },
+
+  // Packages — bundled deals at a discount
+  { id: 31, name: 'Bridal Hair + Makeup', price: 1500000, photo: svcImg('bride with elegant hair styling and bridal makeup on wedding day'), desc: 'Full bridal package: trial + wedding day hair & makeup', category: 'Package', available: true },
+  { id: 32, name: 'Monthly AC Maintenance (4 visits)', price: 400000, photo: svcImg('air conditioner being maintained by technician monthly service'), desc: 'One AC service per week for 4 weeks (saves Rp 80k)', category: 'Package', available: true },
+  { id: 33, name: 'Pet Grooming Package (5 visits)', price: 600000, photo: svcImg('happy clean groomed dogs at pet salon professional'), desc: '5 grooming sessions for small dogs (saves Rp 150k)', category: 'Package', available: true },
+  { id: 34, name: 'Photo Session Half-Day', price: 1200000, photo: svcImg('professional photoshoot with multiple looks studio half day'), desc: '4-hour shoot, 2 location changes, ~100 edited photos', category: 'Package', available: true },
+  { id: 35, name: 'Salon Day (Hair + Mani + Pedi)', price: 220000, photo: svcImg('woman enjoying salon day with hair manicure pedicure relaxing'), desc: 'Wash + style + manicure + pedicure in one visit', category: 'Package', available: true },
+]
