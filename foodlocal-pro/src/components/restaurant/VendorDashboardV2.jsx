@@ -11,9 +11,73 @@ import imgError from '../../imgFallback'
 import { PAYMENT_ICONS } from '@/constants/paymentIcons'
 import { saveVendorExtras as saveExtrasToDb, saveBundleDiscount as saveBundleToDb, saveMenuItem as saveMenuItemToDb, deleteMenuItem as deleteMenuItemFromDb } from '@/services/vendorExtrasService'
 import { getPrepaidWallet, topUpPrepaidWallet } from '@/services/walletService'
+import { supabase } from '@/lib/supabase'
+import { SUPPORTED_GATEWAYS as RAW_GATEWAYS } from '@shared/constants/paymentGateways'
 
 const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 const LOCAL_KEY = 'indoo_vendor_restaurant'
+
+// ── Payment gateway wiring (copied from food-basic; kept self-contained
+// so FoodLocal Pro and FoodLocal basic stay independent codebases) ────────
+// IDs of gateways whose Edge Functions are deployed end-to-end. Anything
+// not listed renders as "Coming Soon" in the gateway picker.
+const LIVE_GATEWAY_IDS = new Set([
+  'midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree',
+  'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay',
+  'authorize-net', '2checkout', 'cybersource', 'worldpay',
+  'ewallet', 'bank',
+])
+// Map each gateway's UI field names to vendor_payment_connections columns
+// (server_key | client_key | webhook_secret). Anything not mapped lands
+// in additional_config jsonb so unusual fields don't need new columns.
+const GATEWAY_FIELD_MAP = {
+  midtrans:        { server_key: 'server_key', client_key: 'client_key' },
+  stripe:          { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+  xendit:          { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
+  paypal:          { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' },
+  razorpay:        { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
+  braintree:       { publicKey: 'server_key', privateKey: 'client_key' },
+  mollie:          { liveApiKey: 'server_key', testApiKey: 'client_key' },
+  hitpay:          { apiKey: 'server_key', salt: 'webhook_secret' },
+  adyen:           { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' },
+  rapyd:           { accessKey: 'server_key', secretKey: 'client_key' },
+  'checkout-com':  { secretKey: 'server_key', publicKey: 'client_key', webhookSecret: 'webhook_secret' },
+  'fomo-pay':      { apiKey: 'server_key', signKey: 'webhook_secret' },
+  'authorize-net': { apiLoginId: 'server_key', transactionKey: 'client_key', signatureKey: 'webhook_secret' },
+  '2checkout':     { merchantCode: 'server_key', secretKey: 'client_key', secretWord: 'webhook_secret' },
+  cybersource:     { merchantId: 'server_key', apiKeyId: 'client_key', sharedSecret: 'webhook_secret' },
+  worldpay:        { serviceKey: 'server_key', clientKey: 'client_key', webhookSecret: 'webhook_secret' },
+}
+// Flatten raw gateway data + flag the not-yet-supported ones as comingSoon.
+const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
+  g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
+)
+
+// Persists the vendor's gateway credentials into vendor_payment_connections
+// (the same table food-basic uses). Edge Functions read from this row at
+// charge time. Keys are NEVER passed to the client beyond this form.
+async function saveGatewayConnection(vendorId, gatewayId, config) {
+  if (!supabase || !vendorId) return
+  const map = GATEWAY_FIELD_MAP[gatewayId] || {}
+  const knownCols = new Set(['server_key', 'client_key', 'webhook_secret'])
+  const row = {
+    vendor_id: vendorId, gateway_id: gatewayId,
+    mode: config.mode || 'test', is_active: true,
+    server_key: null, client_key: null, webhook_secret: null,
+    additional_config: {},
+  }
+  Object.entries(config).forEach(([k, v]) => {
+    if (k === 'mode') return
+    const mapped = map[k] || k
+    if (knownCols.has(mapped)) row[mapped] = v
+    else row.additional_config[k] = v
+  })
+  await supabase.from('vendor_payment_connections').upsert(row, { onConflict: 'vendor_id,gateway_id' })
+}
+async function removeGatewayConnection(vendorId, gatewayId) {
+  if (!supabase || !vendorId) return
+  await supabase.from('vendor_payment_connections').delete().eq('vendor_id', vendorId).eq('gateway_id', gatewayId)
+}
 
 // ── Help content per section ─────────────────────────────────────────────────
 const HELP = {
@@ -1031,28 +1095,8 @@ export default function VendorDashboardV2({ onClose }) {
         )}
 
         {/* ══════════ PAGE: PAYMENT METHODS ══════════ */}
-        {/* FoodLocal Pro has no commission, so there's nothing to "pay out"
-            to StreetLocal. This section will host the gateway-connection UI
-            (same 16-gateway flow as food-basic) in a follow-up phase. */}
         {page === 'payments' && (
-          <>
-            <SectionHeader title="Payment Methods" helpKey="payments" />
-            <div style={{ background: 'rgba(141,198,63,0.06)', border: '1px solid rgba(141,198,63,0.15)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#8DC63F', marginBottom: 6 }}>You keep 100% of every order</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>FoodLocal Pro is a flat monthly subscription. There is no commission on orders, no transaction fees from StreetLocal, no payout reconciliation. Customer payments flow through your own connected gateway directly to your bank account.</div>
-            </div>
-            <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Accept payments three ways:</div>
-              <ol style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.7 }}>
-                <li><strong style={{ color: '#fff' }}>Cash / bank transfer / QRIS</strong> — no setup needed. Customer pays you directly; you confirm the order manually.</li>
-                <li><strong style={{ color: '#fff' }}>WhatsApp coordination</strong> — order details go to your WhatsApp; agree payment method there.</li>
-                <li><strong style={{ color: '#fff' }}>Connect a payment gateway</strong> — Stripe, Midtrans, Xendit, PayPal, Adyen, Worldpay, CyberSource, Checkout.com, Authorize.net, Mollie, Razorpay, HitPay, FOMO Pay, Rapyd, 2Checkout, or Braintree. Customer pays by card / e-wallet / QRIS at checkout, money lands in your gateway account.</li>
-              </ol>
-            </div>
-            <div style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 14, padding: 14, color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.55 }}>
-              Gateway connection UI lands in a follow-up release — it reuses the same 16-gateway integration as FoodLocal basic (no extra cost). For now, run on cash / bank / QRIS or coordinate via WhatsApp / app chat.
-            </div>
-          </>
+          <PaymentsPage vendorId={restaurant?.id} />
         )}
 
         {/* ══════════ PAGE: LIVE ITEMS ══════════ */}
@@ -1381,6 +1425,177 @@ function loadDeals() {
 }
 function saveDeals(deals) {
   try { localStorage.setItem(DEALS_STORAGE, JSON.stringify(deals)) } catch {}
+}
+
+// ── Payment Methods page ────────────────────────────────────────────────────
+// Vendor connects their own gateway accounts so customer payments flow
+// directly to them. StreetLocal never holds funds. Mirrors the food-basic
+// flow but standalone (apps are separate per architecture decision).
+function PaymentsPage({ vendorId }) {
+  const [connections, setConnections] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [activeGateway, setActiveGateway] = useState(null)
+  const [formConfig, setFormConfig] = useState({ mode: 'test' })
+  const [saveBusy, setSaveBusy] = useState(false)
+  const [saveMsg, setSaveMsg] = useState('')
+
+  // Load existing connections from supabase on mount + when vendor changes.
+  useEffect(() => {
+    if (!supabase || !vendorId) { setLoading(false); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('vendor_payment_connections')
+          .select('gateway_id, is_active, mode')
+          .eq('vendor_id', vendorId)
+        if (cancelled) return
+        const map = {}
+        for (const row of data || []) {
+          map[row.gateway_id] = { connected: !!row.is_active, mode: row.mode }
+        }
+        setConnections(map)
+      } catch {}
+      finally { if (!cancelled) setLoading(false) }
+    })()
+    return () => { cancelled = true }
+  }, [vendorId])
+
+  const handleSave = async () => {
+    if (!activeGateway || !vendorId || saveBusy) return
+    setSaveBusy(true); setSaveMsg('')
+    try {
+      await saveGatewayConnection(vendorId, activeGateway.id, formConfig)
+      setConnections(prev => ({ ...prev, [activeGateway.id]: { connected: true, mode: formConfig.mode || 'test' } }))
+      setSaveMsg('Connected — customers can now pay via this gateway at checkout.')
+      setTimeout(() => { setActiveGateway(null); setFormConfig({ mode: 'test' }); setSaveMsg('') }, 1500)
+    } catch (e) {
+      setSaveMsg(e?.message || 'Save failed — check the keys and try again.')
+    } finally { setSaveBusy(false) }
+  }
+
+  const handleDisconnect = async (gatewayId) => {
+    if (!vendorId) return
+    if (!window.confirm('Disconnect this gateway? Customers can\'t pay via this method until you reconnect.')) return
+    try {
+      await removeGatewayConnection(vendorId, gatewayId)
+      setConnections(prev => { const next = { ...prev }; delete next[gatewayId]; return next })
+    } catch {}
+  }
+
+  const connectedList = SUPPORTED_GATEWAYS.filter(g => connections[g.id]?.connected)
+  const availableList = SUPPORTED_GATEWAYS.filter(g => !connections[g.id]?.connected && !g.comingSoon)
+  const comingSoonList = SUPPORTED_GATEWAYS.filter(g => g.comingSoon && !connections[g.id]?.connected)
+
+  return (
+    <>
+      <SectionHeader title="Payment Methods" helpKey="payments" />
+      <div style={{ background: 'rgba(141,198,63,0.06)', border: '1px solid rgba(141,198,63,0.15)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#8DC63F', marginBottom: 6 }}>You keep 100% of every order</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>FoodLocal Pro is a flat monthly subscription — no commission, no transaction fees from StreetLocal. Customer payments flow through your own connected gateway directly to your bank account. You can also run on cash, bank transfer, or QRIS without connecting anything.</div>
+      </div>
+
+      {loading && <div style={{ padding: 20, color: 'rgba(255,255,255,0.4)', textAlign: 'center', fontSize: 13 }}>Loading…</div>}
+
+      {!loading && connectedList.length > 0 && (
+        <>
+          <SectionHeader title={`Connected (${connectedList.length})`} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            {connectedList.map(g => (
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(141,198,63,0.25)' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: (g.color || '#8DC63F') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>{g.icon || '💳'}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{g.name}</div>
+                  <div style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700, marginTop: 2 }}>Active · {connections[g.id]?.mode === 'live' ? 'Live' : 'Sandbox'}</div>
+                </div>
+                <button onClick={() => handleDisconnect(g.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Disconnect</button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!loading && (
+        <>
+          <SectionHeader title={`Available (${availableList.length})`} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {availableList.map(g => (
+              <button key={g.id} onClick={() => { setActiveGateway(g); setFormConfig({ mode: 'test' }); setSaveMsg('') }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'left', cursor: 'pointer' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: (g.color || '#fff') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>{g.icon || '💳'}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{g.name}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2, lineHeight: 1.4 }}>{g.tagline || g.bestFor || 'Tap to connect'}</div>
+                </div>
+                <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!loading && comingSoonList.length > 0 && (
+        <details style={{ marginBottom: 16 }}>
+          <summary style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 0' }}>Coming soon ({comingSoonList.length})</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+            {comingSoonList.map(g => (
+              <div key={g.id} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.06)', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{g.name} — {g.tagline || 'Not yet wired'}</div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {/* Gateway connection modal */}
+      {activeGateway && createPortal(
+        <div onClick={() => !saveBusy && setActiveGateway(null)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', color: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: (activeGateway.color || '#8DC63F') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{activeGateway.icon || '💳'}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800 }}>Connect {activeGateway.name}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{activeGateway.tagline}</div>
+              </div>
+            </div>
+            <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginTop: 6 }}>Mode</label>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['test', 'live'].map(m => (
+                <button key={m} onClick={() => setFormConfig(c => ({ ...c, mode: m }))} style={{ flex: 1, padding: '8px 10px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer', background: formConfig.mode === m ? '#8DC63F' : 'rgba(255,255,255,0.08)', color: formConfig.mode === m ? '#000' : 'rgba(255,255,255,0.6)' }}>{m === 'test' ? 'Sandbox / Test' : 'Live'}</button>
+              ))}
+            </div>
+            {(activeGateway.fields || []).map(f => (
+              <div key={f.key} style={{ marginTop: 4 }}>
+                <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{f.label}{f.required && <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span>}</label>
+                <input
+                  type={f.type === 'password' || f.secret ? 'password' : (f.type || 'text')}
+                  placeholder={f.placeholder || ''}
+                  value={formConfig[f.key] || ''}
+                  onChange={e => setFormConfig(c => ({ ...c, [f.key]: e.target.value }))}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+            ))}
+            {activeGateway.docUrl && (
+              <a href={activeGateway.docUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: '#8DC63F', textDecoration: 'underline', marginTop: 4 }}>How to find these keys →</a>
+            )}
+            {activeGateway.setupSteps && activeGateway.setupSteps.length > 0 && (
+              <details style={{ marginTop: 6 }}>
+                <summary style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>Setup steps</summary>
+                <ol style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+                  {activeGateway.setupSteps.map((s, i) => <li key={i}>{s}</li>)}
+                </ol>
+              </details>
+            )}
+            {saveMsg && <div style={{ fontSize: 12, color: saveMsg.toLowerCase().includes('fail') ? '#FCA5A5' : '#86EFAC', textAlign: 'center', padding: '6px 4px' }}>{saveMsg}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <button onClick={() => setActiveGateway(null)} disabled={saveBusy} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: saveBusy ? 'wait' : 'pointer' }}>Cancel</button>
+              <button onClick={handleSave} disabled={saveBusy} style={{ flex: 2, padding: 12, borderRadius: 12, border: 'none', background: '#8DC63F', color: '#000', fontSize: 13, fontWeight: 900, cursor: saveBusy ? 'wait' : 'pointer', opacity: saveBusy ? 0.6 : 1 }}>{saveBusy ? 'Connecting…' : 'Connect Gateway'}</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  )
 }
 
 function DealsPage({ menuItems, onBack }) {
