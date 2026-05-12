@@ -2252,7 +2252,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Try Demo — always free, no signup required */}
               <a
-                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5176/food/whatsapp/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
+                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5177/food/chat/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#FFD600', border: '2px solid #1a1a1a', animation: 'demoShake 3s ease-in-out infinite' }}
