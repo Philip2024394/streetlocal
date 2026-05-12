@@ -1946,7 +1946,7 @@ export default function App() {
 
       {/* --- Promo Banner (marquee) — edge-safe via inner padded overflow-hidden box --- */}
       {promoBannerEnabled && promoBanner && (
-        <div style={{ background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '2px 0' }}>
+        <div style={{ padding: '2px 0' }}>
           <div style={{ overflow: 'hidden', padding: '0 16px' }}>
             <style>{`
               @keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
@@ -5371,7 +5371,14 @@ export default function App() {
 
                 return (
                   <>
-                    <style>{`@keyframes promoScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
+                    <style>{`
+                      @keyframes promoScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                      @keyframes promoPreviewWave { 0% { transform: translateX(100%) translateY(0); } 25% { transform: translateX(50%) translateY(-3px); } 50% { transform: translateX(0%) translateY(0); } 75% { transform: translateX(-50%) translateY(3px); } 100% { transform: translateX(-100%) translateY(0); } }
+                      @keyframes promoPreviewGlow { 0%, 100% { text-shadow: 0 0 2px rgba(156,163,175,0.4); } 50% { text-shadow: 0 0 6px rgba(156,163,175,0.95), 0 0 10px rgba(156,163,175,0.5); } }
+                      @keyframes promoPreviewPulse { 0%, 100% { transform: translateX(100%) scale(1); } 50% { transform: translateX(0%) scale(1.08); } }
+                      @keyframes promoPreviewFade { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+                      @keyframes promoPreviewShake { 0%, 100% { transform: translateX(100%); } 10% { transform: translateX(95%) translateY(-0.5px); } 20% { transform: translateX(85%) translateY(0.5px); } 50% { transform: translateX(0%) translateY(-0.5px); } 80% { transform: translateX(-85%) translateY(0.5px); } 90% { transform: translateX(-95%) translateY(-0.5px); } }
+                    `}</style>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 14, marginBottom: 10 }}>
                       {/* iPhone Frame */}
                       <div style={{ width: 220, height: 420, borderRadius: 32, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 30px ${accent}15, 0 4px 12px rgba(0,0,0,0.3)`, border: '2px solid #333', flexShrink: 0 }}>
@@ -5445,7 +5452,10 @@ export default function App() {
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
-                                {promoBanner && <div style={{ background: accent, padding: '2px 8px', borderRadius: 4, marginBottom: 5, overflow: 'hidden', opacity: promoBannerEnabled ? 1 : 0.35, position: 'relative' }}><div style={{ fontSize: 7, color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', animation: 'promoScroll 6s linear infinite' }}>{promoBanner}</div>{!promoBannerEnabled && <div style={{ position: 'absolute', top: 1, right: 3, fontSize: 6, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '0 3px', borderRadius: 2, letterSpacing: 0.5 }}>OFF</div>}</div>}
+                                {promoBanner && (() => {
+                                  const pvAnim = { scroll: 'promoScroll 6s linear infinite', wave: 'promoPreviewWave 6s ease-in-out infinite', glow: 'promoScroll 6s linear infinite, promoPreviewGlow 2s ease-in-out infinite', pulse: 'promoPreviewPulse 6s ease-in-out infinite', fade: 'promoScroll 6s linear infinite, promoPreviewFade 2.5s ease-in-out infinite', shake: 'promoPreviewShake 6s linear infinite' }[promoBannerEffect] || 'promoScroll 6s linear infinite'
+                                  return <div style={{ padding: '2px 8px', marginBottom: 5, overflow: 'hidden', opacity: promoBannerEnabled ? 1 : 0.35, position: 'relative' }}><div style={{ fontSize: 7, color: '#9CA3AF', fontWeight: 700, whiteSpace: 'nowrap', animation: pvAnim, display: 'inline-block' }}>{promoBanner}</div>{!promoBannerEnabled && <div style={{ position: 'absolute', top: 1, right: 3, fontSize: 6, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '0 3px', borderRadius: 2, letterSpacing: 0.5 }}>OFF</div>}</div>
+                                })()}
                                 {menuBanners.length > 0 && (
                                   <>
                                     <div style={{ position: 'relative', width: '100%', height: 36, borderRadius: 5, overflow: 'hidden', marginBottom: menuBanners.length > 1 ? 2 : 5 }}>
