@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 *.local
+
+# Retired apps — kept on disk for local dev archaeology but no longer
+# tracked, built, or routed. /food/whatsapp now redirects to /food/chat.
+foodlocalwhatsapp/

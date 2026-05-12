@@ -1,5 +1,5 @@
 // Shared theme definitions for all FoodLocal apps
-// (foodlocalchat, foodlocalwhatsapp).
+// (foodlocalchat).
 // Edit ONCE here — all apps pick up the change automatically.
 
 /* ─── Food Type Categories ─── */

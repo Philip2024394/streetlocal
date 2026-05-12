@@ -511,6 +511,16 @@ const PERK_LABELS = {
   spendFree:  { emoji: '💸', text: 'SPEND Rp 50K — FREE DELIVERY' },
 }
 
+// One-time migration: when a user previously visited the retired
+// /food/whatsapp app (now redirected here), their vendorId was stored
+// under `vendorbasic_vendorId`. Copy it forward so the rest of the app
+// — which only reads `foodlocalchat_vendorId` — picks them up seamlessly.
+try {
+  if (typeof window !== 'undefined' && !localStorage.getItem('foodlocalchat_vendorId') && localStorage.getItem('vendorbasic_vendorId')) {
+    localStorage.setItem('foodlocalchat_vendorId', localStorage.getItem('vendorbasic_vendorId'))
+  }
+} catch {}
+
 /* ─── Main App ─── */
 export default function App() {
   // Route to admin or activate page
@@ -639,7 +649,9 @@ export default function App() {
   const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
   const [showLanding, setShowLanding] = useState(() => {
     if (isDemo) return demoPage === 'landing'
-    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id')
+    // vendorbasic_vendorId fallback preserves state for users migrating from
+    // the retired /food/whatsapp app (which used that localStorage key).
+    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
     return !id
   })
   const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('foodlocalchat_menu', DEMO_MENU))

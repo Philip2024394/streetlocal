@@ -524,7 +524,6 @@ export default function Admin({ onClose }) {
                   style={{ ...s.input, marginBottom: 10 }}
                 >
                   <option value="">Select app...</option>
-                  <option value="foodlocalwhatsapp">FoodLocal (WhatsApp)</option>
                   <option value="foodlocalchat">FoodLocal Chat</option>
                   <option value="food-pro">Food Pro (Restaurant)</option>
                   <option value="landing">Landing Page (streetlocal.live)</option>
