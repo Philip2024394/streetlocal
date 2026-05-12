@@ -5408,7 +5408,7 @@ export default function App() {
                 { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
               ].map(item => (
                 <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 44 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}>{item.icon}</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.label}</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{item.desc}</div>
@@ -5424,7 +5424,7 @@ export default function App() {
             {/* Design Studio link */}
             <div style={{ padding: '0 16px 12px' }}>
               <button onClick={() => { setDesignStudio(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🎨</div>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>🎨</span></div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Design Studio</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Theme, layout, effects, branding</div>
