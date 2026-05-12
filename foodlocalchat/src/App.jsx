@@ -6,27 +6,28 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd + Checkout.com + FOMO Pay
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd + Checkout.com + FOMO Pay + Authorize.net
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
-  midtrans:       { server_key: 'server_key', client_key: 'client_key' },
-  stripe:         { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
-  xendit:         { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
-  paypal:         { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
-  razorpay:       { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
-  braintree:      { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
-  mollie:         { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
-  hitpay:         { apiKey: 'server_key', salt: 'webhook_secret' },
-  adyen:          { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
-  rapyd:          { accessKey: 'server_key', secretKey: 'client_key' }, // secretKey is also the webhook HMAC key
-  'checkout-com': { secretKey: 'server_key', publicKey: 'client_key', webhookSecret: 'webhook_secret' },
-  'fomo-pay':     { apiKey: 'server_key', signKey: 'webhook_secret' }, // merchantId → additional_config
+  midtrans:        { server_key: 'server_key', client_key: 'client_key' },
+  stripe:          { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+  xendit:          { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
+  paypal:          { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
+  razorpay:        { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
+  braintree:       { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
+  mollie:          { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
+  hitpay:          { apiKey: 'server_key', salt: 'webhook_secret' },
+  adyen:           { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
+  rapyd:           { accessKey: 'server_key', secretKey: 'client_key' }, // secretKey is also the webhook HMAC key
+  'checkout-com':  { secretKey: 'server_key', publicKey: 'client_key', webhookSecret: 'webhook_secret' },
+  'fomo-pay':      { apiKey: 'server_key', signKey: 'webhook_secret' }, // merchantId → additional_config
+  'authorize-net': { apiLoginId: 'server_key', transactionKey: 'client_key', signatureKey: 'webhook_secret' },
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -977,6 +978,36 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  // Customer-side: Authorize.net Accept Hosted page.
+  // Unlike the other hosted gateways, Authorize.net expects us to POST
+  // the token to their payment URL (not GET-redirect). We build a
+  // hidden form and submit it programmatically.
+  const payWithAuthorizeNet = async ({ orderId, amount, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('authorize-net-create-token', {
+      body: { vendorId, orderId, amount, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl },
+    })
+    if (error || !data?.token || !data?.hostedUrl) {
+      console.error('Authorize.net token failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingAnetOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    // Build a hidden form and auto-submit — this is the standard
+    // Accept Hosted handoff pattern
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = data.hostedUrl
+    form.style.display = 'none'
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = 'token'
+    input.value = data.token
+    form.appendChild(input)
+    document.body.appendChild(form)
+    form.submit()
+    return 'redirecting'
+  }
   // Customer-side: FOMO Pay hosted cashier redirect. Asian e-wallets
   // (WeChat Pay, Alipay, GrabPay, etc.) + cards.
   const payWithFomoPay = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
@@ -1147,6 +1178,7 @@ export default function App() {
   const [vendorRapydLive, setVendorRapydLive] = useState(false)
   const [vendorCkoLive, setVendorCkoLive] = useState(false)
   const [vendorFomoLive, setVendorFomoLive] = useState(false)
+  const [vendorAnetLive, setVendorAnetLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1165,11 +1197,12 @@ export default function App() {
     probe('rapyd', setVendorRapydLive)
     probe('checkout-com', setVendorCkoLive)
     probe('fomo-pay', setVendorFomoLive)
+    probe('authorize-net', setVendorAnetLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status') || params.get('fomo_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status') || params.get('fomo_status') || params.get('anet_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -1185,6 +1218,7 @@ export default function App() {
         localStorage.removeItem('foodlocalchat_pendingRapydOrder')
         localStorage.removeItem('foodlocalchat_pendingCkoOrder')
         localStorage.removeItem('foodlocalchat_pendingFomoOrder')
+        localStorage.removeItem('foodlocalchat_pendingAnetOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -2005,7 +2039,7 @@ export default function App() {
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
     // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Checkout.com → Rapyd → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorAnetLive ? 'authorize-net' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2155,6 +2189,18 @@ export default function App() {
           }).catch(() => {})
           await payWithFomoPay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to FOMO Pay
+        } else if (activeGateway === 'authorize-net') {
+          // Authorize.net Accept Hosted (POST-form handoff, not GET redirect).
+          orderPayload.payment = { method: 'authorize-net', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Authorize.net payment',
+          }).catch(() => {})
+          await payWithAuthorizeNet({ ...payArgs, customerEmail: '' })
+          return // form has been submitted; browser is navigating
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
