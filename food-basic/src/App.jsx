@@ -926,6 +926,11 @@ export default function App() {
   // vendor.plan_tier loaded from supabase: 'whatsapp' | 'chat' | 'both' | null
   // null = legacy vendor with no plan set; treated as 'both' for back-compat.
   const [vendorPlanTier, setVendorPlanTier] = useState(null)
+  // Subscription payment state — for the post-signup "pay to activate" gate.
+  const [subPickerOpen, setSubPickerOpen] = useState(false)
+  const [subBusy, setSubBusy] = useState(false)
+  const [subError, setSubError] = useState('')
+  const [subMessage, setSubMessage] = useState('')
   // Escrow hold tracking — set when a Stripe-with-escrow order is found
   // for the current conversation. Drives the "Release funds / Cancel"
   // panel rendered in the order-done view.
@@ -1458,6 +1463,57 @@ export default function App() {
     probe('cybersource', setVendorCsLive)
     probe('worldpay', setVendorWpLive)
   }, [vendorId, isVendor])
+  // Vendor subscription checkout — opens Midtrans Snap for the
+  // StreetLocal central account. After payment, the webhook flips
+  // vendor.status to 'active'. We poll briefly on return to reflect that.
+  const startSubscriptionCheckout = async (planTier) => {
+    if (!supabase || !vendorId || subBusy) return
+    setSubBusy(true); setSubError('')
+    try {
+      const returnUrl = window.location.origin + window.location.pathname
+      const { data, error } = await supabase.functions.invoke('subscription-create-checkout', {
+        body: { vendorId, planTier, returnUrl },
+      })
+      if (error || !data?.redirectUrl) {
+        setSubError(data?.error || 'Could not start payment. Try again in a moment.')
+        setSubBusy(false)
+        return
+      }
+      try { localStorage.setItem('foodlocalchat_pendingSubOrder', JSON.stringify({ orderId: data.orderId, vendorId, planTier, at: Date.now() })) } catch {}
+      window.location.href = data.redirectUrl
+    } catch (e) {
+      setSubError(e?.message || 'Payment failed to start')
+      setSubBusy(false)
+    }
+  }
+  // Detect ?subscription=ok return from Midtrans → poll vendor.status until
+  // the webhook has flipped it to 'active' (or 30s, whichever first).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('subscription') !== 'ok') return
+    const cleanedUrl = window.location.pathname
+    window.history.replaceState({}, '', cleanedUrl)
+    setSubMessage('Activating your shop…')
+    if (!supabase || !vendorId) return
+    let attempts = 0
+    const poll = async () => {
+      attempts++
+      try {
+        const { data } = await supabase.from('vendor_accounts').select('status, plan_tier, expires_at').eq('id', vendorId).single()
+        if (data?.status === 'active') {
+          setVendorStatus('active')
+          if (data.plan_tier) setVendorPlanTier(data.plan_tier)
+          if (data.expires_at) setVendorExpiresAt(data.expires_at)
+          setSubMessage('Your shop is live!')
+          try { localStorage.removeItem('foodlocalchat_pendingSubOrder') } catch {}
+          return
+        }
+      } catch {}
+      if (attempts < 10) setTimeout(poll, 3000)
+      else setSubMessage('Payment received — activation may take a few minutes. Refresh to check.')
+    }
+    poll()
+  }, [vendorId])
   // When the customer is on the order-confirmation screen, check whether the
   // most recent order for this conversation is a Stripe escrow hold that
   // hasn't been released or cancelled yet. If so, surface it so the customer
@@ -3173,8 +3229,46 @@ export default function App() {
 
       {/* --- Subscription expired banner --- */}
       {isVendor && vendorStatus === 'expired' && (
-        <div style={{ background: 'rgba(255,60,60,0.15)', border: '1px solid rgba(255,60,60,0.3)', borderRadius: 12, margin: '8px 12px', padding: '12px 16px', textAlign: 'center', color: '#ff6b6b', fontSize: 14, fontWeight: 600 }}>
-          Subscription expired — contact admin to renew
+        <div style={{ background: 'rgba(255,60,60,0.15)', border: '1px solid rgba(255,60,60,0.3)', borderRadius: 12, margin: '8px 12px', padding: '12px 16px', textAlign: 'center', color: '#ff6b6b', fontSize: 14, fontWeight: 600, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          <span>Subscription expired — pay to renew</span>
+          <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew Now</button>
+        </div>
+      )}
+
+      {/* --- Activation pending banner (post-signup, before payment) --- */}
+      {isVendor && (vendorStatus === 'pending' || (vendorStatus === null && vendorId && !String(vendorId).startsWith('local'))) && (
+        <div style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: 12, margin: '8px 12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>Pay to activate your shop</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>You can build your menu in preview mode. Customers can't place orders until you pay your monthly plan.</div>
+          <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>Choose Plan & Pay</button>
+          {subMessage && <div style={{ fontSize: 11, color: '#86EFAC' }}>{subMessage}</div>}
+        </div>
+      )}
+
+      {/* --- Subscription plan picker modal --- */}
+      {subPickerOpen && (
+        <div onClick={() => !subBusy && setSubPickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
+            <div style={{ fontSize: 17, fontWeight: 800 }}>Choose your plan</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.</div>
+            <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('whatsapp')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.08)', color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>WhatsApp orders · Rp 35.000 / month</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Customers send orders to your WhatsApp — you handle the rest.</div>
+              </div>
+            </button>
+            <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('chat')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: `1px solid ${accent}55`, background: `${accent}15`, color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>App Chat orders · Rp 50.000 / month</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time in-app chat + 16 payment gateways + order tracking.</div>
+              </div>
+            </button>
+            {subError && <div style={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
+            <button type="button" onClick={() => setSubPickerOpen(false)} disabled={subBusy} style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', minHeight: 44 }}>{subBusy ? 'Opening Midtrans…' : 'Cancel'}</button>
+          </div>
         </div>
       )}
 
