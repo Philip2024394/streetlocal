@@ -887,9 +887,50 @@ export default function App() {
   const [formVariants, setFormVariants] = useState([])     // [{id, name, priceDelta}]
   const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
   const [formPerks, setFormPerks] = useState([])           // array of perk ids — renders as ribbon on menu card
+  const [formPerkText, setFormPerkText] = useState('')     // custom override text — wins over preset
+  const [formPerkLimitType, setFormPerkLimitType] = useState('none') // 'none' | 'time' | 'stock'
+  const [formPerkLimitEndAt, setFormPerkLimitEndAt] = useState('')   // ISO timestamp
+  const [formPerkLimitStock, setFormPerkLimitStock] = useState('')   // string of integer
+  // Tick state — drives the countdown on perk ribbons (1s interval when any item has a time limit)
+  const [nowTick, setNowTick] = useState(() => Date.now())
   // Which optional sections are expanded in the item form
   const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
   const toggleSection = (k) => setExpandedSections(p => ({ ...p, [k]: !p[k] }))
+
+  // --- Perk helpers ---
+  // Pull display text + emoji for a menu item's perk (custom text wins over preset)
+  const getPerkDisplay = (item) => {
+    if (item.perkText) return { emoji: '🎁', text: item.perkText }
+    const id = item.perks?.[0]
+    return id ? PERK_LABELS[id] : null
+  }
+  // Compute countdown string, or null if no limit / 'expired' / 'soldout' to signal hide
+  const getPerkCountdown = (item) => {
+    const limit = item.perkLimit
+    if (!limit) return null
+    if (limit.type === 'time') {
+      const ms = new Date(limit.endAt).getTime() - nowTick
+      if (ms <= 0) return 'expired'
+      const h = Math.floor(ms / 3600000)
+      const m = Math.floor((ms % 3600000) / 60000)
+      const s = Math.floor((ms % 60000) / 1000)
+      if (h > 0) return `${h}h ${m}m`
+      if (m > 0) return `${m}:${String(s).padStart(2, '0')}`
+      return `${s}s`
+    }
+    if (limit.type === 'stock') {
+      if ((limit.remaining ?? 0) <= 0) return 'soldout'
+      return `${limit.remaining} left`
+    }
+    return null
+  }
+  // Tick once per second only when at least one visible item has a time-based perk
+  useEffect(() => {
+    const hasTimeLimit = menuItems.some(m => m.perkLimit?.type === 'time')
+    if (!hasTimeLimit) return
+    const id = setInterval(() => setNowTick(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [menuItems])
 
   // Shared progressive-disclosure block for both add + edit item forms
   const renderItemOptionalFields = () => (
@@ -917,12 +958,14 @@ export default function App() {
       {expandedSections.perks && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
           <button type="button" onClick={() => toggleSection('perks')} aria-label="Close perks" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${accent}66` }}>×</button>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card. Pick one or none.</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card.</div>
+          {/* Preset chips */}
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Preset</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
             {Object.entries(PERK_LABELS).map(([id, p]) => {
-              const isActive = formPerks[0] === id
+              const isActive = formPerks[0] === id && !formPerkText
               return (
-                <button key={id} type="button" onClick={() => setFormPerks(isActive ? [] : [id])} style={{
+                <button key={id} type="button" onClick={() => { setFormPerks(isActive ? [] : [id]); setFormPerkText('') }} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: isActive ? accent : 'rgba(255,255,255,0.05)',
                   border: '1px solid ' + (isActive ? accent : 'rgba(255,255,255,0.1)'),
@@ -934,6 +977,43 @@ export default function App() {
               )
             })}
           </div>
+          {/* Custom text override */}
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>Or write your own (max 24 chars)</div>
+          <input value={formPerkText} maxLength={24} onChange={e => { setFormPerkText(e.target.value); if (e.target.value) setFormPerks([]) }} placeholder="e.g. Free Cendol Today!" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+          {/* Countdown limit */}
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Limited offer? (countdown on right of ribbon)</div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            {[
+              { id: 'none', label: 'No limit' },
+              { id: 'time', label: '⏱ Time' },
+              { id: 'stock', label: '📦 Stock' },
+            ].map(opt => (
+              <button key={opt.id} type="button" onClick={() => setFormPerkLimitType(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: formPerkLimitType === opt.id ? accent : 'rgba(255,255,255,0.08)', color: formPerkLimitType === opt.id ? '#fff' : 'rgba(255,255,255,0.6)', minHeight: 40 }}>{opt.label}</button>
+            ))}
+          </div>
+          {formPerkLimitType === 'time' && (
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                {[
+                  { label: '+1 h',   ms: 1 * 3600000 },
+                  { label: '+4 h',   ms: 4 * 3600000 },
+                  { label: '+24 h',  ms: 24 * 3600000 },
+                  { label: '+48 h',  ms: 48 * 3600000 },
+                  { label: '+7 days', ms: 7 * 24 * 3600000 },
+                ].map(opt => (
+                  <button key={opt.label} type="button" onClick={() => setFormPerkLimitEndAt(new Date(Date.now() + opt.ms).toISOString())} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 36 }}>{opt.label}</button>
+                ))}
+              </div>
+              <input type="datetime-local" value={formPerkLimitEndAt ? new Date(formPerkLimitEndAt).toISOString().slice(0,16) : ''} onChange={e => setFormPerkLimitEndAt(e.target.value ? new Date(e.target.value).toISOString() : '')} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+              {formPerkLimitEndAt && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Ends {new Date(formPerkLimitEndAt).toLocaleString()}</div>}
+            </div>
+          )}
+          {formPerkLimitType === 'stock' && (
+            <div>
+              <input type="number" min={0} value={formPerkLimitStock} onChange={e => setFormPerkLimitStock(e.target.value)} placeholder="e.g. 20" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>How many units of this perk available — ribbon hides at 0</div>
+            </div>
+          )}
         </div>
       )}
       {expandedSections.allergens && (
@@ -1368,6 +1448,10 @@ export default function App() {
     setFormVariants(item.variants || [])
     setFormModifiers(item.modifiers || [])
     setFormPerks(item.perks || [])
+    setFormPerkText(item.perkText || '')
+    setFormPerkLimitType(item.perkLimit?.type || 'none')
+    setFormPerkLimitEndAt(item.perkLimit?.endAt || '')
+    setFormPerkLimitStock(item.perkLimit?.remaining != null ? String(item.perkLimit.remaining) : '')
     setExpandedSections({
       photos: (item.photos || []).length > 0,
       allergens: (item.allergens || []).length > 0,
@@ -1381,10 +1465,16 @@ export default function App() {
     setEditItem(item)
   }
 
+  const buildPerkLimit = () => {
+    if (formPerkLimitType === 'time' && formPerkLimitEndAt) return { type: 'time', endAt: formPerkLimitEndAt }
+    if (formPerkLimitType === 'stock' && formPerkLimitStock !== '') return { type: 'stock', remaining: Number(formPerkLimitStock) }
+    return null
+  }
+
   const saveEdit = () => {
     if (!formName || !formPrice) return
     const stockNum = formStock === '' ? null : Number(formStock)
-    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks }
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit() }
     setMenuItems((prev) =>
       prev.map((m) =>
         m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
@@ -1414,6 +1504,10 @@ export default function App() {
     setFormVariants([])
     setFormModifiers([])
     setFormPerks([])
+    setFormPerkText('')
+    setFormPerkLimitType('none')
+    setFormPerkLimitEndAt('')
+    setFormPerkLimitStock('')
     setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
     setAddingItem(true)
   }
@@ -1423,7 +1517,7 @@ export default function App() {
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
     const stockNum = formStock === '' ? null : Number(formStock)
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks }
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit() }
     setMenuItems((prev) => [...prev, item])
     if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
@@ -2429,12 +2523,16 @@ export default function App() {
             /* GRID card style — 2 columns, image on top */
             <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 14, overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
               {/* Perk ribbon — overlay on top edge of image */}
-              {item.perks?.length > 0 && (() => {
-                const p = PERK_LABELS[item.perks[0]]
+              {(() => {
+                const p = getPerkDisplay(item)
                 if (!p) return null
+                const cd = getPerkCountdown(item)
+                if (cd === 'expired' || cd === 'soldout') return null
                 return (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.3, padding: '3px 6px', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
-                    <span style={{ fontSize: 11 }}>{p.emoji}</span>{p.text}
+                    <span style={{ fontSize: 11 }}>{p.emoji}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
+                    {cd && <span style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 5px', borderRadius: 6, fontSize: 8, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
@@ -2457,12 +2555,16 @@ export default function App() {
             /* FULLWIDTH card style — large image cards */
             <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
               {/* Perk ribbon — overlay on top edge of image */}
-              {item.perks?.length > 0 && (() => {
-                const p = PERK_LABELS[item.perks[0]]
+              {(() => {
+                const p = getPerkDisplay(item)
                 if (!p) return null
+                const cd = getPerkCountdown(item)
+                if (cd === 'expired' || cd === 'soldout') return null
                 return (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 3 }}>
-                    <span style={{ fontSize: 14 }}>{p.emoji}</span>{p.text}
+                    <span style={{ fontSize: 14 }}>{p.emoji}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
+                    {cd && <span style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 8, fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
@@ -2487,15 +2589,19 @@ export default function App() {
             /* HORIZONTAL card style — default */
             <div
               key={item.id}
-              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}), ...(item.perks?.length ? { paddingTop: 30 } : {}) }}
+              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}), ...(getPerkDisplay(item) && getPerkCountdown(item) !== 'expired' && getPerkCountdown(item) !== 'soldout' ? { paddingTop: 30 } : {}) }}
             >
-              {/* Perk ribbon — always visible when item has perks */}
-              {item.perks?.length > 0 && (() => {
-                const p = PERK_LABELS[item.perks[0]]
+              {/* Perk ribbon — always visible when item has perks, hidden when expired/sold out */}
+              {(() => {
+                const p = getPerkDisplay(item)
                 if (!p) return null
+                const cd = getPerkCountdown(item)
+                if (cd === 'expired' || cd === 'soldout') return null
                 return (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 1 }}>
-                    <span style={{ fontSize: 13 }}>{p.emoji}</span>{p.text}
+                    <span style={{ fontSize: 13 }}>{p.emoji}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
+                    {cd && <span style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
