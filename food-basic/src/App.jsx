@@ -1558,16 +1558,32 @@ export default function App() {
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
 
-  /* Auto-detect user distance */
+  /* Auto-detect user distance — silently skip when the browser has
+     already denied geolocation, otherwise Chrome logs a warning every
+     mount and the user sees a noisy console. User-initiated callsites
+     (e.g. "Use my location" buttons) still call getCurrentPosition
+     directly so the prompt re-appears when the user asks for it. */
   useEffect(() => {
     if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const d = haversineKm(SHOP_LAT, SHOP_LON, pos.coords.latitude, pos.coords.longitude)
-        setUserDistance(Math.round(d * 10) / 10)
-      },
-      () => {}
-    )
+    let cancelled = false
+    const ask = () => {
+      if (cancelled) return
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const d = haversineKm(SHOP_LAT, SHOP_LON, pos.coords.latitude, pos.coords.longitude)
+          setUserDistance(Math.round(d * 10) / 10)
+        },
+        () => {}
+      )
+    }
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'geolocation' })
+        .then((status) => { if (status.state !== 'denied') ask() })
+        .catch(() => ask())
+    } else {
+      ask()
+    }
+    return () => { cancelled = true }
   }, [])
 
   /* Load delivery rates from admin settings (Supabase) */
