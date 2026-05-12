@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../dist/food-pro',
+    outDir: '../dist/foodlocal-pro',
     chunkSizeWarningLimit: 1000,
   },
 });
