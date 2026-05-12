@@ -910,11 +910,14 @@ export default function App() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatError, setChatError] = useState('')
-  // Order channel picker — shown before submission when the vendor supports
-  // both in-app chat (with payment gateways + real-time replies) and
-  // WhatsApp (pre-filled message, vendor processes manually).
+  // Order channel picker — shown before submission only when the vendor's
+  // plan_tier === 'both'. For 'whatsapp' or 'chat' tiers the customer is
+  // routed directly to that channel; no choice surfaced.
   const [orderModePickerOpen, setOrderModePickerOpen] = useState(false)
   const [orderModeRemember, setOrderModeRemember] = useState(false)
+  // vendor.plan_tier loaded from supabase: 'whatsapp' | 'chat' | 'both' | null
+  // null = legacy vendor with no plan set; treated as 'both' for back-compat.
+  const [vendorPlanTier, setVendorPlanTier] = useState(null)
   // Escrow hold tracking — set when a Stripe-with-escrow order is found
   // for the current conversation. Drives the "Release funds / Cancel"
   // panel rendered in the order-done view.
@@ -2049,6 +2052,9 @@ export default function App() {
       if (data.delivery_free_above !== undefined) setDelFreeAbove(data.delivery_free_above)
       if (data.delivery_currency) setDelCurrency(data.delivery_currency)
       if (data.delivery_enabled !== undefined) setDelEnabled(data.delivery_enabled)
+      // plan_tier drives the order-channel routing (see openOrderModePicker).
+      // null is acceptable — handled as legacy 'both' in the dispatcher.
+      setVendorPlanTier(data.plan_tier || null)
     })
   }, [vendorId])
 
@@ -2342,18 +2348,32 @@ export default function App() {
     setOrderModePickerOpen(false)
     sendOrder()
   }
-  // Entry point from the "Send Order" button. Either shows the picker (default)
-  // or dispatches directly if the customer previously chose "always use X".
+  // Entry point from the "Send Order" button. Routing precedence:
+  //   1. Vendor's plan_tier is the authority — 'whatsapp' or 'chat' tier
+  //      vendors route directly; the customer is never offered the other
+  //      channel and any saved preference is ignored.
+  //   2. plan_tier 'both' or null (legacy) falls through to the picker,
+  //      which can be auto-dispatched by the customer's saved preference.
   const openOrderModePicker = () => {
     if (chatSending) return
     const cleanCust = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanCust) { setChatError('Enter your phone number'); return }
     setChatError('')
+    const vendorHasWhatsApp = !!String(shopPhone || '').replace(/[^0-9]/g, '')
+
+    // 1. Vendor plan_tier is the source of truth.
+    if (vendorPlanTier === 'whatsapp') {
+      if (!vendorHasWhatsApp) { setChatError('Vendor WhatsApp number not configured'); return }
+      return submitViaWhatsApp()
+    }
+    if (vendorPlanTier === 'chat') {
+      return sendOrder()
+    }
+
+    // 2. 'both' or null (legacy) — picker logic with localStorage fallback.
     let pref = null
     try { pref = localStorage.getItem('foodlocalchat_orderModePref') } catch {}
-    const vendorHasWhatsApp = !!String(shopPhone || '').replace(/[^0-9]/g, '')
-    // If vendor has no WhatsApp number, skip the picker entirely.
-    if (!vendorHasWhatsApp) return sendOrder()
+    if (!vendorHasWhatsApp) return sendOrder() // no WhatsApp number → chat only
     if (pref === 'whatsapp') return submitViaWhatsApp()
     if (pref === 'chat') return sendOrder()
     setOrderModeRemember(false)
