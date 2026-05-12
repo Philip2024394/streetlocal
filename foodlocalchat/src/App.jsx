@@ -1037,7 +1037,7 @@ export default function App() {
                 <div style={{ background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10 }}>
                   <span style={{ fontSize: 13 }}>{previewEmoji}</span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewText}</span>
-                  {cd && <span style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                  {cd && <span style={{ fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                 </div>
               </div>
             )
@@ -2567,12 +2567,12 @@ export default function App() {
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.3, padding: '3px 6px', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
                     <span style={{ fontSize: 11 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
-                    {cd && <span style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 5px', borderRadius: 6, fontSize: 8, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                    {cd && <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
               {isVendor && vendorStatus !== 'expired' && (
-                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 6, right: 6, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 28 : 6 })(), right: 6, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
               <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
               {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
@@ -2599,12 +2599,12 @@ export default function App() {
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 3 }}>
                     <span style={{ fontSize: 14 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
-                    {cd && <span style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 8, fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                    {cd && <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
               {isVendor && vendorStatus !== 'expired' && (
-                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 36 : 8 })(), right: 8, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
               <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
               {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
@@ -2636,12 +2636,12 @@ export default function App() {
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 1 }}>
                     <span style={{ fontSize: 13 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
-                    {cd && <span style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                    {cd && <span style={{ fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
               {isVendor && vendorStatus !== 'expired' && (
-                <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}>
+                <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 38 : 8 })(), right: 8, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}>
                   <div style={S.toggleDot(item.available)} />
                 </button>
               )}
