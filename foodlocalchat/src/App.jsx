@@ -1859,10 +1859,39 @@ export default function App() {
 
   /* ═══ SPLASH SCREEN ═══ */
   if (showSplash && splashEnabled) {
+    const HERO_FONTS_SP = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', nunito: '"Nunito", sans-serif', poppins: '"Poppins", sans-serif', playfair: '"Playfair Display", serif', caveat: '"Caveat", cursive', bebas: '"Bebas Neue", sans-serif' }
+    const HERO_SIZES_SP = { normal: 42, large: 52, xl: 62 }
+    const ffSp = HERO_FONTS_SP[heroFont] || HERO_FONTS_SP.system
+    const titleSize = HERO_SIZES_SP[heroSize] || HERO_SIZES_SP.normal
+    const EFFECTS_SP = {
+      shadow: { textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5)' },
+      glow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 0 60px ${heroColor}20, 0 2px 4px rgba(0,0,0,0.9)` },
+      runGlow: { textShadow: `0 0 10px ${heroColor}80, 0 0 30px ${heroColor}40, 0 2px 4px rgba(0,0,0,0.9)` },
+      outline: { WebkitTextStroke: `2px ${heroColor}`, color: 'transparent', textShadow: '0 2px 8px rgba(0,0,0,0.5)' },
+      neon: { textShadow: `0 0 7px ${heroColor}, 0 0 10px ${heroColor}, 0 0 21px ${heroColor}, 0 0 42px ${heroColor}80, 0 0 82px ${heroColor}40` },
+      none: { textShadow: 'none' },
+    }
+    const fxSp = EFFECTS_SP[heroEffect] || EFFECTS_SP.shadow
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        {shopLogo && <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 100, height: 100, objectFit: 'contain', borderRadius: 20 }} />}
-        <div style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>{shopName}</div>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden' }}>
+        {/* Theme background — same as landing */}
+        <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...bgStyle }} />
+        <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
+        {/* Logo — respects shopLogoStyle (off / bare / circle) */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, zIndex: 2 }}>
+          {shopLogoStyle !== 'off' && shopLogo ? (
+            shopLogoStyle === 'bare' ? (
+              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 200, height: 200, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+            ) : (
+              <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: Math.round(156 * logoInner / 100), height: Math.round(156 * logoInner / 100), objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+              </div>
+            )
+          ) : shopLogoStyle !== 'off' ? (
+            <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', border: '3px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
+          ) : null}
+          <div style={{ fontSize: titleSize, fontWeight: 800, color: heroEffect === 'outline' ? 'transparent' : heroColor, fontFamily: ffSp, textAlign: 'center', lineHeight: 1.15, letterSpacing: -0.5, padding: '0 16px', ...fxSp }}>{shopName}</div>
+        </div>
       </div>
     )
   }
