@@ -3221,7 +3221,7 @@ export default function App() {
             {/* Content scroll container — sits above the fixed bg + overlay */}
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             {/* Header */}
-            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 2 }}>
+            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 2 }}>
               <button onClick={() => setHeroEditor(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
@@ -3230,7 +3230,7 @@ export default function App() {
             </div>
 
             {/* Live Preview — iPhone mockup */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 10px', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 10px', position: 'relative', zIndex: 2 }}>
               <div style={{ position: 'relative' }}>
                 {/* iPhone frame */}
                 <div style={{ width: 200, height: 400, borderRadius: 30, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 12px 40px ${accent}20, 0 4px 16px rgba(0,0,0,0.3)`, border: '2px solid #333' }}>
@@ -3284,7 +3284,7 @@ export default function App() {
             </div>
 
             {/* Controls */}
-            <div style={{ padding: '14px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', position: 'relative', zIndex: 2 }}>
+            <div style={{ padding: '14px', position: 'relative', zIndex: 2 }}>
 
               {/* Shop Name Input */}
               <div style={{ marginBottom: 14 }}>
@@ -3356,7 +3356,7 @@ export default function App() {
               <button onClick={() => { setHeroSize('normal'); setHeroFont('system'); setHeroColor('#ffffff'); setHeroSubColor(''); setHeroEffect('shadow') }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset All to Default</button>
             </div>
             {/* Footer save button — sticks to viewport bottom while page scrolls */}
-            <div style={{ padding: 14, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderTop: '1px solid rgba(255,255,255,0.06)', position: 'sticky', bottom: 0, zIndex: 2 }}>
+            <div style={{ padding: 14, borderTop: '1px solid rgba(255,255,255,0.06)', position: 'sticky', bottom: 0, zIndex: 2 }}>
               <button onClick={() => setHeroEditor(false)} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>Save Changes</button>
             </div>
             </div>{/* end content scroll container */}
