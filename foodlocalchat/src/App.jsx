@@ -1980,7 +1980,7 @@ export default function App() {
       {/* --- Menu Banner Image carousel --- */}
       {menuBanners.length > 0 && (
         <div style={{ margin: '4px 12px 0' }}>
-          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '30 / 7', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
+          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '3 / 1', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
             {menuBanners.map((url, i) => (
               <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
             ))}
@@ -5517,7 +5517,7 @@ export default function App() {
                             </div>
                             <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 4, display: 'block' }}>Banner Carousel Above Menu ({menuBanners.length}/5)</label>
                             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 6, lineHeight: 1.5 }}>Wide landscape image(s) shown above the menu. Add up to 5 — they auto-rotate every 4 seconds with an indicator bar below.</div>
-                            <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, color: '#fff', background: accent, padding: '6px 10px', borderRadius: 8, marginBottom: 10, letterSpacing: 0.3 }}>📐 Recommended size: 1200 × 280 px</div>
+                            <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, color: '#fff', background: accent, padding: '6px 10px', borderRadius: 8, marginBottom: 10, letterSpacing: 0.3 }}>📐 Recommended size: 1200 × 400 px</div>
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
                               {menuBanners.length < 5 && (
                                 <label style={{ padding: '10px 16px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>+ Add Banner
@@ -5530,7 +5530,7 @@ export default function App() {
                               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                 {menuBanners.map((url, i) => (
                                   <div key={url + i} style={{ position: 'relative', width: 'calc(33% - 4px)' }}>
-                                    <img src={url} alt="" onError={imgError('banner')} style={{ width: '100%', aspectRatio: '30 / 7', objectFit: 'cover', borderRadius: 6, border: i === menuBannerIdx ? `2px solid ${accent}` : '2px solid transparent' }} />
+                                    <img src={url} alt="" onError={imgError('banner')} style={{ width: '100%', aspectRatio: '3 / 1', objectFit: 'cover', borderRadius: 6, border: i === menuBannerIdx ? `2px solid ${accent}` : '2px solid transparent' }} />
                                     <button onClick={() => setMenuBanners(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, border: '2px solid #1a1a1a', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                                   </div>
                                 ))}
