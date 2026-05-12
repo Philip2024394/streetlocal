@@ -120,11 +120,25 @@ export default function Admin({ onClose }) {
   const criticalCount = openAlerts.filter(a => a.severity === 'critical').length
   const warningCount = openAlerts.filter(a => a.severity === 'warning').length
 
+  // Mirror admin status onto vendor_accounts (joined by slug) so the customer-facing
+  // Coming Soon gate reflects admin actions. admin 'active' → vendor 'active';
+  // anything else (pending_verification, deactivated) → vendor 'pending' (link goes dark).
+  const syncVendorAccount = async (regId, adminStatus, expiresAt) => {
+    const reg = regs.find(r => r.id === regId)
+    const slug = reg?.slug
+    if (!slug) return
+    const vendorStatus = adminStatus === 'active' ? 'active' : 'pending'
+    const patch = { status: vendorStatus }
+    if (expiresAt) patch.expires_at = expiresAt
+    await supabase.from('vendor_accounts').update(patch).eq('slug', slug)
+  }
+
   const updateStatus = async (id, status) => {
     await supabase.from('app_registrations').update({
       status,
       verified_at: status === 'active' ? new Date().toISOString() : null
     }).eq('id', id)
+    await syncVendorAccount(id, status)
     load()
   }
 
@@ -756,12 +770,14 @@ export default function Admin({ onClose }) {
           async function verifyPayment(id) {
             const expiresAt = new Date(Date.now() + 30 * 86400000).toISOString()
             await supabase.from('app_registrations').update({ status: 'active', verified_at: new Date().toISOString(), expires_at: expiresAt }).eq('id', id)
+            await syncVendorAccount(id, 'active', expiresAt)
             await supabase.from('admin_audit_log').insert({ action: 'payment_verified', target_type: 'vendor', target_id: id, details: { expires_at: expiresAt } })
             load()
           }
 
           async function rejectPayment(id) {
             await supabase.from('app_registrations').update({ status: 'deactivated' }).eq('id', id)
+            await syncVendorAccount(id, 'deactivated')
             await supabase.from('admin_audit_log').insert({ action: 'payment_rejected', target_type: 'vendor', target_id: id })
             load()
           }
@@ -771,6 +787,7 @@ export default function Admin({ onClose }) {
             const currentExpiry = reg?.expires_at ? new Date(reg.expires_at) : new Date()
             const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()) + 30 * 86400000).toISOString()
             await supabase.from('app_registrations').update({ status: 'active', expires_at: newExpiry, verified_at: new Date().toISOString() }).eq('id', id)
+            await syncVendorAccount(id, 'active', newExpiry)
             await supabase.from('admin_audit_log').insert({ action: 'payment_verified', target_type: 'vendor', target_id: id, details: { renewal: true, new_expiry: newExpiry } })
             load()
           }

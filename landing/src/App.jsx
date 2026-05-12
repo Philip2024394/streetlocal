@@ -2949,7 +2949,7 @@ export default function App() {
                 phone: fullPhone, password_hash: vendorAuthForm.password,
                 shop_name: vendorAuthForm.name, shop_food_type: vendorAuthForm.category,
                 shop_phone: fullPhone, country_code: vendorAuthForm.country, shop_city: vendorAuthForm.city,
-                slug, status: 'active'
+                slug, status: 'pending'
               }).select().single()
               if (error) { setVendorAuthError(error.message?.includes('duplicate') ? 'Phone already registered' : 'Signup failed'); return }
               // Register in app_registrations for admin dashboard
@@ -2961,7 +2961,7 @@ export default function App() {
                   email: '',
                   app_type: vendorAuthApp?.id || 'basic',
                   app_tier: vendorAuthApp?.id || 'basic',
-                  status: 'active',
+                  status: 'pending_verification',
                   billing_cycle: 'monthly',
                 })
               } catch (e) { /* ignore */ }
