@@ -451,9 +451,9 @@ function getCategories(t, cp) {
           description: t.proDesc || '',
           features: t.proFeatures || [],
           screenshots: [
-            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png',
-            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-5-2026-12_24_25-pm.png',
-            'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-4-2026-04_17_25-pm.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2012,%202026,%2006_20_44%20PM.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2012,%202026,%2006_20_15%20PM.png',
+            'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2012,%202026,%2006_08_51%20PM.png',
           ],
           url: '/food/pro/',
           color: '#FFD600',
