@@ -436,9 +436,9 @@ function getCategories(t, cp) {
             { cat: 'Payments', items: ['Online payments accepted (optional) — Connect Stripe, PayPal, Midtrans, or 16 other gateways'] },
           ],
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
-          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=' + p),
-          url: '/food/whatsapp/',
-          color: '#FF6B35',
+          liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5177/food/chat/' : '/food/chat/') + '?demo=true&page=' + p),
+          url: '/food/chat/',
+          color: '#8B0000',
           checkoutChooser: 'food',
         },
         {
