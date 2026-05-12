@@ -13,6 +13,6 @@ export default defineConfig({
   },
   server: { fs: { allow: ['..'] } },
   build: {
-    outDir: '../dist/foodlocalchat',
+    outDir: '../dist/food-basic',
   },
 })
