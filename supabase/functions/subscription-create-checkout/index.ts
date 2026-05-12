@@ -30,16 +30,29 @@ const corsHeaders = {
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status })
 
-const PRICE_BY_TIER: Record<string, number> = { whatsapp: 35000, chat: 50000, both: 50000 }
+// Pricing matrix by product + tier (Indonesian rupiah).
+// FoodLocal basic — lightweight subscription, 35k WhatsApp / 50k Chat.
+// FoodLocal Pro   — full restaurant suite (menu extras, banner ads, deals,
+//                   analytics, KTP-verified), 100k WhatsApp / 150k Chat.
+// 'both' tier (only on basic) lets the customer choose the channel at
+// checkout via the in-app picker.
+const PRICE_TABLE: Record<string, Record<string, number>> = {
+  basic: { whatsapp: 35000, chat: 50000, both: 50000 },
+  pro:   { whatsapp: 100000, chat: 150000 },
+}
+const VALID_PRODUCTS = Object.keys(PRICE_TABLE)
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const body = await req.json()
-    const { vendorId, planTier, returnUrl } = body
+    // product defaults to 'basic' so older callers keep working.
+    const { vendorId, planTier, returnUrl, product = 'basic' } = body
     if (!vendorId) return json({ error: 'vendorId required' }, 400)
-    if (!planTier || !(planTier in PRICE_BY_TIER)) return json({ error: 'planTier must be whatsapp | chat | both' }, 400)
+    if (!VALID_PRODUCTS.includes(product)) return json({ error: `product must be one of: ${VALID_PRODUCTS.join(', ')}` }, 400)
+    const tierTable = PRICE_TABLE[product]
+    if (!planTier || !(planTier in tierTable)) return json({ error: `planTier for product '${product}' must be one of: ${Object.keys(tierTable).join(', ')}` }, 400)
 
     const serverKey = Deno.env.get('MIDTRANS_SUBSCRIPTION_SERVER_KEY')
     if (!serverKey) return json({ error: 'subscription gateway not configured (MIDTRANS_SUBSCRIPTION_SERVER_KEY missing)' }, 500)
@@ -55,8 +68,10 @@ serve(async (req) => {
       .single()
     if (vendorErr || !vendor) return json({ error: 'vendor not found' }, 404)
 
-    const amount = PRICE_BY_TIER[planTier]
-    const orderId = `SLS-${String(vendor.slug || vendor.id).slice(0, 24)}-${Date.now()}`
+    const amount = tierTable[planTier]
+    // SLS-<product>-<slug>-<ts> so webhook can distinguish basic vs pro orders
+    // (both flow through the same webhook handler but may diverge later).
+    const orderId = `SLS-${product}-${String(vendor.slug || vendor.id).slice(0, 18)}-${Date.now()}`
 
     // Pending payment row inserted BEFORE we hit Midtrans so the
     // webhook always has somewhere to land. amount and plan are echoed
@@ -70,16 +85,16 @@ serve(async (req) => {
       status: 'pending',
       payment_method: 'card',                      // updated by webhook to the actual method
       midtrans_order_id: orderId,
-      notes: `Subscription ${planTier} via Midtrans Snap`,
+      notes: `${product === 'pro' ? 'FoodLocal Pro' : 'FoodLocal'} ${planTier} subscription via Midtrans Snap`,
     })
 
     const snapPayload = {
       transaction_details: { order_id: orderId, gross_amount: amount },
       item_details: [{
-        id: `subscription-${planTier}`,
+        id: `subscription-${product}-${planTier}`,
         price: amount,
         quantity: 1,
-        name: `StreetLocal ${planTier === 'whatsapp' ? 'WhatsApp' : planTier === 'chat' ? 'Chat' : 'Both'} — 30 days`,
+        name: `${product === 'pro' ? 'FoodLocal Pro' : 'FoodLocal'} ${planTier === 'whatsapp' ? 'WhatsApp' : planTier === 'chat' ? 'Chat' : 'Both'} — 30 days`,
       }],
       customer_details: {
         first_name: vendor.shop_name || 'Vendor',
@@ -116,10 +131,13 @@ serve(async (req) => {
       return json({ error: (result as any).error_messages?.[0] || 'Midtrans Snap creation failed', detail: result }, r.status || 500)
     }
 
-    // Store on the vendor so the client can find the in-flight order
+    // Store on the vendor so the client can find the in-flight order.
+    // subscription_product (added by migration 20260518000000) records
+    // which app tier this vendor pays for — drives renewal pricing too.
     await supabase.from('vendor_accounts').update({
       subscription_order_id: orderId,
       subscription_provider: 'midtrans',
+      subscription_product: product,
     }).eq('id', vendor.id)
 
     return json({
@@ -127,6 +145,7 @@ serve(async (req) => {
       redirectUrl: (result as any).redirect_url,
       orderId,
       amount,
+      product,
       planTier,
     })
   } catch (e) {
