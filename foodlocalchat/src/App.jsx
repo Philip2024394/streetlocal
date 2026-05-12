@@ -1953,7 +1953,7 @@ export default function App() {
 
       {/* --- Menu Banner Image carousel --- */}
       {menuBanners.length > 0 && (
-        <div style={{ margin: '4px 12px 4px' }}>
+        <div style={{ margin: '4px 12px 0' }}>
           <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', height: 140, border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
             {menuBanners.map((url, i) => (
               <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
@@ -1980,7 +1980,6 @@ export default function App() {
           <button onClick={startAdd} style={{ padding: '6px 14px', borderRadius: 10, border: 'none', background: '#8DC63F', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add Item</button>
         </div>
       )}
-      <div style={{ height: 4 }} />
       {/* --- Daily Deals Button + Cards --- */}
       {hasDeals && (
         <div style={{ padding: '0 16px 8px' }}>
