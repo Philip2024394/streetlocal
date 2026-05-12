@@ -69,13 +69,16 @@ function daysRemaining(expiresAt) {
 }
 
 /* ─── Supabase Functions ─── */
-async function generateCodes(quantity) {
+// Price per plan tier (Indonesian rupiah). Reflects landing/Affiliate.jsx.
+const PRICE_BY_TIER = { whatsapp: 35000, chat: 50000, both: 50000 }
+async function generateCodes(quantity, planTier = 'chat') {
+  const price = PRICE_BY_TIER[planTier] ?? 50000
   const codes = Array.from({ length: quantity }, () => ({
     code: generateCodeString(),
     status: 'unused',
-    plan: 'chat',
-    days: 30,
-    price: 50000,
+    plan_tier: planTier,
+    period_days: 30,
+    price,
   }))
   if (!supabase) return codes.map((c, i) => ({ ...c, id: 'gen-' + Date.now() + '-' + i, created_at: new Date().toISOString() }))
   const { data, error } = await supabase.from('activation_codes').insert(codes).select()
@@ -203,6 +206,7 @@ export default function AdminDashboard() {
   const [codeFilter, setCodeFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
   const [genQty, setGenQty] = useState(10)
+  const [genPlanTier, setGenPlanTier] = useState('chat') // 'whatsapp' | 'chat' | 'both'
   const [assignName, setAssignName] = useState('')
   const [selectedCodes, setSelectedCodes] = useState([])
   const [cityZones, setCityZones] = useState(() => {
@@ -252,7 +256,7 @@ export default function AdminDashboard() {
 
   const handleGenerateCodes = async () => {
     try {
-      const newCodes = await generateCodes(genQty)
+      const newCodes = await generateCodes(genQty, genPlanTier)
       setCodes(prev => [...newCodes, ...prev])
     } catch (e) { alert('Error generating codes: ' + e.message) }
   }
@@ -507,11 +511,22 @@ export default function AdminDashboard() {
             {/* Generate section */}
             <div style={S.card}>
               <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Generate Codes</h3>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Plan tier</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                {[
+                  { id: 'whatsapp', label: 'WhatsApp · Rp 35.000' },
+                  { id: 'chat', label: 'App Chat · Rp 50.000' },
+                  { id: 'both', label: 'Both · Rp 50.000' },
+                ].map(opt => (
+                  <button key={opt.id} style={S.tab(genPlanTier === opt.id)} onClick={() => setGenPlanTier(opt.id)}>{opt.label}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Quantity</div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 {[10, 25, 50].map(n => (
                   <button key={n} style={S.tab(genQty === n)} onClick={() => setGenQty(n)}>{n}</button>
                 ))}
-                <button style={S.btnGreen} onClick={handleGenerateCodes}>Generate {genQty} Codes</button>
+                <button style={S.btnGreen} onClick={handleGenerateCodes}>Generate {genQty} {genPlanTier === 'whatsapp' ? 'WhatsApp' : genPlanTier === 'chat' ? 'Chat' : 'Both'} Codes</button>
               </div>
             </div>
 
