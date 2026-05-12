@@ -2053,7 +2053,7 @@ export default function App() {
       {/* --- Menu --- */}
       <div style={{ paddingBottom: 12 }}>
         {/* Category text toggles + Visit Us */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px 0' }}>
           <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none', alignItems: 'center' }}>
           {(() => {
             const allCats = MENU_CATEGORIES.slice(1)
