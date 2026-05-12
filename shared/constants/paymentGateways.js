@@ -285,10 +285,21 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'merchantId', label: 'Merchant ID', placeholder: 'your-merchant-id', type: 'text', required: true },
       { key: 'apiKeyId', label: 'API Key ID', placeholder: '••••', type: 'text', required: true },
-      { key: 'sharedSecret', label: 'Shared Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'sharedSecret', label: 'Shared Secret Key (REST, base64)', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'profileId', label: 'Secure Acceptance Profile ID', placeholder: 'e.g. 12345678-1234-...', type: 'text', required: true },
+      { key: 'accessKey', label: 'Secure Acceptance Access Key', placeholder: '••••', type: 'text', required: true },
+      { key: 'secretKey', label: 'Secure Acceptance Secret Key', placeholder: '••••', type: 'password', required: true, secret: true },
     ],
     docUrl: 'https://ebc2.cybersource.com/',
-    setupSteps: ['Apply for CyberSource merchant account (sales contact)', 'Enterprise KYC process (4–8 weeks)', 'Business Center → Key Management', 'Generate REST API key set'],
+    setupSteps: [
+      'Apply for CyberSource merchant account (sales contact)',
+      'Enterprise KYC process (4–8 weeks)',
+      'Business Center → Payment Configuration → Key Management → "Generate Key" → REST → Shared Secret (copy Merchant ID + Key ID + Shared Secret here)',
+      'Business Center → Payment Configuration → Secure Acceptance Settings → Profiles → New Profile (Web/Mobile) → copy Profile ID',
+      'In that profile → Security → Create New Key → Active → copy Access Key + Secret Key here',
+      'Same profile → Customer Response → Receipt URL (transaction response) → https://<your-supabase>.functions.supabase.co/functions/v1/cybersource-webhook',
+      'Same profile → Notifications → Merchant POST URL → https://<your-supabase>.functions.supabase.co/functions/v1/cybersource-webhook (POST + signed)',
+    ],
   },
   {
     id: 'worldpay',

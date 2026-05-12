@@ -11,7 +11,7 @@ import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', '2checkout', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', '2checkout', 'cybersource', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -29,6 +29,7 @@ const GATEWAY_FIELD_MAP = {
   'fomo-pay':      { apiKey: 'server_key', signKey: 'webhook_secret' }, // merchantId → additional_config
   'authorize-net': { apiLoginId: 'server_key', transactionKey: 'client_key', signatureKey: 'webhook_secret' },
   '2checkout':     { merchantCode: 'server_key', secretKey: 'client_key', secretWord: 'webhook_secret' },
+  cybersource:     { merchantId: 'server_key', apiKeyId: 'client_key', sharedSecret: 'webhook_secret' }, // profileId/accessKey/secretKey (Secure Acceptance) → additional_config
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -995,6 +996,36 @@ export default function App() {
     window.location.href = data.url
     return 'redirecting'
   }
+  // Customer-side: CyberSource Secure Acceptance Hosted Checkout.
+  // The Edge Function returns the hosted URL + a signed set of form fields;
+  // we POST them to CyberSource via a hidden auto-submitting form (same
+  // pattern as Authorize.net Accept Hosted).
+  const payWithCyberSource = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('cybersource-create-session', {
+      body: { vendorId, orderId, amount, currency: currency || 'USD', items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl },
+    })
+    if (error || !data?.url || !data?.fields) {
+      console.error('CyberSource session failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingCsOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = data.url
+    form.style.display = 'none'
+    Object.entries(data.fields).forEach(([k, v]) => {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = k
+      input.value = String(v ?? '')
+      form.appendChild(input)
+    })
+    document.body.appendChild(form)
+    form.submit()
+    return 'redirecting'
+  }
   // Customer-side: Authorize.net Accept Hosted page.
   // Unlike the other hosted gateways, Authorize.net expects us to POST
   // the token to their payment URL (not GET-redirect). We build a
@@ -1197,6 +1228,7 @@ export default function App() {
   const [vendorFomoLive, setVendorFomoLive] = useState(false)
   const [vendorAnetLive, setVendorAnetLive] = useState(false)
   const [vendorTcLive, setVendorTcLive] = useState(false)
+  const [vendorCsLive, setVendorCsLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1217,11 +1249,12 @@ export default function App() {
     probe('fomo-pay', setVendorFomoLive)
     probe('authorize-net', setVendorAnetLive)
     probe('2checkout', setVendorTcLive)
+    probe('cybersource', setVendorCsLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status') || params.get('fomo_status') || params.get('anet_status') || params.get('tc_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status') || params.get('fomo_status') || params.get('anet_status') || params.get('tc_status') || params.get('cs_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -2059,7 +2092,7 @@ export default function App() {
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
     // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Checkout.com → Rapyd → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorAnetLive ? 'authorize-net' : vendorTcLive ? '2checkout' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorAnetLive ? 'authorize-net' : vendorCsLive ? 'cybersource' : vendorTcLive ? '2checkout' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2233,6 +2266,18 @@ export default function App() {
           }).catch(() => {})
           await payWithTwoCheckout({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to 2Checkout
+        } else if (activeGateway === 'cybersource') {
+          // CyberSource Secure Acceptance hosted checkout (signed form POST).
+          orderPayload.payment = { method: 'cybersource', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending CyberSource payment',
+          }).catch(() => {})
+          await payWithCyberSource({ ...payArgs, customerEmail: '' })
+          return // browser is now navigating to CyberSource Secure Acceptance
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
