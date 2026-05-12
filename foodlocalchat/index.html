@@ -68,7 +68,7 @@
   </head>
   <body>
     <div id="app-shell">
-      <div id="app-bg"><img id="app-bg-img" src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png" alt="" /></div>
+      <div id="app-bg"><img id="app-bg-img" src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png" alt="" /></div>
       <div id="app-glass"></div>
       <div id="root"></div>
     </div>
@@ -81,13 +81,14 @@
       var isDemo = params.get('demo') === 'true';
       var bgParam = params.get('bg');
       var bgImg = document.getElementById('app-bg-img');
-      if (bgParam && bgImg) {
-        // Explicit bg param — always wins (used by theme preview iframes)
+      if (isDemo && bgImg) {
+        // Demo mode is LOCKED to noodle background — ignore any ?theme= or ?bg= params
+        bgImg.src = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png';
+        bgImg.style.objectFit = 'fill';
+      } else if (bgParam && bgImg) {
+        // Explicit bg param — always wins outside demo (used by theme preview iframes)
         bgImg.src = decodeURIComponent(bgParam);
         bgImg.style.objectFit = 'fill';
-      } else if (isDemo && !params.get('theme') && bgImg) {
-        // Demo mode with no theme param — default noodle
-        bgImg.src = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png';
       } else if (!isDemo && !params.get('preview')) {
         // Normal mode — load from localStorage (skip in preview mode)
         var savedBg = localStorage.getItem('foodlocalchat_themeBg');

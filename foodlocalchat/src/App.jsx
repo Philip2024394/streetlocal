@@ -594,8 +594,9 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState(false)
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
   const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
-  const [shopTheme, setShopTheme] = useState(() => urlThemePreset ? urlThemePreset.id : (isDemo || isPreview) ? 'noodle' : (localStorage.getItem('foodlocalchat_theme') || 'default'))
-  const [shopAccentColor, setShopAccentColor] = useState(() => urlThemePreset ? urlThemePreset.accent : (isDemo || isPreview) ? '#8B0000' : (localStorage.getItem('foodlocalchat_accentColor') || '#8DC63F'))
+  // Demo is locked to noodle (red) regardless of URL params. New vendors also start on noodle.
+  const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : urlThemePreset ? urlThemePreset.id : isPreview ? 'noodle' : (localStorage.getItem('foodlocalchat_theme') || 'noodle'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : urlThemePreset ? urlThemePreset.accent : isPreview ? '#8B0000' : (localStorage.getItem('foodlocalchat_accentColor') || '#8B0000'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
