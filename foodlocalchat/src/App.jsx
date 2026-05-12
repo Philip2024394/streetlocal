@@ -1944,7 +1944,7 @@ export default function App() {
         <div style={{ background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '6px 0' }}>
           <div style={{ overflow: 'hidden', padding: '0 16px' }}>
             <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-            <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 14s linear infinite', fontSize: 13, fontWeight: 700, color: accent }}>
+            <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 14s linear infinite', fontSize: 13, fontWeight: 700, color: '#9CA3AF' }}>
               {promoBanner.split('\n').map(s => s.trim()).filter(Boolean).join('   ·   ')}
             </div>
           </div>
