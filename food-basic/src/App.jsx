@@ -81,12 +81,20 @@ import { enableVendorPush, disableVendorPush, getCurrentSubscription, pushSuppor
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
   if (!supabase) return { id: 'local-' + Date.now(), slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-') }
+  // Self-signups land in 'pending' state — visible to the vendor (they can
+  // build their menu/theme) but not yet activated. A sales person flips
+  // them to 'active' via ActivatePage with an activation_code, which also
+  // writes the plan_tier (35k whatsapp / 50k chat). plan_tier is left as
+  // the column default ('both') until activation. openOrderModePicker on
+  // the customer side blocks order submission when vendorStatus !== 'active'
+  // so trial vendors can preview their shop without taking real orders.
   const { data, error } = await supabase.from('vendor_accounts').insert({
     phone: phone.replace(/[^0-9]/g, ''),
     password_hash: password, // In production, hash this
     shop_name: name,
     shop_phone: phone.replace(/[^0-9]/g, ''),
     slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30),
+    status: 'pending',
   }).select().single()
   if (error) throw new Error(error.message)
   return data
@@ -2359,6 +2367,15 @@ export default function App() {
     const cleanCust = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanCust) { setChatError('Enter your phone number'); return }
     setChatError('')
+
+    // 0. Block orders for trial / non-active vendors. Pending vendors can
+    //    preview their shop, but can't take live orders until a sales
+    //    person activates them via ActivatePage. isDemo skips this.
+    if (!isDemo && vendorStatus && vendorStatus !== 'active') {
+      setChatError(vendorStatus === 'pending' ? 'This shop is still being activated. Please check back soon.' : 'This shop is not currently accepting orders.')
+      return
+    }
+
     const vendorHasWhatsApp = !!String(shopPhone || '').replace(/[^0-9]/g, '')
 
     // 1. Vendor plan_tier is the source of truth.
