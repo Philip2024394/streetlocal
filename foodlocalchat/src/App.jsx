@@ -596,7 +596,7 @@ export default function App() {
   const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
   // Demo is locked to noodle (red) regardless of URL params. New vendors also start on noodle.
   const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : urlThemePreset ? urlThemePreset.id : isPreview ? 'noodle' : (localStorage.getItem('foodlocalchat_theme') || 'noodle'))
-  const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : urlThemePreset ? urlThemePreset.accent : isPreview ? '#8B0000' : (localStorage.getItem('foodlocalchat_accentColor') || '#8B0000'))
+  const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#EF4444' : urlThemePreset ? urlThemePreset.accent : isPreview ? '#EF4444' : (localStorage.getItem('foodlocalchat_accentColor') || '#EF4444'))
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')

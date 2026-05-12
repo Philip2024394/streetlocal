@@ -438,7 +438,7 @@ function getCategories(t, cp) {
           screenshots: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'],
           liveUrls: ['landing', 'menu', 'item', 'cart', 'checkout', 'sent', 'visit'].map(p => (window.location.hostname === 'localhost' ? 'http://localhost:5177/food/chat/' : '/food/chat/') + '?demo=true&page=' + p),
           url: '/food/chat/',
-          color: '#8B0000',
+          color: '#EF4444',
           checkoutChooser: 'food',
         },
         {
