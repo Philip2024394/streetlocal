@@ -2000,10 +2000,10 @@ export default function App() {
         <div style={S.closedBanner}>{t.shopClosed || 'This shop is currently closed'}</div>
       )}
 
-      {/* Add Item button (vendor) */}
+      {/* Add Item button (vendor) — extra top padding when a banner is showing for easier touch reach */}
       {isVendor && vendorStatus !== 'expired' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px' }}>
-          <button onClick={startAdd} style={{ padding: '6px 14px', borderRadius: 10, border: 'none', background: '#8DC63F', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add Item</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: menuBanners.length > 0 ? '12px 16px 8px' : '0 16px' }}>
+          <button onClick={startAdd} style={{ padding: '12px 20px', borderRadius: 12, border: 'none', background: '#8DC63F', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, minWidth: 110 }}>+ Add Item</button>
         </div>
       )}
       {/* --- Daily Deals Button + Cards --- */}
@@ -2309,9 +2309,9 @@ export default function App() {
                   100% { transform: translateY(100%); }
                 }
               `}</style>
-              {/* Animated red running line on the left edge */}
+              {/* Animated running line on the left edge — uses theme accent */}
               <div style={{ position: 'absolute', left: 0, top: 0, width: 3, height: '100%', overflow: 'hidden', borderTopLeftRadius: 18, borderBottomLeftRadius: 18, pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '60%', background: 'linear-gradient(180deg, transparent 0%, #EF4444 40%, #FF4D4D 50%, #EF4444 60%, transparent 100%)', filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.8))', animation: 'redRun 2.4s linear infinite' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '60%', background: `linear-gradient(180deg, transparent 0%, ${accent} 40%, ${accent} 60%, transparent 100%)`, filter: `drop-shadow(0 0 6px ${accent}CC)`, animation: 'redRun 2.4s linear infinite' }} />
               </div>
               {/* Accent line on top — premium "title indicator" */}
               <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14 }} />
@@ -2320,7 +2320,7 @@ export default function App() {
                   <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Menu</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
                 </div>
-                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: '#EF4444', border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>&times;</button>
+                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: accent, border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: `0 2px 6px ${accent}66` }}>&times;</button>
               </div>
               {(() => {
                 // Short description shown under each category label
@@ -2357,14 +2357,14 @@ export default function App() {
                       padding: '13px 14px', marginBottom: 8, borderRadius: 12,
                       background: isActive ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
                       backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                      border: '1.5px solid #EF4444',
-                      boxShadow: isActive ? '0 0 14px rgba(239,68,68,0.4)' : 'none',
+                      border: `1.5px solid ${accent}`,
+                      boxShadow: isActive ? `0 0 14px ${accent}66` : 'none',
                       cursor: 'pointer', minHeight: 48,
                       color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'left',
                       transition: 'background 150ms ease, box-shadow 150ms ease',
                     }}>
-                      <span style={{ width: 36, height: 36, borderRadius: 10, background: isActive ? '#EF4444' : 'rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms ease' }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? '#fff' : '#EF4444'} aria-hidden="true"><path d={iconPath} /></svg>
+                      <span style={{ width: 36, height: 36, borderRadius: 10, background: isActive ? accent : `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms ease' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? '#fff' : accent} aria-hidden="true"><path d={iconPath} /></svg>
                       </span>
                       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                         <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{opt.label}</span>
