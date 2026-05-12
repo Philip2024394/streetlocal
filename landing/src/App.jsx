@@ -934,109 +934,75 @@ const VENDOR_STATUS_CONFIG = {
 }
 
 /* ─── Contact Page Data ─── */
+// SUPPORT_CATEGORIES — pruned from 14 fabricated categories to 6 honest
+// ones covering features that actually exist. Every Q/A here matches
+// real product surface (verified against food-basic + Affiliate.jsx +
+// shared/constants/paymentGateways.js). No 100+-themes, drag-and-drop,
+// CSV import, GrabExpress integration, 2FA, REST API, or 99.9% SLA
+// claims — those features aren't built and shouldn't be promised.
 const SUPPORT_CATEGORIES = [
-  { icon: '🏪', title: 'Store Setup', description: 'Get help setting up your digital storefront', ticketsInQ: 3, faqs: [
-    { q: 'How do I create my store?', a: 'Sign up, choose a plan, and follow our guided setup wizard. Your store will be live in under 5 minutes.' },
-    { q: 'Can I customize my store design?', a: 'Yes! Choose from 100+ themes and customize colors, fonts, and layouts to match your brand.' },
-    { q: 'Do I need technical knowledge?', a: 'No. Our platform is designed for non-technical users. Everything is drag-and-drop.' }
+  { icon: '🏪', title: 'Setup & Activation', description: 'Signup, activation, and going live', faqs: [
+    { q: 'How do I sign up?', a: 'Open the FoodLocal app via streetlocal.live, click Vendor Login → Create Account, and enter your business name, WhatsApp number, and password. Your account starts in preview mode so you can build your menu and pick a theme before paying.' },
+    { q: 'How do I activate my shop?', a: 'After signup the app shows a "Pay to activate" banner. Choose your plan (WhatsApp orders Rp 35.000/month OR App Chat orders Rp 50.000/month) and pay via Midtrans Snap — QRIS, GoPay, OVO, ShopeePay, Virtual Account, or card. Your shop goes live automatically once the payment settles.' },
+    { q: 'How long does activation take?', a: 'Usually under a minute. Once Midtrans confirms the payment, our webhook flips your shop to active and customers can immediately place orders.' },
   ]},
-  { icon: '💳', title: 'Billing & Payments', description: 'Subscription, invoices, and payment methods', ticketsInQ: 1, faqs: [
-    { q: 'What payment methods do you accept?', a: 'We accept bank transfer, credit cards, and digital wallets including GoPay, OVO, and Dana.' },
-    { q: 'How do I upgrade my plan?', a: 'Go to Settings > Subscription and select your new plan. Changes take effect immediately.' },
-    { q: 'Can I get a refund?', a: 'We offer a 7-day money-back guarantee on all plans. Contact support within 7 days of purchase.' }
+  { icon: '💳', title: 'Billing & Subscription', description: 'Your monthly plan, renewal, and cancellation', faqs: [
+    { q: 'What does it cost?', a: 'Rp 35.000/month for the WhatsApp-orders tier, or Rp 50.000/month for the in-app chat tier. Both give you the full FoodLocal app — they only differ in how customer orders reach you.' },
+    { q: 'When do I renew?', a: 'Each subscription covers 30 days from activation. A reminder banner appears in your vendor dashboard 7 days before expiry. Click Renew, choose your tier (you can switch), pay via Midtrans — done.' },
+    { q: "What happens if I don't renew?", a: "After expiry your shop's public URL stops accepting orders, but your dashboard stays accessible — your menu, theme, and data are preserved. Pay anytime to reactivate." },
+    { q: 'Can I cancel?', a: "There's nothing to cancel — subscriptions don't auto-renew. Just don't pay the next month and your shop quietly stops taking orders." },
   ]},
-  { icon: '🌐', title: 'Custom Domains', description: 'Domain connection, DNS, and SSL certificates', ticketsInQ: 0, faqs: [
-    { q: 'How do I connect my domain?', a: 'Add a CNAME record pointing to our servers. We handle SSL automatically.' },
-    { q: 'Can I buy a domain through StreetLocal?', a: 'Yes, we offer domain registration starting from $12/year through our domain packages.' },
-    { q: 'How long does DNS propagation take?', a: 'Usually 15-30 minutes, but can take up to 48 hours in rare cases.' }
+  { icon: '💸', title: 'Customer Payment Gateways', description: 'How your customers pay you', faqs: [
+    { q: 'How do customers pay me?', a: 'Three options: (1) cash / bank transfer / QRIS — no gateway needed, you confirm manually; (2) WhatsApp orders go straight to your number for manual payment coordination; (3) Connect any of 16 payment gateways in Settings → Payment Methods for cards / e-wallets / etc. directly at checkout.' },
+    { q: 'Which payment gateways are supported?', a: 'Stripe, PayPal, Braintree, Checkout.com, Authorize.net, Mollie, Razorpay, HitPay, FOMO Pay, Rapyd, Adyen, CyberSource, Worldpay, 2Checkout, Midtrans, and Xendit — 16 in total, covering 200+ countries.' },
+    { q: 'Does StreetLocal hold customer payments?', a: 'No. Each vendor connects their own gateway account. Customer payments flow straight to that account — StreetLocal never sees or holds your money. We are software only; we are not a payment processor.' },
+    { q: 'Do I need a payment gateway?', a: 'No — gateways are optional. You can run on cash, bank transfer, QRIS, or pure-WhatsApp orders without one. Connect a gateway when you want to accept cards / e-wallets directly inside checkout.' },
   ]},
-  { icon: '📱', title: 'Mobile App', description: 'PWA features, notifications, and mobile optimization', ticketsInQ: 2, faqs: [
-    { q: 'Is there a mobile app?', a: 'Your store is a Progressive Web App (PWA) — customers can install it directly from their browser.' },
-    { q: 'How do push notifications work?', a: 'Enable notifications in your dashboard. Customers who install your PWA will receive order updates automatically.' },
-    { q: 'Does it work offline?', a: 'Yes, basic browsing and menu viewing work offline. Orders require an internet connection.' }
+  { icon: '🌐', title: 'Custom Domains', description: 'Use your own domain instead of streetlocal.live/your-name', faqs: [
+    { q: 'How do I connect my own domain?', a: "See the Domains page in your vendor dashboard. We offer three options: a subdomain (yourname.streetlocal.live — included free), a custom subdomain (menu.yourbrand.com), or a full domain (yourbrand.com) where we handle the setup." },
+    { q: 'Are custom domains optional?', a: 'Yes — your app works perfectly on streetlocal.live/your-name without any extra setup. Custom domains are a paid add-on for vendors who want their own brand URL.' },
   ]},
-  { icon: '🎨', title: 'Themes & Design', description: 'Templates, customization, and branding', ticketsInQ: 1, faqs: [
-    { q: 'How many themes are available?', a: 'Over 100 professionally designed themes, all optimized for mobile and desktop.' },
-    { q: 'Can I use custom CSS?', a: 'Pro and Enterprise plans support custom CSS for advanced styling.' },
-    { q: 'Can I preview themes before applying?', a: 'Yes, use the live preview feature to see how any theme looks with your content.' }
+  { icon: '📱', title: 'Mobile App & PWA', description: 'Installing on your phone and notifications', faqs: [
+    { q: 'Is there a mobile app to install?', a: "Your shop and the vendor dashboard are both Progressive Web Apps (PWAs). Open the link in your phone's browser and use the Add to Home Screen option — it looks and behaves like a native app, no app store needed." },
+    { q: 'How do I get notified about new orders?', a: 'Enable Order Alerts in vendor settings: you get sound + vibration when the orders inbox is open, and push notifications when the app is closed (after granting permission once).' },
+    { q: 'What languages does the app support?', a: '11 languages — Indonesian, English, Malay, Thai, Vietnamese, Filipino, German, French, Spanish, Arabic, Chinese. The customer-facing app picks the visitor\'s browser language automatically.' },
   ]},
-  { icon: '📊', title: 'Analytics & Reports', description: 'Traffic, sales data, and performance metrics', ticketsInQ: 0, faqs: [
-    { q: 'What analytics are included?', a: 'Page views, unique visitors, conversion rates, top products, and revenue tracking.' },
-    { q: 'Can I export reports?', a: 'Yes, export reports as CSV or PDF from your analytics dashboard.' },
-    { q: 'Is Google Analytics supported?', a: 'Yes, connect your GA4 property in Settings > Integrations.' }
-  ]},
-  { icon: '🔒', title: 'Security & Privacy', description: 'Account security, data protection, and compliance', ticketsInQ: 0, faqs: [
-    { q: 'Is my data secure?', a: 'We use bank-level encryption (AES-256) and all data is stored on secure cloud infrastructure.' },
-    { q: 'Do you comply with data regulations?', a: 'Yes, we comply with GDPR, and Indonesian data protection regulations.' },
-    { q: 'How do I enable 2FA?', a: 'Go to Settings > Security and enable two-factor authentication via SMS or authenticator app.' }
-  ]},
-  { icon: '🤝', title: 'Affiliate Program', description: 'Commissions, referrals, and partner support', ticketsInQ: 4, faqs: [
-    { q: 'How much commission do I earn?', a: '100% of the first month subscription for every vendor you refer.' },
-    { q: 'When do I get paid?', a: 'Commissions are paid monthly, 30 days after the referred vendor activates.' },
-    { q: 'Is there a referral limit?', a: 'No limit. Refer as many vendors as you want.' }
-  ]},
-  { icon: '🛒', title: 'Product Management', description: 'Adding products, inventory, and categories', ticketsInQ: 2, faqs: [
-    { q: 'How many products can I add?', a: 'Depends on your plan — Starter allows 50, Pro allows 500, Enterprise is unlimited.' },
-    { q: 'Can I import products in bulk?', a: 'Yes, use our CSV import tool to add hundreds of products at once.' },
-    { q: 'How do I manage inventory?', a: 'Set stock levels per product. Get alerts when inventory is low.' }
-  ]},
-  { icon: '📦', title: 'Orders & Delivery', description: 'Order processing, shipping, and fulfillment', ticketsInQ: 5, faqs: [
-    { q: 'How do I process orders?', a: 'Orders appear in your dashboard in real-time. Accept, prepare, and mark as delivered.' },
-    { q: 'Do you integrate with delivery services?', a: 'We integrate with GrabExpress, GoSend, and other local delivery partners.' },
-    { q: 'Can customers track their orders?', a: 'Yes, customers receive real-time status updates via WhatsApp and in-app notifications.' }
-  ]},
-  { icon: '⚙️', title: 'Technical Issues', description: 'Bugs, errors, and platform troubleshooting', ticketsInQ: 1, faqs: [
-    { q: 'My store is loading slowly', a: 'Clear your browser cache, check your image sizes (we recommend under 500KB), and contact support if it persists.' },
-    { q: 'I see an error message', a: 'Take a screenshot and submit a ticket with the error details. Our team will investigate within 1 hour.' },
-    { q: 'The dashboard is not updating', a: 'Try refreshing the page. If the issue persists, clear cookies and log in again.' }
-  ]},
-  { icon: '🏢', title: 'Enterprise Solutions', description: 'Custom development, API access, and SLAs', ticketsInQ: 0, faqs: [
-    { q: 'Do you offer custom development?', a: 'Yes, our enterprise team can build custom features, integrations, and white-label solutions.' },
-    { q: 'Is API access available?', a: 'Enterprise plans include full REST API access with comprehensive documentation.' },
-    { q: 'What SLAs do you offer?', a: 'Enterprise plans include 99.9% uptime SLA with dedicated support and priority response times.' }
-  ]},
-  { icon: '📣', title: 'Marketing & SEO', description: 'Promotions, social media, and search optimization', ticketsInQ: 1, faqs: [
-    { q: 'Is SEO built in?', a: 'Yes, every store includes meta tags, sitemaps, structured data, and mobile optimization.' },
-    { q: 'Can I run promotions?', a: 'Create discount codes, flash sales, and bundle deals from your marketing dashboard.' },
-    { q: 'Do you support social media integration?', a: 'Connect Instagram, Facebook, and TikTok to sync products and share updates.' }
-  ]},
-  { icon: '🌍', title: 'Multi-Language', description: 'Translations, regional settings, and localization', ticketsInQ: 0, faqs: [
-    { q: 'What languages are supported?', a: 'Indonesian, English, Malay, Thai, Vietnamese, Filipino, and more being added.' },
-    { q: 'Can my store be multilingual?', a: 'Yes, Pro and Enterprise plans support multiple languages with automatic detection.' },
-    { q: 'How do I change my store language?', a: 'Go to Settings > Language and select your default language. Customers can switch languages too.' }
+  { icon: '🤝', title: 'Affiliate Program', description: 'Earn commission referring vendors', faqs: [
+    { q: 'How much commission do I earn?', a: "100% of the first-month subscription for every vendor you refer who activates. That's Rp 35.000 per WhatsApp-tier signup or Rp 50.000 per Chat-tier signup." },
+    { q: 'When do I get paid?', a: "Commissions are paid out after the referred vendor's first-month subscription settles. See the Affiliate page in your dashboard for the full payout schedule." },
+    { q: 'Is there a referral limit?', a: 'No limit — refer as many vendors as you want.' },
   ]}
 ]
 
+// CONTACT_DEPARTMENTS — descriptors only, no fabricated metrics.
+// Removed Sales/Engineering/APAC/Training departments that don't reflect
+// actual team structure, and the fake "status: online" presence flags.
 const CONTACT_DEPARTMENTS = [
-  { icon: '🎯', name: 'Sales', metric: '45 deals/month', status: 'online' },
-  { icon: '🛠️', name: 'Technical Support', metric: '1.2hr avg response', status: 'online' },
-  { icon: '💰', name: 'Billing', metric: '99.8% resolution', status: 'online' },
-  { icon: '🎨', name: 'Design Studio', metric: '100+ themes', status: 'online' },
-  { icon: '📱', name: 'Mobile Team', metric: 'PWA experts', status: 'online' },
-  { icon: '🔧', name: 'Engineering', metric: '99.9% uptime', status: 'online' },
-  { icon: '🤝', name: 'Partnerships', metric: '50+ integrations', status: 'online' },
-  { icon: '📊', name: 'Analytics', metric: 'Real-time data', status: 'online' },
-  { icon: '🛡️', name: 'Security', metric: 'AES-256 encryption', status: 'online' },
-  { icon: '🌏', name: 'APAC Operations', metric: '12 countries', status: 'online' },
-  { icon: '📚', name: 'Training', metric: '200+ guides', status: 'busy' },
-  { icon: '🚀', name: 'Onboarding', metric: '5 min setup', status: 'busy' }
+  { icon: '🛠️', name: 'Technical Support', metric: 'Bugs, errors, troubleshooting' },
+  { icon: '💰', name: 'Billing', metric: 'Subscription & renewals' },
+  { icon: '🤝', name: 'Affiliate / Partnerships', metric: 'Referrals & co-marketing' },
+  { icon: '🎨', name: 'Design Help', metric: 'Themes & customisation' },
+  { icon: '💸', name: 'Payment Gateways', metric: 'Connect Stripe / Midtrans / etc.' },
 ]
 
+// CONTACT_CHANNELS — dropped "Enterprise plans" and "24/7 monitoring"
+// claims (no enterprise tier; no dedicated ops team). Kept ticket / email
+// / sales channels with honest WIB hours.
 const CONTACT_CHANNELS = [
   { icon: '🎫', name: 'Support Ticket', availability: 'Mon-Fri 09:00-21:00 WIB', responseTime: 'Tickets processed in queue', primary: true, color: '#FFD600', href: null, action: 'ticket' },
   { icon: '📧', name: 'Email Support', availability: 'Mon-Fri 09:00-21:00 WIB', responseTime: 'Tickets processed in queue', primary: false, color: '#1a73e8', href: null, action: 'ticket' },
-  { icon: '⚡', name: 'Priority Support', availability: 'Enterprise plans', responseTime: 'Fast-tracked queue', primary: false, color: '#ff6b35', href: null },
-  { icon: '🛡️', name: 'Site Operations', availability: '24/7 monitoring', responseTime: 'Automated systems', primary: false, color: '#6366f1', href: null },
   { icon: '💼', name: 'Sales Consultation', availability: 'Mon-Fri 09:00-18:00 WIB', responseTime: 'Tickets processed in queue', primary: false, color: '#1a1a1a', href: null, action: 'sales' },
 ]
 
+// "By the numbers" — switched from unverifiable growth claims (500
+// vendors, 99.9% uptime, 24/7 support) to product facts we can stand
+// behind: gateway coverage, country reach via those gateways, language
+// support, commission policy.
 const CONTACT_COMPANY_STATS = [
-  { label: 'Vendors', target: 500, suffix: '+' },
-  { label: 'Apps Built', target: 50, suffix: '+' },
-  { label: 'Uptime', target: 99.9, suffix: '%', decimal: true },
-  { label: 'Countries', target: 12, suffix: '+' },
-  { label: 'Themes', target: 100, suffix: '+' },
-  { label: 'Support', target: 24, suffix: '/7' }
+  { label: 'Payment Gateways', target: 16, suffix: '' },
+  { label: 'Countries (via gateways)', target: 200, suffix: '+' },
+  { label: 'Languages', target: 11, suffix: '' },
+  { label: 'Commission', target: 0, suffix: '%' }
 ]
 
 // Critical image URLs preloaded at app startup so the home page never shows
@@ -4798,11 +4764,13 @@ export default function App() {
                       <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Popular Articles</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {[
-                          { cat: SUPPORT_CATEGORIES[0], faq: SUPPORT_CATEGORIES[0].faqs[0] },
-                          { cat: SUPPORT_CATEGORIES[1], faq: SUPPORT_CATEGORIES[1].faqs[0] },
-                          { cat: SUPPORT_CATEGORIES[3], faq: SUPPORT_CATEGORIES[3].faqs[0] },
-                          { cat: SUPPORT_CATEGORIES[10], faq: SUPPORT_CATEGORIES[10].faqs[0] },
-                          { cat: SUPPORT_CATEGORIES[2], faq: SUPPORT_CATEGORIES[2].faqs[0] }
+                          // Popular = one from each of the most-asked-about categories.
+                          // Indices align with the new 6-entry SUPPORT_CATEGORIES.
+                          { cat: SUPPORT_CATEGORIES[0], faq: SUPPORT_CATEGORIES[0].faqs[1] }, // Activation
+                          { cat: SUPPORT_CATEGORIES[1], faq: SUPPORT_CATEGORIES[1].faqs[1] }, // Renewal
+                          { cat: SUPPORT_CATEGORIES[2], faq: SUPPORT_CATEGORIES[2].faqs[0] }, // How customers pay
+                          { cat: SUPPORT_CATEGORIES[3], faq: SUPPORT_CATEGORIES[3].faqs[0] }, // Custom domains
+                          { cat: SUPPORT_CATEGORIES[4], faq: SUPPORT_CATEGORIES[4].faqs[0] }  // PWA install
                         ].map((item, i) => (
                           <div key={i} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
                             <button
@@ -4833,10 +4801,13 @@ export default function App() {
                       <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>Quick Links</h3>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {[
+                          // Indices are into the new 6-entry SUPPORT_CATEGORIES:
+                          // 0=Setup & Activation, 1=Billing, 2=Customer Payment Gateways,
+                          // 3=Custom Domains, 4=Mobile App & PWA, 5=Affiliate.
                           { icon: '&#128640;', label: 'Getting Started', catIdx: 0 },
-                          { icon: '&#128100;', label: 'Account Setup', catIdx: 0 },
                           { icon: '&#128179;', label: 'Billing', catIdx: 1 },
-                          { icon: '&#128187;', label: 'API Docs', catIdx: 11 }
+                          { icon: '&#128184;', label: 'Payment Gateways', catIdx: 2 },
+                          { icon: '&#127760;', label: 'Custom Domains', catIdx: 3 },
                         ].map((link, i) => (
                           <button
                             key={i}
@@ -5100,11 +5071,7 @@ export default function App() {
                     <div key={i} style={{ background: '#fff', borderRadius: 14, padding: 14, border: '1px solid #f0f0f0', textAlign: 'center' }}>
                       <div style={{ fontSize: 24, marginBottom: 6 }}>{dept.icon}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>{dept.name}</div>
-                      <div style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>{dept.metric}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: dept.status === 'online' ? '#25D366' : '#f59e0b', animation: dept.status === 'online' ? 'pulseGlow 2s ease-in-out infinite' : 'none' }} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: dept.status === 'online' ? '#25D366' : '#f59e0b' }}>{dept.status === 'online' ? 'Online' : 'Busy'}</span>
-                      </div>
+                      <div style={{ fontSize: 11, color: '#888' }}>{dept.metric}</div>
                     </div>
                   ))}
                 </div>
