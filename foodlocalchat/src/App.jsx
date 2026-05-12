@@ -698,12 +698,15 @@ export default function App() {
   const [customTagline, setCustomTagline] = useState(() => localStorage.getItem('foodlocalchat_customTagline') || '')
   const [menuCardStyle, setMenuCardStyle] = useState(() => localStorage.getItem('foodlocalchat_menuCardStyle') || 'horizontal')
   const [menuBanners, setMenuBanners] = useState(() => {
+    // Blob URLs are session-only — if any leaked into localStorage from a
+    // previous session (e.g. demo upload without cloud persist), drop them.
+    const keep = u => typeof u === 'string' && !u.startsWith('blob:')
     try {
       const stored = JSON.parse(localStorage.getItem('foodlocalchat_menuBanners') || 'null')
-      if (Array.isArray(stored) && stored.length) return stored.slice(0, 5)
+      if (Array.isArray(stored)) return stored.filter(keep).slice(0, 5)
     } catch {}
     const single = localStorage.getItem('foodlocalchat_menuBanner') || ''
-    return single ? [single] : []
+    return single && keep(single) ? [single] : []
   })
   const [menuBannerIdx, setMenuBannerIdx] = useState(0)
   // (Removed showClosedBanner toggle — when shop is closed, the banner now always shows.
@@ -1082,7 +1085,7 @@ export default function App() {
   // the first time the user opens the Text tool, so they can delete and retype.
   useEffect(() => { if (configTool === 'text' && !customTagline && shopFoodType) setCustomTagline(shopFoodType) }, [configTool])
   useEffect(() => { localStorage.setItem('foodlocalchat_menuCardStyle', menuCardStyle) }, [menuCardStyle])
-  useEffect(() => { localStorage.setItem('foodlocalchat_menuBanners', JSON.stringify(menuBanners)) }, [menuBanners])
+  useEffect(() => { localStorage.setItem('foodlocalchat_menuBanners', JSON.stringify(menuBanners.filter(u => typeof u === 'string' && !u.startsWith('blob:')))) }, [menuBanners])
   useEffect(() => { if (menuBannerIdx >= menuBanners.length) setMenuBannerIdx(0) }, [menuBanners.length])
   useEffect(() => {
     if (menuBanners.length < 2) return
