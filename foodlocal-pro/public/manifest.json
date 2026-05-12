@@ -1,15 +1,16 @@
 {
-  "name": "Street Local Live",
-  "short_name": "Street Local Live",
-  "description": "Order food direct — Indonesian & Western grilled favourites",
-  "start_url": "/",
+  "name": "FoodLocal Pro",
+  "short_name": "FoodLocal Pro",
+  "description": "Full restaurant ordering app — menu, deals, banner ads, analytics",
+  "start_url": "/food/pro/",
+  "scope": "/food/pro/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "theme_color": "#8B0000",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/food/pro/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

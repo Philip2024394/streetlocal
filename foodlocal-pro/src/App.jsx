@@ -59,16 +59,43 @@ export default function App() {
     setView('food')
   }, [])
 
+  // Dev-only shortcut to jump straight into the vendor dashboard from
+  // the customer-facing food view. Hidden on production hostnames.
+  const isDevHost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.endsWith('.vercel.app')
+  )
+
   return (
     <AuthProvider>
       {view === 'food' && (
-        <RestaurantBrowseScreen
-          onClose={() => {}}
-          onBackToCategories={() => {}}
-          category={null}
-          scrollToId={null}
-          onOrderViaChat={() => {}}
-        />
+        <>
+          <RestaurantBrowseScreen
+            onClose={() => {}}
+            onBackToCategories={() => {}}
+            category={null}
+            scrollToId={null}
+            onOrderViaChat={() => {}}
+          />
+          {isDevHost && (
+            <button
+              onClick={() => { window.location.search = '?view=vendor' }}
+              style={{
+                position: 'fixed', right: 12, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+                zIndex: 9999, padding: '8px 14px', borderRadius: 999,
+                border: '1px solid rgba(255,0,0,0.4)',
+                background: 'rgba(0,0,0,0.85)', color: '#FF6B6B',
+                fontSize: 10, fontWeight: 800, letterSpacing: 0.5,
+                cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                fontFamily: 'inherit',
+              }}
+              title="Open vendor dashboard (dev only — hidden in production)"
+            >
+              DEV · Dashboard
+            </button>
+          )}
+        </>
       )}
 
       {view === 'directory' && (
