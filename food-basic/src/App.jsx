@@ -1463,6 +1463,22 @@ export default function App() {
     probe('cybersource', setVendorCsLive)
     probe('worldpay', setVendorWpLive)
   }, [vendorId, isVendor])
+  // If the vendor arrived via a marketing link like /food/chat/?plan=whatsapp
+  // (from landing/Affiliate.jsx), and they're logged in with a pending status,
+  // auto-open the subscription picker. The picker has both options visible
+  // so they can still switch, but the chosen plan starts highlighted.
+  useEffect(() => {
+    if (!isVendor || subPickerOpen) return
+    if (vendorStatus && vendorStatus !== 'pending') return
+    const plan = new URLSearchParams(window.location.search).get('plan')
+    if (plan === 'whatsapp' || plan === 'chat') {
+      // Clear the param so it doesn't keep re-triggering on subsequent renders.
+      const cleaned = new URL(window.location.href)
+      cleaned.searchParams.delete('plan')
+      window.history.replaceState({}, '', cleaned.toString())
+      setSubPickerOpen(true)
+    }
+  }, [isVendor, vendorStatus])
   // Vendor subscription checkout — opens Midtrans Snap for the
   // StreetLocal central account. After payment, the webhook flips
   // vendor.status to 'active'. We poll briefly on return to reflect that.

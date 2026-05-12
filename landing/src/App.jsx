@@ -1207,7 +1207,8 @@ function findThemeMatches(query, limit = 6) {
 function themeDemoUrl(theme) {
   const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   if (theme.app === 'food') {
-    return (isLocal ? 'http://localhost:5176/food/whatsapp/' : '/food/whatsapp/') + '?demo=true&page=landing&theme=' + theme.id
+    // food-basic is the consolidated food vendor app; was foodlocalchat before Phase C rename.
+    return (isLocal ? 'http://localhost:5177/food/chat/' : '/food/chat/') + '?demo=true&page=landing&theme=' + theme.id
   }
   if (theme.app === 'services') {
     return (isLocal ? 'http://localhost:5183/services/whatsapp/' : '/services/whatsapp/') + '?demo=true&page=landing&theme=' + theme.id
@@ -1778,7 +1779,7 @@ export default function App() {
                     <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                       <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
                     </div>
-                    <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const isChat = selectedApp.id === 'chat'; const base = isLocal ? (isChat ? 'http://localhost:5177/food/chat/' : 'http://localhost:5176/food/whatsapp/') : (isChat ? '/food/chat/' : '/food/whatsapp/'); return base + '?demo=true&page=landing&theme=' + theme.id })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
+                    <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const base = isLocal ? 'http://localhost:5177/food/chat/' : '/food/chat/'; const plan = selectedApp.id === 'chat' ? 'chat' : 'whatsapp'; return base + '?demo=true&page=landing&theme=' + theme.id + '&plan=' + plan })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
                   </div>
                 )
@@ -1998,7 +1999,7 @@ export default function App() {
                 <div style={{ width: 24, height: 24, borderRadius: 6, background: previewTheme.accent || '#8DC63F', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: 'monospace', letterSpacing: 1 }}>{(previewTheme.accent || '#8DC63F').toUpperCase()}</span>
               </div>
-              <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const isChat = selectedApp?.id === 'chat'; const base = isLocal ? (isChat ? 'http://localhost:5177/food/chat/' : 'http://localhost:5176/food/whatsapp/') : (isChat ? '/food/chat/' : '/food/whatsapp/'); return base + '?demo=true&page=landing&theme=' + previewTheme.id })()} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'block' }}>Edit Theme</a>
+              <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const base = isLocal ? 'http://localhost:5177/food/chat/' : '/food/chat/'; const plan = selectedApp?.id === 'chat' ? 'chat' : 'whatsapp'; return base + '?demo=true&page=landing&theme=' + previewTheme.id + '&plan=' + plan })()} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'block' }}>Edit Theme</a>
             </div>
 
             <button onClick={() => setPreviewTheme(null)} style={{ marginTop: 10, padding: '10px 28px', borderRadius: 12, border: 'none', background: '#fff', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Close</button>
@@ -5542,7 +5543,7 @@ export default function App() {
             return (
               <div key={vendor.id} style={{ marginBottom: 10 }}>
                 <div
-                  onClick={() => { if (isMock) return; const slug = vendor.slug || vendor.id; if (slug) window.open(`${window.location.origin}/food/whatsapp/?vendor=${slug}`, '_blank') }}
+                  onClick={() => { if (isMock) return; const slug = vendor.slug || vendor.id; if (slug) window.open(`${window.location.origin}/food/chat/?vendor=${slug}`, '_blank') }}
                   style={{ background: '#fff', borderRadius: 14, padding: '12px 12px 10px', cursor: isMock ? 'default' : 'pointer', opacity: vendor.status === 'closed' ? 0.5 : 1, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}
                 >
                   <div style={{ display: 'flex', gap: 12 }}>
