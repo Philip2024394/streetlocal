@@ -3235,6 +3235,25 @@ export default function App() {
         </div>
       )}
 
+      {/* --- Subscription renewal reminder (7-day window before expiry) --- */}
+      {isVendor && vendorStatus === 'active' && vendorExpiresAt && (() => {
+        const daysLeft = Math.ceil((new Date(vendorExpiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+        if (daysLeft > 7 || daysLeft < 0) return null
+        const urgent = daysLeft <= 2
+        return (
+          <div style={{ background: urgent ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.12)', border: `1px solid ${urgent ? 'rgba(245,158,11,0.45)' : 'rgba(250,204,21,0.35)'}`, borderRadius: 12, margin: '8px 12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 22, flexShrink: 0 }}>{urgent ? '⏰' : '🔔'}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: urgent ? '#F59E0B' : '#FACC15' }}>
+                {daysLeft === 0 ? 'Subscription expires today' : daysLeft === 1 ? 'Subscription expires tomorrow' : `Subscription expires in ${daysLeft} days`}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Renew now to keep customers ordering — no downtime.</div>
+            </div>
+            <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew</button>
+          </div>
+        )
+      })()}
+
       {/* --- Activation pending banner (post-signup, before payment) --- */}
       {isVendor && (vendorStatus === 'pending' || (vendorStatus === null && vendorId && !String(vendorId).startsWith('local'))) && (
         <div style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: 12, margin: '8px 12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', textAlign: 'center' }}>
