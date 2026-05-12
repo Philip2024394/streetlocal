@@ -886,8 +886,9 @@ export default function App() {
   const [formStock, setFormStock] = useState('')           // empty = unlimited; number = count
   const [formVariants, setFormVariants] = useState([])     // [{id, name, priceDelta}]
   const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
+  const [formPerks, setFormPerks] = useState([])           // array of perk ids — renders as ribbon on menu card
   // Which optional sections are expanded in the item form
-  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
+  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
   const toggleSection = (k) => setExpandedSections(p => ({ ...p, [k]: !p[k] }))
 
   // Shared progressive-disclosure block for both add + edit item forms
@@ -896,6 +897,7 @@ export default function App() {
       <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {[
+          { key: 'perks', label: '🎁 Perk Ribbon' },
           { key: 'variants', label: '📏 Sizes' },
           { key: 'modifiers', label: '➕ Add-ons' },
           { key: 'allergens', label: '⚠️ Allergens' },
@@ -912,6 +914,28 @@ export default function App() {
         ))}
       </div>
       {/* Photo gallery is handled by the 4 thumbnail slots under the live preview card. */}
+      {expandedSections.perks && (
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
+          <button type="button" onClick={() => toggleSection('perks')} aria-label="Close perks" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${accent}66` }}>×</button>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card. Pick one or none.</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {Object.entries(PERK_LABELS).map(([id, p]) => {
+              const isActive = formPerks[0] === id
+              return (
+                <button key={id} type="button" onClick={() => setFormPerks(isActive ? [] : [id])} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: isActive ? accent : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? accent : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 14, minHeight: 36,
+                }}>
+                  <span>{p.emoji}</span>{p.text}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
       {expandedSections.allergens && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
@@ -1343,6 +1367,7 @@ export default function App() {
     setFormStock(item.stock != null ? String(item.stock) : '')
     setFormVariants(item.variants || [])
     setFormModifiers(item.modifiers || [])
+    setFormPerks(item.perks || [])
     setExpandedSections({
       photos: (item.photos || []).length > 0,
       allergens: (item.allergens || []).length > 0,
@@ -1351,6 +1376,7 @@ export default function App() {
       stock: item.stock != null,
       variants: (item.variants || []).length > 0,
       modifiers: (item.modifiers || []).length > 0,
+      perks: (item.perks || []).length > 0,
     })
     setEditItem(item)
   }
@@ -1358,7 +1384,7 @@ export default function App() {
   const saveEdit = () => {
     if (!formName || !formPrice) return
     const stockNum = formStock === '' ? null : Number(formStock)
-    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers }
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks }
     setMenuItems((prev) =>
       prev.map((m) =>
         m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
@@ -1387,7 +1413,8 @@ export default function App() {
     setFormStock('')
     setFormVariants([])
     setFormModifiers([])
-    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false })
+    setFormPerks([])
+    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
     setAddingItem(true)
   }
 
@@ -1396,7 +1423,7 @@ export default function App() {
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
     const stockNum = formStock === '' ? null : Number(formStock)
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers }
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks }
     setMenuItems((prev) => [...prev, item])
     if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
@@ -2401,6 +2428,16 @@ export default function App() {
           menuCardStyle === 'grid' ? (
             /* GRID card style — 2 columns, image on top */
             <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 14, overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+              {/* Perk ribbon — overlay on top edge of image */}
+              {item.perks?.length > 0 && (() => {
+                const p = PERK_LABELS[item.perks[0]]
+                if (!p) return null
+                return (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.3, padding: '3px 6px', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
+                    <span style={{ fontSize: 11 }}>{p.emoji}</span>{p.text}
+                  </div>
+                )
+              })()}
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: 6, right: 6, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
@@ -2419,6 +2456,16 @@ export default function App() {
           ) : menuCardStyle === 'fullwidth' ? (
             /* FULLWIDTH card style — large image cards */
             <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+              {/* Perk ribbon — overlay on top edge of image */}
+              {item.perks?.length > 0 && (() => {
+                const p = PERK_LABELS[item.perks[0]]
+                if (!p) return null
+                return (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 3 }}>
+                    <span style={{ fontSize: 14 }}>{p.emoji}</span>{p.text}
+                  </div>
+                )
+              })()}
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
