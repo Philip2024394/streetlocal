@@ -3220,8 +3220,8 @@ export default function App() {
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
             {/* Content scroll container — sits above the fixed bg + overlay */}
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
-            {/* Header */}
-            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 2 }}>
+            {/* Header — sticky with translucent bg so content doesn't show through during scroll */}
+            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 5 }}>
               <button onClick={() => setHeroEditor(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
@@ -3275,10 +3275,6 @@ export default function App() {
                     {/* Home indicator */}
                     <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                   </div>
-                </div>
-                {/* Line count badge */}
-                <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 700, color: lineWarning ? '#EF4444' : '#22c55e', background: '#1a1a1a', padding: '3px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
-                  {pLines.length} line{pLines.length !== 1 ? 's' : ''}{lineWarning ? ' — too many!' : ''} · {shopName.length}/20
                 </div>
               </div>
             </div>
