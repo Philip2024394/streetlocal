@@ -3222,7 +3222,6 @@ export default function App() {
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Customise your landing page brand</div>
               </div>
-              <button onClick={() => setHeroEditor(false)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save Changes</button>
             </div>
 
             {/* Live Preview — iPhone mockup */}
@@ -3350,6 +3349,10 @@ export default function App() {
 
               {/* Reset all */}
               <button onClick={() => { setHeroSize('normal'); setHeroFont('system'); setHeroColor('#ffffff'); setHeroSubColor(''); setHeroEffect('shadow') }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 20 }}>Reset All to Default</button>
+            </div>
+            {/* Footer save button */}
+            <div style={{ flexShrink: 0, padding: 14, background: 'rgba(0,0,0,0.8)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button onClick={() => setHeroEditor(false)} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>Save Changes</button>
             </div>
           </div>
         )
