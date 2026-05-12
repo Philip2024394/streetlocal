@@ -6,7 +6,6 @@ export const PLACEHOLDER_LG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.
 
 export const ACCENT_PALETTE = [
   { color: '#C8102E', label: 'Nescafe Red' },
-  { color: '#DC2626', label: 'Red' },
   { color: '#8B0000', label: 'Dark Red' },
   { color: '#FF6B35', label: 'Orange' },
   { color: '#B8860B', label: 'Gold' },
