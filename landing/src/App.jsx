@@ -4,6 +4,7 @@ import Admin from './Admin'
 import Affiliate from './Affiliate'
 import { getTranslation, COUNTRY_TO_LANG } from './translations'
 import imgError, { FALLBACK_URLS } from './imgFallback'
+import { THEME_PRESETS as SERVICES_THEME_PRESETS } from '../../shared/themes/servicesThemes.js'
 
 /* ─── Translations ─── */
 const TRANSLATIONS = {
@@ -3981,6 +3982,67 @@ export default function App() {
                         <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
                           {theme.popular && <div style={{ position: 'absolute', top: 4, left: 4, background: '#4A90D9', padding: '1px 5px', borderRadius: 3, fontSize: 7, fontWeight: 800, color: '#fff' }}>POPULAR</div>}
+                          <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>{theme.label}</div>
+                        <div style={{ fontSize: 9, color: '#999' }}>{theme.ref}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {currentPage === 'service-themes' && (() => {
+            const serviceThemes = SERVICES_THEME_PRESETS.map((t, i) => ({
+              id: t.id,
+              ref: 'SL-' + String(i + 1).padStart(3, '0'),
+              label: t.label.replace(/^#\d+[a-z]?\s*/, ''),
+              accent: t.accent,
+              img: t.img,
+              isNew: !!t.isNew,
+              popular: false,
+              activations: 0,
+            }))
+            const filtered = themeLibSearch ? serviceThemes.filter(t => t.label.toLowerCase().includes(themeLibSearch.toLowerCase())) : serviceThemes
+            const newThemes = filtered.filter(t => t.isNew)
+            const otherThemes = filtered.filter(t => !t.isNew)
+
+            return (
+              <div style={{ background: '#fff', margin: '-20px -24px', padding: '0 0 40px', minHeight: '100vh' }}>
+                <div style={{ padding: '12px 16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input value={themeLibSearch} onChange={e => setThemeLibSearch(e.target.value)} placeholder="Search service themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ccc" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  </div>
+                </div>
+
+                {newThemes.length > 0 && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>🆕 New Service Themes</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                      {newThemes.map(theme => (
+                        <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                          <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>🛠️</span>}
+                            <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>{theme.label}</div>
+                          <div style={{ fontSize: 9, color: '#999' }}>{theme.ref}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ padding: '0 16px 16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Service Themes ({otherThemes.length})</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                    {otherThemes.map(theme => (
+                      <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                        <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>🛠️</span>}
                           <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
                         </div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>{theme.label}</div>
