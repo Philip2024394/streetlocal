@@ -11,7 +11,7 @@ import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', '2checkout', 'cybersource', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', '2checkout', 'cybersource', 'worldpay', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -30,6 +30,7 @@ const GATEWAY_FIELD_MAP = {
   'authorize-net': { apiLoginId: 'server_key', transactionKey: 'client_key', signatureKey: 'webhook_secret' },
   '2checkout':     { merchantCode: 'server_key', secretKey: 'client_key', secretWord: 'webhook_secret' },
   cybersource:     { merchantId: 'server_key', apiKeyId: 'client_key', sharedSecret: 'webhook_secret' }, // profileId/accessKey/secretKey (Secure Acceptance) → additional_config
+  worldpay:        { serviceKey: 'server_key', clientKey: 'client_key', webhookSecret: 'webhook_secret' },
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -980,6 +981,14 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  const loadWorldpayJs = () => new Promise((resolve, reject) => {
+    if (window.Worldpay) return resolve()
+    const s = document.createElement('script')
+    s.src = 'https://cdn.worldpay.com/v1/worldpay.js'
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('Could not load Worldpay.js'))
+    document.head.appendChild(s)
+  })
   // Customer-side: 2Checkout (Verifone) Buy Link hosted checkout.
   // Standard GET redirect to a 2Checkout-hosted purchase page.
   const payWithTwoCheckout = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
@@ -1213,6 +1222,75 @@ export default function App() {
       return 'failed'
     }
   }
+  // Customer-side: Worldpay (FIS) Online — card tokenisation in a modal
+  // via Worldpay.js, then server-side charge against /v1/orders.
+  const payWithWorldpay = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
+    if (!supabase) return 'failed'
+    try {
+      const keyRes = await supabase.functions.invoke('worldpay-client-key', { body: { vendorId } })
+      if (keyRes.error || !keyRes.data?.clientKey) {
+        console.error('Worldpay client key failed', keyRes.error || keyRes.data)
+        return 'failed'
+      }
+      await loadWorldpayJs()
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px'
+      const modal = document.createElement('div')
+      modal.style.cssText = 'background:#fff;border-radius:16px;padding:18px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;color:#1a1a1a'
+      // Worldpay.js useTemplateForm mounts its iframe card fields into the
+      // payment section div. We build a real form so the SDK's submit hook fires.
+      modal.innerHTML = `
+        <div style="font-size:18px;font-weight:800;margin-bottom:12px">Payment — ${fmt(amount)}</div>
+        <form id="wp-form" action="" method="post">
+          <div id="wp-payment"></div>
+          <input type="text" id="wp-postal" placeholder="Postcode / ZIP" style="margin-top:10px;width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px" />
+          <button type="submit" id="wp-pay" style="margin-top:14px;width:100%;padding:14px;border-radius:12px;border:none;background:#E5251F;color:#fff;font-size:15px;font-weight:800;cursor:pointer;min-height:48px">Pay ${fmt(amount)}</button>
+        </form>
+        <button id="wp-cancel" style="margin-top:8px;width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer">Cancel</button>
+        <div id="wp-error" style="margin-top:8px;color:#dc2626;font-size:12px"></div>
+      `
+      overlay.appendChild(modal)
+      document.body.appendChild(overlay)
+      return await new Promise((resolve) => {
+        const cleanup = () => { try { document.body.removeChild(overlay) } catch {} }
+        const errEl = modal.querySelector('#wp-error')
+        modal.querySelector('#wp-cancel').onclick = () => { cleanup(); resolve('closed') }
+        try {
+          window.Worldpay.useTemplateForm({
+            clientKey: keyRes.data.clientKey,
+            form: 'wp-form',
+            paymentSection: 'wp-payment',
+            display: 'inline',
+            type: 'card',
+            callback: async (obj) => {
+              if (!obj || obj.error) {
+                errEl.textContent = obj?.error?.message || 'Card details invalid.'
+                return
+              }
+              try {
+                const billingPostal = modal.querySelector('#wp-postal')?.value || 'N/A'
+                const chargeRes = await supabase.functions.invoke('worldpay-charge', {
+                  body: { vendorId, orderId, amount, currency: currency || 'GBP', token: obj.token, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description, billingPostal },
+                })
+                if (chargeRes.error || !chargeRes.data?.ok) {
+                  errEl.textContent = chargeRes.data?.error || 'Payment was declined.'
+                  return
+                }
+                cleanup(); resolve('paid')
+              } catch (e) {
+                errEl.textContent = e?.message || 'Payment failed.'
+              }
+            },
+          })
+        } catch (e) {
+          errEl.textContent = e?.message || 'Could not load card form'
+        }
+      })
+    } catch (e) {
+      console.error('Worldpay pay failed', e)
+      return 'failed'
+    }
+  }
   // Customer-side: vendor's active live gateway (read once on mount). The order of
   // preference is Midtrans → Xendit → Stripe → PayPal → Razorpay; vendors typically configure one.
   const [vendorStripeLive, setVendorStripeLive] = useState(false)
@@ -1229,6 +1307,7 @@ export default function App() {
   const [vendorAnetLive, setVendorAnetLive] = useState(false)
   const [vendorTcLive, setVendorTcLive] = useState(false)
   const [vendorCsLive, setVendorCsLive] = useState(false)
+  const [vendorWpLive, setVendorWpLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1250,6 +1329,7 @@ export default function App() {
     probe('authorize-net', setVendorAnetLive)
     probe('2checkout', setVendorTcLive)
     probe('cybersource', setVendorCsLive)
+    probe('worldpay', setVendorWpLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
@@ -2092,7 +2172,7 @@ export default function App() {
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
     // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Checkout.com → Rapyd → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorAnetLive ? 'authorize-net' : vendorCsLive ? 'cybersource' : vendorTcLive ? '2checkout' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorAnetLive ? 'authorize-net' : vendorCsLive ? 'cybersource' : vendorWpLive ? 'worldpay' : vendorTcLive ? '2checkout' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2278,6 +2358,15 @@ export default function App() {
           }).catch(() => {})
           await payWithCyberSource({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to CyberSource Secure Acceptance
+        } else if (activeGateway === 'worldpay') {
+          // Worldpay (FIS) Online — card modal via Worldpay.js, server-side charge.
+          const payRes = await payWithWorldpay({ ...payArgs, customerEmail: '', description: summaryItems })
+          if (payRes === 'closed' || payRes === 'failed') {
+            setChatError(payRes === 'closed' ? 'Payment cancelled — your order was not sent.' : 'Payment failed — try again or use another method.')
+            setChatSending(false)
+            return
+          }
+          orderPayload.payment = { method: 'worldpay', status: payRes, gatewayOrderId }
         }
       } catch (e) {
         console.error('Gateway payment failed', e)

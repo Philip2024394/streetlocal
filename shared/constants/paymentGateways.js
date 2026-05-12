@@ -316,9 +316,15 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'serviceKey', label: 'Service Key (test/live)', placeholder: 'T_S_... or L_S_...', type: 'password', required: true, secret: true },
       { key: 'clientKey', label: 'Client Key', placeholder: 'T_C_... or L_C_...', type: 'text', required: true },
+      { key: 'webhookSecret', label: 'Webhook Signing Secret (optional)', placeholder: '••••', type: 'password', secret: true },
     ],
     docUrl: 'https://online.worldpay.com/',
-    setupSteps: ['Apply for Worldpay/FIS merchant account (sales)', 'Enterprise KYC (~6–12 weeks)', 'Dashboard → Integration → Keys', 'Copy Service Key + Client Key'],
+    setupSteps: [
+      'Apply for Worldpay/FIS Online merchant account (sales)',
+      'Enterprise KYC (~6–12 weeks)',
+      'online.worldpay.com → Settings → Integration → API Keys → copy Service Key + Client Key',
+      'Settings → Notifications → Webhooks → Add → URL https://<your-supabase>.functions.supabase.co/functions/v1/worldpay-webhook → enable signing → copy signing secret here',
+    ],
   },
   {
     id: 'ewallet',
