@@ -525,7 +525,7 @@ export default function Admin({ onClose }) {
                 >
                   <option value="">Select app...</option>
                   <option value="food-basic">Food Basic</option>
-                  <option value="food-pro">Food Pro (Restaurant)</option>
+                  <option value="foodlocal-pro">FoodLocal Pro (Restaurant)</option>
                   <option value="landing">Landing Page (streetlocal.live)</option>
                   <option value="admin">Admin Dashboard</option>
                   <option value="other">Other</option>
