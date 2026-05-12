@@ -262,11 +262,12 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'apiKey', label: 'API Key', placeholder: 'AQEyhmf...', type: 'password', required: true, secret: true },
       { key: 'merchantAccount', label: 'Merchant Account name', placeholder: 'YourCompanyECOM', type: 'text', required: true },
-      { key: 'hmacKey', label: 'HMAC Key (webhook)', placeholder: '••••', type: 'password', secret: true },
+      { key: 'hmacKey', label: 'HMAC Key (webhook)', placeholder: '••••', type: 'password', required: true, secret: true },
       { key: 'clientKey', label: 'Client Key', placeholder: 'live_... or test_...', type: 'text' },
+      { key: 'liveUrlPrefix', label: 'Live URL Prefix (live mode only)', placeholder: 'e.g. abcd1234efgh5678-MyCompany', type: 'text' },
     ],
     docUrl: 'https://ca-test.adyen.com/ca/ca/overview/default.shtml',
-    setupSteps: ['Contact Adyen sales (enterprise application)', 'Full enterprise KYC (~30 days)', 'Customer Area → Developers → API Credentials', 'Generate API Key + HMAC + Client Key'],
+    setupSteps: ['Contact Adyen sales (enterprise application)', 'Full enterprise KYC (~30 days)', 'Customer Area → Developers → API Credentials → generate API Key + Client Key', 'Customer Area → Developers → Webhooks → Add → Standard webhook → URL https://<your-supabase>.functions.supabase.co/functions/v1/adyen-webhook → events: AUTHORISATION, CAPTURE, REFUND → generate HMAC key + paste here', 'For live mode only: Customer Area → Developers → API URLs → copy your live URL prefix here (e.g. abcd1234-MyCompany)'],
   },
   {
     id: 'cybersource',

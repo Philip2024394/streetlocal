@@ -6,12 +6,12 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -23,6 +23,7 @@ const GATEWAY_FIELD_MAP = {
   braintree: { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
   mollie:    { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
   hitpay:    { apiKey: 'server_key', salt: 'webhook_secret' },
+  adyen:     { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -973,6 +974,23 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  // Customer-side: Adyen Pay-by-Link hosted redirect. Supports 250+ methods
+  // (cards, iDEAL, Bancontact, Klarna, GiroPay, Sofort, etc.) — vendor
+  // enables which to show in Adyen Customer Area.
+  const payWithAdyen = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description, countryCode }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('adyen-create-link', {
+      body: { vendorId, orderId, amount, currency: currency || 'EUR', items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl, description, countryCode },
+    })
+    if (error || !data?.url) {
+      console.error('Adyen link failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingAdyenOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   // Customer-side: HitPay hosted checkout redirect. Supports cards / PayNow QR /
   // Shopee Pay / GrabPay / Alipay / WeChat Pay.
   const payWithHitPay = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
@@ -1073,6 +1091,7 @@ export default function App() {
   const [vendorBraintreeLive, setVendorBraintreeLive] = useState(false)
   const [vendorMollieLive, setVendorMollieLive] = useState(false)
   const [vendorHitPayLive, setVendorHitPayLive] = useState(false)
+  const [vendorAdyenLive, setVendorAdyenLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1087,11 +1106,12 @@ export default function App() {
     probe('braintree', setVendorBraintreeLive)
     probe('mollie', setVendorMollieLive)
     probe('hitpay', setVendorHitPayLive)
+    probe('adyen', setVendorAdyenLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -1103,6 +1123,7 @@ export default function App() {
         localStorage.removeItem('foodlocalchat_pendingRazorpayOrder')
         localStorage.removeItem('foodlocalchat_pendingMollieOrder')
         localStorage.removeItem('foodlocalchat_pendingHitPayOrder')
+        localStorage.removeItem('foodlocalchat_pendingAdyenOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -1922,8 +1943,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → PayPal → Razorpay → Braintree → Mollie.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2025,6 +2046,18 @@ export default function App() {
           }).catch(() => {})
           await payWithHitPay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to HitPay
+        } else if (activeGateway === 'adyen') {
+          // Adyen Pay-by-Link hosted redirect (250+ payment methods).
+          orderPayload.payment = { method: 'adyen', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Adyen payment',
+          }).catch(() => {})
+          await payWithAdyen({ ...payArgs, customerEmail: '', description: summaryItems })
+          return // browser is now navigating to Adyen
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
