@@ -713,6 +713,7 @@ export default function App() {
   // It's basic UX clarity; vendors have no good reason to hide it.)
   const [promoBanner, setPromoBanner] = useState(() => localStorage.getItem('foodlocalchat_promoBanner') || '')
   const [promoBannerEnabled, setPromoBannerEnabled] = useState(() => localStorage.getItem('foodlocalchat_promoBannerEnabled') === 'true')
+  const [promoBannerEffect, setPromoBannerEffect] = useState(() => localStorage.getItem('foodlocalchat_promoBannerEffect') || 'scroll')
   const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('foodlocalchat_splashEnabled') === 'true')
   const [showSplash, setShowSplash] = useState(() => localStorage.getItem('foodlocalchat_splashEnabled') === 'true')
   const [configPreviewTab, setConfigPreviewTab] = useState('landing')
@@ -1094,6 +1095,7 @@ export default function App() {
   }, [menuBanners.length])
   useEffect(() => { localStorage.setItem('foodlocalchat_promoBanner', promoBanner) }, [promoBanner])
   useEffect(() => { localStorage.setItem('foodlocalchat_promoBannerEnabled', promoBannerEnabled) }, [promoBannerEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_promoBannerEffect', promoBannerEffect) }, [promoBannerEffect])
   useEffect(() => { localStorage.setItem('foodlocalchat_splashEnabled', splashEnabled) }, [splashEnabled])
   // When splash is enabled (initially OR via toggle), show it for 2 seconds then auto-hide.
   // When disabled, hide immediately.
@@ -1946,10 +1948,31 @@ export default function App() {
       {promoBannerEnabled && promoBanner && (
         <div style={{ background: `${accent}20`, borderBottom: `1px solid ${accent}30`, padding: '2px 0' }}>
           <div style={{ overflow: 'hidden', padding: '0 16px' }}>
-            <style>{`@keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-            <div style={{ whiteSpace: 'nowrap', animation: 'promoBannerScroll 14s linear infinite', fontSize: 13, fontWeight: 700, color: '#9CA3AF' }}>
-              {promoBanner.split('\n').map(s => s.trim()).filter(Boolean).join('   ·   ')}
-            </div>
+            <style>{`
+              @keyframes promoBannerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+              @keyframes promoBannerWave { 0% { transform: translateX(100%) translateY(0); } 25% { transform: translateX(50%) translateY(-6px); } 50% { transform: translateX(0%) translateY(0); } 75% { transform: translateX(-50%) translateY(6px); } 100% { transform: translateX(-100%) translateY(0); } }
+              @keyframes promoBannerGlow { 0%, 100% { text-shadow: 0 0 4px rgba(156,163,175,0.4); } 50% { text-shadow: 0 0 14px rgba(156,163,175,0.9), 0 0 22px rgba(156,163,175,0.5); } }
+              @keyframes promoBannerPulse { 0%, 100% { transform: translateX(100%) scale(1); } 50% { transform: translateX(0%) scale(1.06); } }
+              @keyframes promoBannerFade { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+              @keyframes promoBannerShake { 0%, 100% { transform: translateX(100%); } 10% { transform: translateX(95%) translateY(-1px); } 20% { transform: translateX(85%) translateY(1px); } 50% { transform: translateX(0%) translateY(-1px); } 80% { transform: translateX(-85%) translateY(1px); } 90% { transform: translateX(-95%) translateY(-1px); } }
+            `}</style>
+            {(() => {
+              const animMap = {
+                scroll:  'promoBannerScroll 14s linear infinite',
+                wave:    'promoBannerWave 14s ease-in-out infinite',
+                glow:    'promoBannerScroll 14s linear infinite, promoBannerGlow 2s ease-in-out infinite',
+                pulse:   'promoBannerPulse 14s ease-in-out infinite',
+                fade:    'promoBannerScroll 14s linear infinite, promoBannerFade 2.5s ease-in-out infinite',
+                shake:   'promoBannerShake 14s linear infinite',
+                none:    'promoBannerScroll 14s linear infinite',
+              }
+              const anim = animMap[promoBannerEffect] || animMap.scroll
+              return (
+                <div style={{ whiteSpace: 'nowrap', animation: anim, fontSize: 13, fontWeight: 700, color: '#9CA3AF', display: 'inline-block' }}>
+                  {promoBanner.split('\n').map(s => s.trim()).filter(Boolean).join('   ·   ')}
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}
@@ -5496,11 +5519,24 @@ export default function App() {
                             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
                               Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 9 }}>Enter</kbd> for another promo line. Lines join with <span style={{ color: accent, fontWeight: 700 }}> · </span> in the banner. {promoBanner.length}/300
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                               <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                                 <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} />
                               </button>
                               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span>
+                            </div>
+                            <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Effect</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                              {[
+                                { id: 'scroll', label: 'Scroll' },
+                                { id: 'wave',   label: 'Wave' },
+                                { id: 'glow',   label: 'Glow' },
+                                { id: 'pulse',  label: 'Pulse' },
+                                { id: 'fade',   label: 'Fade' },
+                                { id: 'shake',  label: 'Shake' },
+                              ].map(opt => (
+                                <button key={opt.id} onClick={() => setPromoBannerEffect(opt.id)} style={{ padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: promoBannerEffect === opt.id ? accent : 'rgba(255,255,255,0.06)', color: promoBannerEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)', minHeight: 36 }}>{opt.label}</button>
+                              ))}
                             </div>
                           </>
                         )}
