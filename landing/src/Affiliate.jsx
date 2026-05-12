@@ -685,8 +685,8 @@ export default function Affiliate({ onClose }) {
                 a: 'Yes — same commission rate as Food and Products. Services is the newest category (launched 2026), so demand from agents/cleaners/photographers is wide open.',
               },
               {
-                q: 'What if my vendor wants to switch tiers later (Basic → Pro → Premium)?',
-                a: 'You earn commission on the upgrade difference for the first 12 months of the subscription.',
+                q: 'What if my vendor wants to switch tiers later (WhatsApp ⇄ Chat)?',
+                a: 'At the next renewal the vendor picks their tier again from the plan picker — they can switch direction at any monthly boundary. Your first-month commission was paid on whatever they originally chose; switches at renewal are routine vendor admin and don\'t generate additional commission.',
               },
               {
                 q: 'How do I get paid?',
@@ -729,24 +729,21 @@ export default function Affiliate({ onClose }) {
             </p>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
+                // FoodLocal actually ships two plan tiers, not three.
+                // Both run on the same food-basic app; the only difference
+                // is how customer orders reach the vendor.
                 {
-                  name: 'Basic',
+                  name: 'WhatsApp',
                   price: 'Rp 35.000',
                   color: '#FF6B35',
-                  features: ['Ordering app', 'WhatsApp checkout', 'Standard menu'],
+                  features: ['Full FoodLocal storefront', 'Orders go to vendor\'s WhatsApp', 'Customer pays cash / bank / QRIS / connected gateway', 'All 25 themes + custom theme editor', 'PWA install on any phone'],
                 },
                 {
-                  name: 'Pro',
+                  name: 'Chat',
                   price: 'Rp 50.000',
                   color: '#22C55E',
-                  features: ['Everything in Basic', 'Analytics dashboard', 'Daily deals', 'More themes'],
+                  features: ['Everything in WhatsApp tier', 'Orders go to private in-app chat (vendor\'s phone stays hidden)', 'Real-time customer chat thread per order', 'Built-in checkout via 16 payment gateways', 'In-thread refund + escrow controls', 'Multi-staff vendor login'],
                   popular: true,
-                },
-                {
-                  name: 'Premium',
-                  price: 'Rp 75.000',
-                  color: '#8B5CF6',
-                  features: ['Everything in Pro', 'Variants & modifiers', 'Multi-photo products', 'Vendor analytics'],
                 },
               ].map(tier => (
                 <div key={tier.name} style={{ background: '#FAFAFA', border: `1px solid ${tier.popular ? tier.color : '#f0f0f0'}`, borderRadius: 14, padding: 14, position: 'relative' }}>
@@ -771,14 +768,14 @@ export default function Affiliate({ onClose }) {
             </div>
           </div>
 
-          {/* Transaction Fee Disclosure */}
+          {/* Transaction Fee Disclosure — covers both vendor payment paths */}
           <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 18 }}>💳</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E', marginBottom: 4 }}>How your commission is calculated</div>
                 <div style={{ fontSize: 11, color: '#78350F', lineHeight: 1.5 }}>
-                  Your commission is paid out <strong>after payment processing fees</strong> are deducted. For card or Stripe payments that's typically ~2.5–3.5% of the subscription. The processor fee comes out of the affiliate commission, not StreetLocal's share — so your real take-home reflects the net amount received.
+                  Vendors can pay their subscription via Midtrans Snap (QRIS / GoPay / OVO / card, ~2.5% processing fee) or via manual bank transfer using an SL-XXXXXX activation code (no processing fee). When the vendor pays via Midtrans, the gateway fee comes out of the affiliate commission, not StreetLocal's share — your real take-home reflects the net amount received. Bank transfer signups pay zero fees so you keep the full Rp 35.000 or Rp 50.000.
                 </div>
               </div>
             </div>
@@ -789,9 +786,9 @@ export default function Affiliate({ onClose }) {
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 18 }}>🏦</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#065F46', marginBottom: 4 }}>Indonesia: zero processing fees</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#065F46', marginBottom: 4 }}>Bank-transfer route: zero processing fees</div>
                 <div style={{ fontSize: 11, color: '#065F46', lineHeight: 1.5 }}>
-                  Indonesian vendors pay via manual bank transfer with SL-XXXXXX reference codes — <strong>no Stripe, no card fees, no deductions</strong>. You keep the full Rp 35.000 / Rp 50.000 / Rp 75.000 on every first-month signup.
+                  When a vendor activates via an SL-XXXXXX bank-transfer code (instead of Midtrans), <strong>there are no Stripe / card / gateway fees, no deductions</strong> on their subscription. You keep the full Rp 35.000 or Rp 50.000 on every first-month signup paid this way.
                 </div>
               </div>
             </div>

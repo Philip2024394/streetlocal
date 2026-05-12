@@ -32,7 +32,7 @@ const TRANSLATIONS = {
       { q: 'How do I add credit card payments to my app?', a: 'Inside your app\'s vendor admin, open Payment Methods, pick your gateway, and paste your API keys. Most gateways take 10 minutes to sign up (Stripe, HitPay, Mollie). Some need full business verification (Adyen, CyberSource, Worldpay — these are tagged "Enterprise"). Once connected, your customers see a Pay button at checkout. We never charge a fee for this connection — it\'s part of every StreetLocal plan.' },
     ],
     termsTitle: 'Terms & Conditions',
-    termsLastUpdated: 'Last updated: 5 May 2026',
+    termsLastUpdated: 'Last updated: 13 May 2026',
     termsSections: [
       {
         title: '1. Definitions & Interpretation',
@@ -48,7 +48,7 @@ const TRANSLATIONS = {
       },
       {
         title: '4. Subscription Terms & Payment',
-        body: 'Subscriptions are available on a monthly or yearly basis at the prices displayed at the time of purchase. All prices are in Indonesian Rupiah (IDR) unless otherwise stated. Payment is made via bank transfer. Subscription activation occurs after payment verification, which may take up to 24 hours.\n\nSubscriptions auto-renew at the end of each billing cycle unless cancelled. No refunds are provided for partial months, partial years, or unused subscription periods. StreetLocal reserves the right to modify pricing with 30 days written notice. Continued use of the Software after a price change constitutes acceptance of the new pricing.\n\nLate or non-payment may result in immediate suspension or termination of the Software license without notice. StreetLocal is not liable for any business disruption caused by suspension due to non-payment.'
+        body: 'Subscriptions are available on a monthly basis at the prices displayed at the time of purchase. All prices are in Indonesian Rupiah (IDR) unless otherwise stated. Payment is made via Midtrans Snap (which accepts QRIS, GoPay, OVO, ShopeePay, virtual account, and card) or via manual bank transfer using a StreetLocal-issued SL-XXXXXX activation code. Midtrans payments activate automatically once the gateway confirms settlement (usually within seconds). Bank-transfer payments are verified manually and activation may take up to 24 hours.\n\nSubscriptions do not auto-renew. At the end of each 30-day billing cycle the User\'s shop URL is taken offline; the User\'s account, menu, and configuration remain accessible in the dashboard so the User can renew at any time. No refunds are provided for partial months or unused subscription periods. StreetLocal reserves the right to modify pricing with 30 days written notice. Continued use of the Software after a price change constitutes acceptance of the new pricing.\n\nLate or non-payment may result in immediate suspension or termination of the Software license without notice. StreetLocal is not liable for any business disruption caused by suspension due to non-payment.'
       },
       {
         title: '5. Intellectual Property & Restrictions',
@@ -250,7 +250,7 @@ const TRANSLATIONS = {
       { q: 'Bagaimana cara menambahkan pembayaran kartu kredit ke aplikasi saya?', a: 'Di admin vendor aplikasi, buka Payment Methods, pilih gateway Anda, dan tempel API key. Sebagian besar gateway butuh 10 menit untuk daftar (Stripe, HitPay, Mollie). Beberapa perlu verifikasi bisnis lengkap (Adyen, CyberSource, Worldpay — bertanda "Enterprise"). Setelah terhubung, pelanggan Anda melihat tombol Pay saat checkout. Kami tidak pernah memungut biaya untuk koneksi ini — sudah termasuk di semua paket StreetLocal.' },
     ],
     termsTitle: 'Syarat & Ketentuan',
-    termsLastUpdated: 'Terakhir diperbarui: 5 Mei 2026',
+    termsLastUpdated: 'Terakhir diperbarui: 13 Mei 2026',
     termsSections: 'same',
     register: {
       title: 'Siapkan Bisnis Kamu',
