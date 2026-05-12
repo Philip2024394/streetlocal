@@ -6,17 +6,19 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit (Edge Functions + webhooks).
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal
+// (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
   midtrans: { server_key: 'server_key', client_key: 'client_key' },
   stripe:   { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
   xendit:   { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
+  paypal:   { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -921,36 +923,50 @@ export default function App() {
     window.location.href = data.url
     return 'redirecting'
   }
+  // Customer-side: redirect to PayPal's hosted approval page. Returns to our app
+  // with ?paypal_status=success on approve, paypal_status=cancel on backout.
+  const payWithPayPal = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('paypal-create-order', {
+      body: { vendorId, orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl },
+    })
+    if (error || !data?.url) {
+      console.error('PayPal order failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingPayPalOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   // Customer-side: vendor's active live gateway (read once on mount). The order of
-  // preference is Midtrans → Xendit → Stripe; vendors typically configure one.
+  // preference is Midtrans → Xendit → Stripe → PayPal; vendors typically configure one.
   const [vendorStripeLive, setVendorStripeLive] = useState(false)
   const [vendorXenditLive, setVendorXenditLive] = useState(false)
+  const [vendorPayPalLive, setVendorPayPalLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
-    supabase.from('vendor_payment_connections')
-      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'stripe')
+    const probe = (id, setter) => supabase.from('vendor_payment_connections')
+      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', id)
       .maybeSingle()
-      .then(({ data }) => setVendorStripeLive(!!data?.is_active))
+      .then(({ data }) => setter(!!data?.is_active))
       .catch(() => {})
-    supabase.from('vendor_payment_connections')
-      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'xendit')
-      .maybeSingle()
-      .then(({ data }) => setVendorXenditLive(!!data?.is_active))
-      .catch(() => {})
+    probe('stripe', setVendorStripeLive)
+    probe('xendit', setVendorXenditLive)
+    probe('paypal', setVendorPayPalLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const stripeStatus = params.get('stripe_status')
-    const xenditStatus = params.get('xendit_status')
-    if (!stripeStatus && !xenditStatus) return
-    const status = stripeStatus || xenditStatus
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status')
+    if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
     if (status === 'success') {
       try {
         localStorage.removeItem('foodlocalchat_pendingStripeOrder')
         localStorage.removeItem('foodlocalchat_pendingXenditOrder')
+        localStorage.removeItem('foodlocalchat_pendingPayPalOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -1770,8 +1786,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe → PayPal.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -1816,6 +1832,18 @@ export default function App() {
           }).catch(() => {})
           await payWithXendit({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Xendit
+        } else if (activeGateway === 'paypal') {
+          // PayPal is hosted-redirect (Smart Checkout). Same pattern as Stripe/Xendit.
+          orderPayload.payment = { method: 'paypal', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending PayPal payment',
+          }).catch(() => {})
+          await payWithPayPal({ ...payArgs, customerEmail: '' })
+          return // browser is now navigating to PayPal
         }
       } catch (e) {
         console.error('Gateway payment failed', e)

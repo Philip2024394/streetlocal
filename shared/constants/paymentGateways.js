@@ -73,11 +73,12 @@ export const SUPPORTED_GATEWAYS = [
     method: 'oauth-or-email',
     fields: [
       { key: 'merchantEmail', label: 'PayPal Business Email', placeholder: 'shop@example.com', type: 'email', required: true },
-      { key: 'clientId', label: 'REST API Client ID', placeholder: 'AeA1QIZX...', type: 'text' },
-      { key: 'secret', label: 'REST API Secret', placeholder: '••••••••', type: 'password', secret: true },
+      { key: 'clientId', label: 'REST API Client ID', placeholder: 'AeA1QIZX...', type: 'text', required: true },
+      { key: 'secret', label: 'REST API Secret', placeholder: '••••••••', type: 'password', secret: true, required: true },
+      { key: 'webhookId', label: 'Webhook ID', placeholder: 'e.g. 8PT...', type: 'text', required: true },
     ],
     docUrl: 'https://developer.paypal.com/dashboard/applications',
-    setupSteps: ['Upgrade to PayPal Business at paypal.com', 'Create REST API app at developer.paypal.com', 'Copy Client ID + Secret', 'Paste here'],
+    setupSteps: ['Upgrade to PayPal Business at paypal.com', 'developer.paypal.com → Apps & Credentials → Create REST API app → copy Client ID + Secret', 'In the same app → Webhooks → Add webhook → URL https://<your-supabase>.functions.supabase.co/functions/v1/paypal-webhook → events: CHECKOUT.ORDER.APPROVED, PAYMENT.CAPTURE.COMPLETED, PAYMENT.CAPTURE.DENIED, PAYMENT.CAPTURE.REFUNDED', 'Copy the Webhook ID PayPal generates → paste it here'],
   },
   {
     id: 'braintree',
