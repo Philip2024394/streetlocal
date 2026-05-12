@@ -6,11 +6,17 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans only (snap.pay + webhook).
+// Real end-to-end processing is wired for Midtrans + Stripe (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'ewallet', 'bank'])
+// Map gateway-specific field names to our shared DB columns
+// (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
+const GATEWAY_FIELD_MAP = {
+  midtrans: { server_key: 'server_key', client_key: 'client_key' },
+  stripe:   { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+}
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
 )
@@ -828,16 +834,16 @@ export default function App() {
   const saveGatewayConnection = async (gatewayId, config) => {
     if (!supabase || !vendorId) return
     try {
-      await supabase.from('vendor_payment_connections').upsert({
-        vendor_id: vendorId,
-        gateway_id: gatewayId,
-        mode: config.mode || 'test',
-        server_key: config.server_key || null,
-        client_key: config.client_key || null,
-        webhook_secret: config.webhook_secret || null,
-        additional_config: config.additional_config || {},
-        is_active: true,
-      }, { onConflict: 'vendor_id,gateway_id' })
+      const map = GATEWAY_FIELD_MAP[gatewayId] || {}
+      const knownCols = new Set(['server_key', 'client_key', 'webhook_secret'])
+      const row = { vendor_id: vendorId, gateway_id: gatewayId, mode: config.mode || 'test', is_active: true, server_key: null, client_key: null, webhook_secret: null, additional_config: {} }
+      Object.entries(config).forEach(([k, v]) => {
+        if (k === 'mode') return
+        const mapped = map[k] || k
+        if (knownCols.has(mapped)) row[mapped] = v
+        else row.additional_config[k] = v
+      })
+      await supabase.from('vendor_payment_connections').upsert(row, { onConflict: 'vendor_id,gateway_id' })
     } catch (e) { console.warn('gateway save failed', e) }
   }
   const removeGatewayConnection = async (gatewayId) => {
@@ -879,6 +885,53 @@ export default function App() {
       })
     })
   }
+  // Customer-side: redirect to Stripe Checkout. Stripe is hosted-redirect, not modal,
+  // so this function navigates away — the order is persisted as pending and the
+  // webhook flips it to paid. On return Stripe appends ?stripe_status=success&order_id=…
+  // which we handle on next mount (see the useEffect below).
+  const payWithStripe = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('stripe-create-session', {
+      body: { vendorId, orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl },
+    })
+    if (error || !data?.url) {
+      console.error('Stripe session failed', error || data)
+      return 'failed'
+    }
+    // Stash the in-progress order in localStorage so we can re-send the chat after redirect-back
+    try { localStorage.setItem('foodlocalchat_pendingStripeOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
+  // Customer-side: vendor's active live gateway (read once on mount). The order of
+  // preference is Midtrans → Stripe; vendors typically configure one.
+  const [vendorStripeLive, setVendorStripeLive] = useState(false)
+  useEffect(() => {
+    if (!supabase || !vendorId || isVendor) return
+    supabase.from('vendor_payment_connections')
+      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'stripe')
+      .maybeSingle()
+      .then(({ data }) => setVendorStripeLive(!!data?.is_active))
+      .catch(() => {})
+  }, [vendorId, isVendor])
+  // Handle Stripe redirect-back: if URL has ?stripe_status=success&order_id=…, show a toast.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const status = params.get('stripe_status')
+    if (!status) return
+    if (status === 'success') {
+      // Strip the params from the URL so refresh doesn't replay
+      const clean = window.location.pathname
+      window.history.replaceState({}, '', clean)
+      try { localStorage.removeItem('foodlocalchat_pendingStripeOrder') } catch {}
+      alert('✅ Payment received. Your order has been sent.')
+    } else if (status === 'cancel') {
+      const clean = window.location.pathname
+      window.history.replaceState({}, '', clean)
+      alert('Payment cancelled. Your cart was not sent.')
+    }
+  }, [])
   const [showVisitUsWA, setShowVisitUsWA] = useState(() => localStorage.getItem('foodlocalchat_showVisitUsWA') === 'true')
   // Customer-side: knows whether THIS vendor has Midtrans live (loaded from Supabase).
   // Vendor's own localStorage doesn't reach customer devices, so we fetch the flag here.
@@ -1691,28 +1744,47 @@ export default function App() {
       setOrderDone(true)
       return
     }
-    // Midtrans gateway — if vendor has it active, charge before sending the chat order.
-    // Customer sees the Midtrans Snap popup (GoPay/OVO/DANA/QRIS/card). On success
-    // we attach the payment status to the order payload so the vendor sees a ✅ Paid badge.
-    if (vendorMidtransLive) {
+    // Live gateway branching — if a real payment gateway is active for this vendor,
+    // run the charge BEFORE the chat order. Midtrans takes priority over Stripe when
+    // both are connected; vendors typically wire one.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorStripeLive ? 'stripe' : null
+    if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
+      const payArgs = {
+        orderId: gatewayOrderId,
+        amount: grandTotal,
+        currency: 'IDR',
+        items: cart.map(c => ({ id: c.id, price: c.promoPrice || c.price, qty: c.qty, name: c.name })),
+        deliveryFee,
+        customerName: custName || 'Customer',
+        customerPhone: cleanPhone,
+      }
       try {
-        const payRes = await payWithMidtrans({
-          orderId: gatewayOrderId,
-          amount: grandTotal,
-          items: cart.map(c => ({ id: c.id, price: c.promoPrice || c.price, qty: c.qty, name: c.name })),
-          deliveryFee,
-          customerName: custName || 'Customer',
-          customerPhone: cleanPhone,
-        })
-        if (payRes === 'closed' || payRes === 'failed') {
-          setChatError(payRes === 'closed' ? 'Payment cancelled — your order was not sent.' : 'Payment failed — try again or use another method.')
-          setChatSending(false)
-          return
+        if (activeGateway === 'midtrans') {
+          const payRes = await payWithMidtrans(payArgs)
+          if (payRes === 'closed' || payRes === 'failed') {
+            setChatError(payRes === 'closed' ? 'Payment cancelled — your order was not sent.' : 'Payment failed — try again or use another method.')
+            setChatSending(false)
+            return
+          }
+          orderPayload.payment = { method: 'midtrans', status: payRes, gatewayOrderId }
+        } else if (activeGateway === 'stripe') {
+          // Stripe is hosted-redirect: we navigate away. Webhook flips status to paid.
+          orderPayload.payment = { method: 'stripe', status: 'redirecting', gatewayOrderId }
+          // Send the chat now (vendor sees pending order) — payment confirmation arrives via webhook
+          // before redirect, the order row is already created by stripe-create-session
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Stripe payment',
+          }).catch(() => {})
+          await payWithStripe({ ...payArgs, customerEmail: '' })
+          return // browser is now navigating to Stripe
         }
-        orderPayload.payment = { method: 'midtrans', status: payRes, gatewayOrderId }
       } catch (e) {
-        console.error('Midtrans payment failed', e)
+        console.error('Gateway payment failed', e)
         setChatError('Payment could not start. Try again in a moment.')
         setChatSending(false)
         return
