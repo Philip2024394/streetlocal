@@ -4000,7 +4000,7 @@ export default function App() {
               ref: 'SL-' + String(i + 1).padStart(3, '0'),
               label: t.label.replace(/^#\d+[a-z]?\s*/, ''),
               accent: t.accent,
-              img: t.img,
+              img: t.img && typeof t.img === 'string' && t.img.length > 0 ? t.img : null,
               isNew: !!t.isNew,
               popular: false,
               activations: 0,
