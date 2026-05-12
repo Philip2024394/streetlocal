@@ -4515,7 +4515,7 @@ export default function App() {
           {/* Footer — Reset + Color picker button */}
           <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px 24px', gap: 12 }}>
             <button onClick={() => {
-              setShopTheme('custom'); setShopAccentColor(editorColor)
+              setShopTheme('custom'); setShopAccentColor(editorColor); setBtnColor('') // reset button override so it follows the new accent
               localStorage.setItem('foodlocalchat_theme', 'custom'); localStorage.setItem('foodlocalchat_themeBg', themeEditor.url)
               localStorage.setItem('foodlocalchat_accentColor', editorColor); localStorage.setItem('foodlocalchat_bgPos', JSON.stringify(editorPos))
               const bgImg = document.getElementById('app-bg-img')
@@ -5443,6 +5443,7 @@ export default function App() {
                   <button onClick={() => {
                     setShopTheme(theme.id)
                     setShopAccentColor(theme.accent || '#8DC63F')
+                    setBtnColor('') // reset button override so it follows the new accent
                     localStorage.setItem('foodlocalchat_theme', theme.id)
                     localStorage.setItem('foodlocalchat_themeBg', theme.img)
                     localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F')
@@ -5458,7 +5459,7 @@ export default function App() {
                       {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
                     </div>
                   </button>
-                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
+                  <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); setBtnColor(''); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
                     <span style={{ fontSize: 9, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
                   </div>
                 </div>
@@ -6646,7 +6647,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: 10, flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => { setThemePreviewId(null); setThemePreviewImg(null) }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
-                        setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F')
+                        setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); setBtnColor('') // reset button override so it follows the new accent
                         localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', activeImg); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F')
                         const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = activeImg
                         setThemePreviewId(null); setThemePreviewImg(null); setThemeBrowser(false); setShowLanding(true)
