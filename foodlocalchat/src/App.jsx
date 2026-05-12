@@ -898,6 +898,11 @@ export default function App() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatError, setChatError] = useState('')
+  // Order channel picker — shown before submission when the vendor supports
+  // both in-app chat (with payment gateways + real-time replies) and
+  // WhatsApp (pre-filled message, vendor processes manually).
+  const [orderModePickerOpen, setOrderModePickerOpen] = useState(false)
+  const [orderModeRemember, setOrderModeRemember] = useState(false)
   // Escrow hold tracking — set when a Stripe-with-escrow order is found
   // for the current conversation. Drives the "Release funds / Cancel"
   // panel rendered in the order-done view.
@@ -2257,6 +2262,69 @@ export default function App() {
   }
 
   /* --- In-app chat order (foodlocalchat) --- */
+  // Format the current cart as a WhatsApp message body. Plain-text only;
+  // emojis and bullet characters render fine in WhatsApp on every platform.
+  const buildWhatsAppMessage = () => {
+    const note = document.getElementById('orderNote')?.value?.trim() || ''
+    const lines = []
+    lines.push(`Hi ${shopName || 'there'}! I'd like to order:`)
+    lines.push('')
+    cart.forEach((c) => {
+      const price = (c.promoPrice || c.price) * c.qty
+      lines.push(`• ${c.qty}x ${c.name} — ${fmt(price)}`)
+      if (c.modifiers?.length) lines.push(`   (${c.modifiers.map(m => m.name).filter(Boolean).join(', ')})`)
+      if (c.note) lines.push(`   Note: ${c.note}`)
+    })
+    lines.push('')
+    lines.push(`Subtotal: ${fmt(totalPrice)}`)
+    if (delEnabled && deliveryZone?.fee > 0) lines.push(`Delivery${deliveryZone.label ? ` (${deliveryZone.label})` : ''}: ${fmt(deliveryZone.fee)}`)
+    lines.push(`Total: ${fmt(totalPrice + (delEnabled ? (deliveryZone?.fee || 0) : 0))}`)
+    lines.push('')
+    if (custName) lines.push(`Name: ${custName}`)
+    if (custPhone) lines.push(`Phone: ${custPhone}`)
+    if (delEnabled && custAddress) lines.push(`Address: ${custAddress}`)
+    if (note) { lines.push(''); lines.push(`Note: ${note}`) }
+    return lines.join('\n')
+  }
+  // Open WhatsApp with the pre-filled order. Vendor handles confirmation
+  // and payment over WhatsApp directly — no payment gateway involvement.
+  const submitViaWhatsApp = () => {
+    const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
+    if (!cleanPhone) { setChatError('Enter your phone number'); return }
+    const shopPhoneClean = String(shopPhone || '').replace(/[^0-9]/g, '')
+    if (!shopPhoneClean) { setChatError('Vendor WhatsApp number missing'); return }
+    if (orderModeRemember) { try { localStorage.setItem('foodlocalchat_orderModePref', 'whatsapp') } catch {} }
+    setOrderModePickerOpen(false)
+    const text = encodeURIComponent(buildWhatsAppMessage())
+    const url = `https://wa.me/${shopPhoneClean}?text=${text}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+    // Clear cart locally so the user returns to a clean state.
+    setCart([])
+    setCheckoutOpen(false)
+  }
+  // Dispatch in-app chat order (the original path). Closes the picker if open.
+  const submitViaChat = () => {
+    if (orderModeRemember) { try { localStorage.setItem('foodlocalchat_orderModePref', 'chat') } catch {} }
+    setOrderModePickerOpen(false)
+    sendOrder()
+  }
+  // Entry point from the "Send Order" button. Either shows the picker (default)
+  // or dispatches directly if the customer previously chose "always use X".
+  const openOrderModePicker = () => {
+    if (chatSending) return
+    const cleanCust = String(custPhone || '').replace(/[^0-9]/g, '')
+    if (!cleanCust) { setChatError('Enter your phone number'); return }
+    setChatError('')
+    let pref = null
+    try { pref = localStorage.getItem('foodlocalchat_orderModePref') } catch {}
+    const vendorHasWhatsApp = !!String(shopPhone || '').replace(/[^0-9]/g, '')
+    // If vendor has no WhatsApp number, skip the picker entirely.
+    if (!vendorHasWhatsApp) return sendOrder()
+    if (pref === 'whatsapp') return submitViaWhatsApp()
+    if (pref === 'chat') return sendOrder()
+    setOrderModeRemember(false)
+    setOrderModePickerOpen(true)
+  }
   const sendOrder = async () => {
     if (chatSending) return
     setChatError('')
@@ -4758,12 +4826,62 @@ export default function App() {
               )}
             </div>
 
+            {/* Order channel picker — appears when the customer hits Send Order.
+                Lets them choose in-app chat (real-time + gateway payments) or
+                WhatsApp (vendor handles offline). Remembered preference can
+                be cleared from a fresh device. */}
+            {orderModePickerOpen && (
+              <div onClick={() => setOrderModePickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0 }}>
+                <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
+                  <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
+                  <div style={{ fontSize: 17, fontWeight: 800 }}>How would you like to send your order?</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>
+                    Both reach the same vendor.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={submitViaChat}
+                    disabled={chatSending}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', textAlign: 'left', cursor: chatSending ? 'wait' : 'pointer', minHeight: 64 }}
+                  >
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, border: `1px solid ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800 }}>In-app chat</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time replies · pay in-app · order tracking</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submitViaWhatsApp}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(37,211,102,0.3)', background: 'rgba(37,211,102,0.08)', color: '#fff', textAlign: 'left', cursor: 'pointer', minHeight: 64 }}
+                  >
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800 }}>WhatsApp</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Opens WhatsApp with your order pre-filled · vendor confirms there</div>
+                    </div>
+                  </button>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.6)', padding: '6px 2px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={orderModeRemember} onChange={e => setOrderModeRemember(e.target.checked)} style={{ accentColor: accent }} />
+                    <span>Always use this for {shopName}</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setOrderModePickerOpen(false)}
+                    style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Order button — fixed bottom */}
             {!orderDone && cart.length > 0 && (
               <div style={{ padding: '12px 14px 24px', flexShrink: 0 }}>
                 <button
                   style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: accent, color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                  onClick={sendOrder}
+                  onClick={openOrderModePicker}
                   disabled={chatSending}
                 >
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
