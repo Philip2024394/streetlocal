@@ -187,9 +187,10 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'keyId', label: 'Key ID', placeholder: 'rzp_test_... or rzp_live_...', type: 'text', required: true },
       { key: 'keySecret', label: 'Key Secret', placeholder: '••••', type: 'password', required: true, secret: true },
+      { key: 'webhookSecret', label: 'Webhook Secret', placeholder: 'Your Razorpay webhook secret', type: 'password', required: true, secret: true },
     ],
     docUrl: 'https://dashboard.razorpay.com/app/keys',
-    setupSteps: ['Sign up at razorpay.com (Indian PAN + bank account required)', 'Complete merchant KYC', 'Dashboard → Account & Settings → API Keys', 'Generate and paste your Key ID + Secret'],
+    setupSteps: ['Sign up at razorpay.com (Indian PAN + bank account required)', 'Complete merchant KYC', 'Dashboard → Account & Settings → API Keys → generate + paste Key ID + Secret', 'Dashboard → Account & Settings → Webhooks → Add → URL https://<your-supabase>.functions.supabase.co/functions/v1/razorpay-webhook → events: payment.captured, payment.failed, payment_link.paid, refund.processed → set a Secret → paste that secret here too'],
   },
   {
     id: 'hitpay',
