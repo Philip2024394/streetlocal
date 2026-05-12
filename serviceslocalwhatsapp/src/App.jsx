@@ -369,6 +369,12 @@ export default function App() {
   const accentLight = accent + '25'
   const accentBorder = accent + '40'
   const isCustomAccent = shopAccentColor !== '#8DC63F'
+  // Theme-driven accent for logo circle + main CTA button — looked up from the
+  // current theme preset. Carpenter (#5) is excluded because its brown reads
+  // poorly as a button/logo color; it keeps the standard default.
+  const currentThemePreset = THEME_PRESETS.find(t => t.id === shopTheme)
+  const useThemeAccent = currentThemePreset && shopTheme !== 'carpenter'
+  const themeAccent = useThemeAccent ? currentThemePreset.accent : null
   const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('vendorservices_bgPos')) } catch { return null } })()
   const bgStyle = shopTheme === 'custom' && savedBgPos ? { objectFit: 'cover', objectPosition: `${savedBgPos.x}% ${savedBgPos.y}%` } : { objectFit: 'fill' }
   const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('vendorservices_delBase')) || 5000)
@@ -1164,12 +1170,12 @@ export default function App() {
             shopLogoStyle === 'bare' ? (
               <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 200, height: 200, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
             ) : (
-              <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
+              <div style={{ width: 156, height: 156, borderRadius: 78, background: themeAccent || (isCustomAccent ? accent : 'rgba(0,0,0,0.4)'), display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)' }}>
                 <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 160, height: 160, borderRadius: 80, objectFit: 'cover', marginTop: 18 }} />
               </div>
             )
           ) : shopLogoStyle !== 'off' ? (
-            <div style={{ width: 90, height: 90, borderRadius: 45, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
+            <div style={{ width: 90, height: 90, borderRadius: 45, background: themeAccent || (isCustomAccent ? accent : 'rgba(0,0,0,0.4)'), backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#fff', marginBottom: 16, border: '3px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{shopName.charAt(0).toUpperCase()}</div>
           ) : null}
 
           {/* Shop name + tagline + city */}
@@ -1247,9 +1253,9 @@ export default function App() {
             borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12,
             cursor: 'pointer', fontSize: 15, fontWeight: 700,
             position: 'relative', overflow: 'hidden',
-            background: btnColor || (isCustomAccent ? accent : '#FACC15'),
-            color: (btnColor || (isCustomAccent ? accent : '#FACC15')) === '#FACC15' ? '#000' : '#fff',
-            ...(btnGlow ? { boxShadow: `0 0 16px ${btnColor || accent}80, 0 0 32px ${btnColor || accent}40` } : {}),
+            background: btnColor || themeAccent || (isCustomAccent ? accent : '#FACC15'),
+            color: (btnColor || themeAccent || (isCustomAccent ? accent : '#FACC15')) === '#FACC15' ? '#000' : '#fff',
+            ...(btnGlow ? { boxShadow: `0 0 16px ${btnColor || themeAccent || accent}80, 0 0 32px ${btnColor || themeAccent || accent}40` } : {}),
           }}>
             <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: btnShape === 'pill' ? 50 : btnShape === 'square' ? 4 : 12 }}>
               <div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} />
