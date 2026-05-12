@@ -6,25 +6,26 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd + Checkout.com
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
-  midtrans:  { server_key: 'server_key', client_key: 'client_key' },
-  stripe:    { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
-  xendit:    { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
-  paypal:    { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
-  razorpay:  { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
-  braintree: { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
-  mollie:    { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
-  hitpay:    { apiKey: 'server_key', salt: 'webhook_secret' },
-  adyen:     { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
-  rapyd:     { accessKey: 'server_key', secretKey: 'client_key' }, // secretKey is also the webhook HMAC key
+  midtrans:       { server_key: 'server_key', client_key: 'client_key' },
+  stripe:         { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+  xendit:         { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
+  paypal:         { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
+  razorpay:       { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
+  braintree:      { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
+  mollie:         { liveApiKey: 'server_key', testApiKey: 'client_key' }, // mode column decides which is used
+  hitpay:         { apiKey: 'server_key', salt: 'webhook_secret' },
+  adyen:          { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
+  rapyd:          { accessKey: 'server_key', secretKey: 'client_key' }, // secretKey is also the webhook HMAC key
+  'checkout-com': { secretKey: 'server_key', publicKey: 'client_key', webhookSecret: 'webhook_secret' },
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -975,6 +976,22 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  // Customer-side: Checkout.com Payment Link hosted redirect. Cards + Apple
+  // Pay + Google Pay + Klarna + iDEAL + Bancontact + Sofort + Multibanco etc.
+  const payWithCheckoutCom = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description, billingCountry }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('checkout-com-create-link', {
+      body: { vendorId, orderId, amount, currency: currency || 'USD', items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl, description, billingCountry },
+    })
+    if (error || !data?.url) {
+      console.error('Checkout.com link failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingCkoOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   // Customer-side: Rapyd hosted Checkout redirect. 900+ local methods across
   // 100+ countries (local wallets / bank transfers / cards / etc.) — vendor
   // enables which to show in Rapyd dashboard.
@@ -1111,6 +1128,7 @@ export default function App() {
   const [vendorHitPayLive, setVendorHitPayLive] = useState(false)
   const [vendorAdyenLive, setVendorAdyenLive] = useState(false)
   const [vendorRapydLive, setVendorRapydLive] = useState(false)
+  const [vendorCkoLive, setVendorCkoLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1127,11 +1145,12 @@ export default function App() {
     probe('hitpay', setVendorHitPayLive)
     probe('adyen', setVendorAdyenLive)
     probe('rapyd', setVendorRapydLive)
+    probe('checkout-com', setVendorCkoLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -1145,6 +1164,7 @@ export default function App() {
         localStorage.removeItem('foodlocalchat_pendingHitPayOrder')
         localStorage.removeItem('foodlocalchat_pendingAdyenOrder')
         localStorage.removeItem('foodlocalchat_pendingRapydOrder')
+        localStorage.removeItem('foodlocalchat_pendingCkoOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -1964,8 +1984,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Rapyd → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorRapydLive ? 'rapyd' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Checkout.com → Rapyd → PayPal → Razorpay → Braintree → Mollie.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2091,6 +2111,18 @@ export default function App() {
           }).catch(() => {})
           await payWithRapyd({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to Rapyd
+        } else if (activeGateway === 'checkout-com') {
+          // Checkout.com Payment Link hosted redirect.
+          orderPayload.payment = { method: 'checkout-com', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Checkout.com payment',
+          }).catch(() => {})
+          await payWithCheckoutCom({ ...payArgs, customerEmail: '', description: summaryItems })
+          return // browser is now navigating to Checkout.com
         }
       } catch (e) {
         console.error('Gateway payment failed', e)

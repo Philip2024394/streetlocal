@@ -113,9 +113,10 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'publicKey', label: 'Public Key', placeholder: 'pk_sbox_... or pk_...', type: 'text', required: true },
       { key: 'secretKey', label: 'Secret Key', placeholder: 'sk_sbox_... or sk_...', type: 'password', required: true, secret: true },
+      { key: 'webhookSecret', label: 'Webhook Signature Key', placeholder: 'Your webhook signing key', type: 'password', required: true, secret: true },
     ],
     docUrl: 'https://dashboard.checkout.com/developers/keys',
-    setupSteps: ['Apply at checkout.com (KYC required)', 'Wait for approval (3–7 days typical)', 'Dashboard → Developers → Keys', 'Copy Public + Secret keys'],
+    setupSteps: ['Apply at checkout.com (KYC required)', 'Wait for approval (3–7 days typical)', 'Dashboard → Developers → Keys → copy Public + Secret keys', 'Dashboard → Developers → Webhooks → Add → URL https://<your-supabase>.functions.supabase.co/functions/v1/checkout-com-webhook → events: payment_captured, payment_declined, payment_refunded → Copy the Signature Key shown when you save → paste here'],
   },
   {
     id: 'authorize-net',
