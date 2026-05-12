@@ -32,6 +32,27 @@ const GATEWAY_FIELD_MAP = {
   cybersource:     { merchantId: 'server_key', apiKeyId: 'client_key', sharedSecret: 'webhook_secret' }, // profileId/accessKey/secretKey (Secure Acceptance) → additional_config
   worldpay:        { serviceKey: 'server_key', clientKey: 'client_key', webhookSecret: 'webhook_secret' },
 }
+// gateway_id → Edge Function name that refunds it. Most are <id>-refund
+// but a few naming quirks are baked into history (fomo-pay → fomopay-refund,
+// 2checkout → twocheckout-refund).
+const REFUND_FUNCTION_BY_GATEWAY = {
+  midtrans: 'midtrans-refund',
+  stripe: 'stripe-refund',
+  xendit: 'xendit-refund',
+  paypal: 'paypal-refund',
+  razorpay: 'razorpay-refund',
+  braintree: 'braintree-refund',
+  mollie: 'mollie-refund',
+  hitpay: 'hitpay-refund',
+  adyen: 'adyen-refund',
+  rapyd: 'rapyd-refund',
+  'checkout-com': 'checkout-com-refund',
+  'fomo-pay': 'fomopay-refund',
+  'authorize-net': 'authorize-net-refund',
+  '2checkout': 'twocheckout-refund',
+  cybersource: 'cybersource-refund',
+  worldpay: 'worldpay-refund',
+}
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
 )
@@ -348,7 +369,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
 }
 
 /* ─── Vendor thread view (inbox conversation) ─── */
-function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, setDraft, onSend, onStatus }) {
+function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, setDraft, onSend, onStatus, order, onReleaseEscrow, onCancelEscrow, onRefund, payActionBusy, payActionMsg }) {
   const scrollRef = useRef(null)
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -399,6 +420,60 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
           <div style={{ marginTop: 4, opacity: 0.8 }}>Phone: {op.customer?.phone}</div>
         </div>
       )}
+      {order && order.gateway_id && (() => {
+        const isHeld = order.escrow_status === 'held'
+        const isPaid = order.payment_status === 'paid' && order.escrow_status !== 'held'
+        const isRefunded = order.payment_status === 'refunded'
+        const isCancelled = order.payment_status === 'cancelled' || order.escrow_status === 'cancelled'
+        const statusLabel =
+          isHeld ? 'Funds held in escrow' :
+          isRefunded ? 'Refunded' :
+          isCancelled ? 'Cancelled' :
+          isPaid ? 'Paid' :
+          order.payment_status === 'pending' ? 'Pending payment' :
+          order.payment_status === 'failed' ? 'Payment failed' : order.payment_status
+        const badgeColor =
+          isHeld ? '#F59E0B' :
+          isPaid ? '#16A34A' :
+          isRefunded ? '#94A3B8' :
+          isCancelled ? '#64748B' :
+          order.payment_status === 'failed' ? '#DC2626' : '#3B82F6'
+        return (
+          <div style={{ ...sty.orderCard, paddingTop: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontWeight: 800, fontSize: 13 }}>Payment</div>
+              <span style={{ background: badgeColor, color: '#fff', fontSize: 10, fontWeight: 900, padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{statusLabel}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{order.gateway_id}</span>
+            </div>
+            {isHeld && order.escrow_release_at && (
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>
+                Auto-releases {new Date(order.escrow_release_at).toLocaleString()}
+              </div>
+            )}
+            {isHeld && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" disabled={payActionBusy} onClick={onReleaseEscrow}
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                  {payActionBusy ? 'Working…' : 'Release funds'}
+                </button>
+                <button type="button" disabled={payActionBusy} onClick={onCancelEscrow}
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 12, fontWeight: 700, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                  Cancel hold
+                </button>
+              </div>
+            )}
+            {isPaid && (
+              <button type="button" disabled={payActionBusy} onClick={onRefund}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.12)', color: '#FCA5A5', fontSize: 12, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                {payActionBusy ? 'Working…' : 'Issue refund'}
+              </button>
+            )}
+            {payActionMsg && (
+              <div style={{ marginTop: 8, fontSize: 11, color: payActionMsg.toLowerCase().includes('fail') ? '#FCA5A5' : '#86EFAC' }}>{payActionMsg}</div>
+            )}
+          </div>
+        )
+      })()}
       <div style={sty.msgList} ref={scrollRef}>
         {messages.filter(m => !m.order_payload).map((m) => (
           <div key={m.id} style={sty.msgRow(m.sender_role)}>
@@ -834,6 +909,11 @@ export default function App() {
   const [vendorTab, setVendorTab] = useState('shop') // 'shop' | 'orders' | 'settings'
   const [vendorConversations, setVendorConversations] = useState([])
   const [vendorActiveConv, setVendorActiveConv] = useState(null)
+  // The current conversation's payment row (escrow status, gateway, totals).
+  // Hydrated when the vendor opens a conversation; null when no order exists yet.
+  const [vendorActiveOrder, setVendorActiveOrder] = useState(null)
+  const [vendorPayActionBusy, setVendorPayActionBusy] = useState(false)
+  const [vendorPayActionMsg, setVendorPayActionMsg] = useState('')
   const [vendorThreadMessages, setVendorThreadMessages] = useState([])
   const [vendorReplyDraft, setVendorReplyDraft] = useState('')
   const [vendorChimePrimed, setVendorChimePrimed] = useState(() => localStorage.getItem('foodlocalchat_chimePrimed') === 'true')
@@ -2596,16 +2676,68 @@ export default function App() {
   }
 
   /* --- Vendor: open conversation thread --- */
+  const fetchVendorActiveOrder = useCallback(async (convId) => {
+    if (!supabase || !convId) { setVendorActiveOrder(null); return }
+    try {
+      const { data } = await supabase
+        .from('orders')
+        .select('id, gateway_id, total, currency, payment_status, escrow_status, escrow_release_at, gateway_transaction_id')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      setVendorActiveOrder(data || null)
+    } catch { setVendorActiveOrder(null) }
+  }, [supabase])
   const openVendorConv = useCallback(async (conv) => {
     primeVendorChime()
     setVendorActiveConv(conv)
+    setVendorPayActionMsg('')
     const msgs = await loadMessages(conv.id, 200)
     setVendorThreadMessages(msgs)
     await clearVendorUnread(conv.id)
+    fetchVendorActiveOrder(conv.id)
     // Refresh list to clear badge
     const list = await loadVendorConversations(vendorId)
     setVendorConversations(list)
-  }, [vendorId, primeVendorChime])
+  }, [vendorId, primeVendorChime, fetchVendorActiveOrder])
+  // Vendor: release a held Stripe escrow order. Captures the PaymentIntent.
+  const vendorReleaseEscrow = async () => {
+    if (!supabase || !vendorActiveOrder || vendorPayActionBusy) return
+    setVendorPayActionBusy(true); setVendorPayActionMsg('')
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-escrow-release', { body: { orderId: vendorActiveOrder.id, actor: 'vendor' } })
+      if (error || !data?.ok) setVendorPayActionMsg(data?.error || 'Release failed.')
+      else { setVendorPayActionMsg('Funds released to your Stripe account.'); fetchVendorActiveOrder(vendorActiveConv?.id) }
+    } catch (e) { setVendorPayActionMsg(e?.message || 'Release failed') }
+    finally { setVendorPayActionBusy(false) }
+  }
+  // Vendor: cancel a held Stripe escrow order. Voids the auth (no charge).
+  const vendorCancelEscrow = async () => {
+    if (!supabase || !vendorActiveOrder || vendorPayActionBusy) return
+    if (!window.confirm('Cancel this hold? The customer\'s card will not be charged.')) return
+    setVendorPayActionBusy(true); setVendorPayActionMsg('')
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-escrow-cancel', { body: { orderId: vendorActiveOrder.id, actor: 'vendor', reason: 'requested_by_customer' } })
+      if (error || !data?.ok) setVendorPayActionMsg(data?.error || 'Cancel failed.')
+      else { setVendorPayActionMsg('Hold cancelled — customer not charged.'); fetchVendorActiveOrder(vendorActiveConv?.id) }
+    } catch (e) { setVendorPayActionMsg(e?.message || 'Cancel failed') }
+    finally { setVendorPayActionBusy(false) }
+  }
+  // Vendor: refund a paid order via its gateway's refund Edge Function.
+  const vendorRefund = async () => {
+    if (!supabase || !vendorActiveOrder || vendorPayActionBusy) return
+    const fnName = REFUND_FUNCTION_BY_GATEWAY[vendorActiveOrder.gateway_id]
+    if (!fnName) { setVendorPayActionMsg('Refund not supported for this payment method.'); return }
+    if (!window.confirm(`Refund ${vendorActiveOrder.currency || ''} ${vendorActiveOrder.total}? This cannot be undone.`)) return
+    setVendorPayActionBusy(true); setVendorPayActionMsg('')
+    try {
+      const { data, error } = await supabase.functions.invoke(fnName, { body: { orderId: vendorActiveOrder.id, reason: 'Vendor-initiated refund' } })
+      if (error || !data?.ok) setVendorPayActionMsg(data?.error || 'Refund failed.')
+      else { setVendorPayActionMsg('Refund issued.'); fetchVendorActiveOrder(vendorActiveConv?.id) }
+    } catch (e) { setVendorPayActionMsg(e?.message || 'Refund failed') }
+    finally { setVendorPayActionBusy(false) }
+  }
 
   const sendVendorReply = async () => {
     if (!vendorActiveConv) return
@@ -4686,11 +4818,17 @@ export default function App() {
               messages={vendorThreadMessages}
               accent={accent}
               fmt={fmt}
-              onBack={() => setVendorActiveConv(null)}
+              onBack={() => { setVendorActiveConv(null); setVendorActiveOrder(null); setVendorPayActionMsg('') }}
               draft={vendorReplyDraft}
               setDraft={setVendorReplyDraft}
               onSend={sendVendorReply}
               onStatus={sendVendorStatus}
+              order={vendorActiveOrder}
+              onReleaseEscrow={vendorReleaseEscrow}
+              onCancelEscrow={vendorCancelEscrow}
+              onRefund={vendorRefund}
+              payActionBusy={vendorPayActionBusy}
+              payActionMsg={vendorPayActionMsg}
             />
           )}
         </div>
