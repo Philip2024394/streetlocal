@@ -2146,7 +2146,7 @@ export default function App() {
       {/* --- Menu Banner Image carousel --- */}
       {menuBanners.length > 0 && (
         <div style={{ margin: '4px 12px 0' }}>
-          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '3 / 1', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
+          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '8 / 3', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
             {menuBanners.map((url, i) => (
               <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
             ))}
