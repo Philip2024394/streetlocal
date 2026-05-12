@@ -5,7 +5,15 @@ import ActivatePage from './ActivatePage'
 import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
-import { SUPPORTED_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
+import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
+// Real end-to-end processing is wired for Midtrans only (snap.pay + webhook).
+// QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
+// Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
+// previously vendors could "connect" Stripe etc. but no payment actually went through.
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'ewallet', 'bank'])
+const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
+  g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
+)
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
@@ -815,7 +823,74 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem('foodlocalchat_payment_gateways', JSON.stringify(paymentGateways)) } catch {}
   }, [paymentGateways])
+  // Persist gateway connections to Supabase too (so Edge Functions can use the keys server-side).
+  // localStorage stays as a UI cache only.
+  const saveGatewayConnection = async (gatewayId, config) => {
+    if (!supabase || !vendorId) return
+    try {
+      await supabase.from('vendor_payment_connections').upsert({
+        vendor_id: vendorId,
+        gateway_id: gatewayId,
+        mode: config.mode || 'test',
+        server_key: config.server_key || null,
+        client_key: config.client_key || null,
+        webhook_secret: config.webhook_secret || null,
+        additional_config: config.additional_config || {},
+        is_active: true,
+      }, { onConflict: 'vendor_id,gateway_id' })
+    } catch (e) { console.warn('gateway save failed', e) }
+  }
+  const removeGatewayConnection = async (gatewayId) => {
+    if (!supabase || !vendorId) return
+    try {
+      await supabase.from('vendor_payment_connections').delete()
+        .eq('vendor_id', vendorId).eq('gateway_id', gatewayId)
+    } catch (e) { console.warn('gateway remove failed', e) }
+  }
+  // Load Snap.js once when a Midtrans-using checkout is open.
+  const loadSnapJs = (mode, clientKey) => new Promise((resolve, reject) => {
+    if (window.snap) return resolve()
+    const s = document.createElement('script')
+    s.src = mode === 'live'
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js'
+    s.setAttribute('data-client-key', clientKey || '')
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('Could not load Midtrans Snap'))
+    document.head.appendChild(s)
+  })
+  // Customer-side: charge via Midtrans Snap. Returns 'paid' | 'pending' | 'failed' | 'closed'.
+  const payWithMidtrans = async ({ orderId, amount, items, deliveryFee, customerName, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    const { data, error } = await supabase.functions.invoke('midtrans-create-token', {
+      body: { vendorId, orderId, amount, items, deliveryFee, customerName, customerPhone, conversationId },
+    })
+    if (error || !data?.snapToken) {
+      console.error('Snap token failed', error || data)
+      return 'failed'
+    }
+    await loadSnapJs(data.mode, data.clientKey)
+    return new Promise((resolve) => {
+      window.snap.pay(data.snapToken, {
+        onSuccess: () => resolve('paid'),
+        onPending: () => resolve('pending'),
+        onError:   () => resolve('failed'),
+        onClose:   () => resolve('closed'),
+      })
+    })
+  }
   const [showVisitUsWA, setShowVisitUsWA] = useState(() => localStorage.getItem('foodlocalchat_showVisitUsWA') === 'true')
+  // Customer-side: knows whether THIS vendor has Midtrans live (loaded from Supabase).
+  // Vendor's own localStorage doesn't reach customer devices, so we fetch the flag here.
+  const [vendorMidtransLive, setVendorMidtransLive] = useState(false)
+  useEffect(() => {
+    if (!supabase || !vendorId || isVendor) return
+    supabase.from('vendor_payment_connections')
+      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'midtrans')
+      .maybeSingle()
+      .then(({ data }) => setVendorMidtransLive(!!data?.is_active))
+      .catch(() => {})
+  }, [vendorId, isVendor])
   const [flashConvId, setFlashConvId] = useState(null)
   const chimeAudioRef = useRef(null)
 
@@ -1615,6 +1690,33 @@ export default function App() {
       setChatSending(false)
       setOrderDone(true)
       return
+    }
+    // Midtrans gateway — if vendor has it active, charge before sending the chat order.
+    // Customer sees the Midtrans Snap popup (GoPay/OVO/DANA/QRIS/card). On success
+    // we attach the payment status to the order payload so the vendor sees a ✅ Paid badge.
+    if (vendorMidtransLive) {
+      const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
+      try {
+        const payRes = await payWithMidtrans({
+          orderId: gatewayOrderId,
+          amount: grandTotal,
+          items: cart.map(c => ({ id: c.id, price: c.promoPrice || c.price, qty: c.qty, name: c.name })),
+          deliveryFee,
+          customerName: custName || 'Customer',
+          customerPhone: cleanPhone,
+        })
+        if (payRes === 'closed' || payRes === 'failed') {
+          setChatError(payRes === 'closed' ? 'Payment cancelled — your order was not sent.' : 'Payment failed — try again or use another method.')
+          setChatSending(false)
+          return
+        }
+        orderPayload.payment = { method: 'midtrans', status: payRes, gatewayOrderId }
+      } catch (e) {
+        console.error('Midtrans payment failed', e)
+        setChatError('Payment could not start. Try again in a moment.')
+        setChatSending(false)
+        return
+      }
     }
     const res = await sendCustomerOrder({
       vendorId,
@@ -4033,14 +4135,20 @@ export default function App() {
         const current = paymentGateways[gw.id] || {}
         const updateField = (key, value) => setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), [key]: value } }))
         const isConnected = !!current.connected
-        const save = () => {
+        const save = async () => {
           const missing = gw.fields.filter(f => f.required && !(current[f.key] || '').toString().trim())
           if (missing.length) { alert('Required: ' + missing.map(m => m.label).join(', ')); return }
-          setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: current.mode || 'test', connectedAt: new Date().toISOString() } }))
+          // Build a config object containing only the fields the gateway needs
+          const config = { mode: current.mode || 'test' }
+          gw.fields.forEach(f => { if (current[f.key]) config[f.key] = current[f.key] })
+          // Persist to Supabase so Edge Functions can use the keys
+          await saveGatewayConnection(gw.id, config)
+          setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: config.mode, connectedAt: new Date().toISOString() } }))
           setSetupGatewayId(null)
         }
-        const disconnect = () => {
+        const disconnect = async () => {
           if (!confirm(`Disconnect ${gw.name}? Your keys will be removed and payments via this gateway will stop working.`)) return
+          await removeGatewayConnection(gw.id)
           setPaymentGateways(p => { const next = { ...p }; delete next[gw.id]; return next })
           setSetupGatewayId(null)
         }
