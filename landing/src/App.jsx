@@ -1692,6 +1692,7 @@ export default function App() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>© 2026 StreetLocal.live</div>
         <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setVendorAuthApp({ id: 'basic', name: 'FoodLocal' }); setVendorAuthMode('login'); setVendorAuthError(''); setVendorAuthOpen(true) }} style={{ background: 'none', border: '1px solid rgba(255,214,0,0.4)', borderRadius: 6, padding: '4px 10px', fontSize: 11, color: '#FFD600', cursor: 'pointer', fontWeight: 700 }}>Vendor Login</button>
           <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('services') }} style={{ background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 500 }}>Terms</button>
           <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('privacy') }} style={{ background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 500 }}>Privacy</button>
         </div>
