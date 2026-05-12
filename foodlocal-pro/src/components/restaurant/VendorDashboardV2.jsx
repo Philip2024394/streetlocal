@@ -52,16 +52,17 @@ const HELP = {
       'Update your store name, photo, and address here.',
       'Set your opening and closing hours — customers see this on your page.',
       'Add your bank details so customers can pay you directly.',
-      'Keep your phone number updated so drivers can contact you.',
+      'Keep your phone number updated so customers can reach you for delivery.',
     ],
   },
-  payouts: {
-    title: 'Payouts',
+  payments: {
+    title: 'Payment Methods',
     steps: [
-      'INDOO takes 10% commission on every order (7% if customer pays via bank transfer).',
-      'Commission is tracked here. You pay INDOO from your wallet balance.',
-      'When your commission owed exceeds Rp 50,000, please top up your wallet.',
-      'All customer payments go directly to your bank account — INDOO never holds your money.',
+      'FoodLocal Pro is a flat monthly subscription — there is NO commission on orders. You keep 100% of every payment.',
+      'Connect your own payment gateway (Stripe, Midtrans, Xendit, PayPal, and 12 more) so customers can pay by card / e-wallet / QRIS directly at checkout.',
+      'You can also accept cash, bank transfer, or QRIS without connecting any gateway — vendor confirms payment manually.',
+      'Customer card data flows straight to your gateway — StreetLocal never sees or holds your money.',
+      'You manage refunds, disputes, and payouts from your gateway\'s own dashboard.',
     ],
   },
   deals: {
@@ -205,6 +206,11 @@ function MenuCard({ item, onToggle, onEdit, onDelete }) {
 
 const MENU_CATS = ['All', 'Main', 'Sides', 'Drinks', 'Snacks', 'Desserts', 'Rice', 'Noodles', 'Gorengan', 'Tea & Coffee', 'Juice & Smoothie', 'Satay & Grilled']
 
+// FoodLocal Pro is a subscription-only product — no commission, no
+// prepaid wallet for paying StreetLocal. Vendors keep 100% of orders.
+// Replaces the old "Payouts" + "Wallet & Top Up" nav entries (which
+// existed for the indoo commission model) with "Payment Methods" —
+// where the vendor connects their own gateway, same as food-basic.
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: '📊' },
   { id: 'menu', label: 'Menu', icon: '🍽️' },
@@ -212,10 +218,9 @@ const NAV_ITEMS = [
   { id: 'events', label: 'Events & Venue', icon: '🎉' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
-  { id: 'payouts', label: 'Payouts', icon: '💰' },
+  { id: 'payments', label: 'Payment Methods', icon: '💳' },
   { id: 'banners', label: 'Banner Ads', icon: '📢' },
   { id: 'extras', label: 'Extras & Add-ons', icon: '🍟' },
-  { id: 'wallet', label: 'Wallet & Top Up', icon: '💳' },
   { id: 'deals', label: 'Deals & Promotions', icon: '🏷️' },
 ]
 
@@ -267,7 +272,7 @@ const BANNER_TEMPLATES = [
 
 const BANNER_PRICE = 100000 // Rp 100.000 per 24 hours
 const BANNER_STORAGE = 'indoo_vendor_banners'
-const BANNER_BANK = { bank: 'BCA', number: '8810 2233 4455', holder: 'PT INDOO Indonesia' }
+const BANNER_BANK = { bank: 'BCA', number: '8810 2233 4455', holder: 'PT FoodLocal Pro Indonesia' }
 
 function loadVendorBanners() {
   try { return JSON.parse(localStorage.getItem(BANNER_STORAGE) || '[]') } catch { return [] }
@@ -1025,32 +1030,28 @@ export default function VendorDashboardV2({ onClose }) {
           </>
         )}
 
-        {/* ══════════ PAGE: PAYOUTS ══════════ */}
-        {page === 'payouts' && (
+        {/* ══════════ PAGE: PAYMENT METHODS ══════════ */}
+        {/* FoodLocal Pro has no commission, so there's nothing to "pay out"
+            to StreetLocal. This section will host the gateway-connection UI
+            (same 16-gateway flow as food-basic) in a follow-up phase. */}
+        {page === 'payments' && (
           <>
-            <SectionHeader title="Payouts" helpKey="payouts" />
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-              <StatCard label="Balance" value={fmtRp(1250000)} color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/mmmass-removebg-preview.png" />
-              <StatCard label="Commission Owed" value={fmtRp(187000)} color="#EF4444" icon="📊" />
+            <SectionHeader title="Payment Methods" helpKey="payments" />
+            <div style={{ background: 'rgba(141,198,63,0.06)', border: '1px solid rgba(141,198,63,0.15)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#8DC63F', marginBottom: 6 }}>You keep 100% of every order</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>FoodLocal Pro is a flat monthly subscription. There is no commission on orders, no transaction fees from StreetLocal, no payout reconciliation. Customer payments flow through your own connected gateway directly to your bank account.</div>
             </div>
-
-            <SectionHeader title="Recent Transactions" />
-            {[
-              { type: 'Order', ref: 'ORD-1001', amount: 66000, commission: 6600, date: 'Today' },
-              { type: 'Order', ref: 'ORD-0998', amount: 45000, commission: 4500, date: 'Yesterday' },
-              { type: 'Payout', ref: 'PAY-0055', amount: -500000, commission: 0, date: '2 days ago' },
-            ].map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{t.ref}</span>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>{t.date}</span>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: t.amount > 0 ? '#8DC63F' : '#EF4444' }}>{t.amount > 0 ? '+' : ''}{fmtRp(Math.abs(t.amount))}</span>
-                  {t.commission > 0 && <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'block' }}>-{fmtRp(t.commission)} commission</span>}
-                </div>
-              </div>
-            ))}
+            <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Accept payments three ways:</div>
+              <ol style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.7 }}>
+                <li><strong style={{ color: '#fff' }}>Cash / bank transfer / QRIS</strong> — no setup needed. Customer pays you directly; you confirm the order manually.</li>
+                <li><strong style={{ color: '#fff' }}>WhatsApp coordination</strong> — order details go to your WhatsApp; agree payment method there.</li>
+                <li><strong style={{ color: '#fff' }}>Connect a payment gateway</strong> — Stripe, Midtrans, Xendit, PayPal, Adyen, Worldpay, CyberSource, Checkout.com, Authorize.net, Mollie, Razorpay, HitPay, FOMO Pay, Rapyd, 2Checkout, or Braintree. Customer pays by card / e-wallet / QRIS at checkout, money lands in your gateway account.</li>
+              </ol>
+            </div>
+            <div style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 14, padding: 14, color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.55 }}>
+              Gateway connection UI lands in a follow-up release — it reuses the same 16-gateway integration as FoodLocal basic (no extra cost). For now, run on cash / bank / QRIS or coordinate via WhatsApp / app chat.
+            </div>
           </>
         )}
 
@@ -1172,10 +1173,13 @@ export default function VendorDashboardV2({ onClose }) {
               }}>
                 <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>How it Works</span>
                 {[
-                  { icon: '1', text: 'INDOO takes 10% commission (7% for bank transfer orders).' },
-                  { icon: '2', text: 'Commission is deducted from your wallet balance.' },
-                  { icon: '3', text: 'Keep your balance above Rp 50,000 to stay active.' },
-                  { icon: '4', text: 'Below minimum = Restricted. Zero balance = Deactivated.' },
+                  // Dead-code reachable only via stale 'wallet' page state.
+                  // Removed from NAV_ITEMS in this commit; rewriting the
+                  // copy anyway so anyone who reaches it sees the truth.
+                  { icon: '1', text: 'FoodLocal Pro is subscription-only — there is no commission on orders.' },
+                  { icon: '2', text: 'You keep 100% of every customer payment.' },
+                  { icon: '3', text: 'Use the Payment Methods page to connect your gateway.' },
+                  { icon: '4', text: 'This Wallet page exists for legacy reasons and will be removed.' },
                 ].map((s, i) => (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
                     <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(141,198,63,0.15)', color: '#8DC63F', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</span>
@@ -2202,7 +2206,7 @@ function BannerAdsPage({ restaurant }) {
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8DC63F" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <span style={{ fontSize: 20, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 8 }}>Banner Submitted!</span>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 6 }}>INDOO team will verify payment and activate your banner.</span>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 6 }}>FoodLocal Pro team will verify payment and activate your banner.</span>
           <span style={{ fontSize: 12, color: '#8DC63F', fontWeight: 700, display: 'block', marginBottom: 16 }}>Activation: Same day during business hours</span>
           <button onClick={() => { setStep('library'); setSelectedTemplate(null); setPromoText(''); setProofPreview(null); setProofFile(null) }} style={{ padding: '12px 32px', borderRadius: 12, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Done</button>
         </div>

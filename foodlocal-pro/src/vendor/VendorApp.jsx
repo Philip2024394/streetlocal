@@ -103,7 +103,7 @@ export default function VendorApp() {
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080808' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 40, height: 40, border: '3px solid rgba(141,198,63,0.2)', borderTopColor: '#8DC63F', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-          <span style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>Loading INDOO Biz...</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>Loading FoodLocal Pro...</span>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -136,7 +136,7 @@ export default function VendorApp() {
             boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
           }}>
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'block' }}>Install INDOO Business</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'block' }}>Install FoodLocal Pro</span>
               {installPrompt ? (
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2, display: 'block' }}>Add to your home screen for the best experience</span>
               ) : (
@@ -175,8 +175,7 @@ export default function VendorApp() {
         {/* Logo */}
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
           <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.03em' }}>
-            <span style={{ color: '#fff' }}>IND</span><span style={{ color: '#8DC63F' }}>OO</span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginLeft: 6 }}>BIZ</span>
+            <span style={{ color: '#fff' }}>FoodLocal</span><span style={{ color: '#8DC63F' }} > Pro</span>
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Merchant Dashboard</p>
         </div>
@@ -191,7 +190,7 @@ export default function VendorApp() {
             {isRegister ? 'Create Account' : 'Sign In'}
           </h2>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 20px' }}>
-            {isRegister ? 'Register your restaurant on INDOO' : 'Access your restaurant dashboard'}
+            {isRegister ? 'Register your restaurant on FoodLocal Pro' : 'Access your restaurant dashboard'}
           </p>
 
           <input

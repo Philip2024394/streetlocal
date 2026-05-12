@@ -26,7 +26,7 @@ const APPS = [
   // so the agent referral flow lands the vendor on the right plan.
   { id: 'basic', name: 'FoodLocal', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'From street carts to restaurants — WhatsApp order channel', url: '/food/chat/?plan=whatsapp' },
   { id: 'chat', name: 'FoodLocal Chat', tier: 'Software 1+', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: 'Same storefront with private in-app chat checkout + 16 payment gateways', url: '/food/chat/?plan=chat' },
-  { id: 'pro', name: 'Restaurant', tier: 'Software 2', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant ordering with themes & promos', url: '/food/pro/' },
+  { id: 'pro', name: 'FoodLocal Pro', tier: 'Software 2', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', url: '/food/pro/' },
 ]
 
 const AGENT_FEE = '35.000'
@@ -1189,7 +1189,7 @@ export default function Affiliate({ onClose }) {
       apps: [
         { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — pemesanan via WhatsApp' : 'From street carts to restaurants — WhatsApp order channel', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=whatsapp' },
         { id: 'chat', name: 'FoodLocal Chat', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: locale === 'id' ? 'Storefront yang sama dengan checkout chat dalam aplikasi' : 'Same storefront with private in-app chat checkout + 16 payment gateways', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=chat' },
-        { id: 'pro', name: 'Restaurant Pro', price: 'Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Pemesanan restoran lengkap dengan tema & promo' : 'Full restaurant ordering with themes & promos', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
+        { id: 'pro', name: 'FoodLocal Pro', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Suite restoran lengkap: menu extras, deal, banner ads, analitik, verifikasi KTP. Order WhatsApp 100k/bln atau Chat dalam aplikasi 150k/bln.' : 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },
     // Future categories will auto-appear here

@@ -166,7 +166,7 @@ export default function WeeklyPromoSheet({ onClose, restaurant }) {
           ))}
         </div>
 
-        <p className={styles.footer}>INDOO STREET · Weekly Deals</p>
+        <p className={styles.footer}>FOODLOCAL PRO · Weekly Deals</p>
       </div>
     </div>
   )

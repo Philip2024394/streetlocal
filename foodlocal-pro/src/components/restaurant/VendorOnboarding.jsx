@@ -103,7 +103,7 @@ export default function VendorOnboarding({ open, onClose, onComplete, userId }) 
               </div>
               <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: '0 0 8px', textAlign: 'center' }}>Identity Verification Required</h2>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 24px', textAlign: 'center', lineHeight: 1.6 }}>
-                To protect buyers and sellers, all vendors must verify their identity with KTP before listing on INDOO.
+                To protect buyers and sellers, all vendors must verify their identity with KTP before listing on FoodLocal Pro.
               </p>
               <button onClick={() => setKtpOpen(true)} style={{ padding: '14px 32px', borderRadius: 14, border: 'none', background: '#8DC63F', color: '#000', fontSize: 15, fontWeight: 900, cursor: 'pointer', marginBottom: 12 }}>
                 Verify Now
@@ -365,7 +365,7 @@ export default function VendorOnboarding({ open, onClose, onComplete, userId }) 
           <div className={styles.step}>
             <img className={styles.stepHero} src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-22-2026-06_35_28-am.png" alt="" />
             <h2 className={styles.stepTitle}>Daftarkan Bisnis Anda</h2>
-            <p className={styles.stepSubtitle}>Register your food business on INDOO Street</p>
+            <p className={styles.stepSubtitle}>Register your food business on FoodLocal Pro</p>
 
             {/* Vendor type selector */}
             <div className={styles.glassCard}>

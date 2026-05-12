@@ -398,7 +398,7 @@ export default function DeliveryMap({
     return (
       <div style={{ ...style, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: compact ? 12 : 0 }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #8DC63F', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 8, fontWeight: 700 }}>INDOO Live Map</span>
+        <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 8, fontWeight: 700 }}>FoodLocal Pro Live Map</span>
       </div>
     )
   }

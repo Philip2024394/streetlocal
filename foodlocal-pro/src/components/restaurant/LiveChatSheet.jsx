@@ -1,8 +1,8 @@
 /**
- * LiveChatSheet — INDOO Support chat window.
+ * LiveChatSheet — FoodLocal Pro Support chat window.
  * Same chat design as driver trip chat.
  * Opens directly to chat — no issue type badges.
- * Auto-greeting from INDOO Team.
+ * Auto-greeting from FoodLocal Pro Team.
  */
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
@@ -59,8 +59,8 @@ export default function LiveChatSheet({ order, onClose }) {
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 20 }}>
               {isGuest
-                ? 'You need to create an account and complete verification to contact INDOO Support.'
-                : 'Please complete your account verification to access INDOO Support. This helps us protect our community.'
+                ? 'You need to create an account and complete verification to contact FoodLocal Pro Support.'
+                : 'Please complete your account verification to access FoodLocal Pro Support. This helps us protect our community.'
               }
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -100,7 +100,7 @@ export default function LiveChatSheet({ order, onClose }) {
       setMessages([{
         id: Date.now(),
         from: 'bot',
-        text: `Hi ${userName}! 👋 Welcome to INDOO Support. How can we help you today?`,
+        text: `Hi ${userName}! 👋 Welcome to FoodLocal Pro Support. How can we help you today?`,
         time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
       }])
     }, 800)
@@ -178,7 +178,7 @@ export default function LiveChatSheet({ order, onClose }) {
       <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${CHAT_BG})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.82)' }} />
 
-      {/* Header — INDOO Team profile on left, close on right */}
+      {/* Header — FoodLocal Pro Team profile on left, close on right */}
       <div style={{
         padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px',
         margin: '0 8px', marginTop: 8,
@@ -193,7 +193,7 @@ export default function LiveChatSheet({ order, onClose }) {
           <div style={{ width: '30%', height: '100%', background: 'linear-gradient(90deg, transparent, #8DC63F, transparent)', animation: 'runningLight 3s linear infinite', opacity: 0.8 }} />
         </div>
 
-        {/* INDOO Team photo */}
+        {/* FoodLocal Pro Team photo */}
         <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#1a1a1a', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(141,198,63,0.4)', flexShrink: 0, position: 'relative' }}>
           <img src={TEAM_PHOTO} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', bottom: -1, right: -1, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid rgba(0,0,0,0.7)' }} />
@@ -201,7 +201,7 @@ export default function LiveChatSheet({ order, onClose }) {
 
         {/* Name + status + time */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>INDOO Team</div>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>FoodLocal Pro Team</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#22C55E' }}>Online</span>
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>·</span>
@@ -236,7 +236,7 @@ export default function LiveChatSheet({ order, onClose }) {
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
             }}>
               {msg.from === 'bot' && (
-                <span style={{ fontSize: 10, fontWeight: 800, color: '#8DC63F', display: 'block', marginBottom: 4 }}>INDOO Team</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#8DC63F', display: 'block', marginBottom: 4 }}>FoodLocal Pro Team</span>
               )}
               {msg.photo && (
                 <img src={msg.photo} alt="" style={{ width: '100%', maxWidth: 200, borderRadius: 12, marginBottom: 8, display: 'block' }} />
