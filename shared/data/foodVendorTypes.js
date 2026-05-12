@@ -1,5 +1,5 @@
 // Shared vendor-type definitions for FoodLocal apps
-// (foodlocalchat).
+// (food-basic).
 // Edit ONCE here — all apps pick up the change automatically.
 
 export const VENDOR_TYPES = {

@@ -1,4 +1,4 @@
-// Shared demo menu data for food family apps (foodlocalchat).
+// Shared demo menu data for food family apps (food-basic).
 
 export const DEMO_MENU = [
   // Meals

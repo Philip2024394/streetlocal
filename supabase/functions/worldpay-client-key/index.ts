@@ -1,5 +1,5 @@
 // Returns the vendor's public Worldpay Online clientKey (T_C_... / L_C_...)
-// so the foodlocalchat client can initialise Worldpay.js for card
+// so the food-basic client can initialise Worldpay.js for card
 // tokenisation. Keeping this behind an Edge Function means the customer
 // app never has to query vendor_payment_connections directly (which
 // would expose the serviceKey alongside).

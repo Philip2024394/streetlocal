@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "cd landing && npm install && cd ../food-pro && npm install && cd ../foodlocalchat && npm install && cd ../products-local && npm install && cd ../productslocalchat && npm install && cd ../productslocalemail && npm install && cd ../serviceslocalwhatsapp && npm install && cd ../serviceslocalchat && npm install && cd ../serviceslocalemail && npm install",
+  "installCommand": "cd landing && npm install && cd ../food-pro && npm install && cd ../food-basic && npm install && cd ../products-local && npm install && cd ../productslocalchat && npm install && cd ../productslocalemail && npm install && cd ../serviceslocalwhatsapp && npm install && cd ../serviceslocalchat && npm install && cd ../serviceslocalemail && npm install",
   "framework": null,
   "redirects": [
     { "source": "/food/whatsapp/:path*", "destination": "/food/chat/:path*", "permanent": true }
@@ -9,8 +9,8 @@
   "rewrites": [
     { "source": "/food/pro/(.*)", "destination": "/food-pro/$1" },
     { "source": "/food/pro", "destination": "/food-pro/index.html" },
-    { "source": "/food/chat/(.*)", "destination": "/foodlocalchat/$1" },
-    { "source": "/food/chat", "destination": "/foodlocalchat/index.html" },
+    { "source": "/food/chat/(.*)", "destination": "/food-basic/$1" },
+    { "source": "/food/chat", "destination": "/food-basic/index.html" },
     { "source": "/products/local/(.*)", "destination": "/products-local/$1" },
     { "source": "/products/local", "destination": "/products-local/index.html" },
     { "source": "/products/chat/(.*)", "destination": "/productslocalchat/$1" },

@@ -1,6 +1,6 @@
 // Worldpay Online — server-side charge using a card token from Worldpay.js.
 // Customer enters card in the Worldpay.js iframe → SDK returns tk_..token →
-// foodlocalchat calls this endpoint with the token + order info → we POST
+// food-basic calls this endpoint with the token + order info → we POST
 // to https://api.worldpay.com/v1/orders to authorise + capture.
 //
 // Deploy: `supabase functions deploy worldpay-charge`
