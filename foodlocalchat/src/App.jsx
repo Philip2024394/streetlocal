@@ -6,20 +6,21 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
-  midtrans: { server_key: 'server_key', client_key: 'client_key' },
-  stripe:   { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
-  xendit:   { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
-  paypal:   { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
-  razorpay: { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
+  midtrans:  { server_key: 'server_key', client_key: 'client_key' },
+  stripe:    { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+  xendit:    { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
+  paypal:    { clientId: 'server_key', secret: 'client_key', webhookId: 'webhook_secret' }, // merchantEmail → additional_config
+  razorpay:  { keyId: 'server_key', keySecret: 'client_key', webhookSecret: 'webhook_secret' },
+  braintree: { publicKey: 'server_key', privateKey: 'client_key' }, // merchantId → additional_config
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -956,12 +957,87 @@ export default function App() {
     window.location.href = data.url
     return 'redirecting'
   }
+  // Customer-side: Braintree Drop-in UI modal (NOT a redirect).
+  // 1) Fetch a client token from the Edge Function
+  // 2) Lazy-load the Drop-in script from CDN
+  // 3) Render Drop-in into a hidden container, wait for the nonce
+  // 4) POST the nonce to braintree-charge which executes the sale synchronously
+  // Returns 'paid' | 'failed' | 'closed' just like payWithMidtrans.
+  const loadBraintreeDropin = () => new Promise((resolve, reject) => {
+    if (window.braintree?.dropin) return resolve()
+    const s = document.createElement('script')
+    s.src = 'https://js.braintreegateway.com/web/dropin/1.42.0/js/dropin.min.js'
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
+    document.head.appendChild(s)
+  })
+  const payWithBraintree = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId }) => {
+    if (!supabase) return 'failed'
+    try {
+      const tokenRes = await supabase.functions.invoke('braintree-client-token', { body: { vendorId } })
+      if (tokenRes.error || !tokenRes.data?.clientToken) {
+        console.error('Braintree client token failed', tokenRes.error || tokenRes.data)
+        return 'failed'
+      }
+      await loadBraintreeDropin()
+      // Build a modal container the customer enters card / PayPal / Venmo into
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px'
+      const modal = document.createElement('div')
+      modal.style.cssText = 'background:#fff;border-radius:16px;padding:18px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;color:#1a1a1a'
+      modal.innerHTML = `
+        <div style="font-size:18px;font-weight:800;margin-bottom:12px">Payment — ${fmt(amount)}</div>
+        <div id="bt-dropin-container"></div>
+        <button id="bt-pay" style="margin-top:14px;width:100%;padding:14px;border-radius:12px;border:none;background:#00ADEF;color:#fff;font-size:15px;font-weight:800;cursor:pointer;min-height:48px">Pay ${fmt(amount)}</button>
+        <button id="bt-cancel" style="margin-top:8px;width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;background:#fff;color:#666;font-size:14px;font-weight:600;cursor:pointer">Cancel</button>
+        <div id="bt-error" style="margin-top:8px;color:#dc2626;font-size:12px"></div>
+      `
+      overlay.appendChild(modal)
+      document.body.appendChild(overlay)
+      return await new Promise(async (resolve) => {
+        const cleanup = () => { document.body.removeChild(overlay) }
+        let instance
+        try {
+          instance = await window.braintree.dropin.create({
+            authorization: tokenRes.data.clientToken,
+            container: '#bt-dropin-container',
+            card: { cardholderName: { required: false } },
+          })
+        } catch (e) {
+          modal.querySelector('#bt-error').textContent = (e?.message || 'Failed to load card form')
+          modal.querySelector('#bt-cancel').onclick = () => { cleanup(); resolve('closed') }
+          return
+        }
+        modal.querySelector('#bt-cancel').onclick = () => { instance.teardown(); cleanup(); resolve('closed') }
+        modal.querySelector('#bt-pay').onclick = async () => {
+          modal.querySelector('#bt-error').textContent = ''
+          try {
+            const payload = await instance.requestPaymentMethod()
+            const chargeRes = await supabase.functions.invoke('braintree-charge', {
+              body: { vendorId, orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, paymentMethodNonce: payload.nonce, deviceData: payload.deviceData },
+            })
+            if (chargeRes.error || chargeRes.data?.status !== 'paid') {
+              modal.querySelector('#bt-error').textContent = chargeRes.data?.error || 'Payment was declined.'
+              return
+            }
+            instance.teardown(); cleanup(); resolve('paid')
+          } catch (e) {
+            modal.querySelector('#bt-error').textContent = e?.message || 'Payment failed.'
+          }
+        }
+      })
+    } catch (e) {
+      console.error('Braintree pay failed', e)
+      return 'failed'
+    }
+  }
   // Customer-side: vendor's active live gateway (read once on mount). The order of
   // preference is Midtrans → Xendit → Stripe → PayPal → Razorpay; vendors typically configure one.
   const [vendorStripeLive, setVendorStripeLive] = useState(false)
   const [vendorXenditLive, setVendorXenditLive] = useState(false)
   const [vendorPayPalLive, setVendorPayPalLive] = useState(false)
   const [vendorRazorpayLive, setVendorRazorpayLive] = useState(false)
+  const [vendorBraintreeLive, setVendorBraintreeLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -973,6 +1049,7 @@ export default function App() {
     probe('xendit', setVendorXenditLive)
     probe('paypal', setVendorPayPalLive)
     probe('razorpay', setVendorRazorpayLive)
+    probe('braintree', setVendorBraintreeLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
@@ -1806,8 +1883,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe → PayPal → Razorpay.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe → PayPal → Razorpay → Braintree.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -1876,6 +1953,15 @@ export default function App() {
           }).catch(() => {})
           await payWithRazorpay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Razorpay
+        } else if (activeGateway === 'braintree') {
+          // Braintree Drop-in UI modal (same page, awaited result like Midtrans).
+          const payRes = await payWithBraintree({ ...payArgs, customerEmail: '' })
+          if (payRes === 'closed' || payRes === 'failed') {
+            setChatError(payRes === 'closed' ? 'Payment cancelled — your order was not sent.' : 'Payment failed — try again or use another method.')
+            setChatSending(false)
+            return
+          }
+          orderPayload.payment = { method: 'braintree', status: payRes, gatewayOrderId }
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
