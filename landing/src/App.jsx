@@ -97,7 +97,11 @@ const TRANSLATIONS = {
     ],
     register: {
       title: 'Set Up Your Business',
-      subtitle: 'Fill in your details below. Your app will be activated once we confirm your payment.',
+      // Honest copy: the Submit button opens WhatsApp pre-filled with the
+      // form data to our admin number. No payment is taken here — that
+      // happens inside the app via the Pay-to-Activate gate. This form is
+      // a lead-capture path for vendors who want help from a human first.
+      subtitle: 'Send your details to our team. We\'ll reply on WhatsApp to help you get set up. Want to skip the wait? Click Try Free Demo above and sign up directly inside the app.',
       businessName: 'Business Name',
       businessNamePlaceholder: 'e.g. Warung Sari Rasa',
       urlLabel: 'Choose Your URL',
@@ -107,9 +111,9 @@ const TRANSLATIONS = {
       whatsappPlaceholder: '+62 812 3456 7890',
       email: 'Email Address',
       emailPlaceholder: 'you@email.com',
-      submitBtn: 'Submit Registration',
-      pendingTitle: 'Registration Submitted!',
-      pendingMsg: 'We\'re verifying your payment. You\'ll receive a WhatsApp message once your app is activated.',
+      submitBtn: 'Send to Our Team on WhatsApp',
+      pendingTitle: 'Details Sent!',
+      pendingMsg: 'We\'ve forwarded your details to our team via WhatsApp. You\'ll hear back within 24 hours with the next steps.',
       backHome: 'Back to Home',
     },
     ourApps: 'Starting Rp 35.000/Month',
@@ -250,7 +254,7 @@ const TRANSLATIONS = {
     termsSections: 'same',
     register: {
       title: 'Siapkan Bisnis Kamu',
-      subtitle: 'Isi detail di bawah. Aplikasi kamu akan diaktifkan setelah kami konfirmasi pembayaran.',
+      subtitle: 'Kirim detail kamu ke tim kami. Kami akan balas di WhatsApp untuk bantu setup. Mau langsung mulai? Klik Coba Demo Gratis di atas dan daftar langsung di dalam aplikasi.',
       businessName: 'Nama Bisnis',
       businessNamePlaceholder: 'contoh: Warung Sari Rasa',
       urlLabel: 'Pilih URL Kamu',
@@ -260,9 +264,9 @@ const TRANSLATIONS = {
       whatsappPlaceholder: '+62 812 3456 7890',
       email: 'Alamat Email',
       emailPlaceholder: 'kamu@email.com',
-      submitBtn: 'Kirim Pendaftaran',
-      pendingTitle: 'Pendaftaran Terkirim!',
-      pendingMsg: 'Kami sedang memverifikasi pembayaran kamu. Kamu akan menerima pesan WhatsApp setelah aplikasi diaktifkan.',
+      submitBtn: 'Kirim ke Tim Kami di WhatsApp',
+      pendingTitle: 'Detail Terkirim!',
+      pendingMsg: 'Kami sudah teruskan detail kamu ke tim via WhatsApp. Kamu akan dihubungi dalam 24 jam untuk langkah selanjutnya.',
       backHome: 'Kembali ke Beranda',
     },
     ourApps: 'Mulai Rp 35.000/Bulan',
