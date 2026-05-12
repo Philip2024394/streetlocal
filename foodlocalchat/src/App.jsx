@@ -823,6 +823,12 @@ export default function App() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatError, setChatError] = useState('')
+  // Escrow hold tracking — set when a Stripe-with-escrow order is found
+  // for the current conversation. Drives the "Release funds / Cancel"
+  // panel rendered in the order-done view.
+  const [heldEscrowOrder, setHeldEscrowOrder] = useState(null) // { id, releaseAt, total, currency }
+  const [escrowActionBusy, setEscrowActionBusy] = useState(false)
+  const [escrowMessage, setEscrowMessage] = useState('')
 
   /* Vendor inbox state (foodlocalchat) */
   const [vendorTab, setVendorTab] = useState('shop') // 'shop' | 'orders' | 'settings'
@@ -1340,6 +1346,62 @@ export default function App() {
     probe('cybersource', setVendorCsLive)
     probe('worldpay', setVendorWpLive)
   }, [vendorId, isVendor])
+  // When the customer is on the order-confirmation screen, check whether the
+  // most recent order for this conversation is a Stripe escrow hold that
+  // hasn't been released or cancelled yet. If so, surface it so the customer
+  // can release funds on receipt (or cancel before).
+  useEffect(() => {
+    if (!supabase || !orderDone || !chatConversation?.id) { setHeldEscrowOrder(null); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('orders')
+          .select('id, total, currency, escrow_release_at, escrow_status, gateway_id')
+          .eq('conversation_id', chatConversation.id)
+          .eq('gateway_id', 'stripe')
+          .eq('escrow_status', 'held')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (cancelled) return
+        if (data) setHeldEscrowOrder({ id: data.id, releaseAt: data.escrow_release_at, total: data.total, currency: data.currency })
+        else setHeldEscrowOrder(null)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [orderDone, chatConversation?.id])
+  // Release the escrow hold — captures the Stripe PaymentIntent, funds settle to vendor.
+  const releaseEscrow = async () => {
+    if (!supabase || !heldEscrowOrder || escrowActionBusy) return
+    setEscrowActionBusy(true); setEscrowMessage('')
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-escrow-release', { body: { orderId: heldEscrowOrder.id, actor: 'customer' } })
+      if (error || !data?.ok) {
+        setEscrowMessage(data?.error || 'Could not release the hold. Try again or contact the vendor.')
+      } else {
+        setEscrowMessage('Funds released — thank you for confirming delivery.')
+        setHeldEscrowOrder(null)
+      }
+    } catch (e) { setEscrowMessage(e?.message || 'Release failed') }
+    finally { setEscrowActionBusy(false) }
+  }
+  // Cancel the escrow hold — voids the auth so the customer's card is not charged.
+  const cancelEscrow = async () => {
+    if (!supabase || !heldEscrowOrder || escrowActionBusy) return
+    if (!window.confirm('Cancel this order? The hold will be released back to your card and you will not be charged.')) return
+    setEscrowActionBusy(true); setEscrowMessage('')
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-escrow-cancel', { body: { orderId: heldEscrowOrder.id, actor: 'customer', reason: 'requested_by_customer' } })
+      if (error || !data?.ok) {
+        setEscrowMessage(data?.error || 'Could not cancel the hold. Try again or contact the vendor.')
+      } else {
+        setEscrowMessage('Hold released — your card was not charged.')
+        setHeldEscrowOrder(null)
+      }
+    } catch (e) { setEscrowMessage(e?.message || 'Cancel failed') }
+    finally { setEscrowActionBusy(false) }
+  }
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -4499,7 +4561,53 @@ export default function App() {
                     </button>
                   )}
 
-                  <button style={{ padding: '12px 30px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', alignSelf: 'center', minHeight: 44 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false); setChatConversation(null); setChatMessages([]); setChatDraft('') }}>
+                  {/* Escrow hold panel — shown when this order is a Stripe
+                      authorisation hold that has not yet been released. The
+                      customer confirms receipt to release funds, or cancels
+                      to void the hold (card is not charged). */}
+                  {heldEscrowOrder && (
+                    <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: 14, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 16, background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontSize: 16, color: '#fff', fontWeight: 900, lineHeight: 1 }}>⏳</span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Funds held in escrow</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2, lineHeight: 1.4 }}>
+                            {fmt(heldEscrowOrder.total)} authorised on your card. Released to the vendor when you confirm receipt{heldEscrowOrder.releaseAt ? ` (auto-releases ${new Date(heldEscrowOrder.releaseAt).toLocaleDateString()})` : ''}.
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          disabled={escrowActionBusy}
+                          onClick={releaseEscrow}
+                          style={{ flex: 1, padding: '11px 12px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontSize: 13, fontWeight: 800, cursor: escrowActionBusy ? 'wait' : 'pointer', minHeight: 44, opacity: escrowActionBusy ? 0.6 : 1 }}
+                        >
+                          {escrowActionBusy ? 'Working…' : 'Confirm received'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={escrowActionBusy}
+                          onClick={cancelEscrow}
+                          style={{ flex: 1, padding: '11px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 700, cursor: escrowActionBusy ? 'wait' : 'pointer', minHeight: 44, opacity: escrowActionBusy ? 0.6 : 1 }}
+                        >
+                          Cancel order
+                        </button>
+                      </div>
+                      {escrowMessage && (
+                        <div style={{ fontSize: 11, color: '#FACC15', marginTop: 2, textAlign: 'center' }}>{escrowMessage}</div>
+                      )}
+                    </div>
+                  )}
+                  {!heldEscrowOrder && escrowMessage && (
+                    <div style={{ background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 12, padding: 12, fontSize: 12, color: '#fff', textAlign: 'center' }}>
+                      {escrowMessage}
+                    </div>
+                  )}
+
+                  <button style={{ padding: '12px 30px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', alignSelf: 'center', minHeight: 44 }} onClick={() => { setCheckoutOpen(false); setCart([]); setOrderDone(false); setChatConversation(null); setChatMessages([]); setChatDraft(''); setEscrowMessage('') }}>
                     Back To Menu
                   </button>
 
