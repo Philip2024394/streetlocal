@@ -6,16 +6,17 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe (Edge Functions + webhooks).
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
   midtrans: { server_key: 'server_key', client_key: 'client_key' },
   stripe:   { secretKey: 'server_key', publishableKey: 'client_key', webhookSecret: 'webhook_secret' },
+  xendit:   { secretKey: 'server_key', publicKey: 'client_key', callbackToken: 'webhook_secret' },
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -904,9 +905,26 @@ export default function App() {
     window.location.href = data.url
     return 'redirecting'
   }
+  // Customer-side: redirect to Xendit hosted Invoice page. Same redirect pattern
+  // as Stripe — Xendit returns the customer to our returnUrl with ?xendit_status=…
+  const payWithXendit = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('xendit-create-invoice', {
+      body: { vendorId, orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl, description },
+    })
+    if (error || !data?.url) {
+      console.error('Xendit invoice failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingXenditOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   // Customer-side: vendor's active live gateway (read once on mount). The order of
-  // preference is Midtrans → Stripe; vendors typically configure one.
+  // preference is Midtrans → Xendit → Stripe; vendors typically configure one.
   const [vendorStripeLive, setVendorStripeLive] = useState(false)
+  const [vendorXenditLive, setVendorXenditLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     supabase.from('vendor_payment_connections')
@@ -914,21 +932,28 @@ export default function App() {
       .maybeSingle()
       .then(({ data }) => setVendorStripeLive(!!data?.is_active))
       .catch(() => {})
+    supabase.from('vendor_payment_connections')
+      .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'xendit')
+      .maybeSingle()
+      .then(({ data }) => setVendorXenditLive(!!data?.is_active))
+      .catch(() => {})
   }, [vendorId, isVendor])
-  // Handle Stripe redirect-back: if URL has ?stripe_status=success&order_id=…, show a toast.
+  // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status')
-    if (!status) return
+    const stripeStatus = params.get('stripe_status')
+    const xenditStatus = params.get('xendit_status')
+    if (!stripeStatus && !xenditStatus) return
+    const status = stripeStatus || xenditStatus
+    const clean = window.location.pathname
+    window.history.replaceState({}, '', clean)
     if (status === 'success') {
-      // Strip the params from the URL so refresh doesn't replay
-      const clean = window.location.pathname
-      window.history.replaceState({}, '', clean)
-      try { localStorage.removeItem('foodlocalchat_pendingStripeOrder') } catch {}
+      try {
+        localStorage.removeItem('foodlocalchat_pendingStripeOrder')
+        localStorage.removeItem('foodlocalchat_pendingXenditOrder')
+      } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
-      const clean = window.location.pathname
-      window.history.replaceState({}, '', clean)
       alert('Payment cancelled. Your cart was not sent.')
     }
   }, [])
@@ -1745,9 +1770,8 @@ export default function App() {
       return
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
-    // run the charge BEFORE the chat order. Midtrans takes priority over Stripe when
-    // both are connected; vendors typically wire one.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorStripeLive ? 'stripe' : null
+    // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → Stripe.
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorStripeLive ? 'stripe' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -1771,8 +1795,6 @@ export default function App() {
         } else if (activeGateway === 'stripe') {
           // Stripe is hosted-redirect: we navigate away. Webhook flips status to paid.
           orderPayload.payment = { method: 'stripe', status: 'redirecting', gatewayOrderId }
-          // Send the chat now (vendor sees pending order) — payment confirmation arrives via webhook
-          // before redirect, the order row is already created by stripe-create-session
           await sendCustomerOrder({
             vendorId,
             customerPhone: cleanPhone,
@@ -1782,6 +1804,18 @@ export default function App() {
           }).catch(() => {})
           await payWithStripe({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to Stripe
+        } else if (activeGateway === 'xendit') {
+          // Xendit is also hosted-redirect (Invoice page). Same pattern as Stripe.
+          orderPayload.payment = { method: 'xendit', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending Xendit payment',
+          }).catch(() => {})
+          await payWithXendit({ ...payArgs, customerEmail: '', description: summaryItems })
+          return // browser is now navigating to Xendit
         }
       } catch (e) {
         console.error('Gateway payment failed', e)

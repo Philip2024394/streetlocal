@@ -55,9 +55,10 @@ export const SUPPORTED_GATEWAYS = [
     fields: [
       { key: 'secretKey', label: 'Secret API Key', placeholder: 'xnd_development_... or xnd_production_...', type: 'password', required: true, secret: true },
       { key: 'publicKey', label: 'Public Key (optional)', placeholder: 'xnd_public_...', type: 'text' },
+      { key: 'callbackToken', label: 'Webhook Verification Token', placeholder: 'Your Xendit callback verification token', type: 'password', required: true, secret: true },
     ],
     docUrl: 'https://dashboard.xendit.co/settings/developers#api-keys',
-    setupSteps: ['Sign up at xendit.co', 'Complete onboarding + KYC', 'Settings → Developers → API Keys', 'Generate and paste your Secret Key'],
+    setupSteps: ['Sign up at xendit.co', 'Complete onboarding + KYC', 'Settings → Developers → API Keys → generate Secret Key', 'Settings → Developers → Webhooks → copy the Callback Verification Token', 'Paste both into this form'],
   },
   {
     id: 'paypal',
