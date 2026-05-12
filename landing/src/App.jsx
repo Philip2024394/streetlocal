@@ -4023,7 +4023,7 @@ export default function App() {
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>🆕 New Service Themes</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                       {newThemes.map(theme => (
-                        <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                        <div key={theme.id} onClick={() => setThemeLibPreview(theme.id)} style={{ textAlign: 'center', cursor: 'pointer' }}>
                           <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>🛠️</span>}
                             <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
@@ -4040,7 +4040,7 @@ export default function App() {
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Service Themes ({otherThemes.length})</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                     {otherThemes.map(theme => (
-                      <div key={theme.id} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                      <div key={theme.id} onClick={() => setThemeLibPreview(theme.id)} style={{ textAlign: 'center', cursor: 'pointer' }}>
                         <div style={{ aspectRatio: '9/16', borderRadius: 14, overflow: 'hidden', position: 'relative', border: `2px solid ${theme.accent}40`, background: `linear-gradient(135deg, ${theme.accent}20, ${theme.accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {theme.img ? <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} /> : <span style={{ fontSize: 32 }}>🛠️</span>}
                           <div style={{ position: 'absolute', top: 4, right: 4, background: theme.accent, width: 10, height: 10, borderRadius: 5 }} />
@@ -4051,6 +4051,37 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
+                {/* Preview Modal */}
+                {themeLibPreview && (() => {
+                  const previewT = serviceThemes.find(t => t.id === themeLibPreview)
+                  if (!previewT) return null
+                  const ac = previewT.accent
+                  const isDev = window.location.hostname === 'localhost'
+                  const demoUrl = (isDev ? 'http://localhost:5183/services/whatsapp/' : '/services/whatsapp/') + '?demo=true&page=landing&theme=' + previewT.id
+                  return (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setThemeLibPreview(null)}>
+                      <div style={{ width: 260, maxWidth: '90vw', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', textAlign: 'center' }}>{previewT.label}</div>
+                        <div style={{ width: 220, aspectRatio: '9 / 16', borderRadius: 24, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${ac}25`, border: '2px solid #333' }}>
+                          <div style={{ width: '100%', height: '100%', borderRadius: 22, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                            <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 50, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
+                            {previewT.img ? <img src={previewT.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>🛠️</div>}
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 2 }}>
+                              <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center' }}>{previewT.label}</div>
+                              <div style={{ marginTop: 12, padding: '8px 20px', borderRadius: 10, background: ac, color: '#fff', fontSize: 12, fontWeight: 700 }}>Book Now</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                          <a href={demoUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '12px 20px', borderRadius: 12, background: ac, color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>Try Live Demo</a>
+                          <button onClick={() => setThemeLibPreview(null)} style={{ flex: 1, padding: '12px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )
           })()}
