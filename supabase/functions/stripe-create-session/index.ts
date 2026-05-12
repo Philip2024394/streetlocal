@@ -68,7 +68,7 @@ serve(async (req) => {
 
     const { data: conn, error: connErr } = await supabase
       .from('vendor_payment_connections')
-      .select('secret_key:server_key, is_active, additional_config')
+      .select('secret_key:server_key, is_active, additional_config, escrow_enabled, escrow_hold_days')
       .eq('vendor_id', vendorId)
       .eq('gateway_id', 'stripe')
       .single()
@@ -79,6 +79,12 @@ serve(async (req) => {
     if (connErr || !secretKey || !conn?.is_active) {
       return json({ error: 'Stripe not configured or inactive for this vendor' }, 400)
     }
+
+    // Escrow / authorisation-hold mode: Stripe authorises but does not
+    // capture; vendor releases later via stripe-escrow-release (or it
+    // auto-expires on the card network after ~7 days).
+    const escrowEnabled = !!(conn as any)?.escrow_enabled
+    const escrowDays = Math.min(Math.max(Number((conn as any)?.escrow_hold_days || 0), 0), 7)
 
     const cur = currency.toUpperCase()
     const factor = ZERO_DECIMAL.has(cur) ? 1 : 100
@@ -99,8 +105,11 @@ serve(async (req) => {
       })
     }
 
-    // Persist pending order so the webhook can join later
-    await supabase.from('orders').insert({
+    // Persist pending order so the webhook can join later. If escrow is
+    // enabled, mark the order as held + record when the auto-release
+    // window expires (informational; actual release is manual via the
+    // stripe-escrow-release endpoint).
+    const orderInsert: Record<string, unknown> = {
       vendor_id: vendorId,
       conversation_id: conversationId ?? null,
       customer_phone: customerPhone ?? null,
@@ -113,7 +122,12 @@ serve(async (req) => {
       gateway_id: 'stripe',
       gateway_order_id: orderId,
       payment_status: 'pending',
-    })
+    }
+    if (escrowEnabled && escrowDays > 0) {
+      orderInsert.escrow_status = 'held'
+      orderInsert.escrow_release_at = new Date(Date.now() + escrowDays * 24 * 60 * 60 * 1000).toISOString()
+    }
+    await supabase.from('orders').insert(orderInsert)
 
     const successUrl = (returnUrl || 'https://streetlocal.live') + (returnUrl?.includes('?') ? '&' : '?') + 'stripe_status=success&order_id=' + encodeURIComponent(orderId)
     const cancelUrl  = (returnUrl || 'https://streetlocal.live') + (returnUrl?.includes('?') ? '&' : '?') + 'stripe_status=cancel&order_id=' + encodeURIComponent(orderId)
@@ -124,9 +138,15 @@ serve(async (req) => {
       cancel_url: cancelUrl,
       client_reference_id: orderId,
       line_items: lineItems,
-      metadata: { vendorId, orderId, conversationId: conversationId || '' },
+      metadata: { vendorId, orderId, conversationId: conversationId || '', escrow: escrowEnabled ? '1' : '0' },
     }
     if (customerEmail) sessionPayload.customer_email = customerEmail
+    if (escrowEnabled && escrowDays > 0) {
+      // payment_intent_data passes through to the underlying PaymentIntent
+      // for the Checkout Session. capture_method=manual makes Stripe
+      // authorise without capturing — funds are held on the card.
+      sessionPayload.payment_intent_data = { capture_method: 'manual', metadata: { escrow: '1', vendorId, orderId } }
+    }
 
     const r = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

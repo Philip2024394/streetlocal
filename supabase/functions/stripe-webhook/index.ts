@@ -109,14 +109,30 @@ serve(async (req) => {
       case 'checkout.session.completed':
         if (obj.payment_status === 'paid') paymentStatus = 'paid'
         else if (obj.payment_status === 'unpaid') paymentStatus = 'pending'
+        // For an escrow (manual-capture) session, Stripe still reports
+        // payment_status='paid' once the auth succeeds — but funds are
+        // held, not captured. The order row already has escrow_status='held'
+        // from creation, so no change needed here.
         transactionId = obj.payment_intent
         paymentMethod = obj.payment_method_types?.[0]
+        break
+      case 'payment_intent.amount_capturable_updated':
+        // Fires when a manual-capture PI moves to requires_capture state.
+        // Auth confirmed; vendor (or auto-release) will capture later.
+        paymentStatus = 'paid' // gateway-side authorisation succeeded
+        transactionId = obj.id
+        paymentMethod = obj.payment_method_types?.[0] || obj.payment_method
         break
       case 'checkout.session.async_payment_succeeded':
       case 'payment_intent.succeeded':
         paymentStatus = 'paid'
         transactionId = obj.id
         paymentMethod = obj.payment_method_types?.[0] || obj.payment_method
+        break
+      case 'payment_intent.canceled':
+        // Manual-capture PI voided (escrow cancelled / auth expired).
+        paymentStatus = 'cancelled'
+        transactionId = obj.id
         break
       case 'checkout.session.async_payment_failed':
       case 'payment_intent.payment_failed':

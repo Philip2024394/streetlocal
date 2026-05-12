@@ -851,9 +851,18 @@ export default function App() {
     try {
       const map = GATEWAY_FIELD_MAP[gatewayId] || {}
       const knownCols = new Set(['server_key', 'client_key', 'webhook_secret'])
+      // Escrow toggle: only meaningful for Stripe (capture_method=manual).
+      // Anything other than stripe ignores these fields; they are stored
+      // as dedicated columns rather than additional_config jsonb.
+      const escrowCols = new Set(['escrow_enabled', 'escrow_hold_days'])
       const row = { vendor_id: vendorId, gateway_id: gatewayId, mode: config.mode || 'test', is_active: true, server_key: null, client_key: null, webhook_secret: null, additional_config: {} }
       Object.entries(config).forEach(([k, v]) => {
         if (k === 'mode') return
+        if (escrowCols.has(k)) {
+          if (gatewayId === 'stripe') row[k] = v
+          // for non-stripe vendors silently drop the escrow toggle
+          return
+        }
         const mapped = map[k] || k
         if (knownCols.has(mapped)) row[mapped] = v
         else row.additional_config[k] = v

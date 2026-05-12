@@ -373,15 +373,21 @@ export const SUPPORTED_GATEWAYS = [
     logoUrl: null,
     countryFlags: '🌍',
     countryCount: 'Wherever Stripe works',
-    fees: 'Same as your Stripe rate · holds funds 1–30 days',
-    bestFor: 'High-value products · new customers · marketplaces',
+    fees: 'Same as your Stripe rate · holds up to 7 days',
+    bestFor: 'High-value products · new customers · trust-sensitive orders',
     method: 'requires-stripe',
     fields: [
-      { key: 'holdDays', label: 'Hold period (days)', placeholder: '7', type: 'number' },
+      { key: 'escrow_enabled', label: 'Enable escrow hold on Stripe orders', type: 'checkbox', defaultValue: true },
+      { key: 'escrow_hold_days', label: 'Hold period (1–7 days)', placeholder: '7', type: 'number', min: 1, max: 7, defaultValue: 7 },
     ],
-    docUrl: 'https://stripe.com/docs/connect/manual-payouts',
-    setupSteps: ['Connect Stripe first', 'Choose hold duration (1–30 days)', 'Customer pays → Stripe holds → released to you after period or on confirmation'],
-    comingSoon: true,
+    docUrl: 'https://stripe.com/docs/payments/place-a-hold-on-a-payment-method',
+    setupSteps: [
+      'Connect Stripe first — escrow uses your existing Stripe credentials',
+      'Set a hold period from 1 to 7 days (Visa/MC card-auth holds expire at ~7 days; longer periods are not reliable)',
+      'When a customer pays, Stripe authorises the card but does NOT capture — the customer\'s available balance shows the charge as pending',
+      'Funds are released to your Stripe account when the customer confirms receipt (or you click Release in the order)',
+      'If you click Cancel before release, the authorisation is voided and the customer is not charged',
+    ],
   },
 ]
 
