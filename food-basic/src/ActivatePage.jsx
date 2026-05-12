@@ -62,7 +62,10 @@ export default function ActivatePage() {
           return
         }
 
-        // 2. Create vendor account
+        // 2. Create vendor account.
+        // plan_tier comes from the activation_code (whatsapp = 35k, chat = 50k,
+        // both = picker for the customer). The price isn't stored on the
+        // vendor row — it's only on payment_records for audit purposes.
         const { data: vendor, error: vendorErr } = await supabase.from('vendor_accounts').insert({
           phone,
           password_hash: password,
@@ -71,8 +74,8 @@ export default function ActivatePage() {
           slug,
           city,
           status: 'active',
-          plan: codeData.plan || 'chat',
-          plan_price: codeData.price || 50000,
+          plan_tier: codeData.plan_tier || codeData.plan || 'chat',
+          plan_started_at: now.toISOString(),
           activated_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           activated_by: salesPerson.trim(),
