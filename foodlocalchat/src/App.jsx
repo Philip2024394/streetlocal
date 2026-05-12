@@ -12,6 +12,7 @@ import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils
 import { VENDOR_TYPES } from '@shared/data/foodVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
+import { MENU_CATEGORY_GROUPS, DIETARY_TAGS, CUSTOM_CATEGORY_ICONS } from '@shared/data/menuCategoryGroups'
 import {
   sendCustomerOrder,
   sendChatText,
@@ -562,6 +563,7 @@ export default function App() {
   const [modalVariant, setModalVariant] = useState(null)        // picked variant in the item modal
   const [modalModifiers, setModalModifiers] = useState([])      // checked modifiers in the modal
   const [modalPhotoIdx, setModalPhotoIdx] = useState(0)         // primary=0; gallery starts at 1
+  const modalSwipeStartX = useRef(null)                          // touch tracking for image gallery swipe
   const [modalNote, setModalNote] = useState('')                 // per-item note set by customer in the modal
   const [modalNoteOpen, setModalNoteOpen] = useState(false)      // progressive disclosure — note field hidden until tapped
   // Reset modal selections whenever a new item opens — auto-pick first variant if any
@@ -852,6 +854,11 @@ export default function App() {
   const [formHalal, setFormHalal] = useState(false)
   const [formPopular, setFormPopular] = useState(false)
   const [formCategory, setFormCategory] = useState('Meal')
+  // Global category picker modal state
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false)
+  const [categoryPickerGroup, setCategoryPickerGroup] = useState(null) // group.id or null (top-level)
+  const [customCategoryName, setCustomCategoryName] = useState('')
+  const [customCategoryIcon, setCustomCategoryIcon] = useState('🍽️')
   const [formPhoto, setFormPhoto] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formPrepTime, setFormPrepTime] = useState(0)
@@ -859,7 +866,8 @@ export default function App() {
   const [formPhotos, setFormPhotos] = useState([])         // additional photos (primary stays in formPhoto)
   const [formAllergens, setFormAllergens] = useState([])   // array of strings
   const [formDietary, setFormDietary] = useState([])       // array of strings (halal/vegan/etc)
-  const [formPortion, setFormPortion] = useState('')       // "200g" / "Serves 2"
+  const [formPortion, setFormPortion] = useState('')       // grams text e.g. "200g"
+  const [formPortionSize, setFormPortionSize] = useState('') // 'Small' | 'Medium' | 'Large' | ''
   const [formStock, setFormStock] = useState('')           // empty = unlimited; number = count
   const [formVariants, setFormVariants] = useState([])     // [{id, name, priceDelta}]
   const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
@@ -873,12 +881,11 @@ export default function App() {
       <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {[
-          { key: 'photos', label: '📷 Photos' },
           { key: 'variants', label: '📏 Sizes' },
           { key: 'modifiers', label: '➕ Add-ons' },
           { key: 'allergens', label: '⚠️ Allergens' },
           { key: 'dietary', label: '🌱 Dietary' },
-          { key: 'portion', label: '⚖️ Portion' },
+          { key: 'portion', label: '⚖️ Grams' },
           { key: 'stock', label: '📦 Stock' },
         ].map(opt => (
           <button key={opt.key} type="button" onClick={() => toggleSection(opt.key)} style={{
@@ -889,33 +896,9 @@ export default function App() {
           }}>{expandedSections[opt.key] ? '−' : '+'} {opt.label}</button>
         ))}
       </div>
-      {expandedSections.photos && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Gallery — up to 4 extra photos (primary is above)</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {formPhotos.map((url, i) => (
-              <div key={i} style={{ position: 'relative', width: 64, height: 64, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button onClick={() => setFormPhotos(p => p.filter((_, j) => j !== i))} type="button" style={{ position: 'absolute', top: 2, right: 2, width: 22, height: 22, borderRadius: 11, border: 'none', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 14, cursor: 'pointer', lineHeight: 1, padding: 0 }}>&times;</button>
-              </div>
-            ))}
-            {formPhotos.length < 4 && (
-              <label style={{ width: 64, height: 64, borderRadius: 10, border: '1px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 24, background: 'rgba(255,255,255,0.02)' }}>
-                +
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  const reader = new FileReader()
-                  reader.onload = () => setFormPhotos(p => [...p, reader.result])
-                  reader.readAsDataURL(file)
-                }} />
-              </label>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Photo gallery is handled by the 4 thumbnail slots under the live preview card. */}
       {expandedSections.allergens && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy'].map(a => {
@@ -933,31 +916,36 @@ export default function App() {
         </div>
       )}
       {expandedSections.dietary && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Dietary tags</div>
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
+          <button type="button" onClick={() => toggleSection('dietary')} aria-label="Close dietary" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#EF4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>×</button>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags · customers can filter the menu by these</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['Halal', 'Vegan', 'Vegetarian', 'Gluten-free', 'Dairy-free'].map(d => {
-              const isActive = formDietary.includes(d)
+            {DIETARY_TAGS.map(tag => {
+              const isActive = formDietary.includes(tag.id)
               return (
-                <button key={d} type="button" onClick={() => setFormDietary(p => isActive ? p.filter(x => x !== d) : [...p, d])} style={{
-                  background: isActive ? '#22C55E' : 'rgba(255,255,255,0.05)',
-                  border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
-                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                <button key={tag.id} type="button" onClick={() => setFormDietary(p => isActive ? p.filter(x => x !== tag.id) : [...p, tag.id])} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: isActive ? `${tag.color}22` : 'rgba(255,255,255,0.05)',
+                  border: '1px solid ' + (isActive ? tag.color : 'rgba(255,255,255,0.1)'),
+                  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   padding: '6px 10px', borderRadius: 14, minHeight: 32,
-                }}>{d}</button>
+                }}>
+                  {tag.svg && <svg width="14" height="14" viewBox="0 0 24 24" fill={tag.color}><path d={tag.svg} /></svg>}
+                  {tag.label}
+                </button>
               )
             })}
           </div>
         </div>
       )}
       {expandedSections.portion && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Portion / serving size</div>
-          <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · Serves 2 · 12oz' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Grams / weight</div>
+          <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · 350g · 1.2kg' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
         </div>
       )}
       {expandedSections.stock && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
@@ -966,7 +954,7 @@ export default function App() {
         </div>
       )}
       {expandedSections.variants && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Sizes / variants — customer picks one. Price delta added to base.</div>
           {formVariants.map((v, i) => (
             <div key={v.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
@@ -979,7 +967,7 @@ export default function App() {
         </div>
       )}
       {expandedSections.modifiers && (
-        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
           {formModifiers.map((m, i) => (
             <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
@@ -1335,6 +1323,7 @@ export default function App() {
     setFormAllergens(item.allergens || [])
     setFormDietary(item.dietary || [])
     setFormPortion(item.portion || '')
+    setFormPortionSize(item.portionSize || '')
     setFormStock(item.stock != null ? String(item.stock) : '')
     setFormVariants(item.variants || [])
     setFormModifiers(item.modifiers || [])
@@ -1353,7 +1342,7 @@ export default function App() {
   const saveEdit = () => {
     if (!formName || !formPrice) return
     const stockNum = formStock === '' ? null : Number(formStock)
-    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) =>
       prev.map((m) =>
         m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
@@ -1378,6 +1367,7 @@ export default function App() {
     setFormAllergens([])
     setFormDietary([])
     setFormPortion('')
+    setFormPortionSize('')
     setFormStock('')
     setFormVariants([])
     setFormModifiers([])
@@ -1390,7 +1380,7 @@ export default function App() {
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
     const stockNum = formStock === '' ? null : Number(formStock)
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, stock: stockNum, variants: formVariants, modifiers: formModifiers }
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers }
     setMenuItems((prev) => [...prev, item])
     if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
@@ -1749,9 +1739,9 @@ export default function App() {
             // touch the edges. objectFit:contain keeps the entire logo visible (no cropping).
             const innerPx = Math.round(heroOuter * logoInner / 100)
             return shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: heroBare, height: heroBare, maxWidth: '85vw', maxHeight: '50vh', objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: heroBare, height: heroBare, maxWidth: 'calc(100vw - 20px)', maxHeight: '50vh', objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
             ) : (
-              <div style={{ width: heroOuter, height: heroOuter, maxWidth: '85vw', maxHeight: '50vh', borderRadius: heroOuter / 2, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+              <div style={{ width: heroOuter, height: heroOuter, maxWidth: 'calc(100vw - 20px)', maxHeight: '50vh', borderRadius: heroOuter / 2, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
                 <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: innerPx, height: innerPx, objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
               </div>
             )
@@ -1891,10 +1881,10 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: 10 }}>
           {shopLogoStyle !== 'off' && shopLogo ? (
             shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))' }} />
+              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
             ) : (
-              <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover' }} />
+              <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
               </div>
             )
           ) : shopLogoStyle !== 'off' ? (
@@ -2126,6 +2116,132 @@ export default function App() {
           </>
         )}
 
+        {/* ─── Global Category Picker — Browse all 85+ categories grouped, or add custom ─── */}
+        {categoryPickerOpen && (() => {
+          const activeGroup = categoryPickerGroup ? MENU_CATEGORY_GROUPS.find(g => g.id === categoryPickerGroup) : null
+          const close = () => { setCategoryPickerOpen(false); setCategoryPickerGroup(null); setCustomCategoryName('') }
+          return (
+            <>
+              <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000 }} />
+              <div role="dialog" aria-label="Pick a menu category" style={{
+                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                width: 380, maxWidth: '94vw', maxHeight: '90vh', overflowY: 'auto',
+                background: '#000', borderRadius: 22, padding: '24px 20px 20px', zIndex: 1001,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div>
+                    {activeGroup && (
+                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCustomCategoryName('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 4 }}>← Back to groups</button>
+                    )}
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {activeGroup && activeGroup.svg && <svg width="20" height="20" viewBox="0 0 24 24" fill="#EF4444"><path d={activeGroup.svg} /></svg>}
+                      {activeGroup ? activeGroup.label : 'Pick a category'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{activeGroup ? activeGroup.desc : 'Tap a group, then pick a type — or add your own.'}</div>
+                  </div>
+                  <button type="button" onClick={close} style={{ width: 32, height: 32, borderRadius: 16, background: '#EF4444', border: 'none', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>✕</button>
+                </div>
+
+                {/* Group cards view */}
+                {!activeGroup && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {MENU_CATEGORY_GROUPS.map(g => (
+                      <button key={g.id} type="button" onClick={() => setCategoryPickerGroup(g.id)} style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                        padding: 12, borderRadius: 14,
+                        background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                        border: '1.5px solid #EF4444',
+                        cursor: 'pointer', textAlign: 'left', color: '#fff', minHeight: 88,
+                        transition: 'transform 100ms ease, background 150ms ease',
+                      }}>
+                        <span style={{ width: 28, height: 28, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {g.svg ? <svg width="22" height="22" viewBox="0 0 24 24" fill="#EF4444"><path d={g.svg} /></svg> : null}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 800 }}>{g.label}</span>
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500, marginTop: 2, lineHeight: 1.3 }}>{g.isCustom ? 'Type your own name' : `${g.types.length} types`}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tier-2 type chips (regular group) */}
+                {activeGroup && !activeGroup.isCustom && (
+                  <>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                      {activeGroup.types.map(t => {
+                        const isPicked = formCategory === t
+                        return (
+                          <button key={t} type="button" onClick={() => { setFormCategory(t); close() }} style={{
+                            background: isPicked ? '#EF4444' : 'rgba(255,255,255,0.06)',
+                            border: '1px solid ' + (isPicked ? '#EF4444' : 'rgba(255,255,255,0.1)'),
+                            color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            padding: '7px 12px', borderRadius: 16, minHeight: 32,
+                          }}>{t}</button>
+                        )
+                      })}
+                    </div>
+                    {/* Custom-name input inside the group too — for niche dish types */}
+                    <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>Or type a new one in this group</div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          value={customCategoryName}
+                          onChange={e => setCustomCategoryName(e.target.value)}
+                          placeholder="e.g. Pho · Goreng · Tapas…"
+                          maxLength={32}
+                          style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 13, padding: '8px 12px', borderRadius: 10, outline: 'none' }}
+                        />
+                        <button type="button" disabled={!customCategoryName.trim()} onClick={() => { setFormCategory(customCategoryName.trim()); close() }} style={{
+                          padding: '0 14px', borderRadius: 10, border: 'none',
+                          background: customCategoryName.trim() ? '#EF4444' : 'rgba(255,255,255,0.06)',
+                          color: '#fff', fontSize: 13, fontWeight: 700,
+                          cursor: customCategoryName.trim() ? 'pointer' : 'not-allowed',
+                          opacity: customCategoryName.trim() ? 1 : 0.5,
+                        }}>Use</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Other — custom category with icon picker */}
+                {activeGroup && activeGroup.isCustom && (
+                  <div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Category name</div>
+                    <input
+                      value={customCategoryName}
+                      onChange={e => setCustomCategoryName(e.target.value)}
+                      placeholder="e.g. Acai Bowls · Sundanese · Persian Stews"
+                      maxLength={32}
+                      style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 14, padding: '10px 12px', borderRadius: 10, outline: 'none', marginBottom: 14 }}
+                    />
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Pick an icon</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14, maxHeight: 180, overflowY: 'auto', padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                      {CUSTOM_CATEGORY_ICONS.map(ic => (
+                        <button key={ic} type="button" onClick={() => setCustomCategoryIcon(ic)} style={{
+                          width: 36, height: 36, fontSize: 20, lineHeight: 1,
+                          background: customCategoryIcon === ic ? '#EF4444' : 'rgba(255,255,255,0.04)',
+                          border: '1px solid ' + (customCategoryIcon === ic ? '#EF4444' : 'rgba(255,255,255,0.08)'),
+                          borderRadius: 8, cursor: 'pointer', padding: 0,
+                        }}>{ic}</button>
+                      ))}
+                    </div>
+                    <button type="button" disabled={!customCategoryName.trim()} onClick={() => { setFormCategory(customCategoryName.trim()); close() }} style={{
+                      width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                      background: customCategoryName.trim() ? '#EF4444' : 'rgba(255,255,255,0.06)',
+                      color: '#fff', fontSize: 14, fontWeight: 800,
+                      cursor: customCategoryName.trim() ? 'pointer' : 'not-allowed',
+                      opacity: customCategoryName.trim() ? 1 : 0.5,
+                    }}>Use "{customCategoryIcon} {customCategoryName.trim() || 'My Category'}"</button>
+                  </div>
+                )}
+              </div>
+            </>
+          )
+        })()}
+
         {/* Visit Us FAB — bottom-right, always visible while scrolling. Expands on first session. */}
         {!isVendor && (
           <button onClick={() => setShowLocation(true)} aria-label="Visit us" title="Visit us" style={{
@@ -2153,7 +2269,7 @@ export default function App() {
             <div onClick={() => setMenuDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 998, animation: 'menuOverlayIn 200ms ease-out' }} />
             <div role="dialog" aria-label="Browse menu" style={{
               position: 'fixed', top: 0, right: 0, width: 300, maxWidth: '88vw', height: '100vh',
-              background: 'linear-gradient(180deg, #1a1a1f 0%, #0c0c10 100%)',
+              background: '#000',
               zIndex: 999, padding: '22px 18px 24px', overflowY: 'auto',
               boxShadow: '-12px 0 40px rgba(0,0,0,0.55), inset 1px 0 0 rgba(255,255,255,0.06)',
               borderTopLeftRadius: 18, borderBottomLeftRadius: 18,
@@ -2162,42 +2278,83 @@ export default function App() {
               <style>{`
                 @keyframes menuDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
                 @keyframes menuOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes redRun {
+                  0% { transform: translateY(-100%); }
+                  100% { transform: translateY(100%); }
+                }
               `}</style>
+              {/* Animated red running line on the left edge */}
+              <div style={{ position: 'absolute', left: 0, top: 0, width: 3, height: '100%', overflow: 'hidden', borderTopLeftRadius: 18, borderBottomLeftRadius: 18, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '60%', background: 'linear-gradient(180deg, transparent 0%, #EF4444 40%, #FF4D4D 50%, #EF4444 60%, transparent 100%)', filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.8))', animation: 'redRun 2.4s linear infinite' }} />
+              </div>
               {/* Accent line on top — premium "title indicator" */}
               <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14 }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div>
-                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Our Menu</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Menu</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
                 </div>
-                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12 }}>&times;</button>
+                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: '#EF4444', border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>&times;</button>
               </div>
-              {[{ filter: 'All', label: 'Full Menu' }, ...MENU_CATEGORIES.slice(1).map(c => ({ filter: c, label: c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c }))].map(opt => {
-                const count = opt.filter === 'All' ? menuItems.length : menuItems.filter(m => m.category === opt.filter).length
-                const isActive = menuFilter === opt.filter
-                return (
-                  <button key={opt.filter} onClick={() => { setMenuFilter(opt.filter); setMenuDrawerOpen(false) }} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
-                    padding: '13px 14px', marginBottom: 8, borderRadius: 12,
-                    background: isActive
-                      ? (isCustomAccent ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)` : 'rgba(255,255,255,0.16)')
-                      : 'rgba(255,255,255,0.04)',
-                    border: isActive ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: isActive && isCustomAccent ? `0 4px 14px ${accent}55` : 'none',
-                    cursor: 'pointer', minHeight: 48,
-                    color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'left',
-                    transition: 'background 150ms ease, box-shadow 150ms ease',
-                  }}>
-                    <span>{opt.label}</span>
-                    <span style={{
-                      padding: '3px 9px', borderRadius: 11,
-                      background: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)',
-                      color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontSize: 11, fontWeight: 700, minWidth: 22, textAlign: 'center',
-                    }}>{count}</span>
-                  </button>
-                )
-              })}
+              {(() => {
+                // Short description shown under each category label
+                const DESCS = {
+                  'All':         'Browse everything we serve',
+                  'Meal':        'Main dishes & full plates',
+                  'Drink':       'Beverages & refreshments',
+                  'Drinks':      'Beverages & refreshments',
+                  'Snack':       'Light bites & sides',
+                  'Snacks':      'Light bites & sides',
+                  'Dessert':     'Sweet treats to finish',
+                  'Extra Sauce': 'Sauces, sambal & dips',
+                  'Extra':       'Sauces, sambal & dips',
+                }
+                // SVG path data for each category — Material Symbols, high quality at any size
+                const ICONS = {
+                  'All':         'M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z',
+                  'Meal':        'M8.1 13.34l2.83-2.83L3.91 3.5a4.008 4.008 0 0 0 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z',
+                  'Drink':       'M5 12l1.5 6h11L19 12V4H5v8zm2-6h10v2H7V6z',
+                  'Drinks':      'M5 12l1.5 6h11L19 12V4H5v8zm2-6h10v2H7V6z',
+                  'Snack':       'M21.598 11.064a1.006 1.006 0 0 0-.854-.172A2.94 2.94 0 0 1 20 11c-1.654 0-3-1.346-3.001-2.999.001-.471.108-.94.315-1.391a.999.999 0 0 0-1.029-1.41c-.108.013-.221.023-.336.023-1.654 0-3-1.346-3-3 0-.116.011-.229.022-.336a1 1 0 0 0-1.412-1.029 9.012 9.012 0 0 0-3.598 12.974 9.012 9.012 0 0 0 13.65-3.769 1.005 1.005 0 0 0-.013-.999z',
+                  'Snacks':      'M21.598 11.064a1.006 1.006 0 0 0-.854-.172A2.94 2.94 0 0 1 20 11c-1.654 0-3-1.346-3.001-2.999.001-.471.108-.94.315-1.391a.999.999 0 0 0-1.029-1.41c-.108.013-.221.023-.336.023-1.654 0-3-1.346-3-3 0-.116.011-.229.022-.336a1 1 0 0 0-1.412-1.029 9.012 9.012 0 0 0-3.598 12.974 9.012 9.012 0 0 0 13.65-3.769 1.005 1.005 0 0 0-.013-.999z',
+                  'Dessert':     'M12 6c1.11 0 2-.9 2-2 0-.38-.1-.73-.29-1.03L12 0l-1.71 2.97c-.19.3-.29.65-.29 1.03 0 1.1.9 2 2 2zm4.6 9.99l-1.07-1.07-1.08 1.07c-1.3 1.3-3.58 1.31-4.89 0l-1.07-1.07-1.09 1.07C6.75 16.64 5.88 17 4.96 17c-.73 0-1.4-.23-1.96-.61V21c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4.61c-.56.38-1.23.61-1.96.61-.92 0-1.79-.36-2.44-1.01zM18 9h-5V7h-2v2H6c-1.66 0-3 1.34-3 3v1.54c0 1.08.88 1.96 1.96 1.96.52 0 1.02-.2 1.38-.57l2.14-2.13 2.13 2.13c.74.74 2.03.74 2.77 0l2.14-2.13 2.13 2.13c.37.37.86.57 1.38.57 1.08 0 1.96-.88 1.96-1.96V12c0-1.66-1.34-3-3-3z',
+                  'Extra Sauce': 'M5.5 21c.83 0 1.5-.67 1.5-1.5V14H4v5.5c0 .83.67 1.5 1.5 1.5zM18 6h-2V3c0-.55-.45-1-1-1H9c-.55 0-1 .45-1 1v3H6c-.55 0-1 .45-1 1v6h14V7c0-.55-.45-1-1-1zm-7-2h2v2h-2V4zm7.5 17c.83 0 1.5-.67 1.5-1.5V14h-3v5.5c0 .83.67 1.5 1.5 1.5z',
+                  'Extra':       'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+                }
+                return [{ filter: 'All', label: 'Full Menu' }, ...MENU_CATEGORIES.slice(1).map(c => ({ filter: c, label: c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c }))].map(opt => {
+                  const count = opt.filter === 'All' ? menuItems.length : menuItems.filter(m => m.category === opt.filter).length
+                  const isActive = menuFilter === opt.filter
+                  const iconPath = ICONS[opt.filter] || ICONS[opt.label] || ICONS['Extra']
+                  return (
+                    <button key={opt.filter} onClick={() => { setMenuFilter(opt.filter); setMenuDrawerOpen(false) }} style={{
+                      display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                      padding: '13px 14px', marginBottom: 8, borderRadius: 12,
+                      background: isActive ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
+                      backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                      border: '1.5px solid #EF4444',
+                      boxShadow: isActive ? '0 0 14px rgba(239,68,68,0.4)' : 'none',
+                      cursor: 'pointer', minHeight: 48,
+                      color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'left',
+                      transition: 'background 150ms ease, box-shadow 150ms ease',
+                    }}>
+                      <span style={{ width: 36, height: 36, borderRadius: 10, background: isActive ? '#EF4444' : 'rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 150ms ease' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? '#fff' : '#EF4444'} aria-hidden="true"><path d={iconPath} /></svg>
+                      </span>
+                      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{opt.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.55)', lineHeight: 1.3, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{DESCS[opt.filter] || DESCS[opt.label] || ''}</span>
+                      </span>
+                      <span style={{
+                        padding: '4px 10px', borderRadius: 11,
+                        background: '#FACC15',
+                        color: '#1a1a1a',
+                        fontSize: 11, fontWeight: 800, minWidth: 24, textAlign: 'center',
+                        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.15)',
+                      }}>{count}</span>
+                    </button>
+                  )
+                })
+              })()}
             </div>
           </>
         )}
@@ -2357,15 +2514,43 @@ export default function App() {
               {(() => {
                 const photoStrip = [itemModal.photo, ...(itemModal.photos || [])].filter(Boolean)
                 const activePhoto = photoStrip[modalPhotoIdx] || itemModal.photo || PLACEHOLDER_LG
+                const hasMany = photoStrip.length > 1
+                const goPrev = () => setModalPhotoIdx(i => (i - 1 + photoStrip.length) % photoStrip.length)
+                const goNext = () => setModalPhotoIdx(i => (i + 1) % photoStrip.length)
                 return (
                   <>
-                    <img
-                      src={activePhoto}
-                      alt={itemModal.name}
-                      onError={imgError('food')}
-                      style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 20 }}
-                    />
-                    {photoStrip.length > 1 && (
+                    <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden' }}
+                      onTouchStart={(e) => { modalSwipeStartX.current = e.touches[0].clientX }}
+                      onTouchEnd={(e) => {
+                        if (modalSwipeStartX.current === null || !hasMany) return
+                        const dx = e.changedTouches[0].clientX - modalSwipeStartX.current
+                        if (Math.abs(dx) > 50) { dx > 0 ? goPrev() : goNext() }
+                        modalSwipeStartX.current = null
+                      }}
+                    >
+                      <img
+                        src={activePhoto}
+                        alt={itemModal.name}
+                        onError={imgError('food')}
+                        style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block', transition: 'opacity 250ms ease' }}
+                        key={activePhoto}
+                      />
+                      {hasMany && (
+                        <>
+                          <button onClick={(e) => { e.stopPropagation(); goPrev() }} aria-label="Previous photo" style={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: 18, border: 'none', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>‹</button>
+                          <button onClick={(e) => { e.stopPropagation(); goNext() }} aria-label="Next photo" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: 18, border: 'none', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>›</button>
+                          {/* Dot indicator */}
+                          <div style={{ position: 'absolute', bottom: 10, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6, pointerEvents: 'none' }}>
+                            {photoStrip.map((_, i) => (
+                              <span key={i} style={{ width: i === modalPhotoIdx ? 18 : 6, height: 6, borderRadius: 3, background: i === modalPhotoIdx ? '#fff' : 'rgba(255,255,255,0.5)', transition: 'width 200ms ease, background 200ms ease' }} />
+                            ))}
+                          </div>
+                          {/* Counter badge */}
+                          <div style={{ position: 'absolute', top: 10, left: 10, padding: '4px 10px', borderRadius: 12, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: '#fff', fontSize: 11, fontWeight: 700, pointerEvents: 'none' }}>{modalPhotoIdx + 1} / {photoStrip.length}</div>
+                        </>
+                      )}
+                    </div>
+                    {hasMany && (
                       <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 2px' }}>
                         {photoStrip.map((url, i) => (
                           <button key={i} onClick={() => setModalPhotoIdx(i)} style={{
@@ -2589,10 +2774,10 @@ export default function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
                 {shopLogoStyle !== 'off' && shopLogo ? (
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
                   ) : (
-                    <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, borderRadius: 29, objectFit: 'cover' }} />
+                    <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
                     </div>
                   )
                 ) : shopLogoStyle !== 'off' ? (
@@ -3746,7 +3931,7 @@ export default function App() {
       {vendorDrawer && (
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
-          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#0a0a0a', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: isCustomAccent ? `2px solid ${accent}30` : '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#000', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
             {/* Header with logo */}
             <div style={{ padding: '20px 16px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -3761,7 +3946,7 @@ export default function App() {
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{shopName}</div>
                   <div style={{ fontSize: 12, color: accent, fontWeight: 600, marginTop: 1 }}>{shopFoodType}</div>
                 </div>
-                <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: '#DC2626', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(220,38,38,0.4)' }}>✕</button>
               </div>
             </div>
 
@@ -3798,7 +3983,7 @@ export default function App() {
                 { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => { setVendorTab('settings'); setVendorDrawer(false) } },
                 { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
               ].map(item => (
-                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}40`, background: `${accent}10`, cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 44 }}>
+                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 44 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.label}</div>
@@ -3814,7 +3999,7 @@ export default function App() {
 
             {/* Design Studio link */}
             <div style={{ padding: '0 16px 12px' }}>
-              <button onClick={() => { setDesignStudio(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}40`, background: `${accent}10`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button onClick={() => { setDesignStudio(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🎨</div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Design Studio</div>
@@ -4181,6 +4366,67 @@ export default function App() {
                 </div>
                 {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               </div>
+
+              {/* 4 thumbnail slots — tap a filled thumbnail to swap with main image */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                {[0, 1, 2, 3].map(i => {
+                  const url = formPhotos[i] || ''
+                  const swapWithMain = () => {
+                    const prevMain = formPhoto
+                    setFormPhoto(url)
+                    setFormPhotos(p => {
+                      const next = [...p]
+                      next[i] = prevMain
+                      return next.filter(Boolean).slice(0, 4)
+                    })
+                  }
+                  const remove = (e) => {
+                    e.preventDefault(); e.stopPropagation()
+                    setFormPhotos(p => p.filter((_, idx) => idx !== i))
+                  }
+                  if (url) {
+                    return (
+                      <div key={i} style={{ flex: 1, position: 'relative' }}>
+                        <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
+                          <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
+                        </button>
+                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                      </div>
+                    )
+                  }
+                  return (
+                    <label key={i} style={{ flex: 1, aspectRatio: '1 / 1', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', gap: 2 }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" /></svg>
+                      <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files[0]; if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                          const img = new Image()
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas')
+                            const max = 800
+                            const scale = Math.min(max / img.width, max / img.height, 1)
+                            canvas.width = img.width * scale
+                            canvas.height = img.height * scale
+                            const ctx = canvas.getContext('2d')
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+                            setFormPhotos(p => {
+                              const next = [...p]
+                              next[i] = dataUrl
+                              return next.filter(Boolean).slice(0, 4)
+                            })
+                          }
+                          img.src = reader.result
+                        }
+                        reader.readAsDataURL(file)
+                      }} />
+                    </label>
+                  )
+                })}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
             </div>
 
             {/* Form card */}
@@ -4194,9 +4440,12 @@ export default function App() {
               {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span>Category</span>
-                    <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCategoryPickerOpen(true) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}>＋ Browse all</button>
+                      <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                    </div>
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
                     {categoryChips.map(c => {
@@ -4235,6 +4484,17 @@ export default function App() {
                     <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Portion size — important: visible by default in main form */}
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Portion</label>
+                <select value={formPortionSize} onChange={(e) => setFormPortionSize(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
+                  <option value="" style={{ background: '#1a1a1a' }}>Choose portion size…</option>
+                  <option value="Small" style={{ background: '#1a1a1a' }}>Small</option>
+                  <option value="Medium" style={{ background: '#1a1a1a' }}>Medium</option>
+                  <option value="Large" style={{ background: '#1a1a1a' }}>Large</option>
+                </select>
               </div>
 
               {/* Badges */}
@@ -4363,6 +4623,67 @@ export default function App() {
                 </div>
                 {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               </div>
+
+              {/* 4 thumbnail slots — tap a filled thumbnail to swap with main image */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                {[0, 1, 2, 3].map(i => {
+                  const url = formPhotos[i] || ''
+                  const swapWithMain = () => {
+                    const prevMain = formPhoto
+                    setFormPhoto(url)
+                    setFormPhotos(p => {
+                      const next = [...p]
+                      next[i] = prevMain
+                      return next.filter(Boolean).slice(0, 4)
+                    })
+                  }
+                  const remove = (e) => {
+                    e.preventDefault(); e.stopPropagation()
+                    setFormPhotos(p => p.filter((_, idx) => idx !== i))
+                  }
+                  if (url) {
+                    return (
+                      <div key={i} style={{ flex: 1, position: 'relative' }}>
+                        <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
+                          <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
+                        </button>
+                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                      </div>
+                    )
+                  }
+                  return (
+                    <label key={i} style={{ flex: 1, aspectRatio: '1 / 1', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', gap: 2 }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" /></svg>
+                      <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files[0]; if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                          const img = new Image()
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas')
+                            const max = 800
+                            const scale = Math.min(max / img.width, max / img.height, 1)
+                            canvas.width = img.width * scale
+                            canvas.height = img.height * scale
+                            const ctx = canvas.getContext('2d')
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+                            setFormPhotos(p => {
+                              const next = [...p]
+                              next[i] = dataUrl
+                              return next.filter(Boolean).slice(0, 4)
+                            })
+                          }
+                          img.src = reader.result
+                        }
+                        reader.readAsDataURL(file)
+                      }} />
+                    </label>
+                  )
+                })}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
             </div>
 
             {/* Form card */}
@@ -4684,30 +5005,36 @@ export default function App() {
         const otherThemes = filtered.filter(t => !t.isNew)
 
         return (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#fff' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+            {/* Themed background — matches the rest of the app */}
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
-              {/* Header */}
+              {/* Header — branded with vendor's logo so it feels like their app */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
-                <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: '#1a1a1a', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>StreetLocal</div>
-                  <div style={{ fontSize: 8, color: 'rgba(0,0,0,0.35)', fontWeight: 600, letterSpacing: 0.5 }}>streetlocal.live</div>
-                </div>
-                <div style={{ flex: 1, textAlign: 'right' }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a' }}>Themes</div>
-                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{THEME_PRESETS.length} available</div>
+                <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
+                {shopLogo ? (
+                  <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)' }}>
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain', transform: `translate(${logoOffsetX * 32 / 156}px, ${logoOffsetY * 32 / 156}px)` }} />
+                  </div>
+                ) : (
+                  <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Themes · {THEME_PRESETS.length} available</div>
                 </div>
               </div>
 
               {/* Search + Filter button */}
               <div style={{ padding: '0 14px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                  <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.03)', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(0,0,0,0.3)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  <input value={themeSearch} onChange={e => setThemeSearch(e.target.value)} placeholder="Search themes..." style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
                 </div>
-                <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#1a1a1a', color: themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill={themeCountry !== 'all' ? '#FFD600' : 'rgba(255,255,255,0.4)'}><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
-                  {themeCountry !== 'all' && <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, background: '#22c55e', border: '2px solid #1a1a1a' }} />}
+                <button onClick={() => setThemeCountryDrawer(true)} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#EF4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative', boxShadow: '0 2px 8px rgba(239,68,68,0.45)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" /></svg>
+                  {themeCountry !== 'all' && <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, background: '#FACC15', border: '2px solid #EF4444' }} />}
                 </button>
               </div>
               {themeCountry !== 'all' && (
@@ -4766,7 +5093,7 @@ export default function App() {
                 const renderPhoneCard = (theme) => (
                   <div key={theme.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {/* Theme name header */}
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#1a1a1a', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {theme.label.replace(/^#\d+\s/, '')}
                       {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, display: 'inline-block', ...newBadgeDance }}>NEW</span>}
                       {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>Active</span>}
@@ -4790,7 +5117,7 @@ export default function App() {
                     {/* New themes */}
                     {newThemes.length > 0 && themeSearch === '' && (
                       <div style={{ padding: '0 14px 16px' }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>New</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#FACC15', marginBottom: 10, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>New</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                           {newThemes.map(renderPhoneCard)}
                         </div>
@@ -4799,8 +5126,8 @@ export default function App() {
 
                     {/* All themes */}
                     <div style={{ padding: '0 14px 20px' }}>
-                      {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>All Themes</div>}
-                      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(0,0,0,0.35)', fontSize: 14 }}>No themes found</div>}
+                      {(newThemes.length > 0 && themeSearch === '') && <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>All Themes</div>}
+                      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>No themes found</div>}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {(themeSearch ? filtered : otherThemes).map(renderPhoneCard)}
                       </div>
@@ -4945,36 +5272,41 @@ export default function App() {
                       <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Logo Inside Circle ({logoInner}%)</label>
                       <input className="overlay-slider" type="range" min="40" max="100" step="2" value={logoInner} onChange={(e) => setLogoInner(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 10 }} />
                       <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 6, display: 'block' }}>Logo Position</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6, minHeight: 150 }}>
-                        {/* Live circle preview — scales with logoScale, just like the phone */}
-                        {(() => {
-                          const prevOuter = Math.min(140, Math.max(30, Math.round(0.5 * logoScale)))
-                          const prevInner = Math.round(prevOuter * logoInner / 100)
-                          const prevOffX = logoOffsetX * prevOuter / 250
-                          const prevOffY = logoOffsetY * prevOuter / 250
-                          return (
-                            <div style={{ flexShrink: 0, width: prevOuter, height: prevOuter, borderRadius: prevOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', transition: 'width 0.15s ease, height 0.15s ease' }}>
+                      {(() => {
+                        // Match the phone-preview formula exactly so the circle here
+                        // is the same pixel size as the one in the iPhone preview.
+                        const PHONE_RATIO = 220 / 360
+                        const PHONE_MAX = 220 - 20  // phone preview is 220px wide, 10px padding each side
+                        const targetOuter = Math.round(156 * (logoScale / 100) * PHONE_RATIO)
+                        const prevOuter = Math.min(PHONE_MAX, targetOuter)
+                        const prevInner = Math.round(prevOuter * logoInner / 100)
+                        const prevOffX = logoOffsetX * PHONE_RATIO
+                        const prevOffY = logoOffsetY * PHONE_RATIO
+                        return (
+                          <div style={{ position: 'relative', minHeight: Math.max(prevOuter, 140) + 8, marginBottom: 6 }}>
+                            {/* Live circle preview — left, matches phone preview pixel-for-pixel */}
+                            <div style={{ width: prevOuter, height: prevOuter, borderRadius: prevOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', transition: 'width 0.15s ease, height 0.15s ease' }}>
                               {shopLogo ? (
                                 <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: prevInner, height: prevInner, objectFit: 'contain', transform: `translate(${prevOffX}px, ${prevOffY}px)`, transition: 'width 0.15s ease, height 0.15s ease' }} />
                               ) : (
                                 <div style={{ fontSize: Math.round(prevOuter * 0.32), fontWeight: 900, color: '#fff' }}>{(shopName || '?').charAt(0)}</div>
                               )}
                             </div>
-                          )
-                        })()}
-                        {/* Arrow pad — right */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, flex: 1, maxWidth: 144 }}>
-                          <div />
-                          <button type="button" onClick={() => setLogoOffsetY(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↑</button>
-                          <div />
-                          <button type="button" onClick={() => setLogoOffsetX(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>←</button>
-                          <button type="button" onClick={() => { setLogoOffsetX(0); setLogoOffsetY(0) }} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.25)' }}>•</button>
-                          <button type="button" onClick={() => setLogoOffsetX(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>→</button>
-                          <div />
-                          <button type="button" onClick={() => setLogoOffsetY(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↓</button>
-                          <div />
-                        </div>
-                      </div>
+                            {/* Arrow pad — absolutely anchored to the right, fixed size */}
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: 144, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+                              <div />
+                              <button type="button" onClick={() => setLogoOffsetY(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↑</button>
+                              <div />
+                              <button type="button" onClick={() => setLogoOffsetX(v => Math.max(-40, v - 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>←</button>
+                              <button type="button" onClick={() => { setLogoOffsetX(0); setLogoOffsetY(0) }} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.25)' }}>•</button>
+                              <button type="button" onClick={() => setLogoOffsetX(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>→</button>
+                              <div />
+                              <button type="button" onClick={() => setLogoOffsetY(v => Math.min(40, v + 4))} style={{ padding: '8px 0', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', minHeight: 36, boxShadow: '0 2px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.4)' }}>↓</button>
+                              <div />
+                            </div>
+                          </div>
+                        )
+                      })()}
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>X: {logoOffsetX}px · Y: {logoOffsetY}px · tap • to reset</div>
                     </>
                   )}
@@ -5038,8 +5370,8 @@ export default function App() {
                                   const pX = logoOffsetX * PHONE_RATIO
                                   const pY = logoOffsetY * PHONE_RATIO
                                   return shopLogoStyle === 'bare'
-                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: '85%', maxHeight: '50%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
-                                    : <div style={{ width: pOuter, height: pOuter, maxWidth: '85%', maxHeight: '50%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: 'calc(100% - 20px)', maxHeight: '50%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
+                                    : <div style={{ width: pOuter, height: pOuter, maxWidth: 'calc(100% - 20px)', maxHeight: '50%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
                                         <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pInner, height: pInner, objectFit: 'contain', transform: `translate(${pX}px, ${pY}px)` }} />
                                       </div>
                                 })() : shopLogoStyle !== 'off' ? (() => {
@@ -5344,7 +5676,7 @@ export default function App() {
             </div>
 
             {/* Intro */}
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Get Found by Local Customers</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
                 Your menu items are searchable on StreetLocal.live. When customers search for food near them, your items appear in the results — but only if your listing meets the quality requirements below.
@@ -5352,7 +5684,7 @@ export default function App() {
             </div>
 
             {/* Required fields */}
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Required For Each Menu Item</div>
               {[
                 { field: 'Item Photo', desc: 'Clear, appetising photo of the dish. Items without photos will NOT appear in search results.' },
@@ -5373,7 +5705,7 @@ export default function App() {
             </div>
 
             {/* Shop requirements */}
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Shop Profile Requirements</div>
               {[
                 { field: 'Shop Name', desc: 'Your business name as customers know it.' },
@@ -5394,7 +5726,7 @@ export default function App() {
             </div>
 
             {/* What you get */}
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>What Completed Listings Achieve</div>
               {[
                 'Your items appear when customers search by food name, type, or category',
@@ -5412,7 +5744,7 @@ export default function App() {
             </div>
 
             {/* Customer expectations */}
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#FFD600', marginBottom: 10 }}>Customer Expectations</div>
               {[
                 'Photos should match the actual food served — misleading images damage trust',
