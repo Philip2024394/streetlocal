@@ -1953,7 +1953,7 @@ export default function App() {
 
       {/* --- Menu Banner Image carousel --- */}
       {menuBanners.length > 0 && (
-        <div style={{ margin: '0 12px 8px' }}>
+        <div style={{ margin: '8px 12px 8px' }}>
           <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', height: 140 }}>
             {menuBanners.map((url, i) => (
               <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
