@@ -1420,6 +1420,10 @@ export default function App() {
   const [vendorTcLive, setVendorTcLive] = useState(false)
   const [vendorCsLive, setVendorCsLive] = useState(false)
   const [vendorWpLive, setVendorWpLive] = useState(false)
+  // vendorId is declared HERE (early) because the gateway-probe useEffect
+  // below depends on it. The matching vendorStatus/vendorExpiresAt state
+  // is still grouped with the vendor-session logic further down.
+  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id') || null)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1548,7 +1552,9 @@ export default function App() {
   const [loginMode, setLoginMode] = useState('login') // 'login' or 'signup'
   const [signupName, setSignupName] = useState('')
   const [signupCategory, setSignupCategory] = useState('')
-  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id') || null)
+  // vendorId is declared earlier in this component (before the gateway-probe
+  // useEffect that depends on it). vendorStatus/vendorExpiresAt stay here
+  // with the rest of the vendor-session UI state.
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
 
