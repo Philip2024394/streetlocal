@@ -6,12 +6,12 @@ import { useAppLocale, LANGUAGES } from './i18n'
 import imgError from './imgFallback'
 import { FOOD_TYPES, THEME_PRESETS } from '@shared/themes/foodThemes'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/paymentGateways'
-// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd + Checkout.com
+// Real end-to-end processing is wired for Midtrans + Stripe + Xendit + PayPal + Razorpay + Braintree + Mollie + HitPay + Adyen + Rapyd + Checkout.com + FOMO Pay
 // (Edge Functions + webhooks).
 // QRIS upload + bank transfer + escrow are manual-info flows (no real charge).
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
-const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'ewallet', 'bank'])
+const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'ewallet', 'bank'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -26,6 +26,7 @@ const GATEWAY_FIELD_MAP = {
   adyen:          { apiKey: 'server_key', clientKey: 'client_key', hmacKey: 'webhook_secret' }, // merchantAccount + liveUrlPrefix → additional_config
   rapyd:          { accessKey: 'server_key', secretKey: 'client_key' }, // secretKey is also the webhook HMAC key
   'checkout-com': { secretKey: 'server_key', publicKey: 'client_key', webhookSecret: 'webhook_secret' },
+  'fomo-pay':     { apiKey: 'server_key', signKey: 'webhook_secret' }, // merchantId → additional_config
 }
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
@@ -976,6 +977,22 @@ export default function App() {
     s.onerror = () => reject(new Error('Could not load Braintree Drop-in'))
     document.head.appendChild(s)
   })
+  // Customer-side: FOMO Pay hosted cashier redirect. Asian e-wallets
+  // (WeChat Pay, Alipay, GrabPay, etc.) + cards.
+  const payWithFomoPay = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description }) => {
+    if (!supabase) return 'failed'
+    const returnUrl = window.location.origin + window.location.pathname + (window.location.search || '')
+    const { data, error } = await supabase.functions.invoke('fomopay-create-payment', {
+      body: { vendorId, orderId, amount, currency: currency || 'SGD', items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, returnUrl, description },
+    })
+    if (error || !data?.url) {
+      console.error('FOMO Pay failed', error || data)
+      return 'failed'
+    }
+    try { localStorage.setItem('foodlocalchat_pendingFomoOrder', JSON.stringify({ orderId, vendorId, at: Date.now() })) } catch {}
+    window.location.href = data.url
+    return 'redirecting'
+  }
   // Customer-side: Checkout.com Payment Link hosted redirect. Cards + Apple
   // Pay + Google Pay + Klarna + iDEAL + Bancontact + Sofort + Multibanco etc.
   const payWithCheckoutCom = async ({ orderId, amount, currency, items, deliveryFee, customerName, customerEmail, customerPhone, conversationId, description, billingCountry }) => {
@@ -1129,6 +1146,7 @@ export default function App() {
   const [vendorAdyenLive, setVendorAdyenLive] = useState(false)
   const [vendorRapydLive, setVendorRapydLive] = useState(false)
   const [vendorCkoLive, setVendorCkoLive] = useState(false)
+  const [vendorFomoLive, setVendorFomoLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
@@ -1146,11 +1164,12 @@ export default function App() {
     probe('adyen', setVendorAdyenLive)
     probe('rapyd', setVendorRapydLive)
     probe('checkout-com', setVendorCkoLive)
+    probe('fomo-pay', setVendorFomoLive)
   }, [vendorId, isVendor])
   // Handle redirect-back from any hosted gateway: clean the URL and show a toast.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status')
+    const status = params.get('stripe_status') || params.get('xendit_status') || params.get('paypal_status') || params.get('razorpay_status') || params.get('mollie_status') || params.get('hitpay_status') || params.get('adyen_status') || params.get('rapyd_status') || params.get('cko_status') || params.get('fomo_status')
     if (!status) return
     const clean = window.location.pathname
     window.history.replaceState({}, '', clean)
@@ -1165,6 +1184,7 @@ export default function App() {
         localStorage.removeItem('foodlocalchat_pendingAdyenOrder')
         localStorage.removeItem('foodlocalchat_pendingRapydOrder')
         localStorage.removeItem('foodlocalchat_pendingCkoOrder')
+        localStorage.removeItem('foodlocalchat_pendingFomoOrder')
       } catch {}
       alert('✅ Payment received. Your order has been sent.')
     } else if (status === 'cancel') {
@@ -1985,7 +2005,7 @@ export default function App() {
     }
     // Live gateway branching — if a real payment gateway is active for this vendor,
     // run the charge BEFORE the chat order. Priority: Midtrans → Xendit → HitPay → Stripe → Adyen → Checkout.com → Rapyd → PayPal → Razorpay → Braintree → Mollie.
-    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
+    const activeGateway = vendorMidtransLive ? 'midtrans' : vendorXenditLive ? 'xendit' : vendorHitPayLive ? 'hitpay' : vendorFomoLive ? 'fomo-pay' : vendorStripeLive ? 'stripe' : vendorAdyenLive ? 'adyen' : vendorCkoLive ? 'checkout-com' : vendorRapydLive ? 'rapyd' : vendorPayPalLive ? 'paypal' : vendorRazorpayLive ? 'razorpay' : vendorBraintreeLive ? 'braintree' : vendorMollieLive ? 'mollie' : null
     if (activeGateway) {
       const gatewayOrderId = `SL-${String(vendorId).slice(0,8)}-${Date.now()}`
       const payArgs = {
@@ -2123,6 +2143,18 @@ export default function App() {
           }).catch(() => {})
           await payWithCheckoutCom({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Checkout.com
+        } else if (activeGateway === 'fomo-pay') {
+          // FOMO Pay hosted cashier (Asian e-wallets, WeChat/Alipay/GrabPay).
+          orderPayload.payment = { method: 'fomo-pay', status: 'redirecting', gatewayOrderId }
+          await sendCustomerOrder({
+            vendorId,
+            customerPhone: cleanPhone,
+            customerName: custName || null,
+            orderPayload,
+            summaryBody: summaryBody + ' · Pending FOMO Pay payment',
+          }).catch(() => {})
+          await payWithFomoPay({ ...payArgs, customerEmail: '', description: summaryItems })
+          return // browser is now navigating to FOMO Pay
         }
       } catch (e) {
         console.error('Gateway payment failed', e)
