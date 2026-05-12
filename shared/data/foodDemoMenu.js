@@ -2,7 +2,7 @@
 
 export const DEMO_MENU = [
   // Meals
-  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1 },
+  { id: 1, name: 'Pepper Noodles', price: 23000, photo: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-08_12_38-pm.png', desc: 'Noodles fried light with slight sauce and chopped peppers', category: 'Meal', available: true, spice: 1, perks: ['bogo'] },
   { id: 2, name: 'Sate Ayam', price: 18000, photo: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=300', desc: 'Grilled chicken skewers with peanut sauce', category: 'Meal', available: true },
   { id: 3, name: 'Bakso', price: 12000, photo: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300', desc: 'Meatball soup with noodles and vegetables', category: 'Meal', available: true },
   { id: 4, name: 'Mie Goreng', price: 13000, photo: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300', desc: 'Stir-fried noodles with vegetables and egg', category: 'Meal', available: true },

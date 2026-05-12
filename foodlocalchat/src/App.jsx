@@ -397,6 +397,16 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
   )
 }
 
+/* ─── Perk labels for the menu-card ribbon ─── */
+const PERK_LABELS = {
+  bogo:       { emoji: '🎁', text: 'BUY 1 GET 1 FREE' },
+  freeDrink:  { emoji: '🥤', text: 'FREE DRINK' },
+  freeRice:   { emoji: '🍚', text: 'FREE RICE' },
+  freeFries:  { emoji: '🍟', text: 'FREE FRIES' },
+  freeCoffee: { emoji: '☕', text: 'FREE COFFEE' },
+  spendFree:  { emoji: '💸', text: 'SPEND Rp 50K — FREE DELIVERY' },
+}
+
 /* ─── Main App ─── */
 export default function App() {
   // Route to admin or activate page
@@ -2430,8 +2440,18 @@ export default function App() {
             /* HORIZONTAL card style — default */
             <div
               key={item.id}
-              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}
+              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}), ...(item.perks?.length ? { paddingTop: 30 } : {}) }}
             >
+              {/* Perk ribbon — always visible when item has perks */}
+              {item.perks?.length > 0 && (() => {
+                const p = PERK_LABELS[item.perks[0]]
+                if (!p) return null
+                return (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 1 }}>
+                    <span style={{ fontSize: 13 }}>{p.emoji}</span>{p.text}
+                  </div>
+                )
+              })()}
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: 8, right: 8, zIndex: 2 }} onClick={() => toggleAvailability(item.id)}>
                   <div style={S.toggleDot(item.available)} />
