@@ -2256,7 +2256,19 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Try Demo — always free, no signup required */}
               <a
-                href={(window.location.hostname === 'localhost' ? (selectedApp.id === 'basic' ? 'http://localhost:5177/food/chat/' : 'http://localhost:5174/food/pro/') : selectedApp.url) + '?lang=' + locale}
+                href={(() => {
+                  // selectedApp.id values from checkoutChooser-food:
+                  //   'basic' = WhatsApp tier (35k); 'chat' = Chat tier (50k)
+                  // Pass plan through so food-basic's activation gate
+                  // auto-selects the same tier if the demo visitor signs up.
+                  const isLocal = window.location.hostname === 'localhost'
+                  const isFoodTier = selectedApp.id === 'basic' || selectedApp.id === 'chat'
+                  const base = isLocal
+                    ? (isFoodTier ? 'http://localhost:5177/food/chat/' : 'http://localhost:5174/food/pro/')
+                    : selectedApp.url
+                  const planQs = isFoodTier ? `&plan=${selectedApp.id === 'basic' ? 'whatsapp' : 'chat'}` : ''
+                  return base + '?lang=' + locale + planQs
+                })()}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ ...styles.ctaButton, background: '#1a1a1a', color: '#FFD600', border: '2px solid #1a1a1a', animation: 'demoShake 3s ease-in-out infinite' }}
