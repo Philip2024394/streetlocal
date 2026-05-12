@@ -2858,62 +2858,11 @@ export default function App() {
             <>
               <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Business Name</label>
               <input type="text" value={vendorAuthForm.name} maxLength={20} onChange={e => setVendorAuthForm({ ...vendorAuthForm, name: e.target.value })} placeholder="Your business name (max 20)" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Country</label>
-              <select value={vendorAuthForm.country} onChange={e => {
-                const c = VENDOR_COUNTRIES.find(x => x.code === e.target.value)
-                setVendorAuthForm({ ...vendorAuthForm, country: e.target.value, phone: c ? c.prefix : vendorAuthForm.phone })
-              }} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#111', color: vendorAuthForm.country ? '#fff' : '#888', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', appearance: 'auto' }}>
-                <option value="" style={{ background: '#111', color: '#888' }}>Select country</option>
-                {VENDOR_COUNTRIES.map(c => (
-                  <option key={c.code} value={c.code} style={{ background: '#111', color: '#ccc' }}>{c.flag} {c.name} ({c.prefix})</option>
-                ))}
-              </select>
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Food Category</label>
-              <select value={vendorAuthForm.category} onChange={e => setVendorAuthForm({ ...vendorAuthForm, category: e.target.value })} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#111', color: vendorAuthForm.category ? '#fff' : '#888', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', appearance: 'auto' }}>
-                <option value="" style={{ background: '#111', color: '#888' }}>Select category</option>
-                <option value="Indonesian Street Food" style={{ background: '#111', color: '#ccc' }}>Indonesian Street Food</option>
-                <option value="Street Food" style={{ background: '#111', color: '#ccc' }}>Street Food</option>
-                <option value="Asian Cuisine" style={{ background: '#111', color: '#ccc' }}>Asian Cuisine</option>
-                <option value="Kebabs" style={{ background: '#111', color: '#ccc' }}>Kebabs</option>
-                <option value="Burgers" style={{ background: '#111', color: '#ccc' }}>Burgers</option>
-                <option value="Donuts" style={{ background: '#111', color: '#ccc' }}>Donuts</option>
-                <option value="Chicken Satay" style={{ background: '#111', color: '#ccc' }}>Chicken Satay</option>
-                <option value="Fresh Juice" style={{ background: '#111', color: '#ccc' }}>Fresh Juice</option>
-                <option value="Fried Rice" style={{ background: '#111', color: '#ccc' }}>Fried Rice</option>
-                <option value="Noodle Soup" style={{ background: '#111', color: '#ccc' }}>Noodle Soup</option>
-                <option value="Meatball Soup" style={{ background: '#111', color: '#ccc' }}>Meatball Soup</option>
-                <option value="Crispy Chicken" style={{ background: '#111', color: '#ccc' }}>Crispy Chicken</option>
-                <option value="Coffee" style={{ background: '#111', color: '#ccc' }}>Coffee</option>
-              </select>
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>City</label>
-              <input type="text" value={vendorAuthForm.city} onChange={e => setVendorAuthForm({ ...vendorAuthForm, city: e.target.value })} placeholder={{
-                ID: 'e.g. Jakarta, Yogyakarta, Bali',
-                MY: 'e.g. Kuala Lumpur, Penang, Johor',
-                SG: 'e.g. Singapore',
-                TH: 'e.g. Bangkok, Chiang Mai, Phuket',
-                VN: 'e.g. Hanoi, Ho Chi Minh, Da Nang',
-                PH: 'e.g. Manila, Cebu, Davao',
-                IN: 'e.g. Mumbai, Delhi, Bangalore',
-                AU: 'e.g. Sydney, Melbourne, Brisbane',
-                GB: 'e.g. London, Manchester, Birmingham',
-                US: 'e.g. New York, Los Angeles, Chicago',
-                AE: 'e.g. Dubai, Abu Dhabi, Sharjah',
-                SA: 'e.g. Riyadh, Jeddah, Mecca',
-                JP: 'e.g. Tokyo, Osaka, Kyoto',
-                KR: 'e.g. Seoul, Busan, Incheon',
-                DE: 'e.g. Berlin, Munich, Hamburg',
-                FR: 'e.g. Paris, Lyon, Marseille',
-              }[vendorAuthForm.country] || 'Enter your city'} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
             </>
           )}
 
           <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>WhatsApp Number</label>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-            <span style={{ padding: '12px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-              {(() => { const c = VENDOR_COUNTRIES.find(x => x.code === vendorAuthForm.country); return c ? `${c.flag} ${c.prefix}` : '📱' })()}
-            </span>
-            <input type="tel" value={vendorAuthForm.phone} onChange={e => setVendorAuthForm({ ...vendorAuthForm, phone: e.target.value })} placeholder="Phone number" style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
-          </div>
+          <input type="tel" value={vendorAuthForm.phone} onChange={e => setVendorAuthForm({ ...vendorAuthForm, phone: e.target.value })} placeholder="e.g. +6281234567890" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' }} />
 
           <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 4, display: 'block' }}>Password</label>
           <div style={{ position: 'relative', marginBottom: 20 }}>
@@ -2939,27 +2888,21 @@ export default function App() {
               localStorage.setItem('indoo_vendor_id', data.id)
               localStorage.setItem('vendorbasic_vendorId', data.id)
               const isDev = window.location.port === '5173' || window.location.port === '5174'
-              const baseUrl = vendorAuthApp?.id === 'basic'
-                ? (isDev ? 'http://localhost:5176/' : '/food/whatsapp/')
-                : vendorAuthApp?.id === 'chat'
-                ? (isDev ? 'http://localhost:5177/' : '/food/chat/')
+              const baseUrl = vendorAuthApp?.id === 'basic' || vendorAuthApp?.id === 'chat'
+                ? (isDev ? 'http://localhost:5177/food/chat/' : '/food/chat/')
                 : (isDev ? '/food/pro/' : '/food/pro/')
               const appUrl = `${baseUrl}?vendor=${data.id}`
               window.open(appUrl, '_blank')
               setVendorAuthOpen(false)
             } else {
               if (!vendorAuthForm.name.trim()) { setVendorAuthError('Enter your business name'); return }
-              if (!vendorAuthForm.country) { setVendorAuthError('Select your country'); return }
-              if (!vendorAuthForm.city.trim()) { setVendorAuthError('Enter your city'); return }
-              if (!vendorAuthForm.category) { setVendorAuthError('Select a food category'); return }
               if (vendorAuthForm.password.length < 4) { setVendorAuthError('Password min 4 characters'); return }
-              const countryInfo = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)
-              const fullPhone = countryInfo ? countryInfo.prefix.replace('+', '') + phone : phone
+              const fullPhone = phone
               const slug = (vendorAuthForm.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[''`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'my-shop'
               const { data, error } = await supabase.from('vendor_accounts').insert({
                 phone: fullPhone, password_hash: vendorAuthForm.password,
-                shop_name: vendorAuthForm.name, shop_food_type: vendorAuthForm.category,
-                shop_phone: fullPhone, country_code: vendorAuthForm.country, shop_city: vendorAuthForm.city,
+                shop_name: vendorAuthForm.name,
+                shop_phone: fullPhone,
                 slug, status: 'pending'
               }).select().single()
               if (error) { setVendorAuthError(error.message?.includes('duplicate') ? 'Phone already registered' : 'Signup failed'); return }
@@ -3000,13 +2943,10 @@ export default function App() {
               localStorage.setItem('indoo_vendor_id', data.id)
               localStorage.setItem('vendorbasic_vendorId', data.id)
               const isDev = window.location.port === '5173' || window.location.port === '5174'
-              const baseUrl = vendorAuthApp?.id === 'basic'
-                ? (isDev ? 'http://localhost:5176/' : '/food/whatsapp/')
-                : vendorAuthApp?.id === 'chat'
-                ? (isDev ? 'http://localhost:5177/' : '/food/chat/')
+              const baseUrl = vendorAuthApp?.id === 'basic' || vendorAuthApp?.id === 'chat'
+                ? (isDev ? 'http://localhost:5177/food/chat/' : '/food/chat/')
                 : (isDev ? '/food/pro/' : '/food/pro/')
-              const countryName = VENDOR_COUNTRIES.find(c => c.code === vendorAuthForm.country)?.name || ''
-              const appUrl = `${baseUrl}?vendor=${data.id}&slug=${encodeURIComponent(slug)}&city=${encodeURIComponent(vendorAuthForm.city)}&country=${encodeURIComponent(countryName)}&cc=${vendorAuthForm.country}`
+              const appUrl = `${baseUrl}?vendor=${data.id}&slug=${encodeURIComponent(slug)}`
               window.open(appUrl, '_blank')
               setVendorAuthOpen(false)
             }
