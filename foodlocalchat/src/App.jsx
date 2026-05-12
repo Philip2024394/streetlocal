@@ -1014,6 +1014,34 @@ export default function App() {
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>How many units of this perk available — ribbon hides at 0</div>
             </div>
           )}
+          {/* Live preview of the ribbon */}
+          {(() => {
+            const previewText = formPerkText || PERK_LABELS[formPerks[0]]?.text
+            const previewEmoji = formPerkText ? '🎁' : PERK_LABELS[formPerks[0]]?.emoji
+            if (!previewText) return null
+            let cd = null
+            if (formPerkLimitType === 'time' && formPerkLimitEndAt) {
+              const ms = new Date(formPerkLimitEndAt).getTime() - nowTick
+              if (ms > 0) {
+                const h = Math.floor(ms / 3600000)
+                const m = Math.floor((ms % 3600000) / 60000)
+                cd = h > 0 ? `${h}h ${m}m` : `${m}m`
+              }
+            } else if (formPerkLimitType === 'stock' && formPerkLimitStock !== '') {
+              const n = Number(formPerkLimitStock)
+              if (n > 0) cd = `${n} left`
+            }
+            return (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Preview</div>
+                <div style={{ background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10 }}>
+                  <span style={{ fontSize: 13 }}>{previewEmoji}</span>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewText}</span>
+                  {cd && <span style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
       {expandedSections.allergens && (
