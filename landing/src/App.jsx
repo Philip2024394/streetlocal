@@ -4479,7 +4479,7 @@ export default function App() {
                               const d = contactFormData
                               const subject = encodeURIComponent(`[${tid}] ${d.subject || 'Support Ticket'} — ${d.department || contactCategory}`)
                               const body = encodeURIComponent(`Ticket: ${tid}\nPriority: ${d.priority}\nDepartment: ${d.department || contactCategory}\n\nName: ${d.name}\nBusiness: ${d.business}\nEmail: ${d.email}\nUsername: ${d.username}\nContact Method: ${d.contactMethod}\n\n${d.description}`)
-                              window.open(`mailto:indootechteam@gmail.com?subject=${subject}&body=${body}`, '_blank')
+                              window.open(`mailto:streetlocallive@gmail.com?subject=${subject}&body=${body}`, '_blank')
                               setContactStep('confirmation')
                             }}
                             style={{ flex: 2, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}
@@ -4807,7 +4807,7 @@ export default function App() {
                                   const d = contactFormData
                                   const subject = encodeURIComponent('[' + tid + '] ' + (d.subject || 'Support Ticket') + ' --- ' + (d.department || (ticketDept ? ticketDept.title : 'General')))
                                   const body = encodeURIComponent('Ticket: ' + tid + '\nPriority: ' + d.priority + '\nDepartment: ' + (d.department || (ticketDept ? ticketDept.title : 'General')) + '\n\nName: ' + d.name + '\nBusiness: ' + d.business + '\nEmail: ' + d.email + '\nUsername: ' + d.username + '\nContact Method: ' + d.contactMethod + '\n\n' + d.description)
-                                  window.open('mailto:indootechteam@gmail.com?subject=' + subject + '&body=' + body, '_blank')
+                                  window.open('mailto:streetlocallive@gmail.com?subject=' + subject + '&body=' + body, '_blank')
                                   setContactStep('confirmation')
                                 }}
                                 style={{ flex: 2, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '14px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}
@@ -5159,7 +5159,7 @@ export default function App() {
                         onClick={() => {
                           const subject = encodeURIComponent('Sales Inquiry - ' + (salesForm.businessName || 'New Business'))
                           const body = encodeURIComponent('Name: ' + salesForm.name + '\nBusiness: ' + salesForm.businessName + '\nEmail: ' + salesForm.email + '\nWhatsApp: ' + salesForm.whatsapp + '\nBusiness Type: ' + salesForm.businessType + '\nLocations: ' + salesForm.locations + '\nMonthly Volume: ' + salesForm.orderVolume + '\nInterests: ' + salesForm.interests.join(', '))
-                          window.open('mailto:indootechteam@gmail.com?subject=' + subject + '&body=' + body, '_blank')
+                          window.open('mailto:streetlocallive@gmail.com?subject=' + subject + '&body=' + body, '_blank')
                         }}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 14, padding: '16px 24px', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 44, width: '100%' }}
                       >
