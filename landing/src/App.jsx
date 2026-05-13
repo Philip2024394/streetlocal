@@ -5,6 +5,7 @@ import Affiliate from './Affiliate'
 import { getTranslation, COUNTRY_TO_LANG } from './translations'
 import imgError, { FALLBACK_URLS } from './imgFallback'
 import { THEME_PRESETS as SERVICES_THEME_PRESETS } from '../../shared/themes/servicesThemes.js'
+import { FOOD_CATEGORIES_FULL as PRO_THEMES } from '../../shared/themes/foodProThemes.js'
 
 /* ─── Translations ─── */
 const TRANSLATIONS = {
@@ -1774,6 +1775,35 @@ export default function App() {
                 { id: 'noodle', label: 'Noodles', accent: '#8B0000', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png' },
               ]; setSelectedApp(null); setSelectedCategory(null); setCurrentPage('themes') }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
+            </div>
+          </div>
+        )}
+
+        {/* FoodLocal Pro Theme showcase strip — cuisine themes for the
+            premium restaurant tier. Source: shared/themes/foodProThemes.js
+            (same data the Pro app uses for its category grid). */}
+        {selectedApp.id === 'pro' && (
+          <div style={{ padding: '0 20px 16px' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 10 }}>Pro Cuisine Themes — {PRO_THEMES.length}+</div>
+            <style>{`@keyframes themeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .theme-strip:hover, .theme-strip:active { animation-play-state: paused !important; }`}</style>
+            <div style={{ overflow: 'hidden', paddingBottom: 8 }}>
+              <div className="theme-strip" style={{ display: 'flex', gap: 10, animation: 'themeScroll 60s linear infinite', width: 'max-content' }}>
+                {(() => {
+                  const renderCard = (theme, i) => (
+                    <div key={`${theme.id}-${i}`} style={{ flexShrink: 0, width: 64, textAlign: 'center', cursor: 'pointer', position: 'relative' }}>
+                      <div style={{ width: 64, height: 110, borderRadius: 12, overflow: 'hidden', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                        <img src={theme.image} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                      </div>
+                      <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const base = isLocal ? 'http://localhost:5174/food/pro/' : '/food/pro/'; return base + '?demo=true&theme=' + theme.id })()} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#fff', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 2, lineHeight: 1 }}>DEV</a>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#555', marginTop: 4 }}>{theme.label}</div>
+                    </div>
+                  )
+                  return [...PRO_THEMES.map((t, i) => renderCard(t, i)), ...PRO_THEMES.map((t, i) => renderCard(t, i + PRO_THEMES.length))]
+                })()}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 10 }}>
+              <button onClick={() => { setSelectedApp(null); setSelectedCategory(null); setCurrentPage('pro-themes') }} style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View All Themes</button>
             </div>
           </div>
         )}
@@ -3862,6 +3892,106 @@ export default function App() {
                   </div>
                   )
                 })()}
+              </div>
+            )
+          })()}
+
+          {/* ═══ FOODLOCAL PRO THEMES LIBRARY ═══ */}
+          {currentPage === 'pro-themes' && (() => {
+            // Build the gallery from the shared FOOD_CATEGORIES_FULL data.
+            // The Pro app uses these as the menu category grid; we render
+            // them here as full-size theme cards so vendors can preview
+            // what their cuisine looks like before they pick.
+            const proThemes = PRO_THEMES.map((c) => ({
+              id: c.id,
+              label: c.label,
+              labelId: c.labelId,
+              img: c.image,
+              variants: c.variants || [],
+              subs: c.subs || [],
+            }))
+            const filtered = themeLibSearch
+              ? proThemes.filter((t) => t.label.toLowerCase().includes(themeLibSearch.toLowerCase()))
+              : proThemes
+            const previewT = themeLibPreview ? proThemes.find((t) => t.id === themeLibPreview) : null
+            const activeImg = themeLibPreviewImg || (previewT ? previewT.img : '')
+            const previewAllImgs = previewT ? [previewT.img, ...(previewT.variants || [])] : []
+
+            return (
+              <div style={{ background: '#fff', margin: '-20px -24px', padding: '0 0 40px', minHeight: '100vh' }}>
+                {/* Header */}
+                <div style={{ padding: '14px 16px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button onClick={() => { setCurrentPage(null); setThemeLibPreview(null); setThemeLibSearch('') }} style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid #e8e8e8', background: '#fff', cursor: 'pointer', fontSize: 18, color: '#1a1a1a' }}>←</button>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>FoodLocal Pro — Cuisine Themes</div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{proThemes.length} themes · pick a cuisine, see your menu look</div>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div style={{ padding: '10px 16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input value={themeLibSearch} onChange={(e) => setThemeLibSearch(e.target.value)} placeholder="Search themes (pizza, satay, sushi…)" style={{ width: '100%', padding: '12px 14px 12px 38px', borderRadius: 14, border: '1px solid #e8e8e8', background: '#f8f9fa', color: '#1a1a1a', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ccc" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+                  </div>
+                </div>
+
+                {/* Grid */}
+                <div style={{ padding: '8px 16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {filtered.map((theme) => (
+                      <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ cursor: 'pointer' }}>
+                        <div style={{ width: '100%', aspectRatio: '64 / 110', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
+                          <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {theme.variants.length > 0 && (
+                            <div style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800 }}>+{theme.variants.length}</div>
+                          )}
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', padding: '14px 8px 8px', textAlign: 'center' }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{theme.label}</div>
+                            {theme.labelId && theme.labelId !== theme.label && (
+                              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{theme.labelId}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {filtered.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 40, color: '#999', fontSize: 13 }}>No themes match "{themeLibSearch}".</div>
+                  )}
+                </div>
+
+                {/* Preview overlay (variants browser) */}
+                {previewT && (
+                  <div onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', padding: 16 }}>
+                    <div onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null) }} style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', fontSize: 18 }}>×</button>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>{previewT.label}</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{previewAllImgs.length} image{previewAllImgs.length === 1 ? '' : 's'} · tap a thumbnail to switch</div>
+                        </div>
+                      </div>
+                      <div style={{ flex: 1, position: 'relative', borderRadius: 16, overflow: 'hidden', background: '#1a1a1a', marginBottom: 12 }}>
+                        <img src={activeImg} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </div>
+                      {previewAllImgs.length > 1 && (
+                        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
+                          {previewAllImgs.map((u, i) => (
+                            <img key={i} src={u} alt="" onError={imgError('theme')} onClick={() => setThemeLibPreviewImg(u)} style={{ width: 64, height: 96, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: activeImg === u ? '2px solid #DC2626' : '2px solid transparent', cursor: 'pointer' }} />
+                          ))}
+                        </div>
+                      )}
+                      {previewT.subs.length > 0 && (
+                        <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', marginBottom: 12 }}>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Sub-categories</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{previewT.subs.join(' · ')}</div>
+                        </div>
+                      )}
+                      <a href={(() => { const isLocal = window.location.hostname === 'localhost'; const base = isLocal ? 'http://localhost:5174/food/pro/' : '/food/pro/'; return base + '?demo=true&theme=' + previewT.id })()} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 14, background: '#DC2626', color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none' }}>Open in FoodLocal Pro Demo</a>
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })()}
