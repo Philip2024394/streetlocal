@@ -10,12 +10,39 @@ import { createPortal } from 'react-dom'
 import imgError from '../../imgFallback'
 import { PAYMENT_ICONS } from '@/constants/paymentIcons'
 import { saveVendorExtras as saveExtrasToDb, saveBundleDiscount as saveBundleToDb, saveMenuItem as saveMenuItemToDb, deleteMenuItem as deleteMenuItemFromDb } from '@/services/vendorExtrasService'
-import { getPrepaidWallet, topUpPrepaidWallet } from '@/services/walletService'
 import { supabase } from '@/lib/supabase'
 import { SUPPORTED_GATEWAYS as RAW_GATEWAYS } from '@shared/constants/paymentGateways'
+import { startFoodproCheckout, pollSubscriptionLive, FOODPRO_TIERS } from '@/services/foodproSubscriptionService'
+import DesignStudio from './DesignStudio'
+import HoursHolidays from './HoursHolidays'
+import DeliverySettings from './DeliverySettings'
+import ModifierGroups from './ModifierGroups'
+import OrderBoard from './OrderBoard'
+import RefundsConsole from './RefundsConsole'
+import PayoutsPage from './PayoutsPage'
+import CouponsPage from './CouponsPage'
+import ReviewsPage from './ReviewsPage'
+import AnalyticsPage from './AnalyticsPage'
+import SettingsPage from './SettingsPage'
+import LocationsPage from './LocationsPage'
+import StaffPage from './StaffPage'
+import NotificationsCenter from './NotificationsCenter'
+import POSIntegrations from './POSIntegrations'
 
 const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 const LOCAL_KEY = 'indoo_vendor_restaurant'
+
+// FoodLocal Pro brand red palette. Green (#DC2626) is reserved for the
+// "Live / Open" semantic across the dashboard, so brand identity rides on
+// red instead. Danger red (#EF4444) is still used for destructive actions.
+const BRAND = {
+  red:       '#DC2626',
+  redLight:  '#EF4444',
+  redDeep:   '#991B1B',
+  redGlow:   'rgba(220,38,38,0.18)',
+  redBorder: 'rgba(220,38,38,0.30)',
+  redFaint:  'rgba(220,38,38,0.08)',
+}
 
 // ── Payment gateway wiring (copied from food-basic; kept self-contained
 // so FoodLocal Pro and FoodLocal basic stay independent codebases) ────────
@@ -158,24 +185,24 @@ function HelpIcon({ section }) {
   return (
     <>
       <button onClick={() => setOpen(true)} style={{
-        width: 22, height: 22, borderRadius: '50%', background: 'rgba(141,198,63,0.15)',
-        border: '1px solid rgba(141,198,63,0.3)', color: '#8DC63F', fontSize: 11, fontWeight: 900,
+        width: 22, height: 22, borderRadius: '50%', background: 'rgba(220,38,38,0.15)',
+        border: '1px solid rgba(220,38,38,0.3)', color: '#DC2626', fontSize: 11, fontWeight: 900,
         cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>?</button>
       {open && createPortal(
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1e', border: '1px solid rgba(141,198,63,0.2)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1e', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%' }}>
             <div style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>💡</div>
             <h3 style={{ fontSize: 17, fontWeight: 900, color: '#fff', margin: '0 0 12px', textAlign: 'center' }}>{help.title}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {help.steps.map((step, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(141,198,63,0.15)', color: '#8DC63F', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#DC2626', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{step}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => setOpen(false)} style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 12, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Got it!</button>
+            <button onClick={() => setOpen(false)} style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 12, background: '#DC2626', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Got it!</button>
           </div>
         </div>,
         document.body
@@ -192,7 +219,7 @@ function StatusToggle({ active, onChange, size = 'normal' }) {
   return (
     <button onClick={() => onChange(!active)} style={{
       width: w, height: h, borderRadius: h, border: 'none', cursor: 'pointer', padding: 0, position: 'relative',
-      background: active ? '#8DC63F' : 'rgba(255,255,255,0.15)', transition: 'background 0.2s',
+      background: active ? '#DC2626' : 'rgba(255,255,255,0.15)', transition: 'background 0.2s',
     }}>
       <div style={{
         position: 'absolute', top: (h - knob) / 2, left: active ? w - knob - 3 : 3,
@@ -215,7 +242,7 @@ function SectionHeader({ title, helpKey, children }) {
 }
 
 // ── Stat Card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, color = '#8DC63F', icon }) {
+function StatCard({ label, value, color = '#DC2626', icon }) {
   return (
     <div style={{
       flex: 1, minWidth: 120, padding: '16px 14px', borderRadius: 16,
@@ -254,8 +281,8 @@ function MenuCard({ item, onToggle, onEdit, onDelete }) {
       </div>
       <span style={{
         fontSize: 9, fontWeight: 900, padding: '3px 8px', borderRadius: 6,
-        background: item.is_available ? 'rgba(141,198,63,0.15)' : 'rgba(255,255,255,0.06)',
-        color: item.is_available ? '#8DC63F' : 'rgba(255,255,255,0.3)',
+        background: item.is_available ? 'rgba(220,38,38,0.15)' : 'rgba(255,255,255,0.06)',
+        color: item.is_available ? '#DC2626' : 'rgba(255,255,255,0.3)',
       }}>{item.is_available ? 'LIVE' : 'OFF'}</span>
       <StatusToggle active={item.is_available} onChange={() => onToggle(item.id)} />
       <button onClick={() => onEdit(item)} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -276,16 +303,31 @@ const MENU_CATS = ['All', 'Main', 'Sides', 'Drinks', 'Snacks', 'Desserts', 'Rice
 // existed for the indoo commission model) with "Payment Methods" —
 // where the vendor connects their own gateway, same as food-basic.
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview', icon: '📊' },
-  { id: 'menu', label: 'Menu', icon: '🍽️' },
-  { id: 'orders', label: 'Orders', icon: '📋' },
-  { id: 'events', label: 'Events & Venue', icon: '🎉' },
-  { id: 'analytics', label: 'Analytics', icon: '📈' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' },
-  { id: 'payments', label: 'Payment Methods', icon: '💳' },
-  { id: 'banners', label: 'Banner Ads', icon: '📢' },
-  { id: 'extras', label: 'Extras & Add-ons', icon: '🍟' },
-  { id: 'deals', label: 'Deals & Promotions', icon: '🏷️' },
+  { id: 'overview',    label: 'Overview',          icon: '📊' },
+  { id: 'orderboard',  label: 'Live Order Board',  icon: '🟢' },
+  { id: 'orders',      label: 'Orders (list)',     icon: '📋' },
+  { id: 'menu',        label: 'Menu',              icon: '🍽️' },
+  { id: 'modifiers',   label: 'Modifier Groups',   icon: '➕' },
+  { id: 'eightysix',   label: '86 List',           icon: '🚫' },
+  { id: 'hours',       label: 'Hours & Holidays',  icon: '🕐' },
+  { id: 'delivery',    label: 'Delivery Settings', icon: '🛵' },
+  { id: 'refunds',     label: 'Refunds',           icon: '↩️' },
+  { id: 'payouts',     label: 'Payouts',           icon: '💰' },
+  { id: 'subscription',label: 'Subscription',      icon: '🔥' },
+  { id: 'payments',    label: 'Payment Methods',   icon: '💳' },
+  { id: 'design',      label: 'Design Studio',     icon: '🎨' },
+  { id: 'banners',     label: 'Banner Ads',        icon: '📢' },
+  { id: 'extras',      label: 'Extras & Add-ons',  icon: '🍟' },
+  { id: 'deals',       label: 'Deals & Promotions',icon: '🏷️' },
+  { id: 'coupons',     label: 'Coupons & Codes',   icon: '🎟️' },
+  { id: 'reviews',     label: 'Reviews',           icon: '⭐' },
+  { id: 'events',      label: 'Events & Venue',    icon: '🎉' },
+  { id: 'analytics',   label: 'Analytics',         icon: '📈' },
+  { id: 'locations',   label: 'Locations',         icon: '🏪' },
+  { id: 'staff',       label: 'Staff & Roles',     icon: '👥' },
+  { id: 'notifications',label:'Notifications',     icon: '🔔' },
+  { id: 'pos',         label: 'POS Integrations',  icon: '🔌' },
+  { id: 'settings',    label: 'Profile / Settings',icon: '⚙️' },
 ]
 
 // ── Extras management ───────────────────────────────────────────────────────
@@ -327,7 +369,7 @@ function saveVendorExtras(data) {
 // ── Banner Ad system ────────────────────────────────────────────────────────
 const BANNER_TEMPLATES = [
   { id: 'fire', label: 'Fire Sale', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-24-2026-06_22_44-pm.png', color: '#EF4444' },
-  { id: 'juice', label: 'Free Juice', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-25-2026-04_22_55-am.png', color: '#8DC63F' },
+  { id: 'juice', label: 'Free Juice', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-25-2026-04_22_55-am.png', color: '#DC2626' },
   { id: 'fries', label: 'Free Fries', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-apr-25-2026-04_22_09-am.png', color: '#FACC15' },
   { id: 'street', label: 'Street Food', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600', color: '#F59E0B' },
   { id: 'seafood', label: 'Ocean Fresh', img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600', color: '#3B82F6' },
@@ -374,176 +416,6 @@ function saveVendorEvents(data) {
   localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(data))
 }
 
-// ── Top Up Overlay ──────────────────────────────────────────────────────────
-function TopUpOverlay({ wallet, onClose, onSuccess }) {
-  const [step, setStep] = useState('select') // select | payment | uploading | success
-  const [amount, setAmount] = useState(null)
-  const [proofFile, setProofFile] = useState(null)
-  const [proofPreview, setProofPreview] = useState(null)
-  const [copyMsg, setCopyMsg] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-
-  const QUICK_AMOUNTS = [50000, 100000, 200000, 500000]
-  const BANK_ACCOUNT = '7890-1234-5678'
-  const bal = wallet?.balance ?? 0
-  const balColor = bal >= 50000 ? '#8DC63F' : bal >= 25000 ? '#FACC15' : '#EF4444'
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(BANK_ACCOUNT.replace(/-/g, '')).catch(() => {})
-    setCopyMsg(true)
-    setTimeout(() => setCopyMsg(false), 2000)
-  }
-
-  const handleProof = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setProofFile(file)
-    const reader = new FileReader()
-    reader.onload = (ev) => setProofPreview(ev.target.result)
-    reader.readAsDataURL(file)
-  }
-
-  const handleSubmit = async () => {
-    if (!amount || !proofFile) return
-    setSubmitting(true)
-    try {
-      const updated = await topUpPrepaidWallet('vendor-demo', amount, 'bank_transfer')
-      if (updated) {
-        setStep('success')
-        setTimeout(() => onSuccess(updated), 2000)
-      }
-    } catch {
-      setSubmitting(false)
-    }
-  }
-
-  return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 10003, display: 'flex', flexDirection: 'column',
-      background: '#000', isolation: 'isolate',
-    }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', zIndex: 0, pointerEvents: 'none' }} />
-
-      {step === 'success' ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, padding: 24 }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
-          <span style={{ fontSize: 22, fontWeight: 900, color: '#8DC63F', marginBottom: 8 }}>Top Up Submitted</span>
-          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Your top up of {fmtRp(amount)} is being verified. Balance will update shortly.</span>
-        </div>
-      ) : (
-        <>
-          {/* Header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px',
-            position: 'relative', zIndex: 1, flexShrink: 0,
-          }}>
-            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-            </button>
-            <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', flex: 1 }}>Top Up Wallet</span>
-          </div>
-
-          {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '0 16px 100px', position: 'relative', zIndex: 1 }}>
-
-            {/* Current balance */}
-            <div style={{
-              padding: 16, borderRadius: 16, marginBottom: 20, textAlign: 'center',
-              background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-              border: `1px solid ${balColor}30`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-            }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>Current Balance</span>
-              <span style={{ fontSize: 32, fontWeight: 900, color: balColor }}>{fmtRp(bal)}</span>
-            </div>
-
-            {/* Quick amount buttons */}
-            <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>Select Amount</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-              {QUICK_AMOUNTS.map(a => (
-                <button key={a} onClick={() => { setAmount(a); setStep('payment') }} style={{
-                  padding: '16px 10px', borderRadius: 14, cursor: 'pointer',
-                  background: amount === a ? 'rgba(141,198,63,0.15)' : 'rgba(0,0,0,0.4)',
-                  backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                  border: amount === a ? '2px solid #8DC63F' : '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                  color: amount === a ? '#8DC63F' : '#fff', fontSize: 16, fontWeight: 900, textAlign: 'center',
-                }}>
-                  {fmtRp(a)}
-                </button>
-              ))}
-            </div>
-
-            {/* Payment details — show after amount selected */}
-            {step === 'payment' && (
-              <>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>Payment Method</span>
-                <div style={{
-                  padding: 16, borderRadius: 16, marginBottom: 16,
-                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(141,198,63,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(0,82,164,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#0052A4', flexShrink: 0 }}>BCA</div>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'block' }}>Bank Transfer BCA</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>PT HAMMEREX PRODUCTS</span>
-                    </div>
-                  </div>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10,
-                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                  }}>
-                    <span style={{ flex: 1, fontSize: 18, fontWeight: 900, color: '#FACC15', letterSpacing: '0.05em', fontFamily: 'monospace' }}>{BANK_ACCOUNT}</span>
-                    <button onClick={handleCopy} style={{
-                      padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(141,198,63,0.3)',
-                      background: copyMsg ? 'rgba(141,198,63,0.2)' : 'rgba(141,198,63,0.08)',
-                      color: '#8DC63F', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                    }}>{copyMsg ? 'Copied!' : 'Copy'}</button>
-                  </div>
-                  <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
-                    Transfer exactly {fmtRp(amount)} to the account above
-                  </div>
-                </div>
-
-                {/* Upload proof */}
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>Upload Payment Proof</span>
-                <div style={{
-                  padding: 16, borderRadius: 16, marginBottom: 20, textAlign: 'center',
-                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px dashed rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                  cursor: 'pointer',
-                }} onClick={() => document.getElementById('topup-proof-input')?.click()}>
-                  <input id="topup-proof-input" type="file" accept="image/*" onChange={handleProof} style={{ display: 'none' }} />
-                  {proofPreview ? (
-                    <img src={proofPreview} alt="Proof" onError={imgError('payment')} style={{ width: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: 10 }} />
-                  ) : (
-                    <>
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>📸</div>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block' }}>Tap to upload screenshot</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', display: 'block', marginTop: 4 }}>Take a screenshot of your bank transfer confirmation</span>
-                    </>
-                  )}
-                </div>
-
-                {/* Confirm button */}
-                <button onClick={handleSubmit} disabled={!proofFile || submitting} style={{
-                  width: '100%', padding: '16px', borderRadius: 14, border: 'none',
-                  background: proofFile && !submitting ? '#8DC63F' : 'rgba(141,198,63,0.2)',
-                  color: proofFile && !submitting ? '#000' : 'rgba(0,0,0,0.3)',
-                  fontSize: 15, fontWeight: 900, cursor: proofFile && !submitting ? 'pointer' : 'not-allowed',
-                }}>
-                  {submitting ? 'Submitting...' : `Confirm Top Up ${fmtRp(amount)}`}
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>,
-    document.body
-  )
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -563,8 +435,8 @@ export default function VendorDashboardV2({ onClose }) {
   const [sideOpen, setSideOpen] = useState(false)
   const [liveListOpen, setLiveListOpen] = useState(false)
   const [offlineListOpen, setOfflineListOpen] = useState(false)
-  const [wallet, setWallet] = useState(null)
-  const [showTopUp, setShowTopUp] = useState(false)
+  const [subscription, setSubscription] = useState(null) // { url_active, expires_at, subscription_tier }
+  const [subActivating, setSubActivating] = useState(false) // true while polling after Midtrans return
 
   // Load restaurant data
   useEffect(() => {
@@ -576,8 +448,41 @@ export default function VendorDashboardV2({ onClose }) {
         setStoreOpen(data.is_open ?? true)
       }
     } catch {}
-    getPrepaidWallet('vendor-demo', 'restaurant').then(w => setWallet(w)).catch(() => {})
   }, [])
+
+  // Fetch live subscription state from Supabase whenever the restaurant id
+  // is known. The url_active flag is the source of truth for "shop is live".
+  useEffect(() => {
+    if (!restaurant?.id || !supabase) return
+    let cancelled = false
+    supabase.from('restaurants')
+      .select('id, url_active, expires_at, subscription_tier, subscription_product, subscription_order_id')
+      .eq('id', restaurant.id).single()
+      .then(({ data }) => { if (!cancelled && data) setSubscription(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [restaurant?.id])
+
+  // Return-from-Midtrans handler: ?subscription=ok&order_id=... arrives
+  // after the vendor pays. We jump to the Subscription page, show an
+  // "Activating…" state, and poll until the webhook flips url_active.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('subscription') !== 'ok') return
+    if (!restaurant?.id) return
+    setPage('subscription')
+    setSubActivating(true)
+    pollSubscriptionLive(restaurant.id).then(row => {
+      if (row) setSubscription(row)
+    }).finally(() => {
+      setSubActivating(false)
+      // Strip the query params so a refresh doesn't re-trigger the poll.
+      const url = new URL(window.location.href)
+      url.searchParams.delete('subscription')
+      url.searchParams.delete('order_id')
+      window.history.replaceState({}, '', url.toString())
+    })
+  }, [restaurant?.id])
 
   // Persist changes
   const persist = (items, open) => {
@@ -709,7 +614,7 @@ export default function VendorDashboardV2({ onClose }) {
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 0, pointerEvents: 'none' }} />
       <style>{`
         @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes flashGreen { 0%,100% { background: #8DC63F; transform: scale(1); } 50% { background: #6BA32D; transform: scale(1.02); box-shadow: 0 0 20px rgba(141,198,63,0.5); } }
+        @keyframes flashGreen { 0%,100% { background: #DC2626; transform: scale(1); } 50% { background: #991B1B; transform: scale(1.02); box-shadow: 0 0 20px rgba(220,38,38,0.5); } }
         @keyframes bellShake { 0%,100% { transform: rotate(0deg); } 15% { transform: rotate(15deg); } 30% { transform: rotate(-15deg); } 45% { transform: rotate(10deg); } 60% { transform: rotate(-10deg); } 75% { transform: rotate(5deg); } }
         @keyframes runLeftLight { 0% { top: -30%; } 100% { top: 100%; } }
       `}</style>
@@ -726,7 +631,7 @@ export default function VendorDashboardV2({ onClose }) {
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, display: 'block' }}>{restaurant?.city ?? ''}{restaurant?.address ? ` · ${restaurant.address}` : ''}</span>
         </div>
         <button onClick={() => setSideOpen(true)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8DC63F" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
 
@@ -738,12 +643,12 @@ export default function VendorDashboardV2({ onClose }) {
         </div>
         <div style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <span style={{ fontSize: 22, fontWeight: 900, color: '#8DC63F', lineHeight: 1 }}>23</span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: '#DC2626', lineHeight: 1 }}>23</span>
           <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Orders</span>
         </div>
         <div style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <span style={{ fontSize: 22, fontWeight: 900, color: storeOpen ? '#8DC63F' : '#EF4444', lineHeight: 1 }}>{storeOpen ? 'Open' : 'Closed'}</span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: storeOpen ? '#DC2626' : '#EF4444', lineHeight: 1 }}>{storeOpen ? 'Open' : 'Closed'}</span>
           <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Status</span>
         </div>
       </div>
@@ -758,24 +663,24 @@ export default function VendorDashboardV2({ onClose }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Today's Overview</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 900, color: storeOpen ? '#8DC63F' : '#EF4444' }}>{storeOpen ? 'OPEN' : 'CLOSED'}</span>
+                <span style={{ fontSize: 11, fontWeight: 900, color: storeOpen ? '#DC2626' : '#EF4444' }}>{storeOpen ? 'OPEN' : 'CLOSED'}</span>
                 <StatusToggle active={storeOpen} onChange={toggleStore} size="large" />
                 <HelpIcon section="toggle" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
               <StatCard label="Sales" value={fmtRp(847000)} color="#FACC15" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledssscc-removebg-preview.png" />
-              <StatCard label="Orders" value="23" color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22-removebg-preview.png" />
+              <StatCard label="Orders" value="23" color="#DC2626" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22-removebg-preview.png" />
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
               {/* Live Items — tappable */}
               <div onClick={() => setPage('live')} style={{
                 flex: 1, minWidth: 120, padding: '16px 14px', borderRadius: 16, cursor: 'pointer', position: 'relative',
-                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(141,198,63,0.2)',
+                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(220,38,38,0.2)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
               }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', marginBottom: 8 }}>🟢 LIVE ITEMS</span>
-                <span style={{ fontSize: 28, fontWeight: 900, color: '#8DC63F' }}>{liveCount}</span>
+                <span style={{ fontSize: 28, fontWeight: 900, color: '#DC2626' }}>{liveCount}</span>
                 <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/detailed-white-fingerprint-on-transparent-background.png" alt="" onError={imgError('generic')} style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, opacity: 0.15, objectFit: 'contain' }} />
               </div>
               {/* Offline Items — tappable */}
@@ -790,39 +695,11 @@ export default function VendorDashboardV2({ onClose }) {
               </div>
             </div>
 
-            {/* ── Wallet Balance Card ── */}
-            {wallet && (() => {
-              const bal = wallet.balance ?? 0
-              const balColor = bal >= 50000 ? '#8DC63F' : bal >= 25000 ? '#FACC15' : '#EF4444'
-              const wStatus = (wallet.status ?? 'active').charAt(0).toUpperCase() + (wallet.status ?? 'active').slice(1)
-              const statusBg = wStatus === 'Active' ? 'rgba(141,198,63,0.15)' : wStatus === 'Restricted' ? 'rgba(250,204,21,0.15)' : 'rgba(239,68,68,0.15)'
-              const statusColor = wStatus === 'Active' ? '#8DC63F' : wStatus === 'Restricted' ? '#FACC15' : '#EF4444'
-              return (
-                <div style={{
-                  padding: 16, borderRadius: 16, marginBottom: 20, position: 'relative', overflow: 'hidden',
-                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                  border: `1px solid ${balColor}30`,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Prepaid Wallet</span>
-                    <span style={{ fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 6, background: statusBg, color: statusColor }}>{wStatus}</span>
-                  </div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: balColor, marginBottom: 4 }}>{fmtRp(bal)}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Minimum required: Rp 50,000</div>
-                  <button onClick={() => setShowTopUp(true)} style={{
-                    width: '100%', padding: '12px', borderRadius: 10, border: 'none',
-                    background: balColor, color: '#000', fontSize: 13, fontWeight: 900, cursor: 'pointer',
-                  }}>Top Up Wallet</button>
-                </div>
-              )
-            })()}
-
             <SectionHeader title="Live Orders" helpKey="orders" />
             {orders.filter(o => o.status !== 'completed').length === 0 ? (
               <div style={{ textAlign: 'center', padding: 30, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No active orders right now</div>
             ) : orders.filter(o => o.status !== 'completed').map(o => {
-              const statusColor = o.status === 'confirmed' ? '#8DC63F' : o.status === 'preparing' ? '#FACC15' : '#60A5FA'
+              const statusColor = o.status === 'confirmed' ? '#DC2626' : o.status === 'preparing' ? '#FACC15' : '#60A5FA'
               return (
                 <div key={o.id} style={{
                   padding: 14, borderRadius: 16, marginBottom: 10, position: 'relative', overflow: 'hidden',
@@ -846,14 +723,14 @@ export default function VendorDashboardV2({ onClose }) {
 
                   {/* Customer info */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(141,198,63,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>👤</div>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>👤</div>
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', display: 'block' }}>{o.customer}</span>
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{o.address}</span>
                     </div>
                     <button onClick={() => setShowPaymentProof(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, position: 'relative' }}>
                       <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} onError={imgError('payment')} style={{ width: 42, height: 42, objectFit: 'contain' }} />
-                      {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#8DC63F', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
+                      {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#DC2626', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
                     </button>
                   </div>
 
@@ -879,7 +756,7 @@ export default function VendorDashboardV2({ onClose }) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdf-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 24, height: 24, objectFit: 'contain' }} />
-                        <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#8DC63F' : '#FACC15' }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#DC2626' : '#FACC15' }}>
                           {o.driverETA === 0 ? 'Delivered' : o.driverETA <= 2 ? 'Arriving now' : `Driver: ${o.driverETA} min`}
                         </span>
                       </div>
@@ -891,7 +768,7 @@ export default function VendorDashboardV2({ onClose }) {
                     {o.status === 'confirmed' && (
                       <button onClick={() => updateOrderStatus(o.id, 'preparing')} style={{
                         width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                        background: '#8DC63F', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer',
+                        background: '#DC2626', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer',
                         animation: 'flashGreen 1s ease-in-out infinite',
                       }}>
                         ✓ Accept Order
@@ -929,7 +806,7 @@ export default function VendorDashboardV2({ onClose }) {
         {page === 'menu' && (
           <>
             <SectionHeader title="Menu Management" helpKey="menu">
-              <button onClick={() => setEditItem({})} style={{ padding: '8px 16px', borderRadius: 10, background: '#8DC63F', border: 'none', color: '#000', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>+ Add Item</button>
+              <button onClick={() => setEditItem({})} style={{ padding: '8px 16px', borderRadius: 10, background: '#DC2626', border: 'none', color: '#000', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>+ Add Item</button>
             </SectionHeader>
 
             {/* Filters */}
@@ -967,7 +844,7 @@ export default function VendorDashboardV2({ onClose }) {
             {orders.filter(o => o.status !== 'completed').length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No active orders</div>
             ) : orders.filter(o => o.status !== 'completed').map(o => {
-              const statusColor = o.status === 'confirmed' ? '#8DC63F' : o.status === 'preparing' ? '#FACC15' : '#60A5FA'
+              const statusColor = o.status === 'confirmed' ? '#DC2626' : o.status === 'preparing' ? '#FACC15' : '#60A5FA'
               return (
                 <div key={o.id} style={{ padding: 14, borderRadius: 16, marginBottom: 10, position: 'relative', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${statusColor}30`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)', borderLeft: `4px solid ${statusColor}` }}>
                   {o.status === 'confirmed' && (
@@ -983,14 +860,14 @@ export default function VendorDashboardV2({ onClose }) {
                     <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{o.time}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(141,198,63,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>👤</div>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>👤</div>
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', display: 'block' }}>{o.customer}</span>
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{o.address}</span>
                     </div>
                     <button onClick={() => setShowPaymentProof(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, position: 'relative' }}>
                       <img src={o.paymentMethod === 'bank' ? PAYMENT_ICONS.bank : PAYMENT_ICONS.cod} alt={o.paymentMethod === 'bank' ? 'Bank' : 'COD'} onError={imgError('payment')} style={{ width: 42, height: 42, objectFit: 'contain' }} />
-                      {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#8DC63F', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
+                      {o.paymentMethod === 'bank' && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#DC2626', border: '2px solid #0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg></div>}
                     </button>
                   </div>
                   <div style={{ marginBottom: 10 }}>
@@ -1007,14 +884,14 @@ export default function VendorDashboardV2({ onClose }) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitlediuooiuoifsdfsdf-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 24, height: 24, objectFit: 'contain' }} />
-                        <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#8DC63F' : '#FACC15' }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: o.driverETA <= 2 ? '#DC2626' : '#FACC15' }}>
                           {o.driverETA <= 2 ? 'Arriving now' : `Driver: ${o.driverETA} min`}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div style={{ marginTop: 10 }}>
-                    {o.status === 'confirmed' && <button onClick={() => updateOrderStatus(o.id, 'preparing')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#8DC63F', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', animation: 'flashGreen 1s ease-in-out infinite' }}>✓ Accept Order</button>}
+                    {o.status === 'confirmed' && <button onClick={() => updateOrderStatus(o.id, 'preparing')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#DC2626', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', animation: 'flashGreen 1s ease-in-out infinite' }}>✓ Accept Order</button>}
                     {o.status === 'preparing' && <button onClick={() => updateOrderStatus(o.id, 'ready')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#FACC15', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer' }}><span style={{ display: 'inline-block', animation: 'bellShake 0.5s ease-in-out infinite' }}>🔔</span> Ready for Pickup</button>}
                     {o.status === 'ready' && (
                       <>
@@ -1036,8 +913,8 @@ export default function VendorDashboardV2({ onClose }) {
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', display: 'block' }}>{o.customer} · {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: 13, fontWeight: 900, color: '#8DC63F' }}>{fmtRp(o.total)}</span>
-                    <span style={{ fontSize: 9, color: '#8DC63F', display: 'block' }}>✓ Completed</span>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: '#DC2626' }}>{fmtRp(o.total)}</span>
+                    <span style={{ fontSize: 9, color: '#DC2626', display: 'block' }}>✓ Completed</span>
                   </div>
                 </div>
               </div>
@@ -1045,58 +922,88 @@ export default function VendorDashboardV2({ onClose }) {
           </>
         )}
 
-        {/* ══════════ PAGE: ANALYTICS ══════════ */}
+        {/* ══════════ PAGE: ANALYTICS (real, from food_orders) ══════════ */}
         {page === 'analytics' && (
-          <>
-            <SectionHeader title="Analytics" helpKey="analytics" />
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-              <StatCard label="This Week" value={fmtRp(4250000)} color="#FACC15" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22sssdsd-removebg-preview.png" />
-              <StatCard label="This Month" value={fmtRp(18700000)} color="#8DC63F" icon="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsssaaa22sssdsdddasdasd-removebg-preview.png" />
-            </div>
-
-            <SectionHeader title="Top Selling Items" />
-            {menuItems.slice(0, 5).map((item, i) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: 14, fontWeight: 900, color: 'rgba(255,255,255,0.3)', width: 20 }}>#{i + 1}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', flex: 1 }}>{item.name}</span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#FACC15' }}>{fmtRp(item.price * (12 - i * 2))}</span>
-              </div>
-            ))}
-
-            <SectionHeader title="Peak Hours" />
-            <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 80, marginBottom: 20 }}>
-              {[10,25,40,65,90,100,85,70,45,30,15,8].map((h, i) => (
-                <div key={i} style={{ flex: 1, height: `${h}%`, background: h > 70 ? '#8DC63F' : h > 40 ? '#FACC15' : 'rgba(255,255,255,0.08)', borderRadius: '4px 4px 0 0', transition: 'height 0.5s' }} title={`${i + 9}:00`} />
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
-              <span>9am</span><span>12pm</span><span>3pm</span><span>6pm</span><span>9pm</span>
-            </div>
-          </>
+          <AnalyticsPage restaurant={restaurant} onBack={() => setPage('overview')} />
         )}
 
-        {/* ══════════ PAGE: SETTINGS ══════════ */}
+        {/* ══════════ PAGE: SETTINGS (restaurant profile) ══════════ */}
         {page === 'settings' && (
-          <>
-            <SectionHeader title="Store Settings" helpKey="settings" />
-            {[
-              { label: 'Store Name', value: restaurant?.name ?? '', key: 'name' },
-              { label: 'Address', value: restaurant?.address ?? '', key: 'address' },
-              { label: 'City', value: restaurant?.city ?? '', key: 'city' },
-              { label: 'Phone', value: restaurant?.phone ?? '', key: 'phone' },
-            ].map(field => (
-              <div key={field.key} style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.3)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>{field.label}</label>
-                <input defaultValue={field.value} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-            ))}
-            <button style={{ width: '100%', padding: '14px', borderRadius: 12, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer', marginTop: 8 }}>Save Changes</button>
-          </>
+          <SettingsPage restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'coupons' && (
+          <CouponsPage restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'reviews' && (
+          <ReviewsPage restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'locations' && (
+          <LocationsPage
+            restaurant={restaurant}
+            onBack={() => setPage('overview')}
+            onSwitchContext={(b) => { setRestaurant(prev => ({ ...prev, ...b })); setPage('overview') }}
+          />
+        )}
+
+        {page === 'staff' && (
+          <StaffPage restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'notifications' && (
+          <NotificationsCenter restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'pos' && (
+          <POSIntegrations restaurant={restaurant} onBack={() => setPage('overview')} />
         )}
 
         {/* ══════════ PAGE: PAYMENT METHODS ══════════ */}
         {page === 'payments' && (
           <PaymentsPage vendorId={restaurant?.id} />
+        )}
+
+        {page === 'subscription' && (
+          <SubscriptionPage
+            restaurant={restaurant}
+            subscription={subscription}
+            activating={subActivating}
+            onActivated={(row) => setSubscription(row)}
+          />
+        )}
+
+        {page === 'design' && (
+          <DesignStudio restaurant={restaurant} onClose={() => setPage('overview')} />
+        )}
+
+        {page === 'hours' && (
+          <HoursHolidays restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'delivery' && (
+          <DeliverySettings restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'modifiers' && (
+          <ModifierGroups restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'eightysix' && (
+          <EightySixList menuItems={menuItems} onToggle={toggleItem} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'orderboard' && (
+          <OrderBoard restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'refunds' && (
+          <RefundsConsole restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'payouts' && (
+          <PayoutsPage restaurant={restaurant} subscription={subscription} onBack={() => setPage('overview')} />
         )}
 
         {/* ══════════ PAGE: LIVE ITEMS ══════════ */}
@@ -1106,14 +1013,14 @@ export default function VendorDashboardV2({ onClose }) {
               <button onClick={() => setPage('overview')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
               </button>
-              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#8DC63F', margin: 0, flex: 1 }}>🟢 Live Items ({liveCount})</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#DC2626', margin: 0, flex: 1 }}>🟢 Live Items ({liveCount})</h2>
               <HelpIcon section="menu" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {menuItems.filter(i => i.is_available).map(item => (
                 <div key={item.id} style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14,
-                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(141,198,63,0.15)',
+                  background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(220,38,38,0.15)',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}>
                   {item.photo_url ? <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 50, height: 50, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 50, height: 50, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
@@ -1122,7 +1029,7 @@ export default function VendorDashboardV2({ onClose }) {
                     <span style={{ fontSize: 13, fontWeight: 900, color: '#FACC15' }}>{fmtRp(item.price)}</span>
                     <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>{item.category}</span>
                   </div>
-                  <button onClick={() => setEditItem(item)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#8DC63F', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => setEditItem(item)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#DC2626', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
                   <StatusToggle active={true} onChange={() => toggleItem(item.id)} />
                 </div>
               ))}
@@ -1154,7 +1061,7 @@ export default function VendorDashboardV2({ onClose }) {
                     <span style={{ fontSize: 13, fontWeight: 900, color: '#FACC15' }}>{fmtRp(item.price)}</span>
                     <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>{item.category}</span>
                   </div>
-                  <button onClick={() => setEditItem(item)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#8DC63F', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => setEditItem(item)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#DC2626', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
                   <StatusToggle active={false} onChange={() => toggleItem(item.id)} />
                 </div>
               ))}
@@ -1175,95 +1082,8 @@ export default function VendorDashboardV2({ onClose }) {
         {/* ══════════ PAGE: DEALS & PROMOTIONS ══════════ */}
         {page === 'deals' && <DealsPage menuItems={menuItems} onBack={() => setPage('overview')} />}
 
-        {/* ══════════ PAGE: WALLET & TOP UP ══════════ */}
-        {page === 'wallet' && (() => {
-          const bal = wallet?.balance ?? 0
-          const balColor = bal >= 50000 ? '#8DC63F' : bal >= 25000 ? '#FACC15' : '#EF4444'
-          const wStatus = wallet ? (wallet.status ?? 'active').charAt(0).toUpperCase() + (wallet.status ?? 'active').slice(1) : 'Unknown'
-          const statusBg = wStatus === 'Active' ? 'rgba(141,198,63,0.15)' : wStatus === 'Restricted' ? 'rgba(250,204,21,0.15)' : 'rgba(239,68,68,0.15)'
-          const statusColor = wStatus === 'Active' ? '#8DC63F' : wStatus === 'Restricted' ? '#FACC15' : '#EF4444'
-          return (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <button onClick={() => setPage('overview')} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                </button>
-                <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, flex: 1 }}>Wallet & Top Up</h2>
-              </div>
-
-              {/* Balance card */}
-              <div style={{
-                padding: 20, borderRadius: 16, marginBottom: 16, position: 'relative', overflow: 'hidden',
-                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                border: `1px solid ${balColor}30`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Current Balance</span>
-                  <span style={{ fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 6, background: statusBg, color: statusColor }}>{wStatus}</span>
-                </div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: balColor, marginBottom: 6 }}>{fmtRp(bal)}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>Minimum required: Rp 50,000</div>
-                <button onClick={() => setShowTopUp(true)} style={{
-                  width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                  background: '#8DC63F', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer',
-                }}>Top Up Wallet</button>
-              </div>
-
-              {/* How it works */}
-              <div style={{
-                padding: 16, borderRadius: 16, marginBottom: 16,
-                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>How it Works</span>
-                {[
-                  // Dead-code reachable only via stale 'wallet' page state.
-                  // Removed from NAV_ITEMS in this commit; rewriting the
-                  // copy anyway so anyone who reaches it sees the truth.
-                  { icon: '1', text: 'FoodLocal Pro is subscription-only — there is no commission on orders.' },
-                  { icon: '2', text: 'You keep 100% of every customer payment.' },
-                  { icon: '3', text: 'Use the Payment Methods page to connect your gateway.' },
-                  { icon: '4', text: 'This Wallet page exists for legacy reasons and will be removed.' },
-                ].map((s, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
-                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(141,198,63,0.15)', color: '#8DC63F', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{s.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Recent wallet transactions */}
-              <div style={{
-                padding: 16, borderRadius: 16,
-                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>Recent Activity</span>
-                {(wallet?.transactions ?? []).length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>No transactions yet</div>
-                ) : (wallet.transactions ?? []).slice(0, 10).map((t, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{t.type === 'topup' ? 'Top Up' : t.type === 'commission' ? 'Commission' : t.type}</span>
-                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>{t.date ?? ''}</span>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 900, color: t.amount > 0 ? '#8DC63F' : '#EF4444' }}>{t.amount > 0 ? '+' : ''}{fmtRp(Math.abs(t.amount))}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )
-        })()}
-
         </div>
       </div>
-
-      {/* ── Top Up Overlay ── */}
-      {showTopUp && <TopUpOverlay
-        wallet={wallet}
-        onClose={() => setShowTopUp(false)}
-        onSuccess={(updated) => { setWallet(updated); setShowTopUp(false) }}
-      />}
 
       {/* ── Add/Edit Item Modal ── */}
       {editItem !== null && (
@@ -1277,7 +1097,7 @@ export default function VendorDashboardV2({ onClose }) {
         if (!order) return null
         return (
           <div onClick={() => setShowQR(null)} style={{ position: 'fixed', inset: 0, zIndex: 10002, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: '#111', borderRadius: 24, padding: 24, maxWidth: 340, width: '100%', textAlign: 'center', border: '2px solid rgba(141,198,63,0.2)' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#111', borderRadius: 24, padding: 24, maxWidth: 340, width: '100%', textAlign: 'center', border: '2px solid rgba(220,38,38,0.2)' }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 4 }}>{order.id}</span>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 16 }}>Show this QR to the driver</span>
 
@@ -1302,7 +1122,7 @@ export default function VendorDashboardV2({ onClose }) {
               {/* Simulate scan button (demo) */}
               <button onClick={() => { updateOrderStatus(order.id, 'completed'); setShowQR(null) }} style={{
                 width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                background: '#8DC63F', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer', marginBottom: 8,
+                background: '#DC2626', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer', marginBottom: 8,
               }}>
                 ✓ Driver Scanned — Complete Order
               </button>
@@ -1336,7 +1156,7 @@ export default function VendorDashboardV2({ onClose }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                     <img src={PAYMENT_ICONS.bank} alt="" onError={imgError('payment')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
                     <div>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#8DC63F', display: 'block' }}>Bank Transfer</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#DC2626', display: 'block' }}>Bank Transfer</span>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{order.customer}</span>
                     </div>
                     <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15', marginLeft: 'auto' }}>{fmtRp(order.total)}</span>
@@ -1397,8 +1217,8 @@ export default function VendorDashboardV2({ onClose }) {
             {NAV_ITEMS.map(nav => (
               <button key={nav.id} onClick={() => { setPage(nav.id); setSideOpen(false) }} style={{
                 width: '100%', padding: '12px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 4,
-                background: page === nav.id ? 'rgba(141,198,63,0.1)' : 'none',
-                color: page === nav.id ? '#8DC63F' : 'rgba(255,255,255,0.5)',
+                background: page === nav.id ? 'rgba(220,38,38,0.1)' : 'none',
+                color: page === nav.id ? '#DC2626' : 'rgba(255,255,255,0.5)',
                 fontSize: 14, fontWeight: 700, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10,
               }}>
                 <span style={{ fontSize: 16 }}>{nav.icon}</span> {nav.label}
@@ -1490,8 +1310,8 @@ function PaymentsPage({ vendorId }) {
   return (
     <>
       <SectionHeader title="Payment Methods" helpKey="payments" />
-      <div style={{ background: 'rgba(141,198,63,0.06)', border: '1px solid rgba(141,198,63,0.15)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#8DC63F', marginBottom: 6 }}>You keep 100% of every order</div>
+      <div style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#DC2626', marginBottom: 6 }}>You keep 100% of every order</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>FoodLocal Pro is a flat monthly subscription — no commission, no transaction fees from StreetLocal. Customer payments flow through your own connected gateway directly to your bank account. You can also run on cash, bank transfer, or QRIS without connecting anything.</div>
       </div>
 
@@ -1502,11 +1322,11 @@ function PaymentsPage({ vendorId }) {
           <SectionHeader title={`Connected (${connectedList.length})`} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {connectedList.map(g => (
-              <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(141,198,63,0.25)' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: (g.color || '#8DC63F') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>{g.icon || '💳'}</div>
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(220,38,38,0.25)' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: (g.color || '#DC2626') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>{g.icon || '💳'}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{g.name}</div>
-                  <div style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700, marginTop: 2 }}>Active · {connections[g.id]?.mode === 'live' ? 'Live' : 'Sandbox'}</div>
+                  <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 700, marginTop: 2 }}>Active · {connections[g.id]?.mode === 'live' ? 'Live' : 'Sandbox'}</div>
                 </div>
                 <button onClick={() => handleDisconnect(g.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Disconnect</button>
               </div>
@@ -1550,7 +1370,7 @@ function PaymentsPage({ vendorId }) {
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', color: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: (activeGateway.color || '#8DC63F') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{activeGateway.icon || '💳'}</div>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: (activeGateway.color || '#DC2626') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{activeGateway.icon || '💳'}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800 }}>Connect {activeGateway.name}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{activeGateway.tagline}</div>
@@ -1559,7 +1379,7 @@ function PaymentsPage({ vendorId }) {
             <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginTop: 6 }}>Mode</label>
             <div style={{ display: 'flex', gap: 6 }}>
               {['test', 'live'].map(m => (
-                <button key={m} onClick={() => setFormConfig(c => ({ ...c, mode: m }))} style={{ flex: 1, padding: '8px 10px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer', background: formConfig.mode === m ? '#8DC63F' : 'rgba(255,255,255,0.08)', color: formConfig.mode === m ? '#000' : 'rgba(255,255,255,0.6)' }}>{m === 'test' ? 'Sandbox / Test' : 'Live'}</button>
+                <button key={m} onClick={() => setFormConfig(c => ({ ...c, mode: m }))} style={{ flex: 1, padding: '8px 10px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer', background: formConfig.mode === m ? '#DC2626' : 'rgba(255,255,255,0.08)', color: formConfig.mode === m ? '#000' : 'rgba(255,255,255,0.6)' }}>{m === 'test' ? 'Sandbox / Test' : 'Live'}</button>
               ))}
             </div>
             {(activeGateway.fields || []).map(f => (
@@ -1575,7 +1395,7 @@ function PaymentsPage({ vendorId }) {
               </div>
             ))}
             {activeGateway.docUrl && (
-              <a href={activeGateway.docUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: '#8DC63F', textDecoration: 'underline', marginTop: 4 }}>How to find these keys →</a>
+              <a href={activeGateway.docUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: '#DC2626', textDecoration: 'underline', marginTop: 4 }}>How to find these keys →</a>
             )}
             {activeGateway.setupSteps && activeGateway.setupSteps.length > 0 && (
               <details style={{ marginTop: 6 }}>
@@ -1588,11 +1408,204 @@ function PaymentsPage({ vendorId }) {
             {saveMsg && <div style={{ fontSize: 12, color: saveMsg.toLowerCase().includes('fail') ? '#FCA5A5' : '#86EFAC', textAlign: 'center', padding: '6px 4px' }}>{saveMsg}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
               <button onClick={() => setActiveGateway(null)} disabled={saveBusy} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: saveBusy ? 'wait' : 'pointer' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saveBusy} style={{ flex: 2, padding: 12, borderRadius: 12, border: 'none', background: '#8DC63F', color: '#000', fontSize: 13, fontWeight: 900, cursor: saveBusy ? 'wait' : 'pointer', opacity: saveBusy ? 0.6 : 1 }}>{saveBusy ? 'Connecting…' : 'Connect Gateway'}</button>
+              <button onClick={handleSave} disabled={saveBusy} style={{ flex: 2, padding: 12, borderRadius: 12, border: 'none', background: '#DC2626', color: '#000', fontSize: 13, fontWeight: 900, cursor: saveBusy ? 'wait' : 'pointer', opacity: saveBusy ? 0.6 : 1 }}>{saveBusy ? 'Connecting…' : 'Connect Gateway'}</button>
             </div>
           </div>
         </div>,
         document.body
+      )}
+    </>
+  )
+}
+
+// ── Subscription page ──────────────────────────────────────────────────────
+// Pay Rp 100.000 (WhatsApp orders) or Rp 150.000 (in-app chat orders) via
+// Midtrans Snap. On settlement the foodpro-subscription-webhook flips
+// restaurants.url_active to true so the shop goes live automatically.
+function SubscriptionPage({ restaurant, subscription, activating, onActivated }) {
+  const [busy, setBusy] = useState(null) // tier id currently being purchased
+  const [msg, setMsg] = useState('')
+
+  const isLive = !!subscription?.url_active
+  const expiresAt = subscription?.expires_at ? new Date(subscription.expires_at) : null
+  const daysLeft = expiresAt ? Math.max(0, Math.ceil((expiresAt - new Date()) / 86400000)) : null
+  const currentTier = subscription?.subscription_tier
+
+  const handleBuy = async (tier) => {
+    if (!restaurant?.id) { setMsg('Restaurant not loaded yet — refresh and try again.'); return }
+    setBusy(tier.id); setMsg('')
+    try {
+      await startFoodproCheckout({
+        restaurantId: restaurant.id,
+        planTier: tier.id,
+        returnUrl: window.location.href.split('?')[0] + '?view=vendor',
+      })
+      // Snap closed via onSuccess — start polling so the UI updates.
+      setMsg('Payment received. Activating your shop…')
+      const row = await pollSubscriptionLive(restaurant.id)
+      if (row) { onActivated(row); setMsg('Your shop is live!') }
+      else setMsg('Activation pending — Midtrans is still processing. Refresh in a minute.')
+    } catch (e) {
+      if (e?.message === 'closed') setMsg('Checkout closed — no charge made.')
+      else setMsg(e?.message || 'Checkout failed. Try again.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <>
+      <SectionHeader title="Subscription" />
+
+      {/* Status banner */}
+      <div style={{
+        padding: 16, borderRadius: 16, marginBottom: 16, position: 'relative', overflow: 'hidden',
+        background: isLive ? 'rgba(220,38,38,0.10)' : 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        border: isLive ? `1px solid ${BRAND.redBorder}` : '1px solid rgba(255,255,255,0.08)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>FoodLocal Pro</span>
+          <span style={{
+            fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 6,
+            background: isLive ? BRAND.redGlow : 'rgba(255,255,255,0.06)',
+            color: isLive ? BRAND.redLight : 'rgba(255,255,255,0.5)',
+          }}>
+            {activating ? 'ACTIVATING…' : isLive ? '● LIVE' : 'NOT LIVE'}
+          </span>
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: isLive ? '#fff' : 'rgba(255,255,255,0.55)', marginBottom: 4 }}>
+          {activating
+            ? 'Activating your shop…'
+            : isLive
+              ? `${(currentTier === 'chat' ? 'Chat' : 'WhatsApp')} Orders · ${daysLeft != null ? daysLeft + ' days left' : '30 days'}`
+              : 'Pick a package below to go live'}
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+          Midtrans handles your payment. The moment it settles, your shop is auto-published and customers can order. No commission — you keep 100% of every order.
+        </div>
+      </div>
+
+      {/* Package cards */}
+      {FOODPRO_TIERS.map(tier => {
+        const isCurrent = isLive && currentTier === tier.id
+        return (
+          <div key={tier.id} style={{
+            padding: 18, borderRadius: 16, marginBottom: 12, position: 'relative', overflow: 'hidden',
+            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+            border: isCurrent ? `1.5px solid ${BRAND.red}` : `1px solid ${BRAND.redBorder}`,
+            boxShadow: isCurrent ? `0 0 24px ${BRAND.redGlow}` : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{tier.label}</span>
+              {isCurrent && (
+                <span style={{ fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 6, background: BRAND.redGlow, color: BRAND.redLight }}>CURRENT</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: 28, fontWeight: 900, color: BRAND.redLight }}>{fmtRp(tier.price)}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>/ 30 days</span>
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.5 }}>{tier.tagline}</div>
+            <ul style={{ margin: '0 0 14px', padding: 0, listStyle: 'none' }}>
+              {tier.features.map((f, i) => (
+                <li key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
+                  <span style={{ width: 16, height: 16, borderRadius: '50%', background: BRAND.redGlow, color: BRAND.redLight, fontSize: 10, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>✓</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleBuy(tier)}
+              disabled={busy === tier.id || isCurrent}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 12, border: 'none',
+                background: isCurrent ? 'rgba(255,255,255,0.08)' : BRAND.red,
+                color: isCurrent ? 'rgba(255,255,255,0.4)' : '#fff',
+                fontSize: 14, fontWeight: 900, cursor: (busy === tier.id || isCurrent) ? 'wait' : 'pointer',
+                opacity: busy === tier.id ? 0.7 : 1,
+              }}>
+              {busy === tier.id ? 'Opening Midtrans…' : isCurrent ? `Active · ${daysLeft != null ? daysLeft + ' days left' : ''}` : `Pay ${fmtRp(tier.price)} via Midtrans`}
+            </button>
+          </div>
+        )
+      })}
+
+      {msg && (
+        <div style={{
+          padding: 12, borderRadius: 12, marginBottom: 12, fontSize: 13, lineHeight: 1.5,
+          background: msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('closed')
+            ? 'rgba(239,68,68,0.08)' : BRAND.redFaint,
+          border: msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('closed')
+            ? '1px solid rgba(239,68,68,0.2)' : `1px solid ${BRAND.redBorder}`,
+          color: msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('closed') ? '#FCA5A5' : '#FECACA',
+        }}>{msg}</div>
+      )}
+
+      {/* How it works */}
+      <div style={{
+        padding: 16, borderRadius: 16,
+        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 10 }}>How it works</span>
+        {[
+          'Pick a package and pay via Midtrans (card, GoPay, ShopeePay, QRIS, bank VA).',
+          'Midtrans settlement triggers an automatic webhook to StreetLocal.',
+          'Your shop goes live the instant the webhook fires — usually under 30 seconds.',
+          'Connect your own payment gateway on the Payment Methods tab so customer payments flow straight to your bank.',
+          'StreetLocal charges no commission and never holds your money.',
+        ].map((s, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
+            <span style={{ width: 22, height: 22, borderRadius: '50%', background: BRAND.redGlow, color: BRAND.redLight, fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{s}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
+// 86 List — items currently unavailable. Quick way to see what's hidden
+// from customers and bulk un-86 when stock returns. Toggle wires back to
+// menu_items.is_available via toggleItem in the parent.
+function EightySixList({ menuItems, onToggle, onBack }) {
+  const off = menuItems.filter(i => i.is_available === false)
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, flex: 1 }}>🚫 86 List ({off.length})</h2>
+        {off.length > 0 && (
+          <button onClick={() => off.forEach(i => onToggle(i.id))} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.15)', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Un-86 all</button>
+        )}
+      </div>
+      <div style={{ padding: 14, borderRadius: 16, marginBottom: 12, background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.30)' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Items hidden from customers</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+          "86'd" means out of stock right now. The item stays in your menu but is hidden until you un-86 it. Use this instead of deleting when you run out for the day.
+        </div>
+      </div>
+      {off.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Nothing is 86'd. Everything is live.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {off.map(item => (
+            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              {item.photo_url
+                ? <img src={item.photo_url} alt="" onError={imgError('food')} style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0, opacity: 0.5 }} />
+                : <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽️</div>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.name}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{fmtRp(item.price)} · {item.category || 'Main'}</div>
+              </div>
+              <button onClick={() => onToggle(item.id)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>Un-86</button>
+            </div>
+          ))}
+        </div>
       )}
     </>
   )
@@ -1709,8 +1722,8 @@ function DealsPage({ menuItems, onBack }) {
       {/* ── Create Deal Button ── */}
       {!showCreate && (
         <button onClick={() => setShowCreate(true)} style={{
-          width: '100%', padding: '14px', borderRadius: 14, border: '2px dashed rgba(141,198,63,0.3)',
-          background: 'rgba(141,198,63,0.06)', color: '#8DC63F', fontSize: 14, fontWeight: 900,
+          width: '100%', padding: '14px', borderRadius: 14, border: '2px dashed rgba(220,38,38,0.3)',
+          background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 14, fontWeight: 900,
           cursor: 'pointer', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
           <span style={{ fontSize: 18 }}>+</span> Create New Deal
@@ -1719,7 +1732,7 @@ function DealsPage({ menuItems, onBack }) {
 
       {/* ══════════ CREATE DEAL FORM ══════════ */}
       {showCreate && (
-        <div style={{ ...cardStyle, border: '1px solid rgba(141,198,63,0.2)', marginBottom: 20 }}>
+        <div style={{ ...cardStyle, border: '1px solid rgba(220,38,38,0.2)', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>New Deal</span>
             <button onClick={() => { setShowCreate(false); resetForm() }} style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: 'none', color: '#EF4444', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
@@ -1736,12 +1749,12 @@ function DealsPage({ menuItems, onBack }) {
               return (
                 <div key={item.id} onClick={() => toggleItemSelection(item)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer',
-                  background: selected ? 'rgba(141,198,63,0.08)' : 'transparent',
+                  background: selected ? 'rgba(220,38,38,0.08)' : 'transparent',
                   borderBottom: '1px solid rgba(255,255,255,0.04)',
                 }}>
                   <div style={{
-                    width: 20, height: 20, borderRadius: 4, border: selected ? '2px solid #8DC63F' : '2px solid rgba(255,255,255,0.15)',
-                    background: selected ? '#8DC63F' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    width: 20, height: 20, borderRadius: 4, border: selected ? '2px solid #DC2626' : '2px solid rgba(255,255,255,0.15)',
+                    background: selected ? '#DC2626' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     {selected && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
                   </div>
@@ -1789,8 +1802,8 @@ function DealsPage({ menuItems, onBack }) {
             {DAYS_OF_WEEK.map(day => (
               <button key={day} onClick={() => toggleDay(day)} style={{
                 padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800,
-                background: days.includes(day) ? 'rgba(141,198,63,0.2)' : 'rgba(255,255,255,0.04)',
-                color: days.includes(day) ? '#8DC63F' : 'rgba(255,255,255,0.3)',
+                background: days.includes(day) ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.04)',
+                color: days.includes(day) ? '#DC2626' : 'rgba(255,255,255,0.3)',
               }}>{day}</button>
             ))}
           </div>
@@ -1820,7 +1833,7 @@ function DealsPage({ menuItems, onBack }) {
           {/* Save button */}
           <button onClick={createDeal} disabled={!canSave} style={{
             width: '100%', padding: '14px', borderRadius: 12, border: 'none', marginTop: 8,
-            background: canSave ? '#8DC63F' : 'rgba(141,198,63,0.2)', color: canSave ? '#000' : 'rgba(255,255,255,0.3)',
+            background: canSave ? '#DC2626' : 'rgba(220,38,38,0.2)', color: canSave ? '#000' : 'rgba(255,255,255,0.3)',
             fontSize: 14, fontWeight: 900, cursor: canSave ? 'pointer' : 'not-allowed',
           }}>Create Deal</button>
         </div>
@@ -1843,7 +1856,7 @@ function DealsPage({ menuItems, onBack }) {
         const running = isDealRunning(deal)
         const remaining = daysRemaining(deal)
         return (
-          <div key={deal.id} style={{ ...cardStyle, border: running ? '1px solid rgba(141,198,63,0.15)' : '1px solid rgba(255,255,255,0.06)' }}>
+          <div key={deal.id} style={{ ...cardStyle, border: running ? '1px solid rgba(220,38,38,0.15)' : '1px solid rgba(255,255,255,0.06)' }}>
             {/* Header row */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1867,7 +1880,7 @@ function DealsPage({ menuItems, onBack }) {
               <span style={{ fontSize: 11, fontWeight: 700, color: remaining <= 2 ? '#EF4444' : 'rgba(255,255,255,0.4)', background: remaining <= 2 ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)', padding: '4px 8px', borderRadius: 6 }}>
                 {remaining > 0 ? `${remaining}d left` : 'Expired'}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: running ? 'rgba(141,198,63,0.1)' : 'rgba(255,255,255,0.04)', color: running ? '#8DC63F' : 'rgba(255,255,255,0.3)' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: running ? 'rgba(220,38,38,0.1)' : 'rgba(255,255,255,0.04)', color: running ? '#DC2626' : 'rgba(255,255,255,0.3)' }}>
                 {running ? 'Running' : deal.active ? 'Scheduled' : 'Inactive'}
               </span>
             </div>
@@ -1881,8 +1894,8 @@ function DealsPage({ menuItems, onBack }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => toggleDealActive(deal.id)} style={{
                 flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
-                background: deal.active ? 'rgba(141,198,63,0.08)' : 'rgba(255,255,255,0.03)',
-                color: deal.active ? '#8DC63F' : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                background: deal.active ? 'rgba(220,38,38,0.08)' : 'rgba(255,255,255,0.03)',
+                color: deal.active ? '#DC2626' : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 800, cursor: 'pointer',
               }}>{deal.active ? 'Deactivate' : 'Activate'}</button>
               <button onClick={() => setPreviewDeal(deal)} style={{
                 padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
@@ -1964,7 +1977,7 @@ function DealCardPreview({ deal }) {
       <div style={{ padding: '12px 14px' }}>
         <span style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deal.title}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: '#8DC63F' }}>{fmtRp(discountedPrice)}</span>
+          <span style={{ fontSize: 16, fontWeight: 900, color: '#DC2626' }}>{fmtRp(discountedPrice)}</span>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through' }}>{fmtRp(originalPrice)}</span>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -2069,7 +2082,7 @@ function ExtrasPage({ restaurantId }) {
             <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Offer size options (Regular / Large)</span>
             <button onClick={() => setEditHasSize(!editHasSize)} style={{
               width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: editHasSize ? '#8DC63F' : 'rgba(255,255,255,0.1)',
+              background: editHasSize ? '#DC2626' : 'rgba(255,255,255,0.1)',
               position: 'relative', transition: 'background 0.2s',
             }}>
               <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: editHasSize ? 22 : 2, transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
@@ -2084,7 +2097,7 @@ function ExtrasPage({ restaurantId }) {
           )}
 
           <button onClick={saveItem} disabled={!editName.trim() || !editPrice} style={{
-            width: '100%', padding: 14, borderRadius: 14, background: editName.trim() && editPrice ? '#8DC63F' : 'rgba(255,255,255,0.06)',
+            width: '100%', padding: 14, borderRadius: 14, background: editName.trim() && editPrice ? '#DC2626' : 'rgba(255,255,255,0.06)',
             border: 'none', color: editName.trim() && editPrice ? '#000' : 'rgba(255,255,255,0.3)',
             fontSize: 14, fontWeight: 900, cursor: editName.trim() && editPrice ? 'pointer' : 'default',
           }}>Save Item</button>
@@ -2104,7 +2117,7 @@ function ExtrasPage({ restaurantId }) {
       <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15' }}>💰 Bundle Discount</span>
-          <span style={{ fontSize: 14, fontWeight: 900, color: '#8DC63F' }}>{bundleDiscount}% off</span>
+          <span style={{ fontSize: 14, fontWeight: 900, color: '#DC2626' }}>{bundleDiscount}% off</span>
         </div>
         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 8 }}>Discount applied to extras when ordered with a main dish</span>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -2125,7 +2138,7 @@ function ExtrasPage({ restaurantId }) {
         {EXTRA_CATEGORIES.map(c => (
           <button key={c.id} onClick={() => setActiveCategory(c.id)} style={{
             flex: 1, padding: '10px 4px', borderRadius: 10,
-            background: activeCategory === c.id ? '#8DC63F' : 'rgba(255,255,255,0.06)',
+            background: activeCategory === c.id ? '#DC2626' : 'rgba(255,255,255,0.06)',
             border: activeCategory === c.id ? 'none' : '1px solid rgba(255,255,255,0.08)',
             color: activeCategory === c.id ? '#000' : 'rgba(255,255,255,0.5)',
             fontSize: 13, fontWeight: 800, cursor: 'pointer',
@@ -2149,7 +2162,7 @@ function ExtrasPage({ restaurantId }) {
                 )}
               </div>
             </div>
-            <button onClick={() => { setEditItem({ category: activeCategory, index: i }); setEditName(item.name); setEditPrice(String(item.price)); setEditLargePrice(item.largePrice ? String(item.largePrice) : ''); setEditHasSize(item.hasSize ?? false) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#8DC63F', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
+            <button onClick={() => { setEditItem({ category: activeCategory, index: i }); setEditName(item.name); setEditPrice(String(item.price)); setEditLargePrice(item.largePrice ? String(item.largePrice) : ''); setEditHasSize(item.hasSize ?? false) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#DC2626', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Edit</button>
             <button onClick={() => deleteItem(i)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Delete</button>
           </div>
         ))}
@@ -2159,7 +2172,7 @@ function ExtrasPage({ restaurantId }) {
       <button onClick={() => {
         setShowLibraryPicker(activeCategory)
       }} style={{
-        width: '100%', padding: 14, borderRadius: 14, background: '#8DC63F', border: 'none', color: '#000',
+        width: '100%', padding: 14, borderRadius: 14, background: '#DC2626', border: 'none', color: '#000',
         fontSize: 14, fontWeight: 900, cursor: 'pointer',
       }}>
         + Add {EXTRA_CATEGORIES.find(c => c.id === activeCategory)?.label} Item
@@ -2201,10 +2214,10 @@ function ExtrasPage({ restaurantId }) {
                           if (restaurantId) saveExtrasToDb(restaurantId, key, updated[key] ?? [])
                         }} style={{
                           display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12,
-                          background: enabled ? 'rgba(141,198,63,0.1)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${enabled ? '#8DC63F' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', textAlign: 'left',
+                          background: enabled ? 'rgba(220,38,38,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${enabled ? '#DC2626' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', textAlign: 'left',
                         }}>
-                          <div style={{ width: 24, height: 24, borderRadius: 6, background: enabled ? '#8DC63F' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div style={{ width: 24, height: 24, borderRadius: 6, background: enabled ? '#DC2626' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {enabled && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
                           </div>
                           <span style={{ fontSize: 13, fontWeight: 700, color: enabled ? '#fff' : 'rgba(255,255,255,0.5)', flex: 1 }}>{item.name}</span>
@@ -2220,7 +2233,7 @@ function ExtrasPage({ restaurantId }) {
               ))}
             </div>
             <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-              <button onClick={() => setShowLibraryPicker(null)} style={{ width: '100%', padding: 14, borderRadius: 14, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>
+              <button onClick={() => setShowLibraryPicker(null)} style={{ width: '100%', padding: 14, borderRadius: 14, background: '#DC2626', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>
                 Done — {(extras[key] ?? []).length} {label.toLowerCase()} selected
               </button>
             </div>
@@ -2228,7 +2241,7 @@ function ExtrasPage({ restaurantId }) {
         )
       })()}
 
-      {toast && <div style={{ position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%)', padding: '10px 20px', borderRadius: 12, background: '#8DC63F', color: '#000', fontSize: 14, fontWeight: 800, zIndex: 10000 }}>✓ {toast}</div>}
+      {toast && <div style={{ position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%)', padding: '10px 20px', borderRadius: 12, background: '#DC2626', color: '#000', fontSize: 14, fontWeight: 800, zIndex: 10000 }}>✓ {toast}</div>}
     </>
   )
 }
@@ -2333,8 +2346,8 @@ function BannerAdsPage({ restaurant }) {
                     </div>
                     <span style={{
                       padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 800,
-                      background: b.status === 'active' ? 'rgba(141,198,63,0.15)' : b.status === 'pending' ? 'rgba(250,204,21,0.15)' : 'rgba(239,68,68,0.15)',
-                      color: b.status === 'active' ? '#8DC63F' : b.status === 'pending' ? '#FACC15' : '#EF4444',
+                      background: b.status === 'active' ? 'rgba(220,38,38,0.15)' : b.status === 'pending' ? 'rgba(250,204,21,0.15)' : 'rgba(239,68,68,0.15)',
+                      color: b.status === 'active' ? '#DC2626' : b.status === 'pending' ? '#FACC15' : '#EF4444',
                     }}>{b.status}</span>
                   </div>
                 ))}
@@ -2345,7 +2358,7 @@ function BannerAdsPage({ restaurant }) {
           {/* Next button */}
           <button onClick={() => { if (selectedTemplate) setStep('promo') }} disabled={!selectedTemplate} style={{
             width: '100%', padding: 14, borderRadius: 14, marginTop: 16,
-            background: selectedTemplate ? '#8DC63F' : 'rgba(255,255,255,0.06)',
+            background: selectedTemplate ? '#DC2626' : 'rgba(255,255,255,0.06)',
             border: 'none', color: selectedTemplate ? '#000' : 'rgba(255,255,255,0.3)',
             fontSize: 14, fontWeight: 900, cursor: selectedTemplate ? 'pointer' : 'default',
           }}>Next — Add Promo Text</button>
@@ -2369,7 +2382,7 @@ function BannerAdsPage({ restaurant }) {
           <input value={promoText} onChange={e => setPromoText(e.target.value)} placeholder="e.g. 20% OFF Today Only!" maxLength={40} style={{ ...inputStyle, marginBottom: 4 }} />
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{promoText.length}/40</span>
 
-          <button onClick={() => setStep('payment')} style={{ width: '100%', padding: 14, borderRadius: 14, marginTop: 16, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Next — Payment</button>
+          <button onClick={() => setStep('payment')} style={{ width: '100%', padding: 14, borderRadius: 14, marginTop: 16, background: '#DC2626', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Next — Payment</button>
         </>
       )}
 
@@ -2388,7 +2401,7 @@ function BannerAdsPage({ restaurant }) {
             <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15', letterSpacing: '0.04em', display: 'block', marginTop: 4 }}>{BANNER_BANK.number}</span>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{BANNER_BANK.holder}</span>
-              <button onClick={() => { navigator.clipboard?.writeText(BANNER_BANK.number); setCopyMsg(true); setTimeout(() => setCopyMsg(false), 2000) }} style={{ padding: '4px 10px', borderRadius: 6, background: copyMsg ? 'rgba(141,198,63,0.2)' : '#8DC63F', border: 'none', color: copyMsg ? '#8DC63F' : '#000', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>{copyMsg ? '✓ Copied' : 'Copy'}</button>
+              <button onClick={() => { navigator.clipboard?.writeText(BANNER_BANK.number); setCopyMsg(true); setTimeout(() => setCopyMsg(false), 2000) }} style={{ padding: '4px 10px', borderRadius: 6, background: copyMsg ? 'rgba(220,38,38,0.2)' : '#DC2626', border: 'none', color: copyMsg ? '#DC2626' : '#000', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>{copyMsg ? '✓ Copied' : 'Copy'}</button>
             </div>
           </div>
 
@@ -2407,7 +2420,7 @@ function BannerAdsPage({ restaurant }) {
 
           <button onClick={handleSubmit} disabled={!proofPreview} style={{
             width: '100%', padding: 14, borderRadius: 14,
-            background: proofPreview ? '#8DC63F' : 'rgba(255,255,255,0.06)',
+            background: proofPreview ? '#DC2626' : 'rgba(255,255,255,0.06)',
             border: 'none', color: proofPreview ? '#000' : 'rgba(255,255,255,0.3)',
             fontSize: 14, fontWeight: 900, cursor: proofPreview ? 'pointer' : 'default',
           }}>Submit & Pay</button>
@@ -2417,13 +2430,13 @@ function BannerAdsPage({ restaurant }) {
       {/* ── SUBMITTED ── */}
       {step === 'submitted' && (
         <div style={{ ...cardStyle, textAlign: 'center', marginTop: 20 }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(141,198,63,0.1)', border: '2px solid rgba(141,198,63,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8DC63F" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', border: '2px solid rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <span style={{ fontSize: 20, fontWeight: 900, color: '#fff', display: 'block', marginBottom: 8 }}>Banner Submitted!</span>
           <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 6 }}>FoodLocal Pro team will verify payment and activate your banner.</span>
-          <span style={{ fontSize: 12, color: '#8DC63F', fontWeight: 700, display: 'block', marginBottom: 16 }}>Activation: Same day during business hours</span>
-          <button onClick={() => { setStep('library'); setSelectedTemplate(null); setPromoText(''); setProofPreview(null); setProofFile(null) }} style={{ padding: '12px 32px', borderRadius: 12, background: '#8DC63F', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Done</button>
+          <span style={{ fontSize: 12, color: '#DC2626', fontWeight: 700, display: 'block', marginBottom: 16 }}>Activation: Same day during business hours</span>
+          <button onClick={() => { setStep('library'); setSelectedTemplate(null); setPromoText(''); setProofPreview(null); setProofFile(null) }} style={{ padding: '12px 32px', borderRadius: 12, background: '#DC2626', border: 'none', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Done</button>
         </div>
       )}
     </>
@@ -2562,7 +2575,7 @@ function EventsPage() {
 
         <button onClick={() => setEditing(null)} style={{
           width: '100%', padding: '14px', borderRadius: 14, border: 'none',
-          background: '#8DC63F', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer',
+          background: '#DC2626', color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer',
         }}>
           Save & Back
         </button>
@@ -2589,14 +2602,14 @@ function EventsPage() {
             <div key={type.id} style={{
               padding: 14, borderRadius: 16,
               background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)',
-              border: `1px solid ${enabled ? 'rgba(141,198,63,0.2)' : 'rgba(255,255,255,0.06)'}`,
+              border: `1px solid ${enabled ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)'}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 24 }}>{type.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ fontSize: 14, fontWeight: 800, color: enabled ? '#fff' : 'rgba(255,255,255,0.5)', display: 'block' }}>{type.label}</span>
                   {enabled && hasContent && (
-                    <span style={{ fontSize: 11, color: '#8DC63F', fontWeight: 700 }}>
+                    <span style={{ fontSize: 11, color: '#DC2626', fontWeight: 700 }}>
                       {(data.images ?? []).length} photos · {(data.description ?? '').length > 0 ? 'description added' : 'no description'}
                     </span>
                   )}
@@ -2608,7 +2621,7 @@ function EventsPage() {
                 {/* Toggle */}
                 <button onClick={() => toggle(type.id)} style={{
                   width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                  background: enabled ? '#8DC63F' : 'rgba(255,255,255,0.1)',
+                  background: enabled ? '#DC2626' : 'rgba(255,255,255,0.1)',
                   position: 'relative', transition: 'background 0.2s', flexShrink: 0,
                 }}>
                   <div style={{
@@ -2625,7 +2638,7 @@ function EventsPage() {
                   <button onClick={() => setEditing(type.id)} style={{
                     padding: '6px 12px', borderRadius: 8,
                     background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#8DC63F', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    color: '#DC2626', fontSize: 12, fontWeight: 800, cursor: 'pointer',
                   }}>Edit</button>
                 )}
               </div>
@@ -2638,8 +2651,37 @@ function EventsPage() {
 }
 
 // ── Add/Edit Item — full page style ──────────────────────────────────────────
+// Perk ribbon presets — shown at the top of a menu card. Vendor can pick
+// one or write a custom 24-char tagline.
+const PERK_LABELS = {
+  bogo:       { emoji: '🎁', text: 'BUY 1 GET 1 FREE' },
+  freeDrink:  { emoji: '🥤', text: 'FREE DRINK' },
+  freeRice:   { emoji: '🍚', text: 'FREE RICE' },
+  freeFries:  { emoji: '🍟', text: 'FREE FRIES' },
+  freeCoffee: { emoji: '☕', text: 'FREE COFFEE' },
+  spendFree:  { emoji: '💸', text: 'SPEND Rp 50K — FREE DELIVERY' },
+}
+
+const DIETARY_TAGS = [
+  { id: 'vegetarian',   label: 'Vegetarian',     icon: '🌱', color: '#22c55e' },
+  { id: 'vegan',        label: 'Vegan',          icon: '🌿', color: '#16a34a' },
+  { id: 'halal',        label: 'Halal',          icon: '🕌', color: '#0d9488' },
+  { id: 'kosher',       label: 'Kosher',         icon: '✡️', color: '#2563eb' },
+  { id: 'gluten_free',  label: 'Gluten-Free',    icon: '🌾', color: '#ca8a04' },
+  { id: 'dairy_free',   label: 'Dairy-Free',     icon: '🥛', color: '#0891b2' },
+  { id: 'nut_free',     label: 'Nut-Free',       icon: '🥜', color: '#a16207' },
+  { id: 'healthy',      label: 'Healthy',        icon: '🥗', color: '#15803d' },
+  { id: 'high_protein', label: 'High-Protein',   icon: '💪', color: '#9333ea' },
+  { id: 'organic',      label: 'Organic',        icon: '🌎', color: '#65a30d' },
+]
+
+const ALLERGEN_OPTIONS = ['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy']
+
 function ItemModal({ item, onSave, onClose }) {
   const isNew = !item?.id
+  const ex = item?.extras || {}
+
+  // Core fields
   const [name, setName] = useState(item?.name ?? '')
   const [originalPrice, setOriginalPrice] = useState(item?.original_price?.toString() ?? '')
   const [price, setPrice] = useState(item?.price?.toString() ?? '')
@@ -2648,12 +2690,49 @@ function ItemModal({ item, onSave, onClose }) {
   const [photoUrl, setPhotoUrl] = useState(item?.photo_url ?? null)
   const [prepTime, setPrepTime] = useState(item?.prep_time_min?.toString() ?? '10')
 
+  // Badge fields
+  const [spice, setSpice] = useState(item?.spice ?? 0)
+  const [halal, setHalal] = useState(item?.halal ?? false)
+  const [popular, setPopular] = useState(item?.popular ?? false)
+
+  // Optional fields (stored in extras JSONB on save)
+  const [photos, setPhotos] = useState(ex.photos ?? [])
+  const [allergens, setAllergens] = useState(ex.allergens ?? [])
+  const [dietary, setDietary] = useState(ex.dietary ?? [])
+  const [portion, setPortion] = useState(ex.portion ?? '')
+  const [portionSize, setPortionSize] = useState(ex.portion_size ?? '')
+  const [stock, setStock] = useState(item?.stock != null ? String(item.stock) : '')
+  const [variants, setVariants] = useState(ex.variants ?? [])
+  const [modifiers, setModifiers] = useState(ex.modifiers ?? [])
+  const [perks, setPerks] = useState(ex.perks ?? [])
+  const [perkText, setPerkText] = useState(ex.perk_text ?? '')
+  const initialLimit = ex.perk_limit || {}
+  const [perkLimitType, setPerkLimitType] = useState(initialLimit.type ?? 'none')
+  const [perkLimitEndAt, setPerkLimitEndAt] = useState(initialLimit.endAt ?? '')
+  const [perkLimitStock, setPerkLimitStock] = useState(initialLimit.remaining != null ? String(initialLimit.remaining) : '')
+
+  const [expanded, setExpanded] = useState({
+    photos: photos.length > 0, perks: perks.length > 0 || !!perkText,
+    variants: variants.length > 0, modifiers: modifiers.length > 0,
+    allergens: allergens.length > 0, dietary: dietary.length > 0,
+    portion: !!portion, stock: stock !== '',
+  })
+  const toggleSection = (k) => setExpanded(p => ({ ...p, [k]: !p[k] }))
+
   const discountPct = originalPrice && Number(originalPrice) > Number(price)
     ? Math.round(((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100)
     : 0
 
   const handleSave = () => {
     if (!name.trim() || !price) return
+    const perkLimit =
+      perkLimitType === 'time'  && perkLimitEndAt   ? { type: 'time', endAt: perkLimitEndAt } :
+      perkLimitType === 'stock' && perkLimitStock !== '' ? { type: 'stock', remaining: Number(perkLimitStock) || 0 } :
+      null
+    const extras = {
+      photos, allergens, dietary, portion, portion_size: portionSize,
+      variants, modifiers, perks, perk_text: perkText, perk_limit: perkLimit,
+    }
     onSave({
       ...item,
       id: item?.id ?? Date.now(),
@@ -2664,12 +2743,21 @@ function ItemModal({ item, onSave, onClose }) {
       description: description.trim(),
       photo_url: photoUrl,
       prep_time_min: Number(prepTime) || 10,
+      spice: Number(spice) || 0,
+      halal,
+      popular,
+      stock: stock === '' ? null : Number(stock),
+      extras,
       is_available: item?.is_available ?? true,
     })
   }
 
   const inputStyle = { width: '100%', padding: '14px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', color: '#fff', fontSize: 16, outline: 'none', marginBottom: 14, boxSizing: 'border-box' }
   const labelStyle = { fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: 6, textTransform: 'uppercase' }
+  const sectionStyle = { marginBottom: 12, padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }
+  const sectionCloseBtn = (key) => (
+    <button type="button" onClick={() => toggleSection(key)} aria-label="Close" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: BRAND.red, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+  )
 
   return createPortal(
     <div style={{
@@ -2702,10 +2790,10 @@ function ItemModal({ item, onSave, onClose }) {
         <input value={price} onChange={e => setPrice(e.target.value.replace(/\D/g, ''))} placeholder="25000" inputMode="numeric" style={inputStyle} />
 
         {discountPct > 0 && (
-          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(141,198,63,0.1)', border: '1px solid rgba(141,198,63,0.2)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ padding: '3px 8px', borderRadius: 6, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900 }}>{discountPct}% OFF</span>
+          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ padding: '3px 8px', borderRadius: 6, background: BRAND.red, color: '#fff', fontSize: 13, fontWeight: 900 }}>{discountPct}% OFF</span>
             <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'line-through' }}>Rp {Number(originalPrice).toLocaleString('id-ID')}</span>
-            <span style={{ fontSize: 13, fontWeight: 900, color: '#8DC63F' }}>Rp {Number(price).toLocaleString('id-ID')}</span>
+            <span style={{ fontSize: 13, fontWeight: 900, color: BRAND.red }}>Rp {Number(price).toLocaleString('id-ID')}</span>
           </div>
         )}
 
@@ -2730,12 +2818,216 @@ function ItemModal({ item, onSave, onClose }) {
             <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={imgError('logo')} />
           </div>
         )}
+
+        {/* Badges row */}
+        <label style={labelStyle}>Badges</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+          <button type="button" onClick={() => setHalal(v => !v)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid ' + (halal ? '#0d9488' : 'rgba(255,255,255,0.1)'), background: halal ? 'rgba(13,148,136,0.15)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🕌 Halal</button>
+          <button type="button" onClick={() => setPopular(v => !v)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid ' + (popular ? BRAND.red : 'rgba(255,255,255,0.1)'), background: popular ? BRAND.redGlow : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginRight: 4 }}>🌶 Spice</span>
+            {[0, 1, 2, 3, 4, 5].map(n => (
+              <button key={n} type="button" onClick={() => setSpice(n)} style={{ width: 22, height: 22, borderRadius: 6, border: 'none', cursor: 'pointer', background: n <= spice && spice > 0 ? '#EF4444' : 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 11, fontWeight: 800 }}>{n}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Optional sections chips */}
+        <label style={labelStyle}>Optional details</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          {[
+            { key: 'perks', label: '🎁 Perk Ribbon' },
+            { key: 'variants', label: '📏 Sizes' },
+            { key: 'modifiers', label: '➕ Add-ons' },
+            { key: 'allergens', label: '⚠️ Allergens' },
+            { key: 'dietary', label: '🌱 Dietary' },
+            { key: 'portion', label: '⚖️ Grams' },
+            { key: 'stock', label: '📦 Stock' },
+            { key: 'photos', label: '🖼 Photos' },
+          ].map(opt => (
+            <button key={opt.key} type="button" onClick={() => toggleSection(opt.key)} style={{
+              background: expanded[opt.key] ? BRAND.redGlow : 'rgba(255,255,255,0.04)',
+              border: '1px dashed ' + (expanded[opt.key] ? BRAND.redBorder : 'rgba(255,255,255,0.12)'),
+              color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              padding: '7px 11px', borderRadius: 12, minHeight: 32,
+            }}>{expanded[opt.key] ? '−' : '+'} {opt.label}</button>
+          ))}
+        </div>
+
+        {expanded.perks && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('perks')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown at the top of this item's card.</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Preset</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {Object.entries(PERK_LABELS).map(([id, p]) => {
+                const isActive = perks[0] === id && !perkText
+                return (
+                  <button key={id} type="button" onClick={() => { setPerks(isActive ? [] : [id]); setPerkText('') }} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: isActive ? BRAND.red : 'rgba(255,255,255,0.05)',
+                    border: '1px solid ' + (isActive ? BRAND.red : 'rgba(255,255,255,0.1)'),
+                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    padding: '6px 10px', borderRadius: 14, minHeight: 36,
+                  }}>
+                    <span>{p.emoji}</span>{p.text}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>Or write your own (max 24 chars)</div>
+            <input value={perkText} maxLength={24} onChange={e => { setPerkText(e.target.value); if (e.target.value) setPerks([]) }} placeholder="e.g. Free Cendol Today!" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Limited offer?</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+              {[
+                { id: 'none', label: 'No limit' },
+                { id: 'time', label: '⏱ Time' },
+                { id: 'stock', label: '📦 Stock' },
+              ].map(opt => (
+                <button key={opt.id} type="button" onClick={() => setPerkLimitType(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: perkLimitType === opt.id ? BRAND.red : 'rgba(255,255,255,0.08)', color: perkLimitType === opt.id ? '#fff' : 'rgba(255,255,255,0.6)', minHeight: 40 }}>{opt.label}</button>
+              ))}
+            </div>
+            {perkLimitType === 'time' && (
+              <div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                  {[
+                    { label: '+1 h', ms: 1 * 3600000 },
+                    { label: '+4 h', ms: 4 * 3600000 },
+                    { label: '+24 h', ms: 24 * 3600000 },
+                    { label: '+48 h', ms: 48 * 3600000 },
+                    { label: '+7 days', ms: 7 * 24 * 3600000 },
+                  ].map(opt => (
+                    <button key={opt.label} type="button" onClick={() => setPerkLimitEndAt(new Date(Date.now() + opt.ms).toISOString())} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 36 }}>{opt.label}</button>
+                  ))}
+                </div>
+                <input type="datetime-local" value={perkLimitEndAt ? new Date(perkLimitEndAt).toISOString().slice(0, 16) : ''} onChange={e => setPerkLimitEndAt(e.target.value ? new Date(e.target.value).toISOString() : '')} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                {perkLimitEndAt && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Ends {new Date(perkLimitEndAt).toLocaleString()}</div>}
+              </div>
+            )}
+            {perkLimitType === 'stock' && (
+              <input type="number" min={0} value={perkLimitStock} onChange={e => setPerkLimitStock(e.target.value)} placeholder="e.g. 20 left" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+            )}
+          </div>
+        )}
+
+        {expanded.variants && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('variants')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Sizes — customer picks one. Delta added to base price.</div>
+            {variants.map((v, i) => (
+              <div key={v.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input value={v.name} onChange={e => setVariants(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="Small / Large / Regular" style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                <input type="number" value={v.priceDelta} onChange={e => setVariants(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder="+0" style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                <button type="button" onClick={() => setVariants(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>×</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setVariants(p => [...p, { id: 'v_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add size</button>
+          </div>
+        )}
+
+        {expanded.modifiers && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('modifiers')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Add-ons — customer can pick multiple, each adds to price.</div>
+            {modifiers.map((m, i) => (
+              <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input value={m.name} onChange={e => setModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="Extra cheese / No onion" style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                <input type="number" value={m.priceDelta} onChange={e => setModifiers(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder="+0" style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                <button type="button" onClick={() => setModifiers(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>×</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setModifiers(p => [...p, { id: 'm_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add modifier</button>
+          </div>
+        )}
+
+        {expanded.allergens && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('allergens')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Contains — helps customers with allergies.</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {ALLERGEN_OPTIONS.map(a => {
+                const isActive = allergens.includes(a)
+                return (
+                  <button key={a} type="button" onClick={() => setAllergens(p => isActive ? p.filter(x => x !== a) : [...p, a])} style={{
+                    background: isActive ? '#EF4444' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
+                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                  }}>{a}</button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {expanded.dietary && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('dietary')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags — customers can filter the menu by these.</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {DIETARY_TAGS.map(tag => {
+                const isActive = dietary.includes(tag.id)
+                return (
+                  <button key={tag.id} type="button" onClick={() => setDietary(p => isActive ? p.filter(x => x !== tag.id) : [...p, tag.id])} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: isActive ? `${tag.color}33` : 'rgba(255,255,255,0.05)',
+                    border: '1px solid ' + (isActive ? tag.color : 'rgba(255,255,255,0.1)'),
+                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                  }}>
+                    <span>{tag.icon}</span>{tag.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {expanded.portion && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('portion')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Grams / weight</div>
+            <input value={portion} onChange={e => setPortion(e.target.value)} placeholder='e.g. 200g · 350g · 1.2kg' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 6 }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['Small', 'Medium', 'Large'].map(s => (
+                <button key={s} type="button" onClick={() => setPortionSize(portionSize === s ? '' : s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: portionSize === s ? BRAND.red : 'rgba(255,255,255,0.08)', color: portionSize === s ? '#fff' : 'rgba(255,255,255,0.6)' }}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {expanded.stock && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('stock')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type="number" min={0} value={stock} onChange={e => setStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="button" onClick={() => setStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: stock === '' ? BRAND.redGlow : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Unlimited</button>
+            </div>
+          </div>
+        )}
+
+        {expanded.photos && (
+          <div style={sectionStyle}>
+            {sectionCloseBtn('photos')}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Extra photos — up to 4 thumbnails shown in a gallery on the item page.</div>
+            {photos.map((url, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input value={url} onChange={e => setPhotos(p => p.map((x, j) => j === i ? e.target.value : x))} placeholder="https://..." style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
+                <button type="button" onClick={() => setPhotos(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>×</button>
+              </div>
+            ))}
+            {photos.length < 4 && (
+              <button type="button" onClick={() => setPhotos(p => [...p, ''])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add photo URL ({photos.length}/4)</button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom buttons */}
       <div style={{ padding: '12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px)', display: 'flex', gap: 10, position: 'relative', zIndex: 1 }}>
         <button onClick={onClose} style={{ flex: 1, padding: '16px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', background: 'none', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-        <button onClick={handleSave} disabled={!name.trim() || !price} style={{ flex: 2, padding: '16px', borderRadius: 14, background: '#8DC63F', border: 'none', color: '#000', fontSize: 16, fontWeight: 900, cursor: 'pointer', opacity: name.trim() && price ? 1 : 0.4 }}>{isNew ? 'Add Item' : 'Save Changes'}</button>
+        <button onClick={handleSave} disabled={!name.trim() || !price} style={{ flex: 2, padding: '16px', borderRadius: 14, background: BRAND.red, border: 'none', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', opacity: name.trim() && price ? 1 : 0.4 }}>{isNew ? 'Add Item' : 'Save Changes'}</button>
       </div>
     </div>,
     document.body

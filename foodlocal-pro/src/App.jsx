@@ -5,10 +5,11 @@ import RestaurantBrowseScreen from '@/screens/RestaurantBrowseScreen'
 import DirectoryPage from './pages/DirectoryPage'
 import RestaurantPage from './pages/RestaurantPage'
 import VendorPanel from './pages/VendorPanel'
+import VendorDashboardV2 from './components/restaurant/VendorDashboardV2'
 
 export default function App() {
   const [restaurantSlug, setRestaurantSlug] = useState(null)
-  const [view, setView] = useState('food') // 'food' | 'directory' | 'restaurant' | 'vendor'
+  const [view, setView] = useState('food') // 'food' | 'directory' | 'restaurant' | 'vendor' | 'dashboard'
 
   /* --- Agent referral tracking --- */
   useEffect(() => {
@@ -27,6 +28,13 @@ export default function App() {
     const hostname = window.location.hostname
     const parts = hostname.split('.')
     const params = new URLSearchParams(window.location.search)
+
+    // Full vendor dashboard (menu CRUD, subscription, payments) — bypasses
+    // VendorPanel's order-only view. Used by the DEV button in this app.
+    if (params.get('view') === 'dashboard') {
+      setView('dashboard')
+      return
+    }
 
     // Check for vendor panel
     if (window.location.pathname === '/vendor' || params.get('view') === 'vendor') {
@@ -80,7 +88,7 @@ export default function App() {
           />
           {isDevHost && (
             <button
-              onClick={() => { window.location.search = '?view=vendor' }}
+              onClick={() => { window.location.search = '?view=dashboard' }}
               style={{
                 position: 'fixed', right: 12, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
                 zIndex: 9999, padding: '8px 14px', borderRadius: 999,
@@ -114,6 +122,10 @@ export default function App() {
 
       {view === 'vendor' && (
         <VendorPanel />
+      )}
+
+      {view === 'dashboard' && (
+        <VendorDashboardV2 onClose={() => { window.location.search = '' }} />
       )}
     </AuthProvider>
   )

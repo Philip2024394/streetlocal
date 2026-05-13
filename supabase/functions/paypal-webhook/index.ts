@@ -47,7 +47,18 @@ serve(async (req) => {
     }
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-    const { data: order } = await supabase.from('orders').select('id, vendor_id').eq('gateway_order_id', orderId).single()
+    // FOO- prefix routes to foodlocal-pro's food_orders; everything else
+    // belongs to food-basic's orders table. vendor_id is the same shape:
+    // restaurants.id for food_orders, vendor_accounts.id for orders.
+    const isFoodOrder = String(orderId).startsWith('FOO-')
+    let order: any = null
+    if (isFoodOrder) {
+      const { data } = await supabase.from('food_orders').select('id, restaurant_id').eq('gateway_order_id', orderId).single()
+      if (data) order = { id: data.id, vendor_id: data.restaurant_id }
+    } else {
+      const { data } = await supabase.from('orders').select('id, vendor_id').eq('gateway_order_id', orderId).single()
+      order = data
+    }
     if (!order) {
       console.warn('paypal webhook: order not found', orderId)
       return new Response('order not found', { status: 200, headers: corsHeaders })
@@ -112,7 +123,12 @@ serve(async (req) => {
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
     if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    if (isFoodOrder) {
+      const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
+      await maybeUpdateFoodOrder(supabase, orderId, paymentStatus, transactionId, 'paypal')
+    } else {
+      await supabase.from('orders').update(patch).eq('id', order.id)
+    }
 
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {

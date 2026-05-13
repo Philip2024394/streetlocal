@@ -1,0 +1,111 @@
+// FoodLocal Pro subscription webhook — Midtrans Notification handler for
+// the central StreetLocal Midtrans account that processes FoodLocal Pro
+// restaurant subscription payments. Distinct from `subscription-webhook`
+// which handles food-basic (vendor_accounts).
+//
+// On settlement (or capture+accept):
+//   - foodpro_payment_records.status = 'paid'
+//   - restaurants.url_active = true  (restaurant goes live for customers)
+//   - restaurants.expires_at = now + 30 days  (auto-live for the period)
+//
+// Signature: sha512(order_id + status_code + gross_amount + server_key)
+//
+// Configure in Midtrans dashboard:
+//   Settings → Configuration → Payment Notification URL:
+//     https://<project>.supabase.co/functions/v1/foodpro-subscription-webhook
+//
+// Deploy: `supabase functions deploy foodpro-subscription-webhook --no-verify-jwt`
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+async function sha512hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-512', new TextEncoder().encode(input))
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+
+  try {
+    const event = await req.json()
+    const orderId = event?.order_id
+    if (!orderId) return new Response('no order id', { status: 200, headers: corsHeaders })
+    if (!String(orderId).startsWith('FLP-')) {
+      // Not a FoodLocal Pro order — ignore (could be a stray webhook).
+      return new Response('not a foodpro order', { status: 200, headers: corsHeaders })
+    }
+
+    const serverKey = Deno.env.get('MIDTRANS_SUBSCRIPTION_SERVER_KEY')
+    if (!serverKey) {
+      console.error('foodpro webhook: MIDTRANS_SUBSCRIPTION_SERVER_KEY not set')
+      return new Response('not configured', { status: 500, headers: corsHeaders })
+    }
+
+    const sigInput = `${orderId}${event.status_code}${event.gross_amount}${serverKey}`
+    const expected = await sha512hex(sigInput)
+    if (event.signature_key && event.signature_key.toLowerCase() !== expected.toLowerCase()) {
+      console.warn('foodpro webhook: signature mismatch')
+      return new Response('invalid signature', { status: 401, headers: corsHeaders })
+    }
+
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+    const { data: paymentRow } = await supabase
+      .from('foodpro_payment_records')
+      .select('id, restaurant_id, period_end, amount')
+      .eq('midtrans_order_id', orderId)
+      .single()
+
+    if (!paymentRow) {
+      console.warn('foodpro webhook: payment row not found for', orderId)
+      return new Response('payment row not found', { status: 200, headers: corsHeaders })
+    }
+
+    const txStatus = String(event.transaction_status || '').toLowerCase()
+    const fraudStatus = String(event.fraud_status || '').toLowerCase()
+    let recordStatus: 'paid' | 'pending' | 'failed' | null = null
+    let goLive = false
+
+    if (txStatus === 'capture' && fraudStatus === 'accept') { recordStatus = 'paid'; goLive = true }
+    else if (txStatus === 'settlement') { recordStatus = 'paid'; goLive = true }
+    else if (txStatus === 'pending') { recordStatus = 'pending' }
+    else if (['cancel', 'expire', 'deny', 'failure'].includes(txStatus)) { recordStatus = 'failed' }
+
+    if (!recordStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
+
+    const recordPatch: Record<string, unknown> = {
+      status: recordStatus,
+      midtrans_transaction_id: event.transaction_id,
+      midtrans_transaction_status: txStatus,
+      payment_method: event.payment_type || 'card',
+    }
+    if (goLive) {
+      recordPatch.verified_at = new Date().toISOString()
+      recordPatch.verified_by = 'midtrans-auto'
+    }
+    await supabase.from('foodpro_payment_records').update(recordPatch).eq('id', paymentRow.id)
+
+    if (goLive && paymentRow.restaurant_id) {
+      const renewAt = new Date(paymentRow.period_end || (Date.now() + 30 * 24 * 60 * 60 * 1000)).toISOString()
+      await supabase.from('restaurants').update({
+        url_active: true,
+        activated_at: new Date().toISOString(),
+        plan_started_at: new Date().toISOString(),
+        expires_at: renewAt,
+        subscription_renew_at: renewAt,
+      }).eq('id', paymentRow.restaurant_id)
+    }
+
+    return new Response('OK', { status: 200, headers: corsHeaders })
+  } catch (e) {
+    console.error('foodpro webhook error', e)
+    return new Response('server error', { status: 500, headers: corsHeaders })
+  }
+})

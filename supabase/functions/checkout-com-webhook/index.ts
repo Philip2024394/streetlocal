@@ -53,12 +53,15 @@ serve(async (req) => {
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-    const { data: order } = await supabase
-      .from('orders')
-      .select('id, vendor_id')
-      .eq('gateway_order_id', reference)
-      .single()
-
+    const isFoodOrder = String(reference || '').startsWith('FOO-')
+    let order: any = null
+    if (isFoodOrder) {
+      const { data } = await supabase.from('food_orders').select('id, restaurant_id').eq('gateway_order_id', reference).single()
+      if (data) order = { id: data.id, vendor_id: data.restaurant_id }
+    } else {
+      const { data } = await supabase.from('orders').select('id, vendor_id').eq('gateway_order_id', reference).single()
+      order = data
+    }
     if (!order) {
       console.warn('checkout.com webhook: order not found', reference)
       return new Response('order not found', { status: 200, headers: corsHeaders })
@@ -114,7 +117,12 @@ serve(async (req) => {
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
     if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    if (isFoodOrder) {
+      const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
+      await maybeUpdateFoodOrder(supabase, reference, paymentStatus, transactionId, 'checkout-com')
+    } else {
+      await supabase.from('orders').update(patch).eq('id', order.id)
+    }
 
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {

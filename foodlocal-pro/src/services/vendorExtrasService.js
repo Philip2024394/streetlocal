@@ -126,11 +126,17 @@ export async function saveMenuItem(restaurantId, item) {
     description: item.description ?? null,
     price: item.price,
     original_price: item.original_price ?? null,
+    promo_price: item.promo_price ?? null,
     photo_url: item.photo_url ?? null,
     prep_time_min: item.prep_time_min ?? 10,
     category: item.category ?? 'Main',
     is_available: item.is_available ?? true,
     sort_order: item.sort_order ?? 0,
+    spice: item.spice ?? 0,
+    halal: item.halal ?? false,
+    popular: item.popular ?? false,
+    stock: item.stock ?? null,
+    extras: item.extras ?? {},
   }
 
   if (item.id && !String(item.id).startsWith('local')) {

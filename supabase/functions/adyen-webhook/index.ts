@@ -46,11 +46,15 @@ serve(async (req) => {
         continue
       }
 
-      const { data: order } = await supabase
-        .from('orders')
-        .select('id, vendor_id')
-        .eq('gateway_order_id', merchantReference)
-        .single()
+      const isFoodOrder = String(merchantReference).startsWith('FOO-')
+      let order: any = null
+      if (isFoodOrder) {
+        const { data } = await supabase.from('food_orders').select('id, restaurant_id').eq('gateway_order_id', merchantReference).single()
+        if (data) order = { id: data.id, vendor_id: data.restaurant_id }
+      } else {
+        const { data } = await supabase.from('orders').select('id, vendor_id').eq('gateway_order_id', merchantReference).single()
+        order = data
+      }
       if (!order) {
         console.warn('adyen webhook: order not found', merchantReference)
         continue
@@ -94,7 +98,12 @@ serve(async (req) => {
       if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
       if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-      await supabase.from('orders').update(patch).eq('id', order.id)
+      if (isFoodOrder) {
+        const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
+        await maybeUpdateFoodOrder(supabase, merchantReference, paymentStatus, i.pspReference, 'adyen')
+      } else {
+        await supabase.from('orders').update(patch).eq('id', order.id)
+      }
     }
 
     // Adyen requires the string "[accepted]" as the response body

@@ -2088,7 +2088,7 @@ export default function RestaurantBrowseScreen({ onClose, onBackToCategories, ca
                           customerLon={slCustomer?.lon}
                           vendorLat={enriched?.[activeIndex]?.lat || -7.7956}
                           vendorLon={enriched?.[activeIndex]?.lng || 110.3695}
-                          subtotal={subtotal}
+                          subtotal={dish?.price ?? 0}
                           onChangeLocation={() => setShowCustomerPopup(true)}
                         />
                       </div>

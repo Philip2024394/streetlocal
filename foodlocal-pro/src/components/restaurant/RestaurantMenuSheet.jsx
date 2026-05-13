@@ -57,6 +57,8 @@ import OrderConfirmOverlay from './OrderConfirmOverlay'
 import OrdersPanel from './OrdersPanel'
 import CategoryDrawer from './CategoryDrawer'
 import EventsDrawer from './EventsDrawer'
+import CheckoutSheet from './CheckoutSheet'
+import { supabase } from '@/lib/supabase'
 import SocialsDrawer from './SocialsDrawer'
 import ReviewModal from './ReviewModal'
 import CustomizeSheet from './CustomizeSheet'
@@ -230,6 +232,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
   const [foodOrders,     setFoodOrders]     = useState([])
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [orderConfirm,   setOrderConfirm]   = useState(null)   // { id, total, estimatedMin }
+  const [gatewayCheckout, setGatewayCheckout] = useState(null) // { foodOrderId, total } when paying via connected gateway
   const [reviewOrder,    setReviewOrder]    = useState(null)    // order to review
   const [reviewStars,    setReviewStars]    = useState(0)
   const [reviewComment,  setReviewComment]  = useState('')
@@ -545,8 +548,27 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
     if (file) setPaymentProofFile(file)
   }
 
-  const handleSubmitPayment = async () => {
+  const handleSubmitPayment = async (skipGateway = false) => {
     if (!orderConfirm) return
+    // Gateway checkout path: if the vendor has a connected Midtrans and the
+    // customer didn't pick cash-on-delivery, mint a Snap token and open
+    // CheckoutSheet. The food-order-payment-webhook will auto-confirm
+    // and the rest of this handler runs after the webhook lands.
+    if (!skipGateway && orderConfirm.payment_method !== 'cod' && restaurant?.id && supabase) {
+      try {
+        const { data: conn } = await supabase
+          .from('vendor_payment_connections')
+          .select('gateway_id')
+          .eq('vendor_id', restaurant.id)
+          .eq('gateway_id', 'midtrans')
+          .eq('is_active', true)
+          .maybeSingle()
+        if (conn) {
+          setGatewayCheckout({ foodOrderId: orderConfirm.id, total: orderConfirm.total })
+          return
+        }
+      } catch {}
+    }
     setPaymentSubmitted(true)
 
     // Update order status in localStorage
@@ -2055,6 +2077,31 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
             if (result.valid) applyPromoCode(code)
             setPromoBannerOpen2(false)
             setCartExpanded(true)
+          }}
+        />
+      )}
+
+      {/* ── Gateway Checkout Sheet (Midtrans Snap via vendor's keys) ── */}
+      {gatewayCheckout && (
+        <CheckoutSheet
+          foodOrderId={gatewayCheckout.foodOrderId}
+          restaurantId={restaurant?.id}
+          total={gatewayCheckout.total}
+          restaurantName={restaurant?.name}
+          onClose={() => setGatewayCheckout(null)}
+          onConfirmed={() => {
+            // Mark the order locally then continue with driver assignment.
+            const orders = getFoodOrders().map(o =>
+              o.id === gatewayCheckout.foodOrderId
+                ? { ...o, status: 'payment_submitted', payment_method: 'midtrans' }
+                : o
+            )
+            saveFoodOrders(orders)
+            setFoodOrders(orders)
+            setGatewayCheckout(null)
+            // Re-run the submit path (driver search + DB insert) but skip
+            // the gateway check this second time so we don't loop.
+            handleSubmitPayment(true)
           }}
         />
       )}

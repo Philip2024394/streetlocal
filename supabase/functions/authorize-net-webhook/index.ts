@@ -49,13 +49,23 @@ serve(async (req) => {
     // Try lookup by invoiceNumber first (our orderId may be truncated to 20 chars
     // in the original request — that's an Authorize.net limit). If miss, try
     // by transaction id stored from a previous webhook.
+    const isFoodOrder = String(invoiceNumber || '').startsWith('FOO-')
     let order: any = null
-    if (invoiceNumber) {
+    let foodOrderRef: string | null = null
+    if (isFoodOrder) {
+      const { data: fo } = await supabase
+        .from('food_orders')
+        .select('id, restaurant_id, gateway_order_id')
+        .ilike('gateway_order_id', `${invoiceNumber}%`)
+        .limit(1)
+        .maybeSingle()
+      if (fo) { order = { id: fo.id, vendor_id: fo.restaurant_id }; foodOrderRef = fo.gateway_order_id }
+    } else if (invoiceNumber) {
       const { data: o } = await supabase
         .from('orders')
         .select('id, vendor_id, gateway_order_id')
         .eq('gateway_id', 'authorize-net')
-        .ilike('gateway_order_id', `${invoiceNumber}%`) // partial match (we send first 20 chars)
+        .ilike('gateway_order_id', `${invoiceNumber}%`)
         .limit(1)
         .maybeSingle()
       order = o
@@ -115,7 +125,12 @@ serve(async (req) => {
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
     if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    if (isFoodOrder && foodOrderRef) {
+      const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
+      await maybeUpdateFoodOrder(supabase, foodOrderRef, paymentStatus, trxnId, 'authorize-net')
+    } else {
+      await supabase.from('orders').update(patch).eq('id', order.id)
+    }
 
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {
