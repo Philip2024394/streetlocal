@@ -3862,7 +3862,7 @@ export default function App() {
                       <div key={theme.id} style={{ textAlign: 'center' }}>
                         {/* iPhone-style frame around the theme — dark bezel, 4px padding,
                             inner phone screen with rounded corners and notch. */}
-                        <div onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ width: '100%', height: 0, paddingBottom: '210%', position: 'relative', borderRadius: 22, background: '#1a1a1a', padding: 4, boxShadow: '0 10px 30px rgba(0,0,0,0.18)', border: '1px solid #333', cursor: 'pointer', boxSizing: 'border-box' }}>
+                        <div onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ width: '100%', height: 0, paddingBottom: '210%', position: 'relative', borderRadius: 22, background: '#1a1a1a', boxShadow: '0 10px 30px rgba(0,0,0,0.18)', border: '1px solid #333', cursor: 'pointer', boxSizing: 'border-box' }}>
                           <div style={{ position: 'absolute', top: 4, left: 4, right: 4, bottom: 4, borderRadius: 18, overflow: 'hidden', background: '#000' }}>
                             {/* Notch (Dynamic Island look) — pill shape, centered at the top */}
                             <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 40, height: 10, background: '#000', borderRadius: 6, zIndex: 5, boxShadow: '0 0 0 1px #1a1a1a' }} />
