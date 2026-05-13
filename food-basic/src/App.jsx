@@ -3146,16 +3146,10 @@ export default function App() {
     // and flip showLanding to false so the menu reveals (the existing menu flow
     // takes over after that point).
     if (landingThemeId === 'donuts') {
-      // Build the iframe URL with vendor-customisable tokens from Design Studio.
-      // These read from the vendor's existing state — the same values Design
-      // Studio's pickers write to. So edits in Design Studio show up here on
-      // next render (the URL changes, iframe reloads with new values).
-      const themeParams = new URLSearchParams()
-      themeParams.set('accent', shopAccentColor || '#EC4899')
-      themeParams.set('shopName', shopName || '')
-      if (typeof customTagline === 'string' && customTagline.trim()) themeParams.set('sub', customTagline)
-      if (typeof btnText === 'string' && btnText.trim()) themeParams.set('btnText', btnText)
-      const donutsSrc = '/themes/donuts.html?' + themeParams.toString()
+      // Render the saved donut theme exactly as approved — no URL-param
+      // overrides. The snapshot at /themes/donuts.html is pixel-accurate to
+      // the approved gallery design.
+      const donutsSrc = '/themes/donuts.html'
       return (
         <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
           {/* Language toggle still available at top-right */}

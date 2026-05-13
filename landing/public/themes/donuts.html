@@ -9,10 +9,10 @@
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
     * { box-sizing: border-box; }
-    /* Design intrinsic size — every absolute px in the layout (44px headline,
-       h-11 button etc.) is based on this 390x844 reference frame. The frame is
-       then scaled to fit whatever iframe / window viewport loads us, so the
-       proportions remain correct on any size container. */
+    /* The approved design is sized for a 390x844 phone viewport. We render at
+       that intrinsic size, then CSS-scale to fit whatever container loads us
+       (catalog preview, food-basic splash, standalone). Proportions and
+       absolute pixel values stay pixel-perfect to the approved design. */
     #root {
       position: fixed;
       top: 0;
@@ -20,26 +20,28 @@
       width: 390px;
       height: 844px;
       transform-origin: top left;
-      /* Fill the iframe — cover-style fit. Uses max() so content scales to
-         fully cover the container; minor overflow on the long side is clipped
-         by body overflow:hidden. */
-      transform: scale(max(calc(100vw / 390), calc(100vh / 844)));
+      transform: scale(min(calc(100vw / 390), calc(100vh / 844)));
     }
-    .theme-fill {
+    /* Center the scaled content so any leftover space on the long axis is
+       split evenly (no off-shape appearance). */
+    body { display: flex; align-items: flex-start; justify-content: flex-start; }
+    /* The theme outer fills the 390x844 reference frame, with the safe-area
+       top padding for notch clearance. Identical to the gallery's
+       .min-h-screen clamp. */
+    .theme-frame {
       width: 390px !important;
       height: 844px !important;
-      min-height: 844px !important;
-      max-height: 844px !important;
       overflow: hidden !important;
       padding-top: 46px !important;
-      padding-bottom: 12px !important;
+      padding-bottom: 8px !important;
       box-sizing: border-box !important;
+      position: relative;
     }
-    .theme-fill .min-h-screen { min-height: 100% !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; }
+    .theme-frame .min-h-screen { min-height: 100% !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding-top: 0 !important; }
   </style>
 </head>
 <body>
-  <!-- Static bg image fills the iframe viewport. -->
+  <!-- Static bg image — fills the iframe viewport (cover fit). -->
   <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;" />
   <div id="root" style="z-index:1;"></div>
 
@@ -58,33 +60,12 @@
 
     const h = React.createElement
 
-    // Read vendor-editable tokens from the URL query string so the saved
-    // theme can be customised via Design Studio. Defaults preserve the
-    // original donut design when no params are passed.
-    const params = new URLSearchParams(window.location.search)
-    const tokens = {
-      accent:        params.get('accent')        || '#EC4899',
-      shopName:      params.get('shopName')      || null,           // optional override
-      kicker:        params.get('kicker')        || 'Hand-crafted Daily',
-      headline1:     params.get('headline1')     || 'Sweet',
-      headline2:     params.get('headline2')     || 'Glazed',
-      headlineAcc:   params.get('headlineAcc')   || 'Donuts',
-      sub:           params.get('sub')           || 'Hand-crafted donuts glazed and filled with love. Baked fresh every morning.',
-      btnText:       params.get('btnText')       || 'Order Donuts',
-      featuredKick:  params.get('featuredKick')  || 'Today’s Flavour',
-      featuredName1: params.get('featuredName1') || 'Strawberry',
-      featuredName2: params.get('featuredName2') || 'Glazed',
-      pillText:      params.get('pillText')      || 'Open Now',
-    }
-    const accentBg   = tokens.accent
-    const accentSoft = tokens.accent + '4D' // ~30% alpha
-    const accentDim  = tokens.accent + '26' // ~15% alpha
-
-    // ─── FROZEN SNAPSHOT — Donuts Theme (cloned from gallery Theme #6 on 2026-05-14) ──
-    // Further edits to gallery Theme #6 will NOT affect this snapshot. Vendor
-    // overrides flow in via URL params.
+    // ─── FROZEN SNAPSHOT — Donuts Theme (cloned 1:1 from gallery Theme #6) ─
+    // Pixel-accurate copy of the approved design. No token substitution.
+    // No reinterpretation. Any future change to the gallery's Theme #6 will
+    // NOT affect this file.
     function ThemeDonuts() {
-      return h('div', { className: 'w-full overflow-hidden text-white theme-fill' }, [
+      return h('div', { className: 'w-full overflow-hidden text-white theme-frame' }, [
         h('div', { key: 'wrap', className: 'relative w-full h-full flex items-center justify-center px-6 py-3 overflow-hidden' }, [
           h('img', { key: 'f1', src: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png', alt: '', className: 'absolute top-6 right-[-40px] w-52 h-52 rounded-full object-cover shadow-[0_40px_140px_rgba(236,72,153,0.4)] animate-bounce' }),
           h('img', { key: 'f2', src: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png', alt: '', className: 'absolute bottom-0 left-[-40px] w-44 h-44 rounded-full object-cover shadow-[0_40px_140px_rgba(34,211,238,0.4)]' }),
@@ -94,40 +75,40 @@
             h('div', { key: 'rad', className: 'absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_35%)]' }),
             h('div', { key: 'line', className: 'absolute top-0 left-10 w-[2px] h-full bg-gradient-to-b from-transparent via-white/10 to-transparent' }),
             h('div', { key: 'hdr', className: 'relative z-10 flex items-center justify-between' }, [
-              h('div', { key: 'live', className: 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-2xl', style: { background: accentBg, border: `1px solid ${accentSoft}`, boxShadow: `0 10px 40px ${accentSoft}` } }, [
+              h('div', { key: 'live', className: 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-500 border border-pink-300/40 backdrop-blur-2xl shadow-[0_10px_40px_rgba(236,72,153,0.5)]' }, [
                 h('div', { key: 'dot', className: 'w-2 h-2 rounded-full bg-white animate-pulse' }),
-                h('span', { key: 'l', className: 'text-[10px] font-semibold tracking-[0.2em] text-white uppercase' }, tokens.pillText),
+                h('span', { key: 'l', className: 'text-[10px] font-semibold tracking-[0.2em] text-white uppercase' }, 'Open Now'),
               ]),
             ]),
             h('div', { key: 'hero', className: 'relative z-10 mt-3' }, [
-              h('div', { key: 'kicker', className: 'text-white/40 text-xs tracking-[0.3em] uppercase mb-2 font-medium' }, tokens.kicker),
+              h('div', { key: 'kicker', className: 'text-white/40 text-xs tracking-[0.3em] uppercase mb-2 font-medium' }, 'Hand-crafted Daily'),
               h('div', { key: 'head-row', className: 'flex items-start gap-3 mb-2' }, [
                 h('h1', { key: 'head', className: 'text-[44px] leading-[0.85] tracking-[-0.06em] font-black flex-1 min-w-0' }, [
-                  tokens.headline1, h('br', { key: 'br' }), tokens.headline2,
-                  h('span', { key: 'sp', className: 'block bg-clip-text text-transparent', style: { backgroundImage: `linear-gradient(to right, ${tokens.accent}, ${tokens.accent}cc)` } }, tokens.headlineAcc),
+                  'Sweet', h('br', { key: 'br' }), 'Glazed',
+                  h('span', { key: 'sp', className: 'block bg-gradient-to-r from-pink-400 to-pink-300 bg-clip-text text-transparent' }, 'Donuts'),
                 ]),
                 h('img', {
                   key: 'head-img',
                   src: 'https://ik.imagekit.io/nepgaxllc/Untitleddasddasdfssdfsdfsdsdasdss-removebg-preview.png',
                   alt: '',
-                  className: 'w-24 h-24 object-contain flex-shrink-0 self-center',
-                  style: { filter: `drop-shadow(0 8px 24px ${accentSoft})` },
+                  className: 'w-[125px] h-[125px] object-contain flex-shrink-0 self-center',
+                  style: { filter: 'drop-shadow(0 8px 24px rgba(236,72,153,0.4))' },
                 }),
               ]),
               h('p', { key: 'sub', className: 'text-white/55 text-sm leading-snug max-w-[310px]' },
-                tokens.sub),
+                'Hand-crafted donuts glazed and filled with love. Baked fresh every morning.'),
             ]),
             h('div', { key: 'feat', className: 'relative z-10 mt-3 rounded-[24px] border border-white/10 bg-black/20 backdrop-blur-3xl p-3 shadow-[0_30px_100px_rgba(0,0,0,0.35)] overflow-hidden' }, [
-              h('div', { key: 'gl', className: 'absolute top-[-30px] right-[-20px] w-32 h-32 rounded-full blur-2xl', style: { background: accentDim } }),
+              h('div', { key: 'gl', className: 'absolute top-[-30px] right-[-20px] w-32 h-32 rounded-full bg-pink-500/10 blur-2xl' }),
               h('div', { key: 'row', className: 'flex items-center justify-between mb-3' }, [
                 h('div', { key: 'txt' }, [
-                  h('div', { key: 'k', className: 'text-white/40 text-[10px] uppercase tracking-[0.25em] mb-1' }, tokens.featuredKick),
+                  h('div', { key: 'k', className: 'text-white/40 text-[10px] uppercase tracking-[0.25em] mb-1' }, 'Today’s Flavour'),
                   h('div', { key: 't', className: 'text-2xl font-black tracking-tight leading-[0.95]' }, [
-                    tokens.featuredName1,
-                    h('span', { key: 's', className: 'block', style: { color: tokens.accent } }, tokens.featuredName2),
+                    'Strawberry',
+                    h('span', { key: 's', className: 'block text-pink-400' }, 'Glazed'),
                   ]),
                 ]),
-                h('div', { key: 'orb', className: 'w-14 h-14 rounded-full flex items-center justify-center overflow-hidden', style: { background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accent}aa)`, boxShadow: `0 20px 80px ${accentSoft}` } },
+                h('div', { key: 'orb', className: 'w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-pink-300 shadow-[0_20px_80px_rgba(236,72,153,0.4)] flex items-center justify-center overflow-hidden' },
                   h('img', { src: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png', alt: '', className: 'w-full h-full object-cover' })
                 ),
               ]),
@@ -136,9 +117,8 @@
                 onClick: () => {
                   try { window.parent && window.parent.postMessage({ type: 'sl-theme-enter-menu' }, '*') } catch {}
                 },
-                className: 'w-full h-11 rounded-[20px] text-base font-black hover:scale-[1.03] transition-all duration-300',
-                style: { background: `linear-gradient(to right, ${tokens.accent}, ${tokens.accent}cc)`, color: '#fff', boxShadow: `0 30px 100px ${accentSoft}` },
-              }, tokens.btnText),
+                className: 'w-full h-11 rounded-[20px] bg-gradient-to-r from-pink-500 to-pink-400 text-base font-black shadow-[0_30px_100px_rgba(236,72,153,0.4)] hover:scale-[1.03] transition-all duration-300',
+              }, 'Order Donuts'),
             ]),
             h('div', { key: 'metrics', className: 'relative z-10 grid grid-cols-3 gap-2 mt-3' }, [
               h('div', { key: 'm1', className: 'rounded-2xl bg-pink-500/15 border border-pink-400/30 backdrop-blur-2xl p-3 text-center' }, [
