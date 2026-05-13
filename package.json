@@ -2,29 +2,25 @@
   "name": "streetlocal-monorepo",
   "private": true,
   "scripts": {
-    "dev:landing": "cd landing && npm run dev",
+    "dev:landing":       "cd landing && npm run dev",
+    "dev:food-basic":    "cd food-basic && npm run dev -- --port 5177",
     "dev:foodlocal-pro": "cd foodlocal-pro && npm run dev -- --port 5174",
-    "dev:food-basic": "cd food-basic && npm run dev -- --port 5177",
-    "dev:products-local": "cd products-local && npm run dev -- --port 5178",
-    "dev:productslocalchat": "cd productslocalchat && npm run dev -- --port 5179",
-    "dev:productslocalemail": "cd productslocalemail && npm run dev -- --port 5180",
-    "dev:serviceslocalwhatsapp": "cd serviceslocalwhatsapp && npm run dev -- --port 5183",
-    "dev:serviceslocalchat": "cd serviceslocalchat && npm run dev -- --port 5184",
-    "dev:serviceslocalemail": "cd serviceslocalemail && npm run dev -- --port 5185",
-    "dev": "npm run dev:landing & npm run dev:foodlocal-pro & npm run dev:food-basic & npm run dev:products-local & npm run dev:productslocalchat & npm run dev:productslocalemail & npm run dev:serviceslocalwhatsapp & npm run dev:serviceslocalchat & npm run dev:serviceslocalemail",
-    "build:landing": "cd landing && npm run build",
+    "dev:products-local":"cd products-local && npm run dev -- --port 5178",
+    "dev:services-local":"cd services-local && npm run dev -- --port 5183",
+    "dev": "npm run dev:landing & npm run dev:food-basic & npm run dev:foodlocal-pro & npm run dev:products-local & npm run dev:services-local",
+    "build:landing":       "cd landing && npm run build",
+    "build:food-basic":    "cd food-basic && npm run build",
     "build:foodlocal-pro": "cd foodlocal-pro && npm run build",
-    "build:food-basic": "cd food-basic && npm run build",
-    "build:products-local": "cd products-local && npm run build",
-    "build:productslocalchat": "cd productslocalchat && npm run build",
-    "build:productslocalemail": "cd productslocalemail && npm run build",
-    "build:serviceslocalwhatsapp": "cd serviceslocalwhatsapp && npm run build",
-    "build:serviceslocalchat": "cd serviceslocalchat && npm run build",
-    "build:serviceslocalemail": "cd serviceslocalemail && npm run build",
-    "build": "npm run build:landing && npm run build:foodlocal-pro && npm run build:food-basic && npm run build:products-local && npm run build:productslocalchat && npm run build:productslocalemail && npm run build:serviceslocalwhatsapp && npm run build:serviceslocalchat && npm run build:serviceslocalemail",
-    "install:all": "cd landing && npm install && cd ../foodlocal-pro && npm install && cd ../food-basic && npm install && cd ../products-local && npm install && cd ../productslocalchat && npm install && cd ../productslocalemail && npm install && cd ../serviceslocalwhatsapp && npm install && cd ../serviceslocalchat && npm install && cd ../serviceslocalemail && npm install"
+    "build:products-local":"cd products-local && npm run build",
+    "build:services-local":"cd services-local && npm run build",
+    "build": "npm run build:landing && npm run build:food-basic && npm run build:foodlocal-pro && npm run build:products-local && npm run build:services-local",
+    "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../foodlocal-pro && npm install && cd ../products-local && npm install && cd ../services-local && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.2",
+    "http-proxy": "^1.18.1"
   }
 }

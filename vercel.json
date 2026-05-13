@@ -4,25 +4,22 @@
   "installCommand": "npm run install:all",
   "framework": null,
   "redirects": [
-    { "source": "/food/whatsapp/:path*", "destination": "/food/chat/:path*", "permanent": true }
+    { "source": "/food/whatsapp/:path*",      "destination": "/food/chat/:path*",  "permanent": true },
+    { "source": "/products/chat/:path*",      "destination": "/products/local/:path*", "permanent": true },
+    { "source": "/products/email/:path*",     "destination": "/products/local/:path*", "permanent": true },
+    { "source": "/services/whatsapp/:path*",  "destination": "/services/:path*",   "permanent": true },
+    { "source": "/services/chat/:path*",      "destination": "/services/:path*",   "permanent": true },
+    { "source": "/services/email/:path*",     "destination": "/services/:path*",   "permanent": true }
   ],
   "rewrites": [
-    { "source": "/food/pro/(.*)", "destination": "/foodlocal-pro/$1" },
-    { "source": "/food/pro", "destination": "/foodlocal-pro/index.html" },
-    { "source": "/food/chat/(.*)", "destination": "/food-basic/$1" },
-    { "source": "/food/chat", "destination": "/food-basic/index.html" },
+    { "source": "/food/pro/(.*)",       "destination": "/foodlocal-pro/$1" },
+    { "source": "/food/pro",            "destination": "/foodlocal-pro/index.html" },
+    { "source": "/food/chat/(.*)",      "destination": "/food-basic/$1" },
+    { "source": "/food/chat",           "destination": "/food-basic/index.html" },
     { "source": "/products/local/(.*)", "destination": "/products-local/$1" },
-    { "source": "/products/local", "destination": "/products-local/index.html" },
-    { "source": "/products/chat/(.*)", "destination": "/productslocalchat/$1" },
-    { "source": "/products/chat", "destination": "/productslocalchat/index.html" },
-    { "source": "/products/email/(.*)", "destination": "/productslocalemail/$1" },
-    { "source": "/products/email", "destination": "/productslocalemail/index.html" },
-    { "source": "/services/whatsapp/(.*)", "destination": "/serviceslocalwhatsapp/$1" },
-    { "source": "/services/whatsapp", "destination": "/serviceslocalwhatsapp/index.html" },
-    { "source": "/services/chat/(.*)", "destination": "/serviceslocalchat/$1" },
-    { "source": "/services/chat", "destination": "/serviceslocalchat/index.html" },
-    { "source": "/services/email/(.*)", "destination": "/serviceslocalemail/$1" },
-    { "source": "/services/email", "destination": "/serviceslocalemail/index.html" },
-    { "source": "/(.*)", "destination": "/landing/$1" }
+    { "source": "/products/local",      "destination": "/products-local/index.html" },
+    { "source": "/services/(.*)",       "destination": "/services-local/$1" },
+    { "source": "/services",            "destination": "/services-local/index.html" },
+    { "source": "/(.*)",                "destination": "/landing/$1" }
   ]
 }
