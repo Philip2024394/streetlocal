@@ -130,6 +130,11 @@ serve(async (req) => {
           })
         }
       } catch (e) { console.warn('whatsapp notify failed', e) }
+      try {
+        await supabase.functions.invoke('send-order-receipt', {
+          body: { orderId: order.id, orderTable: 'food_orders' },
+        })
+      } catch (e) { console.warn('receipt email failed', e) }
     }
 
     return new Response('OK', { status: 200, headers: corsHeaders })

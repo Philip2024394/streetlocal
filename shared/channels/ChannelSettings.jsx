@@ -15,8 +15,8 @@ import { resolveChannels, CHANNEL_META, enabledChannelIds } from './index.js'
 
 const AVAILABLE_BY_KIND = {
   food:     ['whatsapp', 'chat'],
-  products: ['whatsapp', 'chat', 'email'],
-  services: ['whatsapp', 'chat', 'email'],
+  products: ['whatsapp', 'chat'],
+  services: ['whatsapp', 'chat'],
 }
 
 export default function ChannelSettings({ vendor, appKind = 'food', availableIds, onSave, onBack }) {

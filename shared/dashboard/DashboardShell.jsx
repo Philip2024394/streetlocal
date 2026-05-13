@@ -16,6 +16,7 @@ import React, { useState } from 'react'
 import OrderBoard from './OrderBoard.jsx'
 import RefundsConsole from './RefundsConsole.jsx'
 import PayoutsPage from './PayoutsPage.jsx'
+import OrderChatThread from '../chat/OrderChatThread.jsx'
 
 const NAV = [
   { id: 'orderboard', label: 'Live Orders',     icon: '🟢' },
@@ -26,6 +27,7 @@ const NAV = [
 export default function DashboardShell({ supabase, vendorId, statusColumns, accent = '#DC2626', onClose, title = 'Vendor Dashboard' }) {
   const [page, setPage] = useState('orderboard')
   const [navOpen, setNavOpen] = useState(false)
+  const [chatOrder, setChatOrder] = useState(null)
 
   return (
     <div style={{
@@ -66,7 +68,7 @@ export default function DashboardShell({ supabase, vendorId, statusColumns, acce
       {/* Page content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
         {page === 'orderboard' && (
-          <OrderBoard supabase={supabase} vendorId={vendorId} columns={statusColumns} onBack={onClose} accent={accent} />
+          <OrderBoard supabase={supabase} vendorId={vendorId} columns={statusColumns} onBack={onClose} accent={accent} onOpenChat={(o) => setChatOrder(o)} />
         )}
         {page === 'refunds' && (
           <RefundsConsole supabase={supabase} vendorId={vendorId} onBack={onClose} accent={accent} />
@@ -75,6 +77,18 @@ export default function DashboardShell({ supabase, vendorId, statusColumns, acce
           <PayoutsPage supabase={supabase} vendorId={vendorId} onBack={onClose} accent={accent} />
         )}
       </div>
+
+      {chatOrder && (
+        <OrderChatThread
+          supabase={supabase}
+          orderId={chatOrder.id}
+          orderTable="vendor_orders"
+          role="vendor"
+          customerName={chatOrder.customer_name}
+          onClose={() => setChatOrder(null)}
+          accent={accent}
+        />
+      )}
     </div>
   )
 }

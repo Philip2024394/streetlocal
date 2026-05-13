@@ -19,6 +19,7 @@ import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections 
 import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
 import { getCategoriesForTheme } from '@shared/themes/themeCategories.js'
 import CheckoutSheet from '@shared/payments/CheckoutSheet.jsx'
+import OrderChatThread from '@shared/chat/OrderChatThread.jsx'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -465,6 +466,7 @@ export default function App() {
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false)
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [gatewayCheckout, setGatewayCheckout] = useState(null) // { vendorOrderId, total } when paying via connected gateway
+  const [chatOrderId, setChatOrderId] = useState(null)         // open thread post-checkout
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -4642,9 +4644,6 @@ export default function App() {
             if (channelId === 'whatsapp') {
               const phone = (picked.channels.whatsapp.phone || shopPhone).replace(/[^0-9]/g, '')
               window.open(`https://wa.me/${phone}?text=${encodeURIComponent(picked.order._formattedText)}`, '_blank')
-            } else if (channelId === 'email') {
-              const addr = picked.channels.email.address || shopEmail
-              window.location.href = `mailto:${addr}?subject=${encodeURIComponent('Order — ' + shopName)}&body=${encodeURIComponent(picked.order._formattedText)}`
             }
             setOrderDone(true)
           }}
@@ -4664,7 +4663,24 @@ export default function App() {
           total={gatewayCheckout.total}
           shopName={shopName}
           onClose={() => { setGatewayCheckout(null); setOrderDone(true) }}
-          onConfirmed={() => { setGatewayCheckout(null); setOrderDone(true); setCart([]) }}
+          onConfirmed={() => {
+            const id = gatewayCheckout.vendorOrderId
+            setGatewayCheckout(null); setOrderDone(true); setCart([])
+            setChatOrderId(id)
+          }}
+        />
+      )}
+
+      {/* ── Order Chat Thread (post-checkout, customer ↔ vendor) ── */}
+      {chatOrderId && (
+        <OrderChatThread
+          supabase={supabase}
+          orderId={chatOrderId}
+          orderTable="vendor_orders"
+          role="customer"
+          shopName={shopName}
+          onClose={() => setChatOrderId(null)}
+          accent={accent}
         />
       )}
     </div>

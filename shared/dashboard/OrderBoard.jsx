@@ -17,7 +17,7 @@ function ageMin(iso, now) {
   return Math.floor((now - new Date(iso).getTime()) / 60000)
 }
 
-export default function OrderBoard({ supabase, vendorId, columns, onBack, accent = '#DC2626' }) {
+export default function OrderBoard({ supabase, vendorId, columns, onBack, accent = '#DC2626', onOpenChat }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [now, setNow] = useState(Date.now())
@@ -134,6 +134,9 @@ export default function OrderBoard({ supabase, vendorId, columns, onBack, accent
                           <button onClick={() => advance(o)} style={{ flex: 2, padding: '8px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer' }}>
                             → {columns.find(c => c.id === NEXT[o.status])?.label || 'Next'}
                           </button>
+                        )}
+                        {onOpenChat && (
+                          <button onClick={() => onOpenChat(o)} title="Chat with customer" style={{ width: 36, padding: '8px 0', borderRadius: 8, border: `1px solid ${accent}55`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>💬</button>
                         )}
                         {o.status !== 'cancelled' && (
                           <button onClick={() => cancel(o)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#FCA5A5', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Cancel</button>

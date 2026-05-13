@@ -26,12 +26,12 @@ const DEFAULTS = {
   products: {
     whatsapp: { enabled: true,  phone: '' },
     chat:     { enabled: true },
-    email:    { enabled: true,  address: '' },
+    email:    { enabled: false, address: '' },
   },
   services: {
     whatsapp: { enabled: true,  phone: '' },
     chat:     { enabled: true },
-    email:    { enabled: true,  address: '' },
+    email:    { enabled: false, address: '' },
   },
 }
 
