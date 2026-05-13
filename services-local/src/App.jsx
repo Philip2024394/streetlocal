@@ -17,6 +17,7 @@ import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
 import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
+import { getCategoriesForTheme } from '@shared/themes/themeCategories.js'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -1131,9 +1132,14 @@ export default function App() {
     if (isVendor && !vendorType && !isDemo) setVendorTypePickerOpen(true)
   }, [isVendor, vendorType, isDemo])
 
-  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu
+  // Quick-chip suggestions: per-theme service packages (preferred) ∪
+  // vendor-type preset ∪ any custom categories already in menu.
+  // Per-theme list comes from shared/themes/themeCategories.js — research-
+  // based starter taxonomy for each of the 47 service themes.
   const vendorPreset = vendorType ? VENDOR_TYPES[vendorType] : VENDOR_TYPES.home
+  const themeCategories = getCategoriesForTheme(shopTheme || 'default', 'services')
   const categoryChips = [...new Set([
+    ...themeCategories,
     ...vendorPreset.categories,
     ...menuItems.map(m => m.category).filter(Boolean),
   ])]

@@ -17,6 +17,7 @@ import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
 import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
+import { getCategoriesForTheme as getSharedCategoriesForTheme, getMenuTabsForTheme as getSharedMenuTabsForTheme } from '@shared/themes/themeCategories.js'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
 const MODULE = 'products'
@@ -169,7 +170,21 @@ const THEME_MENU_TABS = {
 }
 /* Legacy food categories — fallback for existing food-themed vendors (e.g. noodle/default) */
 const FOOD_MENU_TABS = ['Meal', 'Snack', 'Drink', 'Extra Sauce', 'Dessert']
+
+/* getMenuTabsForTheme — short 3-tab list for compact UI strips.
+ * Falls back to legacy THEME_MENU_TABS for any theme the shared module
+ * doesn't know yet, then to FOOD_MENU_TABS. */
 function getMenuTabsForTheme(themeId) {
+  const shared = getSharedMenuTabsForTheme(themeId, 'products')
+  if (shared && shared.length && shared[0] !== 'Featured') return shared
+  return THEME_MENU_TABS[themeId] || FOOD_MENU_TABS
+}
+
+/* getCategoriesForTheme — full 6–8 category list for the vendor's
+ * "Add menu item → Category" dropdown. Falls back to the 3-tab list. */
+function getCategoriesForTheme(themeId) {
+  const shared = getSharedCategoriesForTheme(themeId, 'products')
+  if (shared && shared.length && shared[0] !== 'Featured') return shared
   return THEME_MENU_TABS[themeId] || FOOD_MENU_TABS
 }
 
@@ -1189,9 +1204,14 @@ export default function App() {
     if (isVendor && !vendorType && !isDemo) setVendorTypePickerOpen(true)
   }, [isVendor, vendorType, isDemo])
 
-  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu
+  // Quick-chip suggestions: per-theme categories (preferred) ∪ vendor-type
+  // preset (legacy fallback) ∪ any custom categories already in menu.
+  // Order matters: theme categories first so the vendor sees the curated
+  // taxonomy for their picked theme right at the top.
   const vendorPreset = vendorType ? VENDOR_TYPES[vendorType] : VENDOR_TYPES.fashion
+  const themeCategories = getCategoriesForTheme(shopTheme || 'default')
   const categoryChips = [...new Set([
+    ...themeCategories,
     ...vendorPreset.categories,
     ...menuItems.map(m => m.category).filter(Boolean),
   ])]
