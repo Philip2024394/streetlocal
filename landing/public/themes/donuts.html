@@ -7,28 +7,28 @@
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body, #root { margin: 0; padding: 0; min-height: 100vh; background: #000; }
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
+    #root { position: fixed; inset: 0; }
     * { box-sizing: border-box; }
-    /* Same min-h-screen clamp as the gallery so the layout fits a phone screen */
-    .min-h-screen-clamp {
-      min-height: 844px !important;
-      max-height: 844px !important;
-      height: 844px !important;
+    /* Force the theme outer to fill the iframe viewport exactly — no scroll,
+       no overflow, content scales by intrinsic Tailwind classes within. */
+    .theme-fill {
+      width: 100vw !important;
+      height: 100vh !important;
+      min-height: 0 !important;
+      max-height: 100vh !important;
       overflow: hidden !important;
-      padding-top: 46px !important;
-      padding-bottom: 8px !important;
+      padding-top: 36px !important;
+      padding-bottom: 12px !important;
       box-sizing: border-box !important;
     }
+    .theme-fill .min-h-screen { min-height: 100% !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; }
   </style>
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;">
-  <!-- Static bg image (no scroll, no dim overlay — to match the gallery preview exactly) -->
-  <div id="phone" style="width:390px;height:844px;position:relative;overflow:hidden;background:#000;border-radius:46px;box-shadow:0 18px 60px rgba(0,0,0,0.5);">
-    <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:0;pointer-events:none;" />
-    <div id="root" style="position:absolute;inset:0;z-index:1;width:390px;height:844px;"></div>
-    <!-- iPhone notch / Dynamic Island -->
-    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:32px;background:#000;border-radius:22px;z-index:99;pointer-events:none;"></div>
-  </div>
+<body>
+  <!-- Static bg image fills the iframe viewport. -->
+  <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;" />
+  <div id="root" style="z-index:1;"></div>
 
   <script type="importmap">
   {
@@ -71,7 +71,7 @@
     // Further edits to gallery Theme #6 will NOT affect this snapshot. Vendor
     // overrides flow in via URL params.
     function ThemeDonuts() {
-      return h('div', { className: 'w-full overflow-hidden text-white min-h-screen-clamp' }, [
+      return h('div', { className: 'w-full overflow-hidden text-white theme-fill' }, [
         h('div', { key: 'wrap', className: 'relative w-full h-full flex items-center justify-center px-6 py-3 overflow-hidden' }, [
           h('img', { key: 'f1', src: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png', alt: '', className: 'absolute top-6 right-[-40px] w-52 h-52 rounded-full object-cover shadow-[0_40px_140px_rgba(236,72,153,0.4)] animate-bounce' }),
           h('img', { key: 'f2', src: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png', alt: '', className: 'absolute bottom-0 left-[-40px] w-44 h-44 rounded-full object-cover shadow-[0_40px_140px_rgba(34,211,238,0.4)]' }),

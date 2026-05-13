@@ -3928,8 +3928,16 @@ export default function App() {
                       )}
                     </div>
                     <div style={{ flex: 1, minHeight: 10 }} />
-                    <div style={{ flexShrink: 0, paddingBottom: 20 }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }} style={{ padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                    <div style={{ flexShrink: 0, paddingBottom: 20, display: 'flex', gap: 10 }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                      <button onClick={() => {
+                        // Tag the saved theme by ID. food-basic reads
+                        // vendor_accounts.landing_theme_id and renders the
+                        // matching /themes/<id>.html as the splash.
+                        try { localStorage.setItem('streetlocal_pending_theme', previewT.id) } catch {}
+                        setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing')
+                        alert('Theme "' + previewT.label + '" selected. Sign up or log in as a vendor of this cuisine to apply it to your storefront.')
+                      }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: `0 6px 18px ${ac}55` }}>Use This Theme</button>
                     </div>
                   </div>
                   )
