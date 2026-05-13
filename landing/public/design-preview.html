@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Design Preview — FoodLandingPage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','"Segoe UI"','Roboto','sans-serif'] } } } }
+  </script>
+  <style>
+    html, body, #root { margin: 0; padding: 0; min-height: 100vh; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import React from 'react'
+    import { createRoot } from 'react-dom/client'
+
+    // ─── Your pasted design (untouched) ──────────────────────────────────
+    function FoodLandingPage() {
+      return React.createElement('div', { className: "min-h-screen bg-black text-white flex items-center justify-center p-4 overflow-hidden" }, [
+        React.createElement('div', { key: 'g1', className: "absolute top-[-120px] right-[-120px] w-[260px] h-[260px] bg-red-500/30 blur-3xl rounded-full" }),
+        React.createElement('div', { key: 'g2', className: "absolute bottom-[-100px] left-[-100px] w-[240px] h-[240px] bg-orange-500/20 blur-3xl rounded-full" }),
+        React.createElement('div', { key: 'screen', className: "relative w-full max-w-[390px] min-h-[820px] rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-2xl p-6 shadow-2xl shadow-red-500/20 overflow-hidden" }, [
+          // Badge
+          React.createElement('div', { key: 'badge', className: "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 backdrop-blur-md mb-8" }, [
+            React.createElement('div', { key: 'dot', className: "w-2 h-2 rounded-full bg-green-400 animate-pulse" }),
+            React.createElement('span', { key: 'lbl', className: "text-sm text-white/80 font-medium" }, "Fast Delivery Live"),
+          ]),
+          // Hero
+          React.createElement('div', { key: 'hero', className: "space-y-5" }, [
+            React.createElement('h1', { key: 'h1', className: "text-5xl leading-[1.05] font-black tracking-tight" }, [
+              'Delicious', React.createElement('br', { key: 'br1' }),
+              'Food Delivered',
+              React.createElement('span', { key: 'span', className: "block text-red-500 mt-1" }, "In Minutes"),
+            ]),
+            React.createElement('p', { key: 'sub', className: "text-white/65 text-base leading-relaxed pr-2" },
+              "Experience premium restaurant quality food with ultra-fast delivery, beautiful presentation, and live order tracking."),
+          ]),
+          // Buttons
+          React.createElement('div', { key: 'btns', className: "mt-8 flex flex-col gap-4" }, [
+            React.createElement('button', { key: 'b1', className: "h-14 rounded-2xl bg-red-500 text-lg font-bold shadow-2xl shadow-red-500/40 hover:scale-[1.02] transition-all duration-300" }, "Start Order"),
+            React.createElement('button', { key: 'b2', className: "h-14 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md text-lg font-semibold hover:bg-white/15 transition-all duration-300" }, "View Menu"),
+          ]),
+          // Stats
+          React.createElement('div', { key: 'stats', className: "grid grid-cols-3 gap-3 mt-10" }, [
+            React.createElement('div', { key: 's1', className: "rounded-3xl bg-white/5 border border-white/10 p-4 backdrop-blur-xl hover:bg-white/10 transition-all duration-300" }, [
+              React.createElement('div', { key: 'n', className: "text-2xl font-black text-red-400" }, "15K+"),
+              React.createElement('div', { key: 'l', className: "text-xs text-white/60 mt-2 leading-tight" }, "Happy Customers"),
+            ]),
+            React.createElement('div', { key: 's2', className: "rounded-3xl bg-white/5 border border-white/10 p-4 backdrop-blur-xl hover:bg-white/10 transition-all duration-300" }, [
+              React.createElement('div', { key: 'n', className: "text-2xl font-black text-orange-400" }, "25m"),
+              React.createElement('div', { key: 'l', className: "text-xs text-white/60 mt-2 leading-tight" }, "Delivery Time"),
+            ]),
+            React.createElement('div', { key: 's3', className: "rounded-3xl bg-white/5 border border-white/10 p-4 backdrop-blur-xl hover:bg-white/10 transition-all duration-300" }, [
+              React.createElement('div', { key: 'n', className: "text-2xl font-black text-yellow-400" }, "4.9★"),
+              React.createElement('div', { key: 'l', className: "text-xs text-white/60 mt-2 leading-tight" }, "Customer Rating"),
+            ]),
+          ]),
+        ]),
+      ])
+    }
+
+    createRoot(document.getElementById('root')).render(React.createElement(FoodLandingPage))
+  </script>
+</body>
+</html>

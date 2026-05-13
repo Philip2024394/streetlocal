@@ -64,6 +64,12 @@ export async function startFoodproCheckout({ restaurantId, planTier, returnUrl }
   if (!supabase) throw new Error('Supabase not configured')
   if (!FOODPRO_PRICES[planTier]) throw new Error('Unknown plan tier: ' + planTier)
 
+  // Funnel: payment_started. Vendor id for foodlocal-pro is the restaurant id.
+  try {
+    const { emitFunnelStep } = await import('../lib/funnel')
+    emitFunnelStep('payment_started', { vendorId: restaurantId, metadata: { plan_tier: planTier, product: 'pro' } })
+  } catch {}
+
   const { data, error } = await supabase.functions.invoke('foodpro-subscription-checkout', {
     body: { restaurantId, planTier, returnUrl: returnUrl || window.location.href },
   })
@@ -97,7 +103,14 @@ export async function pollSubscriptionLive(restaurantId, { tries = 10, intervalM
       .select('id, url_active, expires_at, subscription_tier, subscription_product')
       .eq('id', restaurantId)
       .single()
-    if (data?.url_active) return data
+    if (data?.url_active) {
+      // Funnel: payment_completed (fires once — unique index dedupes retries).
+      try {
+        const { emitFunnelStep } = await import('../lib/funnel')
+        emitFunnelStep('payment_completed', { vendorId: restaurantId, metadata: { plan_tier: data.subscription_tier || null, product: 'pro' } })
+      } catch {}
+      return data
+    }
     await new Promise(r => setTimeout(r, intervalMs))
   }
   return null

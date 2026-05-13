@@ -58,6 +58,7 @@ const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
 )
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
+import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
 import { VENDOR_TYPES } from '@shared/data/foodVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
@@ -77,6 +78,7 @@ import {
   fmtRupiah as fmtRupiahChat,
 } from './lib/chat'
 import { enableVendorPush, disableVendorPush, getCurrentSubscription, pushSupported, registerSW } from './lib/push'
+import { emitFunnelStep } from './lib/funnel'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -88,6 +90,7 @@ async function vendorSignup(phone, password, name) {
   // the column default ('both') until activation. openOrderModePicker on
   // the customer side blocks order submission when vendorStatus !== 'active'
   // so trial vendors can preview their shop without taking real orders.
+  emitFunnelStep('signup_started')
   const { data, error } = await supabase.from('vendor_accounts').insert({
     phone: phone.replace(/[^0-9]/g, ''),
     password_hash: password, // In production, hash this
@@ -97,6 +100,7 @@ async function vendorSignup(phone, password, name) {
     status: 'pending',
   }).select().single()
   if (error) throw new Error(error.message)
+  emitFunnelStep('signup_completed', { vendorId: data?.id })
   return data
 }
 
@@ -538,6 +542,35 @@ export default function App() {
   if (viewMode === 'admin') return <AdminDashboard />
   if (viewMode === 'activate') return <ActivatePage />
 
+  /* --- Traffic-source capture (powers 2bee Traffic & Funnel tab) --- */
+  useEffect(() => {
+    if (!supabase) return
+    try {
+      const qs = new URLSearchParams(window.location.search)
+      let sid = localStorage.getItem('sl_session_id')
+      if (!sid) {
+        sid = (crypto.randomUUID && crypto.randomUUID()) ||
+              ('s_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10))
+        localStorage.setItem('sl_session_id', sid)
+      }
+      supabase.from('traffic_events').insert({
+        app_id: 'food-basic',
+        session_id: sid,
+        utm_source: qs.get('utm_source'),
+        utm_medium: qs.get('utm_medium'),
+        utm_campaign: qs.get('utm_campaign'),
+        utm_content: qs.get('utm_content'),
+        utm_term: qs.get('utm_term'),
+        referrer: document.referrer || null,
+        landing_path: window.location.pathname + window.location.search,
+        user_agent: navigator.userAgent,
+        event_type: 'first_visit',
+      }).then(() => {}, () => {})
+      // Also fire the funnel step — same session_id, separate table.
+      emitFunnelStep('landing_viewed')
+    } catch {}
+  }, [])
+
   /* --- Auto-healing + Health reporting --- */
   const APP_VERSION = '1.0.0'
   useEffect(() => {
@@ -714,6 +747,24 @@ export default function App() {
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
   const [designStudio, setDesignStudio] = useState(false) // show design studio
+  const [landingThemePicker, setLandingThemePicker] = useState(false) // theme picker modal inside design studio
+  const [landingThemeId, setLandingThemeId] = useState(() => localStorage.getItem('foodlocalchat_landing_theme_id') || null)
+  // Listen for the frozen theme iframe's CTA tap (e.g. "Order Donuts" → posts
+  // sl-theme-enter-menu). Drop the splash when received so the menu reveals.
+  useEffect(() => {
+    const onMsg = (e) => { if (e && e.data && e.data.type === 'sl-theme-enter-menu') setShowLanding(false) }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
+  // Curated landing themes — frozen snapshots, separate from Design Studio's customisable tokens.
+  const LANDING_THEMES = [
+    {
+      id: 'donuts',
+      name: 'Donuts — Sweet Glazed',
+      tagline: 'Hand-crafted donut shop landing with pink palette',
+      previewUrl: '/themes/donuts.html',
+    },
+  ]
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
@@ -1486,6 +1537,7 @@ export default function App() {
     if (!supabase || !vendorId || subBusy) return
     setSubBusy(true); setSubError('')
     try {
+      emitFunnelStep('payment_started', { vendorId, metadata: { plan_tier: planTier, product: 'basic' } })
       const returnUrl = window.location.origin + window.location.pathname
       const { data, error } = await supabase.functions.invoke('subscription-create-checkout', {
         body: { vendorId, planTier, returnUrl },
@@ -1521,6 +1573,7 @@ export default function App() {
           if (data.plan_tier) setVendorPlanTier(data.plan_tier)
           if (data.expires_at) setVendorExpiresAt(data.expires_at)
           setSubMessage('Your shop is live!')
+          emitFunnelStep('payment_completed', { vendorId, metadata: { plan_tier: data.plan_tier || null } })
           try { localStorage.removeItem('foodlocalchat_pendingSubOrder') } catch {}
           return
         }
@@ -2125,6 +2178,10 @@ export default function App() {
       if (data.shop_website) setShopWebsite(data.shop_website)
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
+      if (data.landing_theme_id) {
+        setLandingThemeId(data.landing_theme_id)
+        try { localStorage.setItem('foodlocalchat_landing_theme_id', data.landing_theme_id) } catch {}
+      }
       if (data.delivery_base_fee) setDelBaseFee(data.delivery_base_fee)
       if (data.delivery_per_km) setDelPerKm(data.delivery_per_km)
       if (data.delivery_min_charge) setDelMinCharge(data.delivery_min_charge)
@@ -3071,6 +3128,41 @@ export default function App() {
 
   /* ═══ LANDING PAGE — full screen, no content behind ═══ */
   if (showLanding) {
+    // If the vendor picked a saved landing theme (e.g. 'donuts'), render that
+    // frozen theme inside an iframe in place of the default splash. The iframe
+    // posts a message back when the customer taps its CTA — we listen for that
+    // and flip showLanding to false so the menu reveals (the existing menu flow
+    // takes over after that point).
+    if (landingThemeId === 'donuts') {
+      return (
+        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
+          {/* Language toggle still available at top-right */}
+          <button onClick={() => {
+            const codes = LANGUAGES.map(l => l.code)
+            const idx = codes.indexOf(locale)
+            setLocale(codes[(idx + 1) % codes.length])
+          }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
+          </button>
+          <iframe
+            src="/themes/donuts.html"
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            title="Donuts landing"
+            sandbox="allow-scripts allow-same-origin"
+          />
+          {/* Floating "Enter Menu" button — same hand-off as the default landing's
+              "View Menu" button. Until the frozen theme HTML posts an enter-menu
+              message back, this guarantees the customer can always proceed. */}
+          <button
+            onClick={() => setShowLanding(false)}
+            style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 20, padding: '14px 28px', borderRadius: 16, border: 'none', background: '#EC4899', color: '#fff', fontSize: 15, fontWeight: 900, cursor: 'pointer', boxShadow: '0 18px 60px rgba(236,72,153,0.5)' }}
+          >
+            View Menu
+          </button>
+        </div>
+      )
+    }
     return (
       <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
         {/* Background image — uses vendor's selected theme */}
@@ -6843,6 +6935,51 @@ export default function App() {
         )
       })()}
 
+      {/* ═══ LANDING THEME PICKER ═══ */}
+      {landingThemePicker && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, background: '#0a0a0f', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <button onClick={() => setLandingThemePicker(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>Choose Landing Theme</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap a theme preview, then "Use This Theme"</div>
+            </div>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'grid', gridTemplateColumns: '1fr', gap: 16, maxWidth: 480, width: '100%', margin: '0 auto' }}>
+            {LANDING_THEMES.map(t => {
+              const isSelected = landingThemeId === t.id
+              return (
+                <div key={t.id} style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? accent : 'rgba(255,255,255,0.08)'}`, overflow: 'hidden' }}>
+                  <div style={{ width: '100%', aspectRatio: '9 / 19.6', background: '#000' }}>
+                    <iframe src={t.previewUrl} style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} title={t.name} sandbox="allow-scripts allow-same-origin" />
+                  </div>
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.5 }}>{t.tagline}</div>
+                    <button
+                      onClick={() => {
+                        setLandingThemeId(t.id)
+                        try { localStorage.setItem('foodlocalchat_landing_theme_id', t.id) } catch {}
+                        if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+                          supabase.from('vendor_accounts').update({ landing_theme_id: t.id }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+                        }
+                        setLandingThemePicker(false)
+                      }}
+                      style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: isSelected ? '#22C55E' : accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      {isSelected ? '✓ Currently Selected' : 'Use This Theme'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+            <div style={{ padding: 12, borderRadius: 12, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.3)', fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+              More themes coming soon. Each one comes with its own colour palette, hero image, and decorative elements — pick the vibe that matches your shop.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
       {designStudio && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
@@ -6856,6 +6993,22 @@ export default function App() {
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Design Studio</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Customise your app appearance</div>
               </div>
+            </div>
+
+            {/* Choose Landing Theme — first step. Opens a curated theme picker; vendor's pick saves to landing_theme_id. */}
+            <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 4 }}>Step 1</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Choose Landing Theme</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.45 }}>
+                Pick the look of your storefront. The colours from your theme apply across your whole shop — landing, menu, buttons.
+              </div>
+              <button
+                onClick={() => { setLandingThemePicker(true) }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: `1px solid ${accent}`, background: `${accent}22`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <span>Browse themes</span>
+                <span style={{ fontSize: 18, color: accent }}>›</span>
+              </button>
             </div>
 
             {/* Logo Style */}
@@ -7441,6 +7594,17 @@ export default function App() {
             <button onClick={() => setTermsOfListing(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Got It</button>
           </div>
         </div>
+      )}
+
+      {/* ── Vendor: admin inbox FAB (📨 with unread badge) — replaces wa.me-only contact path ── */}
+      {isVendor && !vendorDrawer && (
+        <AdminInboxFab
+          supabase={supabase}
+          vendorId={vendorId}
+          vendorName="StreetLocal Admin"
+          accent="#FFD600"
+          bottom={150}
+        />
       )}
     </div>
   )

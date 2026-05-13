@@ -31,14 +31,17 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status })
 
 // Pricing matrix by product + tier (Indonesian rupiah).
-// FoodLocal basic — lightweight subscription, 35k WhatsApp / 50k Chat.
-// FoodLocal Pro   — full restaurant suite (menu extras, banner ads, deals,
-//                   analytics, KTP-verified), 100k WhatsApp / 150k Chat.
-// 'both' tier (only on basic) lets the customer choose the channel at
-// checkout via the in-app picker.
+//   basic    — FoodLocal basic: 35k WhatsApp / 60k Chat
+//   pro      — FoodLocal Pro:   100k WhatsApp / 150k Chat
+//   products — Products Local:  35k WhatsApp / 60k Chat
+//   services — Services Local:  35k WhatsApp / 60k Chat
+// 'both' tier (basic only) lets the vendor pick the channel at checkout
+// via the in-app picker; priced at the higher chat tier.
 const PRICE_TABLE: Record<string, Record<string, number>> = {
-  basic: { whatsapp: 35000, chat: 50000, both: 50000 },
-  pro:   { whatsapp: 100000, chat: 150000 },
+  basic:    { whatsapp: 35000,  chat: 60000,  both: 60000 },
+  pro:      { whatsapp: 100000, chat: 150000 },
+  products: { whatsapp: 35000,  chat: 60000,  both: 60000 },
+  services: { whatsapp: 35000,  chat: 60000,  both: 60000 },
 }
 const VALID_PRODUCTS = Object.keys(PRICE_TABLE)
 

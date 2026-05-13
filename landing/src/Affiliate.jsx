@@ -217,6 +217,26 @@ function PromoCarousel({ promos, locale, agentCode, appName, appLink }) {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
+  // Group promos by platform inferred from the title prefix (case-insensitive).
+  // Banners titled "Facebook — …" / "Instagram — …" land in their own section;
+  // anything else goes into a generic "Other" group at the end.
+  const platformOf = (p) => {
+    const t = String(p.title || '').toLowerCase()
+    if (t.includes('facebook')) return 'facebook'
+    if (t.includes('instagram')) return 'instagram'
+    return 'other'
+  }
+  const grouped = promos.reduce((acc, p) => {
+    const k = platformOf(p)
+    ;(acc[k] = acc[k] || []).push(p)
+    return acc
+  }, {})
+  const PLATFORM_META = {
+    facebook:  { label: locale === 'id' ? 'Facebook (Landscape)'   : 'Facebook (Landscape)',  hint: locale === 'id' ? 'Untuk feed Facebook & Marketplace'           : 'For Facebook feed & Marketplace',  color: '#1877F2' },
+    instagram: { label: locale === 'id' ? 'Instagram (Square)'     : 'Instagram (Square)',    hint: locale === 'id' ? 'Untuk feed Instagram, Reels cover & Stories' : 'For Instagram feed, Reels covers & Stories',  color: '#E4405F' },
+    other:     { label: locale === 'id' ? 'Banner Lainnya'         : 'Other Banners',         hint: locale === 'id' ? 'Bisa digunakan di platform mana saja'        : 'Use on any platform',                color: '#1a1a1a' },
+  }
+
   return (
     <div style={{ width: '100%', marginTop: 28 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -233,56 +253,51 @@ function PromoCarousel({ promos, locale, agentCode, appName, appLink }) {
         {locale === 'id' ? 'Salin link & bagikan banner ini di sosial media' : 'Copy your link & share these banners on social media'}
       </div>
 
-      {/* Carousel */}
-      <div
-        ref={scrollRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 8, scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {promos.map(promo => (
-          <div key={promo.id} style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}>
-            {promo.type === 'video' ? (
-              <div style={{ width: '100%', borderRadius: 14, overflow: 'hidden', background: '#000' }}>
-                <video src={promo.url} poster={promo.thumbnail_url || ''} style={{ width: '100%', display: 'block' }} controls />
-              </div>
-            ) : (
-              <div style={{ width: '100%', borderRadius: 14, overflow: 'hidden', background: '#f0f0f0' }}>
-                <img src={promo.url} alt={promo.title || ''} style={{ width: '100%', display: 'block' }} />
-              </div>
-            )}
-            {promo.title && <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 8 }}>{promo.title}</div>}
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button
-                onClick={copyLink}
-                style={{ flex: 1, padding: '10px 0', borderRadius: 10, background: '#FFD600', color: '#1a1a1a', fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer' }}
-              >
-                {linkCopied ? (locale === 'id' ? 'Tersalin!' : 'Copied!') : (locale === 'id' ? 'Salin Link' : 'Copy Link')}
-              </button>
-              <button
-                onClick={() => shareWa(promo)}
-                style={{ flex: 1, padding: '10px 0', borderRadius: 10, background: '#1a1a1a', color: '#fff', fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer' }}
-              >
-                {locale === 'id' ? 'Bagikan' : 'Share'}
-              </button>
+      {/* Per-platform sections: Facebook first (landscape), Instagram second (square), Other last. */}
+      {['facebook', 'instagram', 'other'].map((key) => {
+        const list = grouped[key]
+        if (!list || list.length === 0) return null
+        const meta = PLATFORM_META[key]
+        return (
+          <div key={key} style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, background: meta.color }} />
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#1a1a1a' }}>{meta.label}</span>
+              <span style={{ fontSize: 10, color: '#888' }}>· {list.length} {locale === 'id' ? 'banner' : list.length === 1 ? 'banner' : 'banners'}</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#888', marginBottom: 8 }}>{meta.hint}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: key === 'instagram' ? 'repeat(2, 1fr)' : '1fr', gap: 10 }}>
+              {list.map(promo => (
+                <div key={promo.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {promo.type === 'video' ? (
+                    <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', background: '#000' }}>
+                      <video src={promo.url} poster={promo.thumbnail_url || ''} style={{ width: '100%', display: 'block', aspectRatio: key === 'instagram' ? '1/1' : '16/9', objectFit: 'cover' }} controls />
+                    </div>
+                  ) : (
+                    <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', background: '#f0f0f0' }}>
+                      <img src={promo.url} alt={promo.title || ''} style={{ width: '100%', display: 'block', aspectRatio: key === 'instagram' ? '1/1' : '16/9', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  {promo.title && <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a' }}>{promo.title}</div>}
+                  <div style={{ fontSize: 9, color: '#888', wordBreak: 'break-all', background: '#FAFAFA', padding: '4px 6px', borderRadius: 6 }}>{appLink}{agentCode ? '?ref=' + agentCode : ''}</div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={copyLink} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                      {linkCopied ? (locale === 'id' ? 'Tersalin!' : 'Copied!') : (locale === 'id' ? 'Salin Link' : 'Copy Link')}
+                    </button>
+                    <button onClick={() => shareWa(promo)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: meta.color, color: '#fff', fontSize: 11, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                      {locale === 'id' ? 'Bagikan' : 'Share'}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+        )
+      })}
 
-      {/* Dots indicator */}
-      {promos.length > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 8 }}>
-          {promos.map((_, i) => (
-            <div key={i} style={{ width: currentIndex === i ? 16 : 6, height: 6, borderRadius: 3, background: currentIndex === i ? '#FF6B35' : '#ddd', transition: 'all 0.3s' }} />
-          ))}
-        </div>
-      )}
-
+      {/* Hidden scroll ref keeps the older arrow nav (ToTop/Bottom) functional;
+          per-platform sections above render the actual banner grids. */}
+      <div ref={scrollRef} style={{ display: 'none' }} />
     </div>
   )
 }
@@ -1297,7 +1312,11 @@ export default function Affiliate({ onClose }) {
 
           {/* Share Kit — Auto-scrolling Promo Carousel */}
           {(() => {
-            const appPromos = promoMaterials.filter(p => p.app_id === selectedApp.id || (p.category_id === selectedApp.categoryId && !p.app_id))
+            const appPromos = promoMaterials.filter(p =>
+              p.app_id === selectedApp.id ||
+              (p.category_id === selectedApp.categoryId && !p.app_id) ||
+              (p.category_id === 'global' && !p.app_id) // global affiliate banners — shown for every app
+            )
             if (appPromos.length === 0) return null
             return <PromoCarousel promos={appPromos} locale={locale} agentCode={agent?.agent_code} appName={selectedApp.name} appLink={getAppLink(selectedApp)} />
           })()}
@@ -1613,6 +1632,34 @@ export default function Affiliate({ onClose }) {
             {drawerPage === 'stats' && (
               <div style={{ padding: 20 }}>
                 <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+
+                {/* ── Headline metrics: views, signups, click-through rate ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
+                  <div style={{ background: '#EFF6FF', borderRadius: 14, padding: 12, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: '#1e40af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{locale === 'id' ? 'Dilihat' : 'Views'}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#3B82F6', marginTop: 4 }}>{stats.totalClicks}</div>
+                    <div style={{ fontSize: 9, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Klik link Anda' : 'Link clicks'}</div>
+                  </div>
+                  <div style={{ background: '#FAF5FF', borderRadius: 14, padding: 12, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: '#6d28d9', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{locale === 'id' ? 'Daftar' : 'Signups'}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#8B5CF6', marginTop: 4 }}>{stats.totalSignups}</div>
+                    <div style={{ fontSize: 9, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Vendor daftar' : 'Vendors joined'}</div>
+                  </div>
+                  <div style={{ background: '#F0FDF4', borderRadius: 14, padding: 12, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: '#15803d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{locale === 'id' ? 'Konversi' : 'CTR'}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#22c55e', marginTop: 4 }}>
+                      {stats.totalClicks > 0 ? ((stats.totalSignups / stats.totalClicks) * 100).toFixed(1) + '%' : '—'}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Klik ke daftar' : 'Click → signup'}</div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 11, color: '#888', marginBottom: 14, lineHeight: 1.5, padding: '8px 12px', background: '#FAFAFA', borderRadius: 10 }}>
+                  {locale === 'id'
+                    ? 'Klik dihitung setiap kali link Anda dikunjungi (?ref=' + (agent?.agent_code || 'kode_anda') + '). Konversi = persentase klik yang berakhir menjadi vendor terdaftar.'
+                    : 'A click is counted each time your link is visited (?ref=' + (agent?.agent_code || 'your_code') + '). CTR = the percent of clicks that became signed-up vendors.'}
+                </div>
+
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 16 }}>{L.referrals}</h3>
                 {referrals.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: 20, color: '#aaa' }}>

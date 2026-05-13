@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
+import { emitFunnelStep } from './funnel'
 import Admin from './Admin'
 import Affiliate from './Affiliate'
 import { getTranslation, COUNTRY_TO_LANG } from './translations'
@@ -1307,6 +1308,35 @@ export default function App() {
     }
   }, [])
 
+  // Traffic-source capture — one row per first mount into traffic_events.
+  // Powers the 2bee "Traffic & Funnel" admin tab. Fire-and-forget.
+  useEffect(() => {
+    if (!supabase) return
+    try {
+      const qs = new URLSearchParams(window.location.search)
+      let sid = localStorage.getItem('sl_session_id')
+      if (!sid) {
+        sid = (crypto.randomUUID && crypto.randomUUID()) ||
+              ('s_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10))
+        localStorage.setItem('sl_session_id', sid)
+      }
+      supabase.from('traffic_events').insert({
+        app_id: 'landing',
+        session_id: sid,
+        utm_source: qs.get('utm_source'),
+        utm_medium: qs.get('utm_medium'),
+        utm_campaign: qs.get('utm_campaign'),
+        utm_content: qs.get('utm_content'),
+        utm_term: qs.get('utm_term'),
+        referrer: document.referrer || null,
+        landing_path: window.location.pathname + window.location.search,
+        user_agent: navigator.userAgent,
+        event_type: 'first_visit',
+      }).then(() => {}, () => {})
+      emitFunnelStep('landing_viewed')
+    } catch {}
+  }, [])
+
   // EU member states map to the shared 'EU' pricing row
   const EU_MEMBERS = new Set(['AT','BE','BG','CY','CZ','DE','DK','EE','ES','FI','FR','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK'])
   const mapPricingCountry = (code) => (code && EU_MEMBERS.has(code) ? 'EU' : code)
@@ -1654,9 +1684,9 @@ export default function App() {
       {/* Social icons */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 20 }}>
         {[
-          { label: 'IG', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>, href: '#' },
+          { label: 'IG', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>, href: 'https://www.instagram.com/streetlocal.live/' },
           { label: 'TT', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>, href: '#' },
-          { label: 'FB', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06 2 17.06 5.66 21.21 10.44 21.96V14.96H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>, href: '#' },
+          { label: 'FB', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06 2 17.06 5.66 21.21 10.44 21.96V14.96H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>, href: 'https://web.facebook.com/share/g/18r6F1aszH/' },
           { label: 'YT', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>, href: '#' },
           { label: 'WA', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>, href: '#' },
         ].map(s => (
@@ -2914,6 +2944,7 @@ export default function App() {
               if (vendorAuthForm.password.length < 4) { setVendorAuthError('Password min 4 characters'); return }
               const fullPhone = phone
               const slug = (vendorAuthForm.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[''`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'my-shop'
+              emitFunnelStep('signup_started', { metadata: { app: vendorAuthApp?.id || 'basic' } })
               const { data, error } = await supabase.from('vendor_accounts').insert({
                 phone: fullPhone, password_hash: vendorAuthForm.password,
                 shop_name: vendorAuthForm.name,
@@ -2921,6 +2952,7 @@ export default function App() {
                 slug, status: 'pending'
               }).select().single()
               if (error) { setVendorAuthError(error.message?.includes('duplicate') ? 'Phone already registered' : 'Signup failed'); return }
+              emitFunnelStep('signup_completed', { vendorId: data?.id, metadata: { app: vendorAuthApp?.id || 'basic' } })
               // Register in app_registrations for admin dashboard
               try {
                 await supabase.from('app_registrations').insert({

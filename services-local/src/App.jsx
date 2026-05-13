@@ -17,16 +17,19 @@ import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
 import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
+import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
 import { getCategoriesForTheme } from '@shared/themes/themeCategories.js'
 import CheckoutSheet from '@shared/payments/CheckoutSheet.jsx'
 import OrderChatThread from '@shared/chat/OrderChatThread.jsx'
 import SideDrawer from '@shared/vendor/SideDrawer.jsx'
 import DesignStudio, { DEFAULT_DESIGN } from '@shared/design/DesignStudio.jsx'
 import HeroTextEditor from '@shared/design/HeroTextEditor.jsx'
+import { emitFunnelStep } from './lib/funnel'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
   if (!supabase) return { id: 'local-' + Date.now(), slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-') }
+  emitFunnelStep('signup_started')
   const { data, error } = await supabase.from('vendor_accounts').insert({
     phone: phone.replace(/[^0-9]/g, ''),
     password_hash: password, // In production, hash this
@@ -35,6 +38,7 @@ async function vendorSignup(phone, password, name) {
     slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30),
   }).select().single()
   if (error) throw new Error(error.message)
+  emitFunnelStep('signup_completed', { vendorId: data?.id })
   return data
 }
 
@@ -165,6 +169,34 @@ export default function App() {
 
   if (viewMode === 'admin') return <AdminDashboard />
   if (viewMode === 'activate') return <ActivatePage />
+
+  /* --- Traffic-source capture (powers 2bee Traffic & Funnel tab) --- */
+  useEffect(() => {
+    if (!supabase) return
+    try {
+      const qs = new URLSearchParams(window.location.search)
+      let sid = localStorage.getItem('sl_session_id')
+      if (!sid) {
+        sid = (crypto.randomUUID && crypto.randomUUID()) ||
+              ('s_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10))
+        localStorage.setItem('sl_session_id', sid)
+      }
+      supabase.from('traffic_events').insert({
+        app_id: 'services-local',
+        session_id: sid,
+        utm_source: qs.get('utm_source'),
+        utm_medium: qs.get('utm_medium'),
+        utm_campaign: qs.get('utm_campaign'),
+        utm_content: qs.get('utm_content'),
+        utm_term: qs.get('utm_term'),
+        referrer: document.referrer || null,
+        landing_path: window.location.pathname + window.location.search,
+        user_agent: navigator.userAgent,
+        event_type: 'first_visit',
+      }).then(() => {}, () => {})
+      emitFunnelStep('landing_viewed')
+    } catch {}
+  }, [])
 
   /* --- Auto-healing + Health reporting --- */
   const APP_VERSION = '1.0.0'
@@ -503,6 +535,62 @@ export default function App() {
   const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('vendorservices_vendorId') || localStorage.getItem('indoo_vendor_id') || null)
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   const [vendorExpiresAt, setVendorExpiresAt] = useState(null)
+  const [vendorPlanTier, setVendorPlanTier] = useState(null)
+  const [subBusy, setSubBusy] = useState(false)
+  const [subError, setSubError] = useState('')
+  const [subMessage, setSubMessage] = useState('')
+
+  // Vendor subscription checkout — opens Midtrans Snap against StreetLocal's
+  // central account. Webhook flips vendor.status to 'active'. product='services'
+  // selects the right PRICE_TABLE row.
+  const startSubscriptionCheckout = async (planTier) => {
+    if (!supabase || !vendorId || subBusy) return
+    setSubBusy(true); setSubError('')
+    try {
+      emitFunnelStep('payment_started', { vendorId, metadata: { plan_tier: planTier, product: 'services' } })
+      const returnUrl = window.location.origin + window.location.pathname
+      const { data, error } = await supabase.functions.invoke('subscription-create-checkout', {
+        body: { vendorId, planTier, product: 'services', returnUrl },
+      })
+      if (error || !data?.redirectUrl) {
+        setSubError(data?.error || 'Could not start payment. Try again in a moment.')
+        setSubBusy(false)
+        return
+      }
+      try { localStorage.setItem('vendorservices_pendingSubOrder', JSON.stringify({ orderId: data.orderId, vendorId, planTier, at: Date.now() })) } catch {}
+      window.location.href = data.redirectUrl
+    } catch (e) {
+      setSubError(e?.message || 'Payment failed to start')
+      setSubBusy(false)
+    }
+  }
+  // Detect ?subscription=ok return from Midtrans → poll vendor.status.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('subscription') !== 'ok') return
+    window.history.replaceState({}, '', window.location.pathname)
+    setSubMessage('Activating your shop…')
+    if (!supabase || !vendorId) return
+    let attempts = 0
+    const poll = async () => {
+      attempts++
+      try {
+        const { data } = await supabase.from('vendor_accounts').select('status, plan_tier, expires_at').eq('id', vendorId).single()
+        if (data?.status === 'active') {
+          setVendorStatus('active')
+          if (data.plan_tier) setVendorPlanTier(data.plan_tier)
+          if (data.expires_at) setVendorExpiresAt(data.expires_at)
+          setSubMessage('Your shop is live!')
+          emitFunnelStep('payment_completed', { vendorId, metadata: { plan_tier: data.plan_tier || null, product: 'services' } })
+          try { localStorage.removeItem('vendorservices_pendingSubOrder') } catch {}
+          return
+        }
+      } catch {}
+      if (attempts < 10) setTimeout(poll, 3000)
+      else setSubMessage('Payment received — activation may take a few minutes. Refresh to check.')
+    }
+    poll()
+  }, [vendorId])
 
   /* Auto-detect user distance */
   useEffect(() => {
@@ -4584,6 +4672,17 @@ export default function App() {
             <button onClick={() => setTermsOfListing(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Got It</button>
           </div>
         </div>
+      )}
+
+      {/* ── Vendor: admin inbox FAB (📨 with unread badge) ── */}
+      {isVendor && !channelSettingsOpen && !dashboardOpen && (
+        <AdminInboxFab
+          supabase={supabase}
+          vendorId={vendorId}
+          vendorName="StreetLocal Admin"
+          accent="#DC2626"
+          bottom={160}
+        />
       )}
 
       {/* ── Vendor: floating action buttons (dashboard + channels) ── */}

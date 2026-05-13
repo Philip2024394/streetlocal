@@ -3,6 +3,17 @@
   "outputDirectory": "dist",
   "installCommand": "npm run install:all",
   "framework": null,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' http://localhost:* http://127.0.0.1:* https://*.vercel.app"
+        }
+      ]
+    }
+  ],
   "redirects": [
     { "source": "/food/whatsapp/:path*",      "destination": "/food/chat/:path*",  "permanent": true },
     { "source": "/products/chat/:path*",      "destination": "/products/local/:path*", "permanent": true },

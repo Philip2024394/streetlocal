@@ -29,6 +29,7 @@ import StaffPage from './StaffPage'
 import NotificationsCenter from './NotificationsCenter'
 import POSIntegrations from './POSIntegrations'
 import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
+import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
 
 const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 const LOCAL_KEY = 'indoo_vendor_restaurant'
@@ -1246,6 +1247,17 @@ export default function VendorDashboardV2({ onClose }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* StreetLocal admin inbox FAB — replaces wa.me-only contact path */}
+      {restaurant?.id && (
+        <AdminInboxFab
+          supabase={supabase}
+          vendorId={restaurant.id}
+          vendorName="StreetLocal Admin"
+          accent={BRAND.red}
+          bottom={150}
+        />
       )}
     </div>,
     document.body

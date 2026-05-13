@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import imgError from '../../imgFallback'
 import { supabase } from '@/lib/supabase'
+import { emitFunnelStep } from '@/lib/funnel'
 import { QRCodeCanvas } from 'qrcode.react'
 import { getOrCreateQRHash, buildQRPayload } from '@/services/qrCodeService'
 import styles from './RestaurantDashboard.module.css'
@@ -305,9 +306,11 @@ export default function RestaurantDashboard({ userId, onClose }) {
     if (id) {
       await supabase.from('restaurants').update(payload).eq('id', id)
     } else {
+      emitFunnelStep('signup_started')
       const { data } = await supabase.from('restaurants').insert({ ...payload, status: 'pending' }).select().single()
       setRestaurant(data)
       id = data?.id
+      if (data?.id) emitFunnelStep('signup_completed', { vendorId: data.id })
     }
     geocodeAddress(address, id)
     showToast(restaurant?.id ? 'Profile saved ✓' : 'Application submitted — pending admin approval')

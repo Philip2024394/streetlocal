@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { emitFunnelStep } from '@/lib/funnel'
 import RestaurantBrowseScreen from '@/screens/RestaurantBrowseScreen'
 import DirectoryPage from './pages/DirectoryPage'
 import RestaurantPage from './pages/RestaurantPage'
@@ -10,6 +11,34 @@ import VendorDashboardV2 from './components/restaurant/VendorDashboardV2'
 export default function App() {
   const [restaurantSlug, setRestaurantSlug] = useState(null)
   const [view, setView] = useState('food') // 'food' | 'directory' | 'restaurant' | 'vendor' | 'dashboard'
+
+  /* --- Traffic-source capture (powers 2bee Traffic & Funnel tab) --- */
+  useEffect(() => {
+    if (!supabase) return
+    try {
+      const qs = new URLSearchParams(window.location.search)
+      let sid = localStorage.getItem('sl_session_id')
+      if (!sid) {
+        sid = (crypto.randomUUID && crypto.randomUUID()) ||
+              ('s_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10))
+        localStorage.setItem('sl_session_id', sid)
+      }
+      supabase.from('traffic_events').insert({
+        app_id: 'foodlocal-pro',
+        session_id: sid,
+        utm_source: qs.get('utm_source'),
+        utm_medium: qs.get('utm_medium'),
+        utm_campaign: qs.get('utm_campaign'),
+        utm_content: qs.get('utm_content'),
+        utm_term: qs.get('utm_term'),
+        referrer: document.referrer || null,
+        landing_path: window.location.pathname + window.location.search,
+        user_agent: navigator.userAgent,
+        event_type: 'first_visit',
+      }).then(() => {}, () => {})
+      emitFunnelStep('landing_viewed')
+    } catch {}
+  }, [])
 
   /* --- Agent referral tracking --- */
   useEffect(() => {
