@@ -7,27 +7,22 @@
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
+    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; background: #000; overflow: hidden; position: relative; }
     * { box-sizing: border-box; }
-    /* The approved design is sized for a 390x844 phone viewport. We render at
-       that intrinsic size, then CSS-scale to fit whatever container loads us
-       (catalog preview, food-basic splash, standalone). Proportions and
-       absolute pixel values stay pixel-perfect to the approved design. */
+    /* The approved design is sized for a 390x844 phone viewport. Render at
+       that intrinsic size, then CSS-scale + translate-CENTER so the scaled
+       frame sits in the middle of whatever container loads us. No top-left
+       anchor (was causing content to appear "off to bottom right" when the
+       iframe aspect didn't match the 390:844 design ratio). */
     #root {
-      position: fixed;
-      top: 0;
-      left: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
       width: 390px;
       height: 844px;
-      transform-origin: top left;
-      transform: scale(min(calc(100vw / 390), calc(100vh / 844)));
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(min(calc(100vw / 390), calc(100vh / 844)));
     }
-    /* Center the scaled content so any leftover space on the long axis is
-       split evenly (no off-shape appearance). */
-    body { display: flex; align-items: flex-start; justify-content: flex-start; }
-    /* The theme outer fills the 390x844 reference frame, with the safe-area
-       top padding for notch clearance. Identical to the gallery's
-       .min-h-screen clamp. */
     .theme-frame {
       width: 390px !important;
       height: 844px !important;
@@ -37,7 +32,6 @@
       box-sizing: border-box !important;
       position: relative;
     }
-    .theme-frame .min-h-screen { min-height: 100% !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding-top: 0 !important; }
   </style>
 </head>
 <body>
