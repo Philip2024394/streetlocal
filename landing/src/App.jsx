@@ -3859,27 +3859,33 @@ export default function App() {
                   {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#999', fontSize: 14 }}>No themes found</div>}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                     {(themeLibSearch ? filtered : otherThemes).map(theme => (
-                      <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ textAlign: 'center', cursor: 'pointer' }}>
-                        <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
-                          <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
-                          {theme.landingPreview ? (
-                            <FitIframe src={theme.landingPreview} pointerEvents="none" />
-                          ) : (
-                            <>
-                              <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
-                              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
-                              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
-                                <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
-                                <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Street Noodle</div>
-                                <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', marginTop: 1 }}>{theme.label}</div>
-                                <div style={{ marginTop: 6, padding: '2px 10px', borderRadius: 5, background: theme.accent, fontSize: 7, fontWeight: 700, color: '#fff' }}>View Menu</div>
-                              </div>
-                            </>
-                          )}
-                          {theme.isNew && <div style={{ position: 'absolute', top: 6, left: 6, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 3 }}>NEW</div>}
+                      <div key={theme.id} style={{ textAlign: 'center' }}>
+                        {/* iPhone-style frame around the theme — dark bezel, 4px padding,
+                            inner phone screen with rounded corners and notch. */}
+                        <div onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ width: '100%', height: 0, paddingBottom: '210%', position: 'relative', borderRadius: 22, background: '#1a1a1a', padding: 4, boxShadow: '0 10px 30px rgba(0,0,0,0.18)', border: '1px solid #333', cursor: 'pointer', boxSizing: 'border-box' }}>
+                          <div style={{ position: 'absolute', top: 4, left: 4, right: 4, bottom: 4, borderRadius: 18, overflow: 'hidden', background: '#000' }}>
+                            {/* Notch (Dynamic Island look) — pill shape, centered at the top */}
+                            <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 40, height: 10, background: '#000', borderRadius: 6, zIndex: 5, boxShadow: '0 0 0 1px #1a1a1a' }} />
+                            {theme.landingPreview ? (
+                              <FitIframe src={theme.landingPreview} pointerEvents="none" />
+                            ) : (
+                              <>
+                                <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 8px' }}>
+                                  <div style={{ width: 24, height: 24, borderRadius: 12, background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4, border: '2px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 9, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                                  <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>Street Noodle</div>
+                                  <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', marginTop: 1 }}>{theme.label}</div>
+                                  <div style={{ marginTop: 6, padding: '2px 10px', borderRadius: 5, background: theme.accent, fontSize: 7, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                                </div>
+                              </>
+                            )}
+                            {theme.isNew && <div style={{ position: 'absolute', top: 8, left: 8, background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, zIndex: 6 }}>NEW</div>}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 6 }}>{theme.label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', marginTop: 8 }}>{theme.label}</div>
                         <div style={{ fontSize: 9, color: '#999', marginTop: 1 }}>{theme.ref} · {theme.activations} active</div>
+                        <button onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ marginTop: 8, width: '100%', padding: '8px 12px', borderRadius: 10, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 12, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.2 }}>View Theme</button>
                       </div>
                     ))}
                   </div>
