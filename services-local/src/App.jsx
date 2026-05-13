@@ -12,6 +12,8 @@ import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils
 import { VENDOR_TYPES } from '@shared/data/servicesVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
+import ChannelPicker from '@shared/channels/ChannelPicker.jsx'
+import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -397,6 +399,8 @@ export default function App() {
   const [heroEffect, setHeroEffect] = useState(() => localStorage.getItem('vendorservices_heroEffect') || 'shadow') // shadow | glow | runGlow | outline | neon | none
   const [heroEditor, setHeroEditor] = useState(false) // full editor open
   const [shopPhone, setShopPhone] = useState(() => localStorage.getItem('vendorservices_shopPhone') || '6281234567890')
+  const [shopChannels, setShopChannels] = useState(() => { try { return JSON.parse(localStorage.getItem('vendorservices_channels') || 'null') } catch { return null } })
+  const [shopEmail, setShopEmail] = useState(() => localStorage.getItem('vendorservices_shopEmail') || '')
   const [shopOpen, setShopOpen] = useState(() => loadJSON('vendorservices_shopOpen', true))
   const [shopAddress, setShopAddress] = useState(() => localStorage.getItem('vendorservices_shopAddress') || 'Jl. Malioboro, Yogyakarta')
   const [shopHours, setShopHours] = useState(() => localStorage.getItem('vendorservices_shopHours') || '17:00 – 23:00')
@@ -452,6 +456,7 @@ export default function App() {
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
+  const [channelPicker, setChannelPicker] = useState(null)
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -831,6 +836,8 @@ export default function App() {
       setVendorId(vendor.id)
       setShopName(vendor.shop_name || shopName)
       setShopPhone(vendor.shop_phone || shopPhone)
+      if (vendor.channels) setShopChannels(vendor.channels)
+      if (vendor.email) setShopEmail(vendor.email)
       setShopAddress(vendor.shop_address || shopAddress)
       setShopHours(vendor.shop_hours || shopHours)
       setShopFoodType(vendor.shop_food_type || shopFoodType)
@@ -1042,9 +1049,26 @@ export default function App() {
       ...(shopAddress ? [`${shopAddress}`, ``] : []),
       `Placed via StreetLocal.live`,
     ]
-    const msg = encodeURIComponent(lines.join('\n'))
-    const phone = shopPhone.replace(/[^0-9]/g, '')
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
+    const formattedText = lines.join('\n')
+    // Channel flip — same dispatcher as products-local. Vendor's enabled
+    // channels decide how the order leaves the customer's device.
+    const channels = resolveChannels({ channels: shopChannels, shop_phone: shopPhone, shop_email: shopEmail }, 'services')
+    const enabled  = enabledChannelIds(channels)
+    const orderPayload = {
+      shopName, customerName: custName, customerPhone: custPhone,
+      items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.promoPrice || c.price })),
+      total: grandTotal, delivery: deliveryFee,
+      address: shopAddress, notes: note, _formattedText: formattedText,
+    }
+    if (enabled.length === 0 || (enabled.length === 1 && enabled[0] === 'whatsapp')) {
+      const phone = (channels.whatsapp.phone || shopPhone).replace(/[^0-9]/g, '')
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(formattedText)}`, '_blank')
+    } else if (enabled.length === 1) {
+      openChannel(enabled[0], channels, orderPayload)
+    } else {
+      setChannelPicker({ channels, order: orderPayload })
+      return
+    }
     // Save customer to directory (localStorage + Supabase)
     if (returning) {
       returning.orders = (returning.orders || 0) + 1
@@ -2572,7 +2596,7 @@ export default function App() {
                   onClick={sendWhatsApp}
                 >
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>Order WhatsApp — {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                  <span style={{ position: 'relative', zIndex: 1 }}>Place Order — {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
                 </button>
               </div>
             )}
@@ -4472,6 +4496,27 @@ export default function App() {
             <button onClick={() => setTermsOfListing(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Got It</button>
           </div>
         </div>
+      )}
+
+      {/* ── Channel Picker (vendor has multiple inbound channels enabled) ── */}
+      {channelPicker && (
+        <ChannelPicker
+          channels={channelPicker.channels}
+          title="How would you like to send this order?"
+          onClose={() => setChannelPicker(null)}
+          onPick={(channelId) => {
+            const picked = channelPicker
+            setChannelPicker(null)
+            if (channelId === 'whatsapp') {
+              const phone = (picked.channels.whatsapp.phone || shopPhone).replace(/[^0-9]/g, '')
+              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(picked.order._formattedText)}`, '_blank')
+            } else if (channelId === 'email') {
+              const addr = picked.channels.email.address || shopEmail
+              window.location.href = `mailto:${addr}?subject=${encodeURIComponent('Order — ' + shopName)}&body=${encodeURIComponent(picked.order._formattedText)}`
+            }
+            setOrderDone(true)
+          }}
+        />
       )}
     </div>
   )
