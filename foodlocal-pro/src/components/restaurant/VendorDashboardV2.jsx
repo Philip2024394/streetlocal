@@ -28,6 +28,7 @@ import LocationsPage from './LocationsPage'
 import StaffPage from './StaffPage'
 import NotificationsCenter from './NotificationsCenter'
 import POSIntegrations from './POSIntegrations'
+import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 
 const fmtRp = (n) => 'Rp ' + (n ?? 0).toLocaleString('id-ID')
 const LOCAL_KEY = 'indoo_vendor_restaurant'
@@ -307,6 +308,7 @@ const NAV_ITEMS = [
   { id: 'orderboard',  label: 'Live Order Board',  icon: '🟢' },
   { id: 'orders',      label: 'Orders (list)',     icon: '📋' },
   { id: 'menu',        label: 'Menu',              icon: '🍽️' },
+  { id: 'channels',    label: 'Order Channels',    icon: '📲' },
   { id: 'modifiers',   label: 'Modifier Groups',   icon: '➕' },
   { id: 'eightysix',   label: '86 List',           icon: '🚫' },
   { id: 'hours',       label: 'Hours & Holidays',  icon: '🕐' },
@@ -958,6 +960,21 @@ export default function VendorDashboardV2({ onClose }) {
 
         {page === 'pos' && (
           <POSIntegrations restaurant={restaurant} onBack={() => setPage('overview')} />
+        )}
+
+        {page === 'channels' && (
+          <ChannelSettings
+            vendor={restaurant}
+            appKind="food"
+            availableIds={['whatsapp', 'chat']}
+            onSave={async (channels) => {
+              if (!supabase || !restaurant?.id) return
+              const { error } = await supabase.from('restaurants').update({ channels }).eq('id', restaurant.id)
+              if (error) throw error
+              setRestaurant((r) => ({ ...r, channels }))
+            }}
+            onBack={() => setPage('overview')}
+          />
         )}
 
         {/* ══════════ PAGE: PAYMENT METHODS ══════════ */}

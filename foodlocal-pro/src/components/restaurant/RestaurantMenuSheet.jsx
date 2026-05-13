@@ -59,6 +59,8 @@ import CategoryDrawer from './CategoryDrawer'
 import EventsDrawer from './EventsDrawer'
 import CheckoutSheet from './CheckoutSheet'
 import { supabase } from '@/lib/supabase'
+import ChannelPicker from '@shared/channels/ChannelPicker.jsx'
+import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 import SocialsDrawer from './SocialsDrawer'
 import ReviewModal from './ReviewModal'
 import CustomizeSheet from './CustomizeSheet'
@@ -233,6 +235,7 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [orderConfirm,   setOrderConfirm]   = useState(null)   // { id, total, estimatedMin }
   const [gatewayCheckout, setGatewayCheckout] = useState(null) // { foodOrderId, total } when paying via connected gateway
+  const [channelPicker, setChannelPicker] = useState(null)     // { channels, order } when customer must choose channel
   const [reviewOrder,    setReviewOrder]    = useState(null)    // order to review
   const [reviewStars,    setReviewStars]    = useState(0)
   const [reviewComment,  setReviewComment]  = useState('')
@@ -548,8 +551,47 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
     if (file) setPaymentProofFile(file)
   }
 
-  const handleSubmitPayment = async (skipGateway = false) => {
+  // Channel routing: build a brief order payload to pass to wa.me / mailto.
+  const _buildChannelOrder = () => {
+    const order = getFoodOrders().find(o => o.id === orderConfirm?.id) || {}
+    return {
+      shopName: restaurant?.name,
+      customerName: order.customer_name || customerWa || 'Customer',
+      customerPhone: customerWa,
+      items: order.items || [],
+      total: orderConfirm?.total,
+      delivery: order.delivery,
+      address: order.address,
+      notes: order.special_instructions,
+    }
+  }
+
+  const _routeViaChannel = (channelId, channels) => {
+    openChannel(channelId, channels, _buildChannelOrder(), {
+      openChatSheet: () => {/* chat handled by inline flow below */},
+    })
+  }
+
+  const handleSubmitPayment = async (skipGateway = false, forcedChannel = null) => {
     if (!orderConfirm) return
+    // Channel flip — read the vendor's enabled channels and decide route.
+    // forcedChannel === 'chat' means the customer already picked chat in the
+    // picker, so we continue straight to the in-app flow (and to the gateway
+    // if one is connected). 'whatsapp' means we open wa.me and stop.
+    if (!skipGateway && !forcedChannel && orderConfirm.payment_method !== 'cod' && restaurant) {
+      const channels = resolveChannels(restaurant, 'food')
+      const enabled  = enabledChannelIds(channels).filter((id) => ['whatsapp', 'chat'].includes(id))
+      if (enabled.length === 0) {
+        // No channels enabled — fall through to existing bank-transfer flow.
+      } else if (enabled.length === 1) {
+        if (enabled[0] === 'whatsapp') { _routeViaChannel('whatsapp', channels); return }
+        // single 'chat' → continue inline
+      } else {
+        // Multiple — let customer pick.
+        setChannelPicker({ channels, order: _buildChannelOrder() })
+        return
+      }
+    }
     // Gateway checkout path: if the vendor has a connected Midtrans and the
     // customer didn't pick cash-on-delivery, mint a Snap token and open
     // CheckoutSheet. The food-order-payment-webhook will auto-confirm
@@ -2077,6 +2119,25 @@ export default function RestaurantMenuSheet({ restaurant, onClose, onOrderViaCha
             if (result.valid) applyPromoCode(code)
             setPromoBannerOpen2(false)
             setCartExpanded(true)
+          }}
+        />
+      )}
+
+      {/* ── Channel Picker (vendor has multiple inbound channels enabled) ── */}
+      {channelPicker && (
+        <ChannelPicker
+          channels={channelPicker.channels}
+          title="How would you like to send this order?"
+          onClose={() => setChannelPicker(null)}
+          onPick={(channelId) => {
+            const picked = channelPicker
+            setChannelPicker(null)
+            if (channelId === 'whatsapp') {
+              openChannel('whatsapp', picked.channels, picked.order)
+            } else {
+              // 'chat' — continue inline (gateway / driver / order insert).
+              handleSubmitPayment(false, 'chat')
+            }
           }}
         />
       )}
