@@ -3877,16 +3877,17 @@ export default function App() {
                           {themeLibPage === 'landing' && previewT.landingPreview ? (
                             // Render iframe at its natural 390x844 design size,
                             // then CSS-scale the iframe element itself to fit
-                            // the phone preview area (the inner phone screen is
-                            // 232x456 after the 4px bezel). Single transform
-                            // origin top-left so it always anchors correctly.
+                            // the phone preview area. Variant thumbnails on the
+                            // right pass ?bg=<selectedImg> to swap the bg in
+                            // the theme; iframe reloads when activeImg changes.
                             (() => {
                               const innerW = 232, innerH = 456
                               const scale = Math.min(innerW / 390, innerH / 844)
                               const scaledW = 390 * scale, scaledH = 844 * scale
                               const offsetX = (innerW - scaledW) / 2
                               const offsetY = (innerH - scaledH) / 2
-                              return <iframe src={previewT.landingPreview} title={previewT.label + ' preview'} style={{ position: 'absolute', top: offsetY, left: offsetX, width: 390, height: 844, border: 'none', display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} sandbox="allow-scripts allow-same-origin" />
+                              const src = previewT.landingPreview + (activeImg && activeImg !== previewT.img ? '?bg=' + encodeURIComponent(activeImg) : '')
+                              return <iframe src={src} title={previewT.label + ' preview'} style={{ position: 'absolute', top: offsetY, left: offsetX, width: 390, height: 844, border: 'none', display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} sandbox="allow-scripts allow-same-origin" />
                             })()
                           ) : (
                             <>

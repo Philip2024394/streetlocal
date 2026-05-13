@@ -26,8 +26,17 @@
   </style>
 </head>
 <body>
-  <!-- Static bg image — fills the 390x844 design frame exactly. -->
-  <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:absolute;inset:0;width:390px;height:844px;object-fit:cover;z-index:0;pointer-events:none;" />
+  <!-- Static bg image — fills the 390x844 design frame exactly. The src is
+       set by inline script below so a ?bg= URL param can swap it (used by
+       the catalog preview's variant thumbnails). -->
+  <img id="bg-static" style="position:absolute;inset:0;width:390px;height:844px;object-fit:cover;z-index:0;pointer-events:none;" />
+  <script>
+    (function () {
+      var DEFAULT_BG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345'
+      var bgParam = new URLSearchParams(window.location.search).get('bg')
+      document.getElementById('bg-static').src = bgParam || DEFAULT_BG
+    })()
+  </script>
   <div id="root" style="z-index:1;"></div>
 
   <script type="importmap">
