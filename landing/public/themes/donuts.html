@@ -20,7 +20,10 @@
       width: 390px;
       height: 844px;
       transform-origin: top left;
-      transform: scale(min(calc(100vw / 390), calc(100vh / 844)));
+      /* Fill the iframe — cover-style fit. Uses max() so content scales to
+         fully cover the container; minor overflow on the long side is clipped
+         by body overflow:hidden. */
+      transform: scale(max(calc(100vw / 390), calc(100vh / 844)));
     }
     .theme-fill {
       width: 390px !important;
