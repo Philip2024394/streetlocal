@@ -20,6 +20,9 @@ import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
 import { getCategoriesForTheme } from '@shared/themes/themeCategories.js'
 import CheckoutSheet from '@shared/payments/CheckoutSheet.jsx'
 import OrderChatThread from '@shared/chat/OrderChatThread.jsx'
+import SideDrawer from '@shared/vendor/SideDrawer.jsx'
+import DesignStudio, { DEFAULT_DESIGN } from '@shared/design/DesignStudio.jsx'
+import HeroTextEditor from '@shared/design/HeroTextEditor.jsx'
 
 /* ─── Supabase Vendor Service ─── */
 async function vendorSignup(phone, password, name) {
@@ -467,6 +470,20 @@ export default function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [gatewayCheckout, setGatewayCheckout] = useState(null) // { vendorOrderId, total } when paying via connected gateway
   const [chatOrderId, setChatOrderId] = useState(null)         // open thread post-checkout
+  const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false)
+  const [designStudioOpen, setDesignStudioOpen] = useState(false)
+  const [heroEditorOpen, setHeroEditorOpen] = useState(false)
+  const [design, setDesign] = useState(() => {
+    try {
+      const raw = localStorage.getItem('vendorservices_design')
+      return raw ? { ...DEFAULT_DESIGN, ...JSON.parse(raw) } : DEFAULT_DESIGN
+    } catch { return DEFAULT_DESIGN }
+  })
+  const updateDesign = (k, v) => setDesign((prev) => {
+    const next = { ...prev, [k]: v }
+    try { localStorage.setItem('vendorservices_design', JSON.stringify(next)) } catch {}
+    return next
+  })
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -4682,6 +4699,79 @@ export default function App() {
           onClose={() => setChatOrderId(null)}
           accent={accent}
         />
+      )}
+
+      {/* ── Vendor Side Drawer ────────────────────────────────────── */}
+      {isVendor && (
+        <SideDrawer
+          open={vendorDrawerOpen}
+          onClose={() => setVendorDrawerOpen(false)}
+          accent={accent}
+          vendor={{ shopName, shopLogo, shopType: shopFoodType, shopOpen }}
+          onToggleOpen={() => setShopOpen((v) => !v)}
+          onPreviewAsCustomer={() => { setIsVendor(false); setVendorDrawerOpen(false) }}
+          tiles={[
+            { id: 'orders',    icon: '🔔', label: 'Live Orders',     desc: 'Kanban, refunds, payouts',     onClick: () => { setDashboardOpen(true); setVendorDrawerOpen(false) } },
+            { id: 'channels',  icon: '📲', label: 'Order Channels',   desc: 'WhatsApp + in-app chat',        onClick: () => { setChannelSettingsOpen(true); setVendorDrawerOpen(false) } },
+            { id: 'payments',  icon: '💳', label: 'Payment Methods',  desc: 'Connect Stripe, Midtrans, Xendit', onClick: () => { setPaymentMethodsOpen?.(true); setVendorDrawerOpen(false) } },
+          ]}
+          designStudioTile={{
+            icon: '🎨', label: 'Design Studio', desc: 'Logo, hero, layout, cards, promo',
+            onClick: () => { setDesignStudioOpen(true); setVendorDrawerOpen(false) },
+          }}
+        />
+      )}
+
+      {/* ── Design Studio ─────────────────────────────────────────── */}
+      {designStudioOpen && (
+        <DesignStudio
+          design={design}
+          onChange={updateDesign}
+          vendor={{ shopName, shopLogo, shopType: shopFoodType, shopOpen }}
+          bgUrl={localStorage.getItem('vendorservices_themeBg') || ''}
+          accent={accent}
+          categories={(getCategoriesForTheme(shopTheme, 'services') || []).map((c) => ({ id: c.id, label: c.label }))}
+          appKind="services"
+          onOpenHeroEditor={() => { setHeroEditorOpen(true); setDesignStudioOpen(false) }}
+          onUploadImage={async (file) => {
+            if (!supabase) return null
+            try {
+              const ext = file.name.split('.').pop() || 'jpg'
+              const path = `services/banners/${vendorId || 'anon'}/${Date.now()}.${ext}`
+              const { error } = await supabase.storage.from('assets').upload(path, file, { upsert: true, contentType: file.type })
+              if (error) return null
+              const { data } = supabase.storage.from('assets').getPublicUrl(path)
+              return data?.publicUrl || null
+            } catch { return null }
+          }}
+          onClose={() => setDesignStudioOpen(false)}
+        />
+      )}
+
+      {/* ── Hero Text Editor ────────────────────────────────────── */}
+      {heroEditorOpen && (
+        <HeroTextEditor
+          design={design}
+          shopName={shopName}
+          bgUrl={localStorage.getItem('vendorservices_themeBg') || ''}
+          accent={accent}
+          onChange={updateDesign}
+          onClose={() => { setHeroEditorOpen(false); setDesignStudioOpen(true) }}
+        />
+      )}
+
+      {/* ── Floating vendor menu button ────────────────────────────── */}
+      {isVendor && !vendorDrawerOpen && !designStudioOpen && !heroEditorOpen && !channelSettingsOpen && !dashboardOpen && (
+        <button
+          onClick={() => setVendorDrawerOpen(true)}
+          style={{
+            position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', right: 12,
+            width: 44, height: 44, borderRadius: 22, border: 'none', background: accent,
+            color: '#fff', fontSize: 18, fontWeight: 900, cursor: 'pointer', zIndex: 9000,
+            boxShadow: `0 4px 14px ${accent}55`,
+          }}
+          aria-label="Open vendor menu"
+        >☰</button>
       )}
     </div>
   )
