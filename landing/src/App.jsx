@@ -3823,11 +3823,11 @@ export default function App() {
                       <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ textAlign: 'center', cursor: 'pointer' }}>
                         <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
                           <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
-                          {theme.landingPreview ? (
-                            // Render the actual saved theme as a live thumbnail.
-                            // pointer-events:none keeps the click on the parent tile.
-                            <iframe src={theme.landingPreview} title={theme.label + ' thumbnail'} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block', pointerEvents: 'none' }} sandbox="allow-scripts allow-same-origin" />
-                          ) : (
+                          {/* Tiles use the bg image only — clicking opens the full
+                              iframe preview where the actual theme renders.
+                              Tiles can't reliably size an iframe at small grid
+                              widths so we keep them as static visual hints. */}
+                          {false ? null : (
                             <>
                               <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
@@ -3875,7 +3875,19 @@ export default function App() {
                               "Street Noodle" stand-in. Otherwise fall back to the
                               bg-image + mock overlay. */}
                           {themeLibPage === 'landing' && previewT.landingPreview ? (
-                            <iframe src={previewT.landingPreview} title={previewT.label + ' preview'} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }} sandbox="allow-scripts allow-same-origin" />
+                            // Render iframe at its natural 390x844 design size,
+                            // then CSS-scale the iframe element itself to fit
+                            // the phone preview area (the inner phone screen is
+                            // 232x456 after the 4px bezel). Single transform
+                            // origin top-left so it always anchors correctly.
+                            (() => {
+                              const innerW = 232, innerH = 456
+                              const scale = Math.min(innerW / 390, innerH / 844)
+                              const scaledW = 390 * scale, scaledH = 844 * scale
+                              const offsetX = (innerW - scaledW) / 2
+                              const offsetY = (innerH - scaledH) / 2
+                              return <iframe src={previewT.landingPreview} title={previewT.label + ' preview'} style={{ position: 'absolute', top: offsetY, left: offsetX, width: 390, height: 844, border: 'none', display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} sandbox="allow-scripts allow-same-origin" />
+                            })()
                           ) : (
                             <>
                               <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
@@ -3939,12 +3951,12 @@ export default function App() {
                     <div style={{ flexShrink: 0, paddingBottom: 20, display: 'flex', gap: 10 }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
-                        // Tag the saved theme by ID. food-basic reads
-                        // vendor_accounts.landing_theme_id and renders the
-                        // matching /themes/<id>.html as the splash.
+                        // Open the food-basic app with this theme pre-selected.
+                        // food-basic reads the ?theme= URL param and persists it
+                        // to vendor_accounts.landing_theme_id, then takes the
+                        // vendor straight into Design Studio to edit it as normal.
                         try { localStorage.setItem('streetlocal_pending_theme', previewT.id) } catch {}
-                        setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing')
-                        alert('Theme "' + previewT.label + '" selected. Sign up or log in as a vendor of this cuisine to apply it to your storefront.')
+                        window.location.href = '/food/chat/?theme=' + encodeURIComponent(previewT.id) + '&design=open'
                       }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: `0 6px 18px ${ac}55` }}>Use This Theme</button>
                     </div>
                   </div>

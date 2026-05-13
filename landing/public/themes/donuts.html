@@ -7,22 +7,13 @@
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; background: #000; overflow: hidden; position: relative; }
+    /* This file renders at the design's intrinsic 390x844 dimensions — NO
+       internal scaling. Consumers (catalog preview, food-basic splash, etc.)
+       are responsible for scaling the iframe ELEMENT from outside to fit
+       their container. This is the canonical responsive-embed pattern. */
+    html, body { margin: 0; padding: 0; width: 390px; height: 844px; background: #000; overflow: hidden; position: relative; }
     * { box-sizing: border-box; }
-    /* The approved design is sized for a 390x844 phone viewport. Render at
-       that intrinsic size, then CSS-scale + translate-CENTER so the scaled
-       frame sits in the middle of whatever container loads us. No top-left
-       anchor (was causing content to appear "off to bottom right" when the
-       iframe aspect didn't match the 390:844 design ratio). */
-    #root {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 390px;
-      height: 844px;
-      transform-origin: center center;
-      transform: translate(-50%, -50%) scale(min(calc(100vw / 390), calc(100vh / 844)));
-    }
+    #root { position: absolute; inset: 0; width: 390px; height: 844px; }
     .theme-frame {
       width: 390px !important;
       height: 844px !important;
@@ -35,8 +26,8 @@
   </style>
 </head>
 <body>
-  <!-- Static bg image — fills the iframe viewport (cover fit). -->
-  <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;" />
+  <!-- Static bg image — fills the 390x844 design frame exactly. -->
+  <img id="bg-static" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png?updatedAt=1778309567345" style="position:absolute;inset:0;width:390px;height:844px;object-fit:cover;z-index:0;pointer-events:none;" />
   <div id="root" style="z-index:1;"></div>
 
   <script type="importmap">
