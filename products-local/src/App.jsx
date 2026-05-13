@@ -16,6 +16,7 @@ import ChannelPicker from '@shared/channels/ChannelPicker.jsx'
 import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
+import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
 const MODULE = 'products'
@@ -514,6 +515,7 @@ export default function App() {
   const [orderDone, setOrderDone] = useState(false)
   const [channelPicker, setChannelPicker] = useState(null) // shown when vendor has >1 channel enabled
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false) // vendor-side: edit own channels
+  const [dashboardOpen, setDashboardOpen] = useState(false)              // vendor-side: full ops dashboard
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -4634,14 +4636,36 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Vendor: edit my channels (floating button + modal) ── */}
-      {isVendor && !channelSettingsOpen && (
-        <button onClick={() => setChannelSettingsOpen(true)} style={{
-          position: 'fixed', right: 16, bottom: 90, zIndex: 9990,
-          padding: '10px 16px', borderRadius: 999, border: 'none',
-          background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 800,
-          cursor: 'pointer', boxShadow: '0 4px 14px rgba(220,38,38,0.4)',
-        }}>📲 Channels</button>
+      {/* ── Vendor: floating action buttons (dashboard + channels) ── */}
+      {isVendor && !channelSettingsOpen && !dashboardOpen && (
+        <div style={{ position: 'fixed', right: 16, bottom: 90, zIndex: 9990, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => setDashboardOpen(true)} style={{
+            padding: '10px 16px', borderRadius: 999, border: 'none',
+            background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 800,
+            cursor: 'pointer', boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+          }}>📊 Dashboard</button>
+          <button onClick={() => setChannelSettingsOpen(true)} style={{
+            padding: '10px 16px', borderRadius: 999, border: 'none',
+            background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 800,
+            cursor: 'pointer', boxShadow: '0 4px 14px rgba(220,38,38,0.4)',
+          }}>📲 Channels</button>
+        </div>
+      )}
+      {dashboardOpen && (
+        <DashboardShell
+          supabase={supabase}
+          vendorId={vendorId}
+          title="Products Local — Vendor Dashboard"
+          accent="#DC2626"
+          statusColumns={[
+            { id: 'new',        label: 'New',        color: '#9CA3AF' },
+            { id: 'confirmed',  label: 'Confirmed',  color: '#22C55E' },
+            { id: 'packed',     label: 'Packed',     color: '#3B82F6' },
+            { id: 'shipped',    label: 'Shipped',    color: '#A855F7' },
+            { id: 'delivered',  label: 'Delivered',  color: '#10B981' },
+          ]}
+          onClose={() => setDashboardOpen(false)}
+        />
       )}
       {channelSettingsOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 10005, background: '#0a0a0a', overflowY: 'auto' }}>
