@@ -8,6 +8,45 @@ import imgError, { FALLBACK_URLS } from './imgFallback'
 import { THEME_PRESETS as SERVICES_THEME_PRESETS } from '../../shared/themes/servicesThemes.js'
 import { FOOD_CATEGORIES_FULL as PRO_THEMES } from '../../shared/themes/foodProThemes.js'
 
+/* ─── FitIframe ──────────────────────────────────────────────────────
+   Renders an iframe at its NATURAL design size (390x844 by default) and
+   uses CSS transform-scale to fit its parent. ResizeObserver re-measures
+   the parent whenever it changes (grid reflow, window resize, etc.) and
+   updates the transform. The parent MUST be position:relative + sized.
+
+   Use this for theme thumbnails / previews — any place we need an iframe
+   to render its real design (not a static screenshot) but appear at a
+   smaller size. */
+function FitIframe({ src, sandbox = 'allow-scripts allow-same-origin', pointerEvents = 'auto', designW = 390, designH = 844 }) {
+  const wrapRef = useRef(null)
+  useEffect(() => {
+    const wrap = wrapRef.current
+    if (!wrap) return
+    const iframe = wrap.querySelector('iframe')
+    const measure = () => {
+      const w = wrap.clientWidth, h = wrap.clientHeight
+      if (!w || !h || !iframe) return
+      const scale = Math.max(w / designW, h / designH)
+      const offsetX = (w - designW * scale) / 2
+      const offsetY = (h - designH * scale) / 2
+      iframe.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(wrap)
+    return () => ro.disconnect()
+  }, [src, designW, designH])
+  return (
+    <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <iframe
+        src={src}
+        sandbox={sandbox}
+        style={{ position: 'absolute', top: 0, left: 0, width: designW, height: designH, border: 'none', display: 'block', transformOrigin: 'top left', pointerEvents }}
+      />
+    </div>
+  )
+}
+
 /* ─── Translations ─── */
 const TRANSLATIONS = {
   en: {
@@ -3823,11 +3862,9 @@ export default function App() {
                       <div key={theme.id} onClick={() => { setThemeLibPreviewImg(null); setThemeLibPreview(theme.id) }} style={{ textAlign: 'center', cursor: 'pointer' }}>
                         <div style={{ width: '100%', height: 0, paddingBottom: '178%', position: 'relative', borderRadius: 18, overflow: 'hidden', background: '#1a1a1a', border: '2px solid #e8e8e8' }}>
                           <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', width: 28, height: 7, background: '#000', borderRadius: 4, zIndex: 3 }} />
-                          {/* Tiles use the bg image only — clicking opens the full
-                              iframe preview where the actual theme renders.
-                              Tiles can't reliably size an iframe at small grid
-                              widths so we keep them as static visual hints. */}
-                          {false ? null : (
+                          {theme.landingPreview ? (
+                            <FitIframe src={theme.landingPreview} pointerEvents="none" />
+                          ) : (
                             <>
                               <img src={theme.img} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
@@ -3875,24 +3912,11 @@ export default function App() {
                               "Street Noodle" stand-in. Otherwise fall back to the
                               bg-image + mock overlay. */}
                           {themeLibPage === 'landing' && previewT.landingPreview ? (
-                            // Render iframe at its natural 390x844 design size,
-                            // then CSS-scale the iframe element itself to fit
-                            // the phone preview area. Variant thumbnails on the
-                            // right pass ?bg=<selectedImg> to swap the bg in
-                            // the theme; iframe reloads when activeImg changes.
-                            (() => {
-                              const innerW = 232, innerH = 472
-                              // Use max() so the scaled iframe FILLS the phone
-                              // screen on both axes — no gaps on width or
-                              // footer. Any overflow on the longer axis is
-                              // clipped by the phone screen's overflow:hidden.
-                              const scale = Math.max(innerW / 390, innerH / 844)
-                              const scaledW = 390 * scale, scaledH = 844 * scale
-                              const offsetX = (innerW - scaledW) / 2
-                              const offsetY = (innerH - scaledH) / 2
-                              const src = previewT.landingPreview + (activeImg && activeImg !== previewT.img ? '?bg=' + encodeURIComponent(activeImg) : '')
-                              return <iframe src={src} title={previewT.label + ' preview'} style={{ position: 'absolute', top: offsetY, left: offsetX, width: 390, height: 844, border: 'none', display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} sandbox="allow-scripts allow-same-origin" />
-                            })()
+                            // Use FitIframe — auto-scales the iframe element to
+                            // fill its parent phone screen via ResizeObserver.
+                            // Variant thumbnails pass ?bg=<selectedImg> to swap
+                            // the bg image; iframe reloads when activeImg changes.
+                            <FitIframe src={previewT.landingPreview + (activeImg && activeImg !== previewT.img ? '?bg=' + encodeURIComponent(activeImg) : '')} />
                           ) : (
                             <>
                               <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
