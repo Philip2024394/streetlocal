@@ -3881,8 +3881,12 @@ export default function App() {
                             // right pass ?bg=<selectedImg> to swap the bg in
                             // the theme; iframe reloads when activeImg changes.
                             (() => {
-                              const innerW = 232, innerH = 456
-                              const scale = Math.min(innerW / 390, innerH / 844)
+                              const innerW = 232, innerH = 472
+                              // Use max() so the scaled iframe FILLS the phone
+                              // screen on both axes — no gaps on width or
+                              // footer. Any overflow on the longer axis is
+                              // clipped by the phone screen's overflow:hidden.
+                              const scale = Math.max(innerW / 390, innerH / 844)
                               const scaledW = 390 * scale, scaledH = 844 * scale
                               const offsetX = (innerW - scaledW) / 2
                               const offsetY = (innerH - scaledH) / 2
