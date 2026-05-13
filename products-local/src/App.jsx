@@ -15,6 +15,7 @@ import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliv
 import ChannelPicker from '@shared/channels/ChannelPicker.jsx'
 import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
+import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
 const MODULE = 'products'
@@ -708,6 +709,16 @@ export default function App() {
 
   /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('productslocal_vendorId', vendorId) }, [vendorId])
+  // Hydrate paymentGateways from the DB when the vendor logs in / changes.
+  // This is what makes connections survive a fresh device or browser.
+  useEffect(() => {
+    if (!vendorId || String(vendorId).startsWith('local')) return
+    loadGatewayConnections(supabase, vendorId).then((db) => {
+      if (db && Object.keys(db).length > 0) {
+        setPaymentGateways((local) => ({ ...local, ...db }))
+      }
+    })
+  }, [vendorId])
   useEffect(() => { saveJSON('productslocal_menu', menuItems) }, [menuItems])
   useEffect(() => { localStorage.setItem('productslocal_shopName', shopName) }, [shopName])
   useEffect(() => { localStorage.setItem('productslocal_shopLogo', shopLogo) }, [shopLogo])
@@ -2778,14 +2789,18 @@ export default function App() {
         const current = paymentGateways[gw.id] || {}
         const updateField = (key, value) => setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), [key]: value } }))
         const isConnected = !!current.connected
-        const save = () => {
+        const save = async () => {
           const missing = gw.fields.filter(f => f.required && !(current[f.key] || '').toString().trim())
           if (missing.length) { alert('Required: ' + missing.map(m => m.label).join(', ')); return }
+          // Persist to vendor_payment_connections so the connection survives
+          // device changes and the customer-side charge fn can read it.
+          await saveGatewayConnection(supabase, vendorId, gw.id, current)
           setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: current.mode || 'test', connectedAt: new Date().toISOString() } }))
           setSetupGatewayId(null)
         }
-        const disconnect = () => {
+        const disconnect = async () => {
           if (!confirm(`Disconnect ${gw.name}? Your keys will be removed and payments via this gateway will stop working.`)) return
+          await removeGatewayConnection(supabase, vendorId, gw.id)
           setPaymentGateways(p => { const next = { ...p }; delete next[gw.id]; return next })
           setSetupGatewayId(null)
         }
