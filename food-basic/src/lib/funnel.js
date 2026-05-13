@@ -31,17 +31,17 @@ export function emitFunnelStep(step, { vendorId = null, metadata = {} } = {}) {
     if (!supabase) return
     const sessionId = getSessionId()
     if (!sessionId) return
-    // Fire-and-forget. on conflict do nothing (handled by unique index +
-    // PostgREST `Prefer: resolution=merge-duplicates` would upsert, but we
-    // want the FIRST timestamp preserved, so we just let conflicts error
-    // silently — they're 23505 unique violations and harmless).
-    supabase.from('funnel_events').insert({
+    // Use upsert with ignoreDuplicates so the DB handles conflicts via
+    // ON CONFLICT DO NOTHING at SQL level (Prefer: resolution=ignore-duplicates)
+    // — no more 409 logs from re-mounts hitting the (session_id, step) unique
+    // index. First insert wins, subsequent calls are no-ops.
+    supabase.from('funnel_events').upsert({
       app_id: APP_ID,
       session_id: sessionId,
       vendor_id: vendorId || null,
       step,
       metadata: metadata || {},
-    }).then(() => {}, () => {})
+    }, { onConflict: 'session_id,step', ignoreDuplicates: true }).then(() => {}, () => {})
   } catch {
     /* never block UI for analytics */
   }

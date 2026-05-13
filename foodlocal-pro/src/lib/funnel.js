@@ -25,13 +25,13 @@ export function emitFunnelStep(step, { vendorId = null, metadata = {} } = {}) {
     if (!supabase) return
     const sessionId = getSessionId()
     if (!sessionId) return
-    supabase.from('funnel_events').insert({
+    supabase.from('funnel_events').upsert({
       app_id: APP_ID,
       session_id: sessionId,
       vendor_id: vendorId || null,
       step,
       metadata: metadata || {},
-    }).then(() => {}, () => {})
+    }, { onConflict: 'session_id,step', ignoreDuplicates: true }).then(() => {}, () => {})
   } catch {
     /* never block UI for analytics */
   }
