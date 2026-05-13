@@ -3146,6 +3146,16 @@ export default function App() {
     // and flip showLanding to false so the menu reveals (the existing menu flow
     // takes over after that point).
     if (landingThemeId === 'donuts') {
+      // Build the iframe URL with vendor-customisable tokens from Design Studio.
+      // These read from the vendor's existing state — the same values Design
+      // Studio's pickers write to. So edits in Design Studio show up here on
+      // next render (the URL changes, iframe reloads with new values).
+      const themeParams = new URLSearchParams()
+      themeParams.set('accent', shopAccentColor || '#EC4899')
+      themeParams.set('shopName', shopName || '')
+      if (typeof customTagline === 'string' && customTagline.trim()) themeParams.set('sub', customTagline)
+      if (typeof btnText === 'string' && btnText.trim()) themeParams.set('btnText', btnText)
+      const donutsSrc = '/themes/donuts.html?' + themeParams.toString()
       return (
         <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
           {/* Language toggle still available at top-right */}
@@ -3158,7 +3168,7 @@ export default function App() {
             <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
           </button>
           <iframe
-            src="/themes/donuts.html"
+            src={donutsSrc}
             style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
             title="Donuts landing"
             sandbox="allow-scripts allow-same-origin"
