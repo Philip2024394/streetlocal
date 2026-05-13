@@ -2181,6 +2181,18 @@ export default function App() {
       if (data.landing_theme_id) {
         setLandingThemeId(data.landing_theme_id)
         try { localStorage.setItem('foodlocalchat_landing_theme_id', data.landing_theme_id) } catch {}
+        // When a vendor picks a saved landing theme, the theme's signature
+        // colour cascades through the rest of the app (menu buttons, accent,
+        // headers etc.) — unless the vendor has already overridden via the
+        // Design Studio colour picker. We only force-apply when the local
+        // accent is still the default (so we don't trample customisations).
+        const THEME_ACCENTS = { donuts: '#EC4899' }
+        const themeAccent = THEME_ACCENTS[data.landing_theme_id]
+        const currentLocal = localStorage.getItem('foodlocalchat_accentColor')
+        if (themeAccent && (!currentLocal || currentLocal === '#8B0000' || currentLocal === '#8DC63F')) {
+          setShopAccentColor(themeAccent)
+          try { localStorage.setItem('foodlocalchat_accentColor', themeAccent) } catch {}
+        }
       }
       if (data.delivery_base_fee) setDelBaseFee(data.delivery_base_fee)
       if (data.delivery_per_km) setDelPerKm(data.delivery_per_km)

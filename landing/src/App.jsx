@@ -3740,7 +3740,7 @@ export default function App() {
               { id: 'nasiuduk', ref: 'SL-015', label: 'Nasi Uduk', accent: '#e8b92c', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_26_08-pm.png', isNew: true, popular: false, activations: 12 },
               { id: 'bebekgoreng', ref: 'SL-016', label: 'Bebek Goreng', accent: '#6b8a0f', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-11_27_16-pm.png', isNew: true, popular: false, activations: 9 },
               { id: 'burger', ref: 'SL-017', label: 'Burgers', accent: '#B8860B', img: 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014403.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-8-2026-05_52_09-pm.png', 'https://ik.imagekit.io/nepgaxllc/NoteGPT_Image_20260511014523.png'], isNew: false, popular: true, activations: 134 },
-              { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_49_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_48_16-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_45_26-pm.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_42_58%20PM.png?updatedAt=1778308994638'], isNew: false, popular: false, activations: 27 },
+              { id: 'donut', ref: 'SL-018', label: 'Donuts', accent: '#DB2777', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png', variants: ['https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_49_47-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_48_16-pm.png', 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_45_26-pm.png', 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_42_58%20PM.png?updatedAt=1778308994638'], isNew: false, popular: false, activations: 27, landingPreview: '/themes/donuts.html' },
               { id: 'hotdog', ref: 'SL-019', label: 'Hot Dogs', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_39_59-am.png', isNew: true, popular: false, activations: 5 },
               { id: 'pizza', ref: 'SL-020', label: 'Pizza', accent: '#dc2626', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_54_57-am.png', isNew: true, popular: false, activations: 3 },
               { id: 'vegetables', ref: 'SL-021', label: 'Vegetables', accent: '#27AE60', img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2011,%202026,%2012_46_34%20PM.png', isNew: true, popular: false, activations: 0 },
@@ -3861,17 +3861,27 @@ export default function App() {
                         <div style={{ position: 'absolute', right: -3, top: 100, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
                         <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                          <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
-                          <div style={{ position: 'absolute', inset: 0, background: themeLibPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themeLibPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
-
-                          {/* LANDING */}
-                          {themeLibPage === 'landing' && (
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
-                              <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span></div>
-                              <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
-                              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{previewT.label}</div>
-                              <button onClick={() => setThemeLibPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
-                            </div>
+                          {/* If the catalog entry points at a saved landing preview HTML
+                              (e.g. donuts → /themes/donuts.html), render that real frozen
+                              theme in the landing-mode iframe instead of the generic
+                              "Street Noodle" stand-in. Otherwise fall back to the
+                              bg-image + mock overlay. */}
+                          {themeLibPage === 'landing' && previewT.landingPreview ? (
+                            <iframe src={previewT.landingPreview} title={previewT.label + ' preview'} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', display: 'block' }} sandbox="allow-scripts allow-same-origin" />
+                          ) : (
+                            <>
+                              <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <div style={{ position: 'absolute', inset: 0, background: themeLibPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themeLibPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
+                              {/* LANDING */}
+                              {themeLibPage === 'landing' && (
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
+                                  <div style={{ width: 64, height: 64, borderRadius: 32, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, border: '3px solid rgba(255,255,255,0.15)' }}><span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                                  <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', lineHeight: 1.1 }}>Street Noodle</div>
+                                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>{previewT.label}</div>
+                                  <button onClick={() => setThemeLibPage('menu')} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, background: ac, fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', boxShadow: `0 4px 16px ${ac}40` }}>View Menu</button>
+                                </div>
+                              )}
+                            </>
                           )}
 
                           {/* MENU */}
