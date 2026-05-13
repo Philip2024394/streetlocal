@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "cd landing && npm install && cd ../foodlocal-pro && npm install && cd ../food-basic && npm install && cd ../products-local && npm install && cd ../productslocalchat && npm install && cd ../productslocalemail && npm install && cd ../serviceslocalwhatsapp && npm install && cd ../serviceslocalchat && npm install && cd ../serviceslocalemail && npm install",
+  "installCommand": "npm run install:all",
   "framework": null,
   "redirects": [
     { "source": "/food/whatsapp/:path*", "destination": "/food/chat/:path*", "permanent": true }
