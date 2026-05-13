@@ -18,6 +18,7 @@ import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channel
 import { saveGatewayConnection, removeGatewayConnection, loadGatewayConnections } from '@shared/payments/connections.js'
 import DashboardShell from '@shared/dashboard/DashboardShell.jsx'
 import { getCategoriesForTheme as getSharedCategoriesForTheme, getMenuTabsForTheme as getSharedMenuTabsForTheme } from '@shared/themes/themeCategories.js'
+import CheckoutSheet from '@shared/payments/CheckoutSheet.jsx'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
 const MODULE = 'products'
@@ -531,6 +532,7 @@ export default function App() {
   const [channelPicker, setChannelPicker] = useState(null) // shown when vendor has >1 channel enabled
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false) // vendor-side: edit own channels
   const [dashboardOpen, setDashboardOpen] = useState(false)              // vendor-side: full ops dashboard
+  const [gatewayCheckout, setGatewayCheckout] = useState(null)           // { vendorOrderId, total } when paying via connected gateway
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -1078,7 +1080,7 @@ export default function App() {
   }
 
   /* --- WhatsApp order --- */
-  const sendWhatsApp = () => {
+  const sendWhatsApp = async () => {
     const note = document.getElementById('orderNote')?.value?.trim()
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -1145,17 +1147,45 @@ export default function App() {
     }
     const formattedText = lines.join('\n')
 
+    // Try in-app gateway checkout first — only if vendor has Midtrans/Stripe/
+    // Xendit connected AND the in-app chat channel is enabled (customer
+    // implicitly chose to pay through the app rather than WA/email).
+    const wantsGateway = enabled.includes('chat') && supabase && vendorId && !String(vendorId).startsWith('local')
+    if (wantsGateway) {
+      try {
+        const { data: conn } = await supabase
+          .from('vendor_payment_connections')
+          .select('gateway_id')
+          .eq('vendor_id', vendorId)
+          .in('gateway_id', ['midtrans', 'stripe', 'xendit'])
+          .eq('is_active', true)
+          .limit(1).maybeSingle()
+        if (conn) {
+          const { data: row, error } = await supabase.from('vendor_orders').insert({
+            vendor_id: vendorId,
+            customer_name: custName, customer_phone: custPhone, customer_address: shopAddress || null,
+            items: orderPayload.items,
+            subtotal: subtotal, delivery_fee: deliveryFee, total: grandTotal,
+            delivery_type: 'delivery', payment_method: 'card',
+            payment_status: 'pending', status: 'new', module: 'products',
+            note: note || null,
+          }).select().single()
+          if (!error && row) {
+            setGatewayCheckout({ vendorOrderId: row.id, total: grandTotal })
+            return // wait for checkout sheet
+          }
+        }
+      } catch (e) { console.warn('gateway pre-check failed', e) }
+    }
+
     if (enabled.length === 0 || (enabled.length === 1 && enabled[0] === 'whatsapp')) {
-      // Default behaviour preserved — WhatsApp with the formatted receipt.
       const phone = (channels.whatsapp.phone || shopPhone).replace(/[^0-9]/g, '')
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(formattedText)}`, '_blank')
     } else if (enabled.length === 1) {
-      // Single non-WhatsApp channel — route directly.
       openChannel(enabled[0], channels, { ...orderPayload, _formattedText: formattedText })
     } else {
-      // Multiple channels — let customer pick.
       setChannelPicker({ channels, order: { ...orderPayload, _formattedText: formattedText } })
-      return  // wait for picker; don't mark orderDone yet
+      return
     }
     // Save customer to directory (localStorage + Supabase)
     if (returning) {
@@ -4710,21 +4740,63 @@ export default function App() {
           channels={channelPicker.channels}
           title="How would you like to send this order?"
           onClose={() => setChannelPicker(null)}
-          onPick={(channelId) => {
+          onPick={async (channelId) => {
             const picked = channelPicker
             setChannelPicker(null)
+            if (channelId === 'chat' && supabase && vendorId && !String(vendorId).startsWith('local')) {
+              try {
+                const { data: conn } = await supabase
+                  .from('vendor_payment_connections')
+                  .select('gateway_id')
+                  .eq('vendor_id', vendorId)
+                  .in('gateway_id', ['midtrans', 'stripe', 'xendit'])
+                  .eq('is_active', true)
+                  .limit(1).maybeSingle()
+                if (conn) {
+                  const { data: row } = await supabase.from('vendor_orders').insert({
+                    vendor_id: vendorId,
+                    customer_name: picked.order.customerName, customer_phone: picked.order.customerPhone,
+                    customer_address: picked.order.address || null,
+                    items: picked.order.items,
+                    subtotal: (picked.order.total || 0) - (picked.order.delivery || 0),
+                    delivery_fee: picked.order.delivery || 0, total: picked.order.total || 0,
+                    delivery_type: 'delivery', payment_method: 'card',
+                    payment_status: 'pending', status: 'new', module: 'products',
+                    note: picked.order.notes || null,
+                  }).select().single()
+                  if (row) {
+                    setGatewayCheckout({ vendorOrderId: row.id, total: picked.order.total || 0 })
+                    return
+                  }
+                }
+              } catch (e) { console.warn('gateway pre-check failed', e) }
+            }
             if (channelId === 'whatsapp') {
               const phone = (picked.channels.whatsapp.phone || shopPhone).replace(/[^0-9]/g, '')
               window.open(`https://wa.me/${phone}?text=${encodeURIComponent(picked.order._formattedText)}`, '_blank')
             } else if (channelId === 'email') {
               const addr = picked.channels.email.address || shopEmail
               window.location.href = `mailto:${addr}?subject=${encodeURIComponent('Order — ' + shopName)}&body=${encodeURIComponent(picked.order._formattedText)}`
-            } else if (channelId === 'chat') {
-              // In-app chat — for products-local this opens the standard order-confirmation flow.
-              // We don't have a separate gateway sheet here yet; mark order as sent.
             }
             setOrderDone(true)
           }}
+        />
+      )}
+
+      {/* ── Gateway Checkout (Midtrans / Stripe / Xendit via Edge Function) ── */}
+      {gatewayCheckout && (
+        <CheckoutSheet
+          supabase={supabase}
+          orderId={gatewayCheckout.vendorOrderId}
+          orderTable="vendor_orders"
+          vendorId={vendorId}
+          chargeFnName="vendor-order-create-charge"
+          paymentField="payment_status"
+          paidValues={['paid']}
+          total={gatewayCheckout.total}
+          shopName={shopName}
+          onClose={() => { setGatewayCheckout(null); setOrderDone(true) }}
+          onConfirmed={() => { setGatewayCheckout(null); setOrderDone(true); setCart([]) }}
         />
       )}
     </div>
