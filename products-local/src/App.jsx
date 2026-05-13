@@ -13,6 +13,7 @@ import { VENDOR_TYPES } from '@shared/data/productsVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
 import ChannelPicker from '@shared/channels/ChannelPicker.jsx'
+import ChannelSettings from '@shared/channels/ChannelSettings.jsx'
 import { resolveChannels, enabledChannelIds, openChannel } from '@shared/channels/index.js'
 
 /* ─── Supabase Vendor Service (ProductsLocal module) ─── */
@@ -511,6 +512,7 @@ export default function App() {
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
   const [channelPicker, setChannelPicker] = useState(null) // shown when vendor has >1 channel enabled
+  const [channelSettingsOpen, setChannelSettingsOpen] = useState(false) // vendor-side: edit own channels
 
   /* Vendor login form */
   const [loginPhone, setLoginPhone] = useState('')
@@ -4614,6 +4616,32 @@ export default function App() {
 
             <button onClick={() => setTermsOfListing(false)} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Got It</button>
           </div>
+        </div>
+      )}
+
+      {/* ── Vendor: edit my channels (floating button + modal) ── */}
+      {isVendor && !channelSettingsOpen && (
+        <button onClick={() => setChannelSettingsOpen(true)} style={{
+          position: 'fixed', right: 16, bottom: 90, zIndex: 9990,
+          padding: '10px 16px', borderRadius: 999, border: 'none',
+          background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 800,
+          cursor: 'pointer', boxShadow: '0 4px 14px rgba(220,38,38,0.4)',
+        }}>📲 Channels</button>
+      )}
+      {channelSettingsOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10005, background: '#0a0a0a', overflowY: 'auto' }}>
+          <ChannelSettings
+            vendor={{ channels: shopChannels, shop_phone: shopPhone, shop_email: shopEmail }}
+            appKind="products"
+            onSave={async (channels) => {
+              setShopChannels(channels)
+              localStorage.setItem('productslocal_channels', JSON.stringify(channels))
+              if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+                await supabase.from('vendor_accounts').update({ channels }).eq('id', vendorId)
+              }
+            }}
+            onBack={() => setChannelSettingsOpen(false)}
+          />
         </div>
       )}
 
