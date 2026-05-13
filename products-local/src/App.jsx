@@ -547,9 +547,17 @@ export default function App() {
       return raw ? { ...DEFAULT_DESIGN, ...JSON.parse(raw) } : DEFAULT_DESIGN
     } catch { return DEFAULT_DESIGN }
   })
+  const designSyncRef = useRef(null)
   const updateDesign = (k, v) => setDesign((prev) => {
     const next = { ...prev, [k]: v }
     try { localStorage.setItem('productslocal_design', JSON.stringify(next)) } catch {}
+    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
+      if (designSyncRef.current) clearTimeout(designSyncRef.current)
+      designSyncRef.current = setTimeout(() => {
+        supabase.from('vendor_accounts').update({ design_config: next }).eq('id', vendorId)
+          .then(() => {}).catch?.(() => {})
+      }, 700)
+    }
     return next
   })
 
@@ -870,6 +878,10 @@ export default function App() {
       if (data.delivery_free_above !== undefined) setDelFreeAbove(data.delivery_free_above)
       if (data.delivery_currency) setDelCurrency(data.delivery_currency)
       if (data.delivery_enabled !== undefined) setDelEnabled(data.delivery_enabled)
+      if (data.design_config && typeof data.design_config === 'object' && Object.keys(data.design_config).length > 0) {
+        setDesign((cur) => ({ ...cur, ...data.design_config }))
+        try { localStorage.setItem('productslocal_design', JSON.stringify({ ...DEFAULT_DESIGN, ...data.design_config })) } catch {}
+      }
     })
   }, [vendorId])
 
@@ -4844,8 +4856,13 @@ export default function App() {
           onPreviewAsCustomer={() => { setIsVendor(false); setVendorDrawerOpen(false) }}
           tiles={[
             { id: 'orders',    icon: '🔔', label: 'Live Orders',     desc: 'Kanban, refunds, payouts',     onClick: () => { setDashboardOpen(true); setVendorDrawerOpen(false) } },
+            { id: 'myshop',    icon: '⚙️', label: 'My Shop',         desc: 'Name, phone, hours, socials',  onClick: () => { setShopConfig(true); setVendorDrawerOpen(false) } },
+            { id: 'themes',    icon: '🖼️', label: 'Themes',          desc: 'Browse & apply app themes',    onClick: () => { setThemeBrowser(true); setVendorDrawerOpen(false) } },
+            { id: 'delivery',  icon: '🛵', label: 'Delivery',         desc: 'Rates, distance, collection',  onClick: () => { setShowDeliverySettings(true); setVendorDrawerOpen(false) } },
             { id: 'channels',  icon: '📲', label: 'Order Channels',   desc: 'WhatsApp + in-app chat',        onClick: () => { setChannelSettingsOpen(true); setVendorDrawerOpen(false) } },
             { id: 'payments',  icon: '💳', label: 'Payment Methods',  desc: 'Connect Stripe, Midtrans, Xendit', onClick: () => { setPaymentMethodsOpen?.(true); setVendorDrawerOpen(false) } },
+            { id: 'domain',    icon: '🌐', label: 'Domains',          desc: 'Custom domain for your app',   onClick: () => { setDomainPage(true); setVendorDrawerOpen(false) } },
+            { id: 'terms',     icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements',  onClick: () => { setTermsOfListing(true); setVendorDrawerOpen(false) } },
           ]}
           designStudioTile={{
             icon: '🎨', label: 'Design Studio', desc: 'Logo, hero, layout, cards, promo',
