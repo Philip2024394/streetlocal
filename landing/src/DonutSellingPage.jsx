@@ -145,7 +145,7 @@ export default function DonutSellingPage() {
               Online in <span className="ds-pink">5 minutes.</span>
             </h1>
             <p className="ds-lede">
-              Take WhatsApp orders, manage your menu, accept payments — without writing a single line of code, and with zero% commission. You keep 100% of what you earn.
+              Take WhatsApp orders, manage your menu, accept payments — without writing a single line of code, and with 0% commission. You keep 100% of what you earn.
             </p>
             <div className="ds-cta-row">
               <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--lg">Start your shop →</a>
