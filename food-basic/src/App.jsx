@@ -2725,7 +2725,7 @@ export default function App() {
   // Shared progressive-disclosure block for both add + edit item forms
   const renderItemOptionalFields = () => (
     <div style={{ padding: '0 14px 4px' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{t.optionalDetails || 'Optional details'}</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {[
           // Donut-only "craft" panel — surfaces Filling/Glaze/Topping/Dough +
@@ -2752,9 +2752,9 @@ export default function App() {
       {expandedSections.perks && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
           <button type="button" onClick={() => toggleSection('perks')} aria-label="Close perks" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${accent}66` }}>×</button>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>{t.perkPresetSection || "Perk ribbon — shown across the top of this item's card."}</div>
           {/* Preset chips */}
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Preset</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>{t.presetLabel || 'Preset'}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
             {Object.entries(PERK_LABELS).map(([id, p]) => {
               const isActive = formPerks[0] === id && !formPerkText
@@ -2772,10 +2772,10 @@ export default function App() {
             })}
           </div>
           {/* Custom text override */}
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>Or write your own (max 24 chars)</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{t.orWriteYourOwn || 'Or write your own (max 24 chars)'}</div>
           <input value={formPerkText} maxLength={24} onChange={e => { setFormPerkText(e.target.value); if (e.target.value) setFormPerks([]) }} placeholder="e.g. Free Cendol Today!" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
           {/* Countdown limit */}
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Limited offer? (countdown on right of ribbon)</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>{t.limitedOfferQ || 'Limited offer? (countdown on right of ribbon)'}</div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {[
               { id: 'none', label: 'No limit' },
@@ -2827,7 +2827,7 @@ export default function App() {
             }
             return (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Preview</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{t.previewLabel || 'Preview'}</div>
                 <div style={{ background: accent, color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10 }}>
                   <span style={{ fontSize: 13 }}>{previewEmoji}</span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewText}</span>
@@ -2882,7 +2882,7 @@ export default function App() {
       })()}
       {expandedSections.allergens && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t.containsHelps || 'Contains — helps customers with allergies'}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {/* Donut shops: prune to the 4 allergens that actually apply (no Shellfish / Soy). */}
             {(shopTheme === 'donut'
@@ -2905,7 +2905,7 @@ export default function App() {
       {expandedSections.dietary && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
           <button type="button" onClick={() => toggleSection('dietary')} aria-label="Close dietary" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#EF4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>×</button>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags · customers can filter the menu by these</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>{t.dietaryTagsLabel || 'Dietary tags · customers can filter the menu by these'}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {/* Donut shops: surface the 4 tags that matter — vegetarian, vegan,
                 gluten-free, dairy-free. Halal is removed at the user's request. */}
@@ -2934,7 +2934,7 @@ export default function App() {
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
           {shopTheme === 'donut' ? (
             <>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Portion — how the donut is sold</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t.portionLabel || 'Portion — how the donut is sold'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {['Single', '3-pack', 'Half Dozen', 'Dozen', 'Mini Pack'].map(p => {
                   const isActive = formPortion === p
@@ -2951,7 +2951,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Grams / weight</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t.gramsWeight || 'Grams / weight'}</div>
               <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · 350g · 1.2kg' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </>
           )}
@@ -2959,10 +2959,10 @@ export default function App() {
       )}
       {expandedSections.stock && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t.stockHelp || 'Stock — auto-hides item when 0. Leave blank for unlimited.'}</div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
-            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Unlimited</button>
+            <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder={t.unlimited || 'Unlimited'} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
+            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>{t.unlimited || 'Unlimited'}</button>
           </div>
         </div>
       )}
@@ -2999,7 +2999,7 @@ export default function App() {
       )}
       {expandedSections.modifiers && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t.addonsModifiers || 'Add-ons / modifiers — customer can pick multiple (each adds to price).'}</div>
           {formModifiers.map((m, i) => (
             <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
               <input value={m.name} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder={shopTheme === 'donut' ? 'Name (Extra glaze / Sprinkles)' : 'Name (Extra cheese / No onion)'} style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
@@ -4568,8 +4568,8 @@ export default function App() {
       {/* --- Subscription expired banner --- */}
       {isVendor && vendorStatus === 'expired' && (
         <div style={{ background: 'rgba(255,60,60,0.15)', border: '1px solid rgba(255,60,60,0.3)', borderRadius: 12, margin: '8px 12px', padding: '12px 16px', textAlign: 'center', color: '#ff6b6b', fontSize: 14, fontWeight: 600, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-          <span>Subscription expired — pay to renew</span>
-          <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew Now</button>
+          <span>{t.subExpired || 'Subscription expired — pay to renew'}</span>
+          <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>{t.renewNow || 'Renew Now'}</button>
         </div>
       )}
 
@@ -4583,11 +4583,15 @@ export default function App() {
             <div style={{ fontSize: 22, flexShrink: 0 }}>{urgent ? '⏰' : '🔔'}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: urgent ? '#F59E0B' : '#FACC15' }}>
-                {daysLeft === 0 ? 'Subscription expires today' : daysLeft === 1 ? 'Subscription expires tomorrow' : `Subscription expires in ${daysLeft} days`}
+                {daysLeft === 0
+                  ? (t.expiresToday || 'Subscription expires today')
+                  : daysLeft === 1
+                    ? (t.expiresTomorrow || 'Subscription expires tomorrow')
+                    : (t.expiresInDays || 'Subscription expires in {days} days').replace('{days}', String(daysLeft))}
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Renew now to keep customers ordering — no downtime.</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{t.renewSubtitle || 'Renew now to keep customers ordering — no downtime.'}</div>
             </div>
-            <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew</button>
+            <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>{t.renewShort || 'Renew'}</button>
           </div>
         )
       })()}
@@ -4602,20 +4606,20 @@ export default function App() {
         <div onClick={() => !subBusy && setSubPickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
             <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
-            <div style={{ fontSize: 17, fontWeight: 800 }}>Choose your plan</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.</div>
+            <div style={{ fontSize: 17, fontWeight: 800 }}>{t.choosePlan || 'Choose your plan'}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>{t.choosePlanSub || '30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.'}</div>
             <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('whatsapp')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.08)', color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>WhatsApp orders · Rp 35.000 / month</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Customers send orders to your WhatsApp — you handle the rest.</div>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>{t.whatsappPlanTitle || 'WhatsApp orders · Rp 35.000 / month'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{t.whatsappPlanDesc || 'Customers send orders to your WhatsApp — you handle the rest.'}</div>
               </div>
             </button>
             <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('chat')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: `1px solid ${accent}55`, background: `${accent}15`, color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>App Chat orders · Rp 50.000 / month</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time in-app chat + 16 payment gateways + order tracking.</div>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>{t.chatPlanTitle || 'App Chat orders · Rp 50.000 / month'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{t.chatPlanDesc || 'Real-time in-app chat + 16 payment gateways + order tracking.'}</div>
               </div>
             </button>
             {subError && <div style={{ fontSize: 13, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
@@ -4700,10 +4704,10 @@ export default function App() {
             {locale === 'id' ? 'Kami sedang mempersiapkan menu. Kunjungi lagi segera!' : 'We\'re preparing our menu. Check back shortly!'}
           </p>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, textAlign: 'center', width: '100%', maxWidth: 280 }}>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>Powered by</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>{t.poweredBy || 'Powered by'}</p>
             <a href="https://streetlocal.live" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
               <div style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>StreetLocal</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Get your own food ordering software</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{t.getYourOwn || 'Get your own food ordering software'}</div>
               <div style={{ fontSize: 13, color: '#8DC63F', fontWeight: 700, marginTop: 4 }}>from $2.50/month →</div>
             </a>
           </div>
@@ -4754,7 +4758,7 @@ export default function App() {
           <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, flexShrink: 0 }}>
             <button onClick={() => setReviewsOpen(false)} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>Reviews</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{t.reviewsTitle || 'Reviews'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
                 {reviews.length > 0 ? `${reviewsAvg.toFixed(1)} ★ · ${reviews.length} review${reviews.length === 1 ? '' : 's'}` : 'Be the first to review'}
               </div>
@@ -4764,7 +4768,7 @@ export default function App() {
           <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '0 16px 20px', maxWidth: 480, margin: '0 auto', width: '100%' }}>
             {/* Leave-a-review form */}
             <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Leave a review</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>{t.leaveReview || 'Leave a review'}</div>
               {/* Star picker */}
               <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
                 {[1, 2, 3, 4, 5].map(i => (
@@ -4796,8 +4800,8 @@ export default function App() {
             {reviews.length === 0 ? (
               <div style={{ padding: '24px 20px', borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>★</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>No reviews yet</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>Be the first to share your experience.</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{t.noReviewsYet || 'No reviews yet'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{t.beFirstReview || 'Be the first to share your experience.'}</div>
               </div>
             ) : (
               reviews.map(r => (
@@ -4953,7 +4957,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, position: 'relative', zIndex: 2 }}>
               <button onClick={() => setDonutTypesGallery(false)} style={{ width: 44, height: 44, borderRadius: 22, background: '#000', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>←</button>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Meet Our Donuts</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: 1.5, textTransform: 'uppercase' }}>{t.meetOurDonuts || 'Meet Our Donuts'}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{safeIdx + 1} of {published.length}</div>
               </div>
               <div style={{ width: 44 }} />
@@ -5194,8 +5198,8 @@ export default function App() {
             }}>
               <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }} />
               <div style={{ textAlign: 'center', marginBottom: 18 }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>What kind of vendor are you?</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>We'll set up your menu categories instantly.</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{t.vendorTypeTitle || 'What kind of vendor are you?'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>{t.vendorTypeSubtitle || "We'll set up your menu categories instantly."}</div>
               </div>
               {Object.values(VENDOR_TYPES).map(vt => {
                 const isActive = vendorType === vt.id
