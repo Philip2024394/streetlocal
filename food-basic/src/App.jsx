@@ -4710,12 +4710,16 @@ export default function App() {
           ) : shopLogoStyle !== 'off' ? (
             <div style={{ width: 40, height: 40, borderRadius: 20, background: isCustomAccent ? accent : 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}>{shopName.charAt(0).toUpperCase()}</div>
           ) : null}
-          <div>
-            <span style={S.shopName}>{shopName}</span>
-            <span style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            {/* Force shop name onto a single line — long names ellipsize
+                instead of pushing the action buttons onto a second row. */}
+            <span style={{ ...S.shopName, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{shopName}</span>
+            <span style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{shopFoodType}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        {/* Action buttons nudged down so they sit below the name baseline
+            and don't compete with the shop name for the top edge. */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', alignSelf: 'flex-end', marginBottom: 2 }}>
           {/* DEV: Quick dashboard toggle */}
           {!isVendor && (
             <button onClick={() => { setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>DEV</button>
@@ -5813,8 +5817,14 @@ export default function App() {
                 <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
               )}
               <div style={S.cardBody}>
-                <div style={{ ...S.cardName, color: donutCardStyles ? donutCardStyles.textColor : (S.cardName && S.cardName.color) }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-                <div style={{ ...S.cardDesc, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : (S.cardDesc && S.cardDesc.color) }}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
+                {/* Reserve ~60px on the right of the first two text rows
+                    when the ★ rating pill is shown — otherwise long names
+                    and the first line of the description visually pass
+                    under the badge. */}
+                {(() => { const _hasRating = !!getItemRating(item); return (<>
+                <div style={{ ...S.cardName, paddingRight: _hasRating ? 60 : 0, color: donutCardStyles ? donutCardStyles.textColor : (S.cardName && S.cardName.color) }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                <div style={{ ...S.cardDesc, paddingRight: _hasRating ? 60 : (S.cardDesc && S.cardDesc.paddingRight), color: donutCardStyles ? 'rgba(0,0,0,0.55)' : (S.cardDesc && S.cardDesc.color) }}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
+                </>) })()}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div>
                     {item.promoPrice ? (

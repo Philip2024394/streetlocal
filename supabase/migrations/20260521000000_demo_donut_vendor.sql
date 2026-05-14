@@ -42,7 +42,7 @@ insert into public.vendor_accounts (
   '+62 812 0000 0000',
   'demo-donuts',
   'active',
-  'Donut Shop',
+  'Freshly Baked Daily',
   true,
   'Demo Street 1, Yogyakarta, Indonesia',
   '07:00 – 21:00',
