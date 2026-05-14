@@ -56,6 +56,17 @@ const REFUND_FUNCTION_BY_GATEWAY = {
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
 )
+// Supabase columns like vendor_id are UUIDs. Demo-mode IDs (e.g.
+// `local-demo-1778788214763`) aren't valid UUIDs, so any query filtering
+// on them returns 400 from PostgREST. Guard with this before issuing the
+// query — when false, skip Supabase and stay in local/demo mode.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v)
+// Fixed demo vendor — seeded by migration 20260521000000_demo_donut_vendor.sql.
+// Visitors who land on the donut app without a real ?vendor= param get
+// promoted to this UUID so chat, gateway probes, and the sales dashboard
+// all hit a real row instead of 400ing on a bogus `local-demo-*` id.
+const DEMO_VENDOR_UUID = '00000000-0000-0000-0000-00000000d0c0'
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
 import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
@@ -229,9 +240,12 @@ function getFilteredThemes(countryCode, foodType, langCountries) {
 /* ─── Styles ─── */
 
 /* ─── Customer Chat Panel (inline below cart confirmation) ─── */
-function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopName }) {
+function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopName, t = {} }) {
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
+  // Order card collapses after the first message exchange so long chats
+  // don't waste vertical space. Customer can re-expand any time.
+  const [orderCollapsed, setOrderCollapsed] = useState(false)
   const scrollRef = useRef(null)
   const isDemoConv = conversation?.id && String(conversation.id).startsWith('demo-')
 
@@ -251,10 +265,26 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages.length])
 
+  // Once the customer + vendor have exchanged a message each, collapse the
+  // order card so the chat thread has room to breathe. Customer can tap to
+  // re-expand any time.
+  const nonOrderMsgs = (messages || []).filter(m => !m.order_payload)
+  const hasVendorReply = nonOrderMsgs.some(m => m.sender_role === 'vendor')
+  useEffect(() => {
+    if (hasVendorReply) setOrderCollapsed(true)
+  }, [hasVendorReply])
+
   if (!conversation) return null
 
   const orderMsg = messages.find(m => m.order_payload)
   const op = orderMsg?.order_payload || {}
+  // Read receipt — if the vendor's unread_count is 0, our last message was
+  // seen. Pessimistic: only assume "read" when unread_vendor_count === 0.
+  const lastCustomerMsg = [...nonOrderMsgs].reverse().find(m => m.sender_role === 'customer')
+  const lastSeen = lastCustomerMsg && conversation && (conversation.unread_vendor_count === 0 || conversation.unread_vendor_count == null)
+  const fmtTime = (ts) => {
+    try { return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) } catch { return '' }
+  }
 
   const onSend = async () => {
     const body = draft.trim()
@@ -317,10 +347,21 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
 
   return (
     <div style={sStyle.panel}>
-      <div style={sStyle.header}>Chat with the vendor</div>
-      {op && op.items && (
+      <div style={{ ...sStyle.header, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>{t.chatWithVendor || 'Chat with the vendor'}</span>
+        {op && op.items && (
+          <button
+            type="button"
+            onClick={() => setOrderCollapsed(c => !c)}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}
+          >
+            {orderCollapsed ? (t.showOrderDetails || 'Show order details') + ' ▾' : (t.hideOrderDetails || 'Hide order details') + ' ▴'}
+          </button>
+        )}
+      </div>
+      {op && op.items && !orderCollapsed && (
         <div style={sStyle.orderCard}>
-          <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13, color: '#FACC15' }}>Order {op.orderNumber || ''}</div>
+          <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13, color: '#FACC15' }}>{t.order || 'Order'} {op.orderNumber || ''}</div>
           {/* Customer info — tidy single-block with icons */}
           {op.customer && (
             <div style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
@@ -357,17 +398,56 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
           {op.note && <div style={{ marginTop: 4, opacity: 0.7, fontSize: 13, fontStyle: 'italic' }}>"{op.note}"</div>}
         </div>
       )}
+      {/* Collapsed order summary — 1-line pill that's tappable to expand. */}
+      {op && op.items && orderCollapsed && (
+        <button
+          type="button"
+          onClick={() => setOrderCollapsed(false)}
+          style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 12px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, color: '#fff', cursor: 'pointer', fontSize: 13, textAlign: 'left', flexShrink: 0 }}
+        >
+          <span style={{ color: '#FACC15', fontWeight: 800, flexShrink: 0 }}>{op.orderNumber || (t.order || 'Order')}</span>
+          <span style={{ color: 'rgba(255,255,255,0.55)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {(op.items || []).slice(0, 2).map(i => `${i.qty}× ${i.name}`).join(', ')}
+            {op.items && op.items.length > 2 ? ` +${op.items.length - 2}` : ''}
+          </span>
+          <span style={{ color: '#FACC15', fontWeight: 800, flexShrink: 0 }}>{fmt ? fmt(op.total) : op.total}</span>
+        </button>
+      )}
       <div style={sStyle.msgList} ref={scrollRef}>
-        {messages.filter(m => !m.order_payload).map((m) => (
-          <div key={m.id} style={sStyle.msgRow(m.sender_role)}>
-            {m.sender_role === 'vendor' && (
-              shopLogo
-                ? <img src={shopLogo} alt="" style={sStyle.avatar} />
-                : <div style={sStyle.avatarFallback}>{(shopName || '?').charAt(0).toUpperCase()}</div>
-            )}
-            <div style={sStyle.bubble(m.sender_role)}>{m.body}</div>
+        {nonOrderMsgs.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '24px 16px', color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 500 }}>
+            👋 {t.sayHi || 'Say hi to'} {shopName || ''}
           </div>
-        ))}
+        )}
+        {nonOrderMsgs.map((m, idx) => {
+          const isLast = m.id === lastCustomerMsg?.id
+          const showAvatar = m.sender_role === 'vendor' && (idx === 0 || nonOrderMsgs[idx - 1].sender_role !== 'vendor')
+          return (
+            <div key={m.id}>
+              <div style={sStyle.msgRow(m.sender_role)}>
+                {m.sender_role === 'vendor' && (
+                  showAvatar ? (
+                    shopLogo
+                      ? <img src={shopLogo} alt="" style={sStyle.avatar} />
+                      : <div style={sStyle.avatarFallback}>{(shopName || '?').charAt(0).toUpperCase()}</div>
+                  ) : <div style={{ width: 26, flexShrink: 0 }} />
+                )}
+                <div style={sStyle.bubble(m.sender_role)}>{m.body}</div>
+              </div>
+              {/* Timestamp + read receipt under the bubble */}
+              {m.created_at && (
+                <div style={{ display: 'flex', justifyContent: m.sender_role === 'customer' ? 'flex-end' : m.sender_role === 'system' ? 'center' : 'flex-start', alignItems: 'center', gap: 4, fontSize: 13, color: 'rgba(255,255,255,0.4)', padding: m.sender_role === 'customer' ? '2px 4px 0 0' : '2px 0 0 32px' }}>
+                  <span>{fmtTime(m.created_at)}</span>
+                  {m.sender_role === 'customer' && isLast && (
+                    <span title={lastSeen ? (t.read || 'Read') : (t.sent || 'Sent')} style={{ color: lastSeen ? accent : 'rgba(255,255,255,0.4)', fontWeight: 800, marginLeft: 2 }}>
+                      {lastSeen ? '✓✓' : '✓'}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       <div style={sStyle.inputRow}>
         <input
@@ -375,10 +455,10 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') onSend() }}
-          placeholder="Type a message…"
-          aria-label="Type a message to the vendor"
+          placeholder={t.typeMessage || 'Type a message…'}
+          aria-label={t.typeMessage || 'Type a message to the vendor'}
         />
-        <button style={sStyle.sendBtn} onClick={onSend} disabled={sending || !draft.trim()}>{sending ? '…' : 'Send'}</button>
+        <button style={sStyle.sendBtn} onClick={onSend} disabled={sending || !draft.trim()}>{sending ? '…' : (t.sendBtn || t.send || 'Send')}</button>
       </div>
       {err && <div style={{ marginTop: 6, color: '#FCA5A5', fontSize: 13 }}>{err}</div>}
     </div>
@@ -501,6 +581,27 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
       <div style={sty.statusRow}>
         {['Accepted', 'Preparing', 'Out for delivery', 'Completed'].map((s) => (
           <button key={s} style={sty.statusBtn} onClick={() => onStatus(s)}>{s}</button>
+        ))}
+      </div>
+      {/* Quick reply chips — vendor taps to populate the input with a
+          preset response. Saves 10-20 seconds per reply during busy hours. */}
+      <div style={{ display: 'flex', gap: 6, padding: '0 12px 8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ width: '100%', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginTop: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.4 }}>Quick replies</div>
+        {[
+          'Got it! Preparing now 🍩',
+          'Out for delivery 🛵',
+          'Ready for pickup ✓',
+          'About 5 minutes!',
+          'Thank you! 🙏',
+        ].map((quick) => (
+          <button
+            key={quick}
+            type="button"
+            onClick={() => setDraft(quick)}
+            style={{ padding: '6px 10px', borderRadius: 999, border: `1px solid ${accent}55`, background: `${accent}1a`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            {quick}
+          </button>
         ))}
       </div>
       <div style={sty.inputRow}>
@@ -1649,6 +1750,21 @@ export default function App() {
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
+  // Distinguishes the WhatsApp success state from the in-app chat success
+  // state — both show inside the checkout (no force-close), but WhatsApp
+  // shows a "Order sent to WhatsApp" panel instead of the chat thread.
+  const [whatsAppSent, setWhatsAppSent] = useState(false)
+  // Pre-order chat — customer can message the vendor BEFORE adding to cart
+  // (e.g. "Is this halal?", "Do you deliver to Yogyakarta?"). Routes to
+  // WhatsApp in WhatsApp mode, in-app chat in Live Chat mode.
+  const [preOrderChatOpen, setPreOrderChatOpen] = useState(false)
+  const [preOrderMessage, setPreOrderMessage] = useState('')
+  const [preOrderSending, setPreOrderSending] = useState(false)
+  const [preOrderSentNote, setPreOrderSentNote] = useState('')
+  // Unread badge on the header 💬 icon — increments when a vendor reply
+  // arrives via the pre-order conversation while the modal is closed.
+  // Resets to 0 when the customer opens the modal.
+  const [preOrderUnread, setPreOrderUnread] = useState(0)
 
   /* In-app chat state (foodlocalchat) */
   const [chatConversation, setChatConversation] = useState(null)
@@ -1656,11 +1772,73 @@ export default function App() {
   const [chatDraft, setChatDraft] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatError, setChatError] = useState('')
+
+  // Persist the pre-order conversation id locally so the customer's
+  // unread state survives reloads. Restore the conversation + count on
+  // mount so the red badge is correct on first paint. Declared AFTER
+  // chatConversation state (TDZ-safe).
+  useEffect(() => {
+    if (isVendor || chatConversation || !supabase) return
+    const savedId = (() => { try { return localStorage.getItem('foodlocalchat_preorder_conv_id') } catch { return null } })()
+    if (!savedId) return
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('chat_conversations').select('*').eq('id', savedId).single()
+        if (data) {
+          setChatConversation(data)
+          if (data.unread_customer_count > 0) setPreOrderUnread(data.unread_customer_count)
+        }
+      } catch {}
+    })()
+  }, [isVendor])
+  // Background subscription on the customer's chat conversation — keeps
+  // chatMessages in sync (so the pre-order modal shows the live thread)
+  // AND drives the unread badge when the modal is closed.
+  useEffect(() => {
+    if (!chatConversation?.id || isVendor) return
+    if (String(chatConversation.id).startsWith('demo-')) return
+    const unsub = subscribeToMessages(chatConversation.id, (msg) => {
+      setChatMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg])
+      if (msg.sender_role === 'vendor' && !preOrderChatOpen) {
+        setPreOrderUnread(c => c + 1)
+      }
+    })
+    return unsub
+  }, [chatConversation?.id, preOrderChatOpen, isVendor])
+  // Load the message history when the modal opens — so the customer
+  // returning later sees the full thread, not an empty box.
+  useEffect(() => {
+    if (!preOrderChatOpen || !chatConversation?.id || isVendor) return
+    if (String(chatConversation.id).startsWith('demo-')) return
+    ;(async () => {
+      try {
+        const msgs = await loadMessages(chatConversation.id)
+        if (msgs && msgs.length) setChatMessages(msgs)
+      } catch {}
+    })()
+  }, [preOrderChatOpen, chatConversation?.id, isVendor])
+  // Reset unread when the modal opens, and clear the server-side count too
+  useEffect(() => {
+    if (preOrderChatOpen && chatConversation?.id) {
+      setPreOrderUnread(0)
+      try { clearCustomerUnread(chatConversation.id) } catch {}
+    }
+  }, [preOrderChatOpen, chatConversation?.id])
   // Order channel picker — shown before submission only when the vendor's
   // plan_tier === 'both'. For 'whatsapp' or 'chat' tiers the customer is
   // routed directly to that channel; no choice surfaced.
   const [orderModePickerOpen, setOrderModePickerOpen] = useState(false)
   const [orderModeRemember, setOrderModeRemember] = useState(false)
+  // Vendor-controlled ORDER MODE — overrides plan_tier-based routing.
+  // 'whatsapp' = every order opens WhatsApp; 'chat' = every order goes
+  // through in-app live chat + payment gateway. Default 'whatsapp' for new
+  // vendors (zero setup). Vendor can switch in the drawer's top toggles.
+  const [vendorOrderMode, setVendorOrderMode] = useState(() => {
+    return localStorage.getItem('foodlocalchat_vendor_order_mode') || 'whatsapp'
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_vendor_order_mode', vendorOrderMode) } catch {}
+  }, [vendorOrderMode])
   // vendor.plan_tier loaded from supabase: 'whatsapp' | 'chat' | 'both' | null
   // null = legacy vendor with no plan set; treated as 'both' for back-compat.
   const [vendorPlanTier, setVendorPlanTier] = useState(null)
@@ -2181,10 +2359,27 @@ export default function App() {
   // below depends on it. vendorStatus is also pulled up here because
   // another useEffect (auto-open subscription picker) reads it in its
   // dependency array — declaring later would cause a TDZ error during render.
-  const [vendorId, setVendorId] = useState(() => new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id') || null)
+  const [vendorId, setVendorId] = useState(() => {
+    // Priority: explicit ?vendor= URL param → saved localStorage → demo.
+    // The demo (seeded migration 20260521000000_demo_donut_vendor.sql) is
+    // the always-on fallback so first-time visitors can try the full app
+    // without signup or backend errors.
+    const urlVendor = new URLSearchParams(window.location.search).get('vendor')
+    if (urlVendor && isUuid(urlVendor)) return urlVendor
+    const saved = localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id')
+    // Sessions saved before the DEMO_VENDOR_UUID switchover may hold a stale
+    // `local-demo-${timestamp}` value — those aren't UUIDs and would 400 on
+    // every Supabase call. Discard non-UUID saves and fall through to demo.
+    if (saved && isUuid(saved)) return saved
+    return DEMO_VENDOR_UUID
+  })
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
+    // Demo vendor IDs (e.g. local-demo-*) aren't UUIDs — Supabase rejects
+    // the filter with 400. Skip the probe in that case; the gateway live
+    // flags stay false, which is correct for demo mode.
+    if (!isUuid(vendorId)) return
     const probe = (id, setter) => supabase.from('vendor_payment_connections')
       .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', id)
       .maybeSingle()
@@ -2364,6 +2559,7 @@ export default function App() {
   const [vendorMidtransLive, setVendorMidtransLive] = useState(false)
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
+    if (!isUuid(vendorId)) return // demo IDs aren't valid UUIDs — skip probe
     supabase.from('vendor_payment_connections')
       .select('is_active').eq('vendor_id', vendorId).eq('gateway_id', 'midtrans')
       .maybeSingle()
@@ -2371,6 +2567,12 @@ export default function App() {
       .catch(() => {})
   }, [vendorId, isVendor])
   const [flashConvId, setFlashConvId] = useState(null)
+  // PERSISTENT alert system — accumulates every customer message that
+  // arrives while the vendor is signed in but hasn't yet opened the
+  // conversation. Drives the repeating chime + always-visible banner so
+  // the owner never misses a message. Cleared when vendor opens the
+  // conversation OR taps "Acknowledge".
+  const [pendingChatAlerts, setPendingChatAlerts] = useState([])
   const chimeAudioRef = useRef(null)
 
   /* Vendor login form */
@@ -3308,9 +3510,10 @@ export default function App() {
     const text = encodeURIComponent(buildWhatsAppMessage())
     const url = `https://wa.me/${shopPhoneClean}?text=${text}`
     window.open(url, '_blank', 'noopener,noreferrer')
-    // Clear cart locally so the user returns to a clean state.
-    setCart([])
-    setCheckoutOpen(false)
+    // Show the success state INSIDE the checkout instead of force-closing
+    // back to home. Customer sees a confirmation + "Back to menu" button.
+    setWhatsAppSent(true)
+    setOrderDone(true)
   }
   // Dispatch in-app chat order (the original path). Closes the picker if open.
   const submitViaChat = () => {
@@ -3340,7 +3543,18 @@ export default function App() {
 
     const vendorHasWhatsApp = !!String(shopPhone || '').replace(/[^0-9]/g, '')
 
-    // 1. Vendor plan_tier is the source of truth.
+    // 0. VENDOR ORDER MODE TOGGLE (drawer setting) — overrides plan_tier
+    //    routing. Customers no longer see a "WhatsApp or in-app?" picker;
+    //    the vendor decides the channel once and every order follows it.
+    if (vendorOrderMode === 'whatsapp') {
+      if (!vendorHasWhatsApp) { setChatError('Vendor WhatsApp number not configured'); return }
+      return submitViaWhatsApp()
+    }
+    if (vendorOrderMode === 'chat') {
+      return sendOrder()
+    }
+
+    // 1. Fallback: vendor plan_tier from supabase.
     if (vendorPlanTier === 'whatsapp') {
       if (!vendorHasWhatsApp) { setChatError('Vendor WhatsApp number not configured'); return }
       return submitViaWhatsApp()
@@ -3372,7 +3586,16 @@ export default function App() {
 
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
-    if (!vendorId && !isDemo) { setChatError('Vendor not set'); return }
+    if (!vendorId && !isDemo) {
+      // Helpful for dev / preview — auto-promote to the seeded demo vendor
+      // so testing the checkout flow doesn't dead-end. Real production
+      // access arrives via a vendor URL that pre-populates vendorId; this
+      // only kicks in when someone is poking the app without one configured.
+      try { localStorage.setItem('foodlocalchat_vendorId', DEMO_VENDOR_UUID) } catch {}
+      setVendorId(DEMO_VENDOR_UUID)
+      setChatError('No vendor configured — switched to the demo shop. Tap Send Order again to continue.')
+      return
+    }
 
     // Stock guard — block oversell. Any cart item whose qty exceeds the
     // current stock (when stock is tracked, i.e. not null) is rejected here
@@ -3758,9 +3981,47 @@ export default function App() {
   useEffect(() => {
     if (!isVendor || !vendorId || String(vendorId).startsWith('local')) return
     let cancelled = false
+    // Helper: load orders from vendor_orders table and shape them as
+    // conversation rows so they slot into the same inbox UI as chat-based
+    // conversations. The Orders inbox now reads from BOTH pipelines —
+    // direct order inserts (vendor_orders) AND chat-with-order_payload.
+    const loadOrdersAsConvs = async () => {
+      if (!supabase || !vendorId) return []
+      try {
+        const { data } = await supabase.from('vendor_orders')
+          .select('id, customer_name, customer_phone, items, total, status, created_at, payment_method, delivery_type, note')
+          .eq('vendor_id', vendorId)
+          .order('created_at', { ascending: false })
+          .limit(50)
+        return (data || []).map(o => {
+          const itemsArr = Array.isArray(o.items) ? o.items : []
+          const itemSummary = itemsArr.length
+            ? itemsArr.slice(0, 2).map(i => `${i.qty || 1}× ${i.name}`).join(', ') + (itemsArr.length > 2 ? ` +${itemsArr.length - 2} more` : '')
+            : `${o.delivery_type || 'order'} · ${o.payment_method || 'cod'}`
+          return {
+            id: 'order-' + o.id,
+            customer_name: o.customer_name || '',
+            customer_phone: o.customer_phone || '',
+            last_message_at: o.created_at,
+            unread_vendor_count: o.status === 'new' ? 1 : 0,
+            preview: itemSummary + ` · ${fmt(o.total || 0)}`,
+            orderId: o.id,
+            orderStatus: o.status,
+            order_payload: { items: itemsArr, total: o.total, placedAt: o.created_at, note: o.note },
+            __source: 'vendor_orders',
+          }
+        })
+      } catch { return [] }
+    }
     ;(async () => {
-      const list = await loadVendorConversations(vendorId)
-      if (!cancelled) setVendorConversations(list)
+      const [convs, orders] = await Promise.all([
+        loadVendorConversations(vendorId),
+        loadOrdersAsConvs(),
+      ])
+      if (cancelled) return
+      // Merge — vendor_orders rows alongside chat conversations, newest first.
+      const merged = [...convs, ...orders].sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0))
+      setVendorConversations(merged)
     })()
     const unsub = subscribeToVendorMessages(vendorId, async (payload) => {
       if (payload.__conv) {
@@ -3777,6 +4038,34 @@ export default function App() {
         setTimeout(() => setFlashConvId((cur) => cur === payload.conversation_id ? null : cur), 1500)
         const list = await loadVendorConversations(vendorId)
         setVendorConversations(list)
+        // Push into the persistent alert queue (skip if vendor already has
+        // the conversation open in the active thread view).
+        const conv = list.find(c => c.id === payload.conversation_id)
+        const isActive = vendorActiveConv?.id === payload.conversation_id
+        if (!isActive) {
+          setPendingChatAlerts(prev => {
+            if (prev.find(a => a.id === payload.id)) return prev
+            return [...prev, {
+              id: payload.id,
+              convId: payload.conversation_id,
+              customerName: conv?.customer_name || conv?.customer_phone || 'Customer',
+              body: payload.body || '',
+              at: payload.created_at,
+            }]
+          })
+        }
+        // Fire a browser notification too — works even when the app tab
+        // is in the background (if vendor granted permission earlier).
+        try {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(`💬 ${conv?.customer_name || 'New customer'}`, {
+              body: payload.body || 'sent you a message',
+              icon: shopLogo || undefined,
+              tag: 'donut-chat-' + payload.conversation_id,
+              renotify: true,
+            })
+          }
+        } catch {}
       }
       // If thread is open for this conversation, append
       if (vendorActiveConv && payload.conversation_id === vendorActiveConv.id) {
@@ -3837,7 +4126,37 @@ export default function App() {
     // Refresh list to clear badge
     const list = await loadVendorConversations(vendorId)
     setVendorConversations(list)
+    // Clear any pending alert chimes/banner for this conversation —
+    // the vendor has now seen it.
+    setPendingChatAlerts(prev => prev.filter(a => a.convId !== conv.id))
   }, [vendorId, primeVendorChime, fetchVendorActiveOrder])
+
+  // Repeating chime + vibration while there are unacknowledged alerts.
+  // Fires every 4 seconds, caps at 12 repeats (~48s) so a vendor who has
+  // walked away from their phone doesn't return to a beep-fest. Tap the
+  // banner or open the conversation to silence.
+  useEffect(() => {
+    if (!isVendor) return
+    if (pendingChatAlerts.length === 0) return
+    let count = 0
+    const interval = setInterval(() => {
+      count++
+      if (count >= 12) { clearInterval(interval); return }
+      try { playVendorChime() } catch {}
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]) } catch {}
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [isVendor, pendingChatAlerts.length, playVendorChime])
+
+  // Auto-request browser notification permission once (vendor side only) so
+  // background-tab + minimised-app alerts work for chat messages.
+  useEffect(() => {
+    if (!isVendor) return
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission === 'default') {
+      try { Notification.requestPermission().catch(() => {}) } catch {}
+    }
+  }, [isVendor])
   // Vendor: release a held Stripe escrow order. Captures the PaymentIntent.
   const vendorReleaseEscrow = async () => {
     if (!supabase || !vendorActiveOrder || vendorPayActionBusy) return
@@ -4273,15 +4592,10 @@ export default function App() {
         )
       })()}
 
-      {/* --- Activation pending banner (post-signup, before payment) --- */}
-      {isVendor && (vendorStatus === 'pending' || (vendorStatus === null && vendorId && !String(vendorId).startsWith('local'))) && (
-        <div style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: 12, margin: '8px 12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>Pay to activate your shop</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>You can build your menu in preview mode. Customers can't place orders until you pay your monthly plan.</div>
-          <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>Choose Plan & Pay</button>
-          {subMessage && <div style={{ fontSize: 13, color: '#86EFAC' }}>{subMessage}</div>}
-        </div>
-      )}
+      {/* Pre-payment activation banner removed — vendors are now diverted
+          to the plan picker from the Copy Link / Custom Domain buttons,
+          which is the natural moment they want to share their shop. The
+          home page stays clean while menu building. */}
 
       {/* --- Subscription plan picker modal --- */}
       {subPickerOpen && (
@@ -4337,6 +4651,30 @@ export default function App() {
           {/* Hamburger menu (vendor only) */}
           {isVendor && (
             <button onClick={() => setVendorDrawer(true)} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>☰</button>
+          )}
+          {/* Chat with vendor (customer-only) — pre-order Q&A. Opens a
+              modal where customer can message the vendor without checking
+              out, then routes via WhatsApp or in-app chat per vendor mode.
+              Red unread badge appears when the vendor has replied since
+              the last time the customer opened the chat. */}
+          {!isVendor && (
+            <button onClick={() => { setPreOrderChatOpen(true); setPreOrderMessage(''); setPreOrderSentNote('') }} aria-label="Chat with vendor" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+              <span style={{ fontSize: 20 }}>💬</span>
+              {preOrderUnread > 0 && (
+                <span aria-label={`${preOrderUnread} unread message${preOrderUnread === 1 ? '' : 's'}`} style={{
+                  position: 'absolute', top: -4, right: -4,
+                  minWidth: 20, height: 20, padding: '0 5px',
+                  borderRadius: 10,
+                  background: '#8B0000',                    // dark red per spec
+                  color: '#fff', fontSize: 13, fontWeight: 900,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 6px rgba(139,0,0,0.55), 0 0 0 2px rgba(0,0,0,0.4)',
+                  lineHeight: 1,
+                }}>
+                  {preOrderUnread > 99 ? '99+' : preOrderUnread}
+                </span>
+              )}
+            </button>
           )}
           {/* Cart icon (hidden for vendor) */}
           {!isVendor && <button onClick={() => { if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
@@ -6553,11 +6891,41 @@ export default function App() {
 
             {/* Leave Review modal — bottom sheet inside the reviews page */}
             {leaveReviewOpen && (
-              <div onClick={closeLeaveSheet} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 260, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: 'rgba(15,15,15,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '20px 18px calc(env(safe-area-inset-bottom, 0px) + 20px)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <div onClick={closeLeaveSheet} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 260, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div onClick={(e) => e.stopPropagation()} style={{
+                  position: 'relative', width: '100%', maxWidth: 480,
+                  // Glass design matching the chat slider — semi-transparent
+                  // with strong blur + subtle pink-tinted gradient.
+                  background: 'linear-gradient(180deg, rgba(40,28,38,0.55) 0%, rgba(20,18,28,0.65) 100%)',
+                  backdropFilter: 'blur(28px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                  borderTopLeftRadius: 24, borderTopRightRadius: 24,
+                  padding: '28px 18px calc(env(safe-area-inset-bottom, 0px) + 20px)',
+                  border: '1px solid rgba(255,255,255,0.08)', borderBottom: 'none',
+                  boxShadow: '0 -24px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
+                }}>
+                  {/* Pink running light along the top rim — matches the
+                      pre-order chat slider for a consistent brand feel. */}
+                  <style>{`@keyframes leaveReviewTopRun { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }`}</style>
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, overflow: 'hidden', borderTopLeftRadius: 24, borderTopRightRadius: 24, pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '60%', height: '100%', background: `linear-gradient(90deg, transparent 0%, ${accent} 40%, ${accent} 60%, transparent 100%)`, filter: `drop-shadow(0 0 6px ${accent}CC)`, animation: 'leaveReviewTopRun 2.4s linear infinite' }} />
+                  </div>
+                  {/* Pink drag-handle bar — tappable to close */}
+                  <button
+                    type="button"
+                    onClick={closeLeaveSheet}
+                    aria-label="Close review form"
+                    style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 60, height: 5, borderRadius: 999, border: 'none', background: accent, boxShadow: `0 0 10px ${accent}99, 0 1px 2px rgba(0,0,0,0.35)`, cursor: 'pointer', padding: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={closeLeaveSheet}
+                    aria-label="Close review form"
+                    style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 140, height: 22, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                  />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                     <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Leave a review</h3>
-                    <button onClick={closeLeaveSheet} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>×</button>
+                    <button onClick={closeLeaveSheet} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 16, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', boxShadow: `0 2px 8px ${accent}66` }}>×</button>
                   </div>
 
                   <div style={{ marginBottom: 14 }}>
@@ -6640,7 +7008,7 @@ export default function App() {
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', flexShrink: 0 }}>
-              <button onClick={() => setCheckoutOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
+              <button onClick={() => { setCheckoutOpen(false); setWhatsAppSent(false) }} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{t.checkout || 'Checkout'}</div>
@@ -6693,7 +7061,7 @@ export default function App() {
                         </div>
                       ) : (
                         <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>Collection Only</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>{t.collectionOnly || 'Collection Only'}</span>
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6 }}>
@@ -6704,20 +7072,58 @@ export default function App() {
                   )}
 
                   {/* Payment method picker — the customer picks ONE before
-                      submitting. Previously hardcoded to 'cod' which silently
-                      ignored card selections. Methods shown depend on what
-                      the vendor has set up. */}
+                      submitting. The list is MODE-AWARE:
+                      - WhatsApp mode: shows MANUAL methods only (COD / Bank /
+                        QRIS) since payment is arranged outside the app.
+                        Card is hidden — no gateway runs in this path.
+                      - Live Chat mode: shows AUTOMATED methods only (Card +
+                        QRIS) since picking Live Chat implies the vendor has
+                        a connected gateway and the customer pays in-app.
+                        COD / manual Bank transfer are hidden because they
+                        defeat the purpose of the live-payment flow. */}
                   {cart.length > 0 && (() => {
                     const cardConnected = SUPPORTED_GATEWAYS.some(g => paymentGateways[g.id]?.connected && LIVE_GATEWAY_IDS.has(g.id))
-                    const methods = [
-                      { id: 'cod',  icon: '💵', label: 'Cash on delivery',  desc: 'Pay when your order arrives.', show: true },
-                      { id: 'qris', icon: '📲', label: 'QRIS / E-wallet',   desc: 'GoPay · OVO · DANA · ShopeePay. Scan after order.', show: !!shopQris },
-                      { id: 'bank', icon: '🏦', label: 'Bank transfer',     desc: 'Vendor confirms transfer manually.', show: true },
-                      { id: 'card', icon: '💳', label: 'Pay by card',       desc: 'Charged securely at checkout.', show: cardConnected },
-                    ].filter(m => m.show)
+                    const isChatMode = vendorOrderMode === 'chat'
+                    // Live Chat mode = Shopify-style single payment path:
+                    // card-only via the connected gateway. No QRIS / COD /
+                    // Bank clutter — the customer pays in one focused step.
+                    // WhatsApp mode = manual methods (COD / Bank / QRIS).
+                    const allMethods = [
+                      { id: 'cod',  icon: '💵', label: 'Cash on delivery',  desc: 'Pay when your order arrives.',                    show: !isChatMode },
+                      { id: 'qris', icon: '📲', label: 'QRIS / E-wallet',   desc: 'GoPay · OVO · DANA · ShopeePay. Scan after order.', show: !isChatMode && !!shopQris },
+                      { id: 'bank', icon: '🏦', label: 'Bank transfer',     desc: 'Vendor confirms transfer manually.',                show: !isChatMode },
+                      { id: 'card', icon: '💳', label: 'Pay by card',       desc: 'Charged securely at checkout.',                    show: isChatMode && cardConnected },
+                    ]
+                    const methods = allMethods.filter(m => m.show)
+                    // Auto-correct payMethod if the current selection isn't
+                    // valid for this mode (e.g. customer had 'cod' picked
+                    // then vendor switched to Live Chat — pick the first
+                    // available method instead).
+                    if (methods.length > 0 && !methods.find(m => m.id === payMethod)) {
+                      const fallback = methods[0].id
+                      // Schedule the state update (avoid setState during render)
+                      Promise.resolve().then(() => setPayMethod(fallback))
+                    }
+                    const methodLabels = {
+                      cod:  { label: t.payCod  || 'Cash on delivery', desc: t.payCodDesc  || 'Pay when your order arrives.' },
+                      qris: { label: t.payQris || 'QRIS / E-wallet',  desc: t.payQrisDesc || 'GoPay · OVO · DANA · ShopeePay. Scan after order.' },
+                      bank: { label: t.payBank || 'Bank transfer',    desc: t.payBankDesc || 'Vendor confirms transfer manually.' },
+                      card: { label: t.payCard || 'Pay by card',      desc: t.payCardDesc || 'Charged securely at checkout.' },
+                    }
+                    // Empty-state guard: Live Chat mode but no gateway + no QRIS
+                    if (methods.length === 0) {
+                      return (
+                        <div style={{ background: 'rgba(239,68,68,0.08)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(239,68,68,0.3)' }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#FCA5A5', marginBottom: 4 }}>⚠ Payment not available</div>
+                          <div style={{ fontSize: 13, color: '#FCA5A5', lineHeight: 1.5 }}>
+                            The shop is set to <b>Live Chat orders</b> but hasn't connected a payment gateway or QRIS yet. The vendor needs to connect at least one in Payment Methods.
+                          </div>
+                        </div>
+                      )
+                    }
                     return (
                       <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Pay with</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{t.payWith || 'Pay with'}</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                           {methods.map(m => {
                             const isActive = payMethod === m.id
@@ -6737,8 +7143,8 @@ export default function App() {
                               >
                                 <div style={{ width: 38, height: 38, borderRadius: 10, background: isActive ? accent : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, color: '#fff' }}>{m.icon}</div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 14, fontWeight: 800 }}>{m.label}</div>
-                                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{m.desc}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 800 }}>{methodLabels[m.id]?.label || m.label}</div>
+                                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{methodLabels[m.id]?.desc || m.desc}</div>
                                 </div>
                                 <div style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${isActive ? accent : 'rgba(255,255,255,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                   {isActive && <div style={{ width: 10, height: 10, borderRadius: 5, background: accent }} />}
@@ -6754,17 +7160,17 @@ export default function App() {
                   {/* Your details — moved to bottom, the LAST thing customer fills before sending */}
                   {cart.length > 0 && (
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{t.yourDetails || 'Your Details'}</div>
                       <input
                         type="text"
-                        placeholder="Your name"
+                        placeholder={t.yourNameLabel || 'Your name'}
                         value={custName}
                         onChange={e => setCustName(e.target.value)}
                         style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
                       />
                       <input
                         type="tel"
-                        placeholder="WhatsApp number (required)"
+                        placeholder={t.whatsappRequired || 'WhatsApp number (required)'}
                         value={custPhone}
                         onChange={e => setCustPhone(e.target.value)}
                         style={{ ...S.input, marginBottom: delEnabled ? 8 : 0, fontSize: 13 }}
@@ -6773,7 +7179,7 @@ export default function App() {
                         <div style={{ display: 'flex', gap: 6 }}>
                           <input
                             type="text"
-                            placeholder="Delivery address"
+                            placeholder={t.deliveryAddressLabel || 'Delivery address'}
                             value={custAddress}
                             onChange={e => setCustAddress(e.target.value)}
                             style={{ ...S.input, marginBottom: 0, fontSize: 13, flex: 1 }}
@@ -6782,7 +7188,7 @@ export default function App() {
                             type="button"
                             onClick={detectAddress}
                             disabled={addressLoading}
-                            title="Use my current location"
+                            title={t.useMyLocation || 'Use my current location'}
                             style={{
                               flexShrink: 0, padding: '0 12px', minHeight: 44, borderRadius: 10,
                               border: 'none', background: isCustomAccent ? accent : 'rgba(255,255,255,0.18)',
@@ -6792,13 +7198,75 @@ export default function App() {
                             }}
                           >
                             <span style={{ fontSize: 14, lineHeight: 1 }}>📍</span>
-                            <span>{addressLoading ? 'Locating…' : 'Set'}</span>
+                            <span>{addressLoading ? (t.locating || 'Locating…') : (t.useMyLocation || 'Set')}</span>
                           </button>
                         </div>
                       )}
                     </div>
                   )}
                 </>
+              ) : whatsAppSent ? (
+                /* WhatsApp success state — order opened in WhatsApp, customer
+                   stays here with confirmation + (if vendor has uploaded a
+                   QRIS) a big prominent QR so the vendor can simply say
+                   "scan to pay" in WhatsApp. Mirrors the food-basic pattern. */
+                <div style={{ padding: '20px 14px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0, alignItems: 'center', overflowY: 'auto' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 32, background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(34,197,94,0.45)' }}>
+                    <span style={{ fontSize: 30, color: '#fff', fontWeight: 900, lineHeight: 1 }}>✓</span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', textAlign: 'center', marginTop: 2 }}>
+                    Order sent to WhatsApp
+                  </div>
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textAlign: 'center', lineHeight: 1.5, maxWidth: 360, padding: '0 8px' }}>
+                    Your order is now in your chat with <span style={{ fontWeight: 800, color: '#fff' }}>{shopName}</span>. The vendor will confirm there.
+                  </div>
+
+                  {/* QR PAY — only when vendor has uploaded a QRIS. Big, clear,
+                      central. Vendor can just say "scan this QR" in WhatsApp
+                      and the customer pays in one tap. */}
+                  {shopQris && (
+                    <button
+                      type="button"
+                      onClick={() => setQrModalOpen(true)}
+                      style={{ width: '100%', maxWidth: 360, padding: 14, borderRadius: 16, border: '2px solid #22C55E', background: 'rgba(34,197,94,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', marginTop: 6 }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#86EFAC', letterSpacing: 0.5, textTransform: 'uppercase' }}>Scan to pay · {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
+                      <div style={{ background: '#fff', borderRadius: 12, padding: 10, boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}>
+                        <img src={shopQris} alt="QRIS code" onError={imgError('qr')} style={{ width: 200, height: 200, objectFit: 'contain', display: 'block' }} />
+                      </div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, textAlign: 'center', maxWidth: 280 }}>
+                        GoPay · OVO · DANA · ShopeePay · Bank Transfer
+                      </div>
+                      <div style={{ fontSize: 13, color: '#FACC15', fontWeight: 700 }}>Tap to enlarge ›</div>
+                    </button>
+                  )}
+
+                  {!shopQris && (
+                    <div style={{ background: 'rgba(0,0,0,0.45)', borderRadius: 14, padding: 14, width: '100%', maxWidth: 360, marginTop: 8 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 4 }}>Order total</div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const shopPhoneClean = String(shopPhone || '').replace(/[^0-9]/g, '')
+                      const text = encodeURIComponent(buildWhatsAppMessage())
+                      window.open(`https://wa.me/${shopPhoneClean}?text=${text}`, '_blank', 'noopener,noreferrer')
+                    }}
+                    style={{ width: '100%', maxWidth: 360, padding: '14px 16px', borderRadius: 14, border: 'none', background: '#25D366', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 18px rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  >
+                    📱 Open WhatsApp again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCart([]); setCheckoutOpen(false); setOrderDone(false); setWhatsAppSent(false) }}
+                    style={{ width: '100%', maxWidth: 360, padding: '12px 16px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Back to menu
+                  </button>
+                </div>
               ) : (
                 /* Order Confirmation — locked-height, only chat scrolls internally */
                 <div style={{ padding: '12px 14px 12px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minHeight: 0 }}>
@@ -6829,6 +7297,7 @@ export default function App() {
                     fmt={fmt}
                     shopLogo={shopLogo}
                     shopName={shopName}
+                    t={t}
                   />
 
                   {/* QRIS Payment QR — landscape row: small QR on left, payment apps on right */}
@@ -6978,7 +7447,7 @@ export default function App() {
                   disabled={chatSending}
                 >
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
-                  <span style={{ position: 'relative', zIndex: 1 }}>{chatSending ? 'Sending…' : `Send Order — ${fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}`}</span>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{chatSending ? (t.sending || 'Sending…') : `${t.sendOrderShort || 'Send Order'} — ${fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}`}</span>
                 </button>
                 {chatError && <div style={{ marginTop: 8, color: '#FCA5A5', fontSize: 13, textAlign: 'center' }}>{chatError}</div>}
               </div>
@@ -6990,6 +7459,52 @@ export default function App() {
 
 
       {/* ═══ VENDOR ORDERS INBOX ═══ */}
+      {/* ═══ PERSISTENT CHAT ALERT BANNER (vendor) ═══
+          Always-visible top banner when there are unacknowledged customer
+          chat messages. Pulses pink + plays the repeating chime above.
+          Tap "View" → opens the conversation. Tap "Acknowledge" → silences
+          without opening (e.g. vendor is mid-task and will reply later). */}
+      {isVendor && pendingChatAlerts.length > 0 && (() => {
+        const latest = pendingChatAlerts[pendingChatAlerts.length - 1]
+        const count = pendingChatAlerts.length
+        const openFromBanner = () => {
+          const conv = vendorConversations.find(c => c.id === latest.convId)
+          if (conv) {
+            setVendorTab('orders')
+            setVendorDrawer(false)
+            openVendorConv(conv)
+          }
+        }
+        return (
+          <>
+            <style>{`@keyframes vendorAlertPulse { 0%,100% { box-shadow: 0 0 0 0 ${accent}66, 0 8px 24px rgba(0,0,0,0.55); } 50% { box-shadow: 0 0 0 8px ${accent}11, 0 8px 24px rgba(0,0,0,0.55); } }`}</style>
+            <div style={{
+              position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 10px)',
+              left: '50%', transform: 'translateX(-50%)',
+              maxWidth: 480, width: 'calc(100% - 20px)',
+              background: `linear-gradient(135deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`,
+              color: '#fff', borderRadius: 16, padding: '12px 14px',
+              display: 'flex', alignItems: 'center', gap: 12,
+              zIndex: 9000,
+              animation: 'vendorAlertPulse 2s ease-in-out infinite',
+              boxShadow: `0 8px 24px rgba(0,0,0,0.55)`,
+            }}>
+              <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🔔</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 900 }}>
+                  {count === 1 ? `New message from ${latest.customerName}` : `${count} new messages`}
+                </div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {latest.body || 'Tap to view'}
+                </div>
+              </div>
+              <button onClick={openFromBanner} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#fff', color: accent, fontSize: 13, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>View</button>
+              <button onClick={() => setPendingChatAlerts([])} aria-label="Acknowledge" style={{ width: 36, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(0,0,0,0.25)', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}>✓</button>
+            </div>
+          </>
+        )
+      })()}
+
       {isVendor && vendorTab === 'orders' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
           {/* Same bg + glass scrim as the main app — pulled from the saved
@@ -7596,6 +8111,191 @@ export default function App() {
         )
       })()}
 
+      {/* ═══ PRE-ORDER CHAT MODAL ═══
+          Customer taps the 💬 icon in the menu header to ask a question
+          BEFORE placing an order. Routes the message based on the vendor's
+          Order Mode setting: WhatsApp mode → opens WhatsApp, Live Chat
+          mode → sends via in-app chat (creates a conversation if needed). */}
+      {preOrderChatOpen && (() => {
+        const close = () => { setPreOrderChatOpen(false); setPreOrderMessage(''); setPreOrderSending(false); setPreOrderSentNote('') }
+        const shopPhoneClean = String(shopPhone || '').replace(/[^0-9]/g, '')
+        // Pre-order chat ALWAYS stays in-app. No more auto-redirect to
+        // WhatsApp on errors — failures show an inline banner with a manual
+        // "Open WhatsApp" link the customer can choose if they want. This
+        // stops the previous "every send opens WhatsApp" bug.
+        const send = async () => {
+          const body = (preOrderMessage || '').trim()
+          if (!body || preOrderSending) return
+          setPreOrderSending(true)
+          const showError = (reason) => {
+            setPreOrderSentNote(`Couldn't send: ${reason}`)
+            setPreOrderSending(false)
+          }
+          if (!supabase || !vendorId) { showError('chat backend not configured. Try again later.'); return }
+          // Optimistic — append the message to the local thread immediately
+          const optimisticId = 'tmp-' + Date.now()
+          setChatMessages(prev => [...prev, { id: optimisticId, conversation_id: chatConversation?.id || 'pending', sender_role: 'customer', body, created_at: new Date().toISOString() }])
+          setPreOrderMessage('')
+          try {
+            let convId = chatConversation?.id
+            if (!convId) {
+              const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '') || 'guest-' + Date.now()
+              const { data: conv, error: cErr } = await supabase.from('chat_conversations').insert({
+                vendor_id: vendorId,
+                customer_phone: cleanPhone,
+                customer_name: custName || null,
+                unread_vendor_count: 1,
+              }).select().single()
+              if (cErr || !conv) {
+                setChatMessages(prev => prev.filter(m => m.id !== optimisticId))
+                setPreOrderMessage(body)
+                showError(cErr?.message || 'could not start chat')
+                return
+              }
+              convId = conv.id
+              setChatConversation(conv)
+              try { localStorage.setItem('foodlocalchat_preorder_conv_id', conv.id) } catch {}
+            }
+            const res = await sendChatText({ conversationId: convId, senderRole: 'customer', body })
+            if (res.error) {
+              setChatMessages(prev => prev.filter(m => m.id !== optimisticId))
+              setPreOrderMessage(body)
+              showError(res.error)
+              return
+            }
+            // Swap optimistic for the real row
+            if (res.message) {
+              setChatMessages(prev => prev.map(m => m.id === optimisticId ? res.message : m))
+            }
+            setPreOrderSentNote('')
+            setPreOrderSending(false)
+          } catch (e) {
+            setChatMessages(prev => prev.filter(m => m.id !== optimisticId))
+            setPreOrderMessage(body)
+            showError(e?.message || 'unexpected error')
+          }
+        }
+        const nonOrderMsgs = (chatMessages || []).filter(m => !m.order_payload)
+        const fmtTime = (ts) => { try { return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) } catch { return '' } }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', background: '#0a0a0a' }}>
+            {/* Theme bg + glass scrim — matches the rest of the app */}
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
+
+            {/* HEADER — WhatsApp-style sticky bar with shop avatar + name */}
+            <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', background: `linear-gradient(180deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`, boxShadow: `0 4px 14px ${accent}55` }}>
+              <button onClick={close} aria-label="Back" style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
+              {shopLogo ? (
+                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.4)', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 900, flexShrink: 0 }}>{(shopName || '?').charAt(0)}</div>
+              )}
+              <div style={{ flex: 1, minWidth: 0, color: '#fff' }}>
+                <div style={{ fontSize: 16, fontWeight: 900, lineHeight: 1.1 }}>{shopName || 'Chat'}</div>
+                <div style={{ fontSize: 13, opacity: 0.85, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: 4, background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,0.8)' }} />
+                  {shopOpen ? 'Online · typically replies within minutes' : 'Currently closed · will reply when open'}
+                </div>
+              </div>
+            </div>
+
+            {/* MESSAGE THREAD */}
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {nonOrderMsgs.length === 0 && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Say hi to {shopName}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.5, maxWidth: 280 }}>Ask anything — delivery zones, opening hours, ingredients, custom orders. The vendor will reply right here.</div>
+                </div>
+              )}
+              {nonOrderMsgs.map((m, idx) => {
+                const isCust = m.sender_role === 'customer'
+                const showAvatar = !isCust && (idx === 0 || nonOrderMsgs[idx - 1].sender_role !== m.sender_role)
+                return (
+                  <div key={m.id}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, justifyContent: isCust ? 'flex-end' : 'flex-start' }}>
+                      {!isCust && (showAvatar
+                        ? (shopLogo
+                          ? <img src={shopLogo} alt="" style={{ width: 26, height: 26, borderRadius: 13, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }} />
+                          : <div style={{ width: 26, height: 26, borderRadius: 13, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{(shopName || '?').charAt(0)}</div>)
+                        : <div style={{ width: 26, flexShrink: 0 }} />)}
+                      <div style={{
+                        maxWidth: '78%', padding: '8px 12px', borderRadius: 14,
+                        fontSize: 14, lineHeight: 1.4,
+                        background: isCust ? accent : 'rgba(0,0,0,0.55)',
+                        color: '#fff', wordBreak: 'break-word',
+                        border: isCust ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                        boxShadow: isCust ? `0 2px 8px ${accent}44` : 'none',
+                      }}>{m.body}</div>
+                    </div>
+                    {m.created_at && (
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', padding: isCust ? '2px 4px 0 0' : '2px 0 0 32px', textAlign: isCust ? 'right' : 'left' }}>
+                        {fmtTime(m.created_at)}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Status banner — only shows when a send fails. Includes an
+                optional "Open WhatsApp" button for the customer to choose
+                manually, not auto-redirected. */}
+            {preOrderSentNote && (
+              <div style={{ position: 'relative', zIndex: 2, margin: '0 12px 6px', padding: '10px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#FCA5A5', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ flex: 1 }}>⚠ {preOrderSentNote}</span>
+                {shopPhoneClean && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const txt = encodeURIComponent(`Hi ${shopName}!`)
+                      window.open(`https://wa.me/${shopPhoneClean}?text=${txt}`, '_blank', 'noopener,noreferrer')
+                    }}
+                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.15)', color: '#86EFAC', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    📱 WhatsApp
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* FOOTER — message input + pink send button */}
+            <div style={{ position: 'relative', zIndex: 2, padding: '10px 12px calc(env(safe-area-inset-bottom, 0px) + 10px)', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                <textarea
+                  value={preOrderMessage}
+                  onChange={(e) => { setPreOrderMessage(e.target.value); setPreOrderSentNote('') }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                  placeholder="Type a message…"
+                  rows={1}
+                  maxLength={500}
+                  style={{ flex: 1, padding: '12px 14px', borderRadius: 22, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.4, maxHeight: 120, minHeight: 44 }}
+                />
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={!preOrderMessage.trim() || preOrderSending}
+                  aria-label="Send message"
+                  style={{
+                    width: 48, height: 48, borderRadius: 24, border: 'none',
+                    background: `linear-gradient(135deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`,
+                    color: '#fff', fontSize: 20, fontWeight: 900,
+                    cursor: preOrderMessage.trim() && !preOrderSending ? 'pointer' : 'not-allowed',
+                    boxShadow: `0 4px 14px ${accent}66`,
+                    opacity: preOrderMessage.trim() && !preOrderSending ? 1 : 0.45,
+                    transition: 'opacity 0.15s ease, transform 0.1s ease',
+                    flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {preOrderSending ? '…' : '➤'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ═══ SHARED COLOUR PALETTE DRAWER ═══
           Opens from any "Open palette" button. The opener supplies the
           target config (value + onChange + label + optional onInherit).
@@ -7756,6 +8456,46 @@ export default function App() {
               <button style={{ ...S.toggle(landingEnabled), background: landingEnabled ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setLandingEnabled(!landingEnabled)}>
                 <div style={S.toggleDot(landingEnabled)} />
               </button>
+            </div>
+
+            {/* Order Mode — segmented control. Vendor picks ONE channel for
+                every customer order. WhatsApp = simplest (no payment setup),
+                Live Chat = full in-app order pipeline + payment gateway. */}
+            <div style={{ margin: '0 16px 12px', padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22c55e' }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Order Mode</span>
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
+                {vendorOrderMode === 'whatsapp'
+                  ? 'Orders open WhatsApp with the cart pre-filled.'
+                  : 'Orders use in-app live chat + payment gateway.'}
+              </div>
+              <div style={{ display: 'flex', gap: 6, background: 'rgba(0,0,0,0.35)', borderRadius: 12, padding: 4 }}>
+                {[
+                  { id: 'whatsapp', label: '📱 WhatsApp', desc: 'Default · simplest' },
+                  { id: 'chat',     label: '💬 Live Chat', desc: 'In-app + payment' },
+                ].map(opt => {
+                  const active = vendorOrderMode === opt.id
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setVendorOrderMode(opt.id)}
+                      style={{
+                        flex: 1, padding: '10px 8px', borderRadius: 10, border: 'none',
+                        background: active ? accent : 'transparent',
+                        color: active ? '#fff' : 'rgba(255,255,255,0.6)',
+                        fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                        textAlign: 'center', minHeight: 44, lineHeight: 1.2,
+                        transition: 'background 0.15s, color 0.15s',
+                      }}
+                    >
+                      <div>{opt.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.75, marginTop: 2 }}>{opt.desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Preview link — yellow pill button. Generous padding around it
@@ -8692,14 +9432,48 @@ export default function App() {
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
             </div>
           </div>
-          {/* Share link card */}
-          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 14, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
-            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 6, display: 'block' }}>Your App Link</label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input readOnly value={`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} style={{ ...S.input, marginBottom: 0, flex: 1, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <button onClick={(e) => { navigator.clipboard.writeText(`https://streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`); e.target.textContent = '✓'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Copy</button>
-            </div>
-          </div>
+          {/* Share link card — link is INACTIVE until the vendor's
+              subscription is 'active'. Tapping Copy on an inactive shop
+              opens the payment picker instead, so vendors can't share a
+              dead URL by mistake. */}
+          {(() => {
+            const linkActive = vendorStatus === 'active'
+            const slug = shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            const fullUrl = `https://streetlocal.live/${slug}`
+            return (
+              <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 14, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+                <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>Your App Link</span>
+                  {!linkActive && (
+                    <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(239,68,68,0.18)', color: '#FCA5A5', fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>INACTIVE</span>
+                  )}
+                </label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    readOnly
+                    value={`streetlocal.live/${slug}`}
+                    style={{ ...S.input, marginBottom: 0, flex: 1, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', opacity: linkActive ? 1 : 0.55, textDecoration: linkActive ? 'none' : 'line-through' }}
+                  />
+                  {linkActive ? (
+                    <button
+                      onClick={(e) => { navigator.clipboard.writeText(fullUrl); e.target.textContent = '✓'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }}
+                      style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                    >Copy</button>
+                  ) : (
+                    <button
+                      onClick={() => setSubPickerOpen(true)}
+                      style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 10px rgba(239,68,68,0.5)' }}
+                    >Activate</button>
+                  )}
+                </div>
+                {!linkActive && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
+                    Your link is locked until your shop is activated. Tap <strong style={{ color: '#FCA5A5' }}>Activate</strong> to choose a plan and unlock sharing.
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Logo + Basic Info card */}
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
@@ -10234,16 +11008,43 @@ export default function App() {
               <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</div>
             </div>
 
-            {/* Current URL Card */}
-            <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Your current app link</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  streetlocal.live/{shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}
+            {/* Current URL Card — same gating as the Shop Config copy
+                button: inactive shops show "Activate" instead of 📋. */}
+            {(() => {
+              const linkActive = vendorStatus === 'active'
+              const slug = shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)
+              return (
+                <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>Your current app link</span>
+                    {!linkActive && (
+                      <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(239,68,68,0.18)', color: '#FCA5A5', fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>INACTIVE</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: linkActive ? 1 : 0.55, textDecoration: linkActive ? 'none' : 'line-through' }}>
+                      streetlocal.live/{slug}
+                    </div>
+                    {linkActive ? (
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(`streetlocal.live/${slug}`) }}
+                        style={{ width: 40, height: 40, borderRadius: 10, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}
+                      >📋</button>
+                    ) : (
+                      <button
+                        onClick={() => setSubPickerOpen(true)}
+                        style={{ padding: '0 14px', height: 40, borderRadius: 10, background: '#EF4444', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 10px rgba(239,68,68,0.5)' }}
+                      >Activate</button>
+                    )}
+                  </div>
+                  {!linkActive && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
+                      Link is locked until your shop is activated. Tap <strong style={{ color: '#FCA5A5' }}>Activate</strong> to pick a plan and unlock sharing.
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}`) }} style={{ width: 40, height: 40, borderRadius: 10, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>📋</button>
-              </div>
-            </div>
+              )
+            })()}
 
             {/* Pricing Tiers */}
             {[
