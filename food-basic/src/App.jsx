@@ -1363,15 +1363,37 @@ export default function App() {
   }
   // Helper: returns `{ avg, count }` for an item's verified reviews. Pulls
   // straight from `reviewsByItem` so the rating reflects the same data the
-  // reviews page is showing. Returns null when there are no reviews — caller
-  // decides whether to render a "no reviews yet" hint or nothing at all.
+  // reviews page is showing.
+  //
+  // Demo fallback: when the shop is the seeded demo vendor AND there are
+  // no real reviews yet, synthesise a deterministic rating in the 4.6–4.9
+  // band so every demo card shows a believable "★ 4.x" badge. The hash is
+  // stable per item id/name, so the same donut always shows the same
+  // number across reloads — it doesn't flicker.
+  //
+  // Returns null only when (a) item is missing, or (b) the shop is a real
+  // vendor with zero reviews — in that case the card stays uncluttered.
   const getItemRating = (item) => {
     if (!item) return null
     const key = item.id || item.name
     const arr = reviewsByItem[key] || []
-    if (arr.length === 0) return null
-    const avg = arr.reduce((s, r) => s + (r.rating || 0), 0) / arr.length
-    return { avg, count: arr.length }
+    if (arr.length > 0) {
+      const avg = arr.reduce((s, r) => s + (r.rating || 0), 0) / arr.length
+      return { avg, count: arr.length }
+    }
+    if (vendorId === DEMO_VENDOR_UUID) {
+      // djb2-ish hash → stable per item
+      let h = 5381
+      const s = String(key || '')
+      for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0
+      h = Math.abs(h)
+      // Four buckets: 4.6, 4.7, 4.8, 4.9
+      const avg = 4.6 + (h % 4) * 0.1
+      // Count between 12 and 47 — reads like real volume.
+      const count = 12 + ((h >> 3) % 36)
+      return { avg, count }
+    }
+    return null
   }
   // Vendor-uploaded content per donut type: { typeName: { image, description } }.
   // A type "publishes" to the customer swipe gallery only when BOTH image and
