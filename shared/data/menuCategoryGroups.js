@@ -170,6 +170,72 @@ export const MENU_CATEGORY_GROUPS = [
   },
 ]
 
+// Theme-specific category groups. Prepended to MENU_CATEGORY_GROUPS in the
+// vendor's category picker when shopTheme matches a key here, so a donut-shop
+// vendor sees donut subtypes (glazed, iced, cream-filled, coffee donuts, etc.)
+// instead of just the single global 'Donuts' chip under Snacks.
+export const THEME_CATEGORY_OVERRIDES = {
+  donut: [
+    {
+      id: 'donut-shop',
+      label: 'Donuts',
+      icon: '🍩',
+      svg: SVG.desserts,
+      desc: 'Donut shop specialties — glazed, filled, iced, infused',
+      // Full 30-type donut taxonomy (user-provided). The first 3 appear inline
+      // as menu-page toggle tabs (Glazed / Chocolate Frosted / Jelly Filled);
+      // the rest are accessible from the side drawer. food-basic strips the
+      // trailing " Donut" suffix in the toggle display so tabs stay compact,
+      // while filters + drawer use the full label.
+      types: [
+        'Glazed Donut',
+        'Chocolate Frosted Donut',
+        'Jelly Filled Donut',
+        'Boston Cream Donut',
+        'Powdered Sugar Donut',
+        'Cinnamon Sugar Donut',
+        'Old Fashioned Donut',
+        'Cruller Donut',
+        'Apple Fritter',
+        'Maple Bar',
+        'Long John Donut',
+        'Sprinkle Donut',
+        'Strawberry Frosted Donut',
+        'Blueberry Cake Donut',
+        'Coconut Donut',
+        'Custard Filled Donut',
+        'Cream Filled Donut',
+        'Mochi Donut',
+        'Cronut',
+        'Ring Donut',
+        'Yeast Donut',
+        'Cake Donut',
+        'Twist Donut',
+        'Caramel Donut',
+        'Red Velvet Donut',
+        'Matcha Donut',
+        'Peanut Butter Donut',
+        'Nutella Donut',
+        'Banana Donut',
+        'Mini Donut',
+      ],
+    },
+    {
+      id: 'donut-drinks',
+      label: 'Drinks',
+      icon: '🥤',
+      svg: SVG.beverages,
+      desc: 'Drinks that pair with donuts — juice, soda, water, iced',
+      types: [
+        'Fresh Juice',
+        'Soda Drinks',
+        'Water',
+        'Ice Drinks',
+      ],
+    },
+  ],
+}
+
 // Flat array of every preset category name (handy for default chip pool / search).
 export const MENU_CATEGORY_FLAT = MENU_CATEGORY_GROUPS.flatMap(g => g.types)
 

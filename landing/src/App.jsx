@@ -1288,6 +1288,11 @@ export default function App() {
   const [themeLibSearch, setThemeLibSearch] = useState('')
   const [themeLibPreview, setThemeLibPreview] = useState(null)
   const [themeLibPreviewImg, setThemeLibPreviewImg] = useState(null)
+  const [themeLibCustomBg, setThemeLibCustomBg] = useState(null) // user-uploaded bg (data URL) for theme preview
+  const themeLibUploadRef = useRef(null)
+  // Reset the custom upload whenever the user closes the preview or switches
+  // to a different theme — each theme starts with a clean upload tile.
+  useEffect(() => { setThemeLibCustomBg(null) }, [themeLibPreview])
   const [themeLibPage, setThemeLibPage] = useState('landing')
   const [contactCategory, setContactCategory] = useState(null)
   const [contactFaqOpen, setContactFaqOpen] = useState([])
@@ -3973,25 +3978,74 @@ export default function App() {
                           <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', width: 56, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                         </div>
                       </div>
-                      {/* Variants */}
-                      {previewAllImgs.length > 1 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                          {previewAllImgs.map((img, i) => (
-                            <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
-                          ))}
-                        </div>
-                      )}
+                      {/* Variants + custom-upload tile */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                        {previewAllImgs.map((img, i) => (
+                          <button key={i} onClick={() => setThemeLibPreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}><img src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>
+                        ))}
+                        {/* Upload your own background — last thumbnail in the column */}
+                        <button
+                          key="upload"
+                          onClick={() => themeLibUploadRef.current?.click()}
+                          title="Upload your own background"
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            border: themeLibCustomBg && activeImg === themeLibCustomBg
+                              ? `3px solid ${ac}`
+                              : '2px dashed rgba(255,255,255,0.4)',
+                            padding: 0,
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            background: themeLibCustomBg ? '#000' : 'rgba(255,255,255,0.06)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'rgba(255,255,255,0.85)',
+                            fontSize: 20,
+                            fontWeight: 700,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {themeLibCustomBg ? (
+                            <img src={themeLibCustomBg} alt="Custom background" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : '+'}
+                        </button>
+                        <input
+                          ref={themeLibUploadRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (!f) return
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              const url = reader.result
+                              setThemeLibCustomBg(url)
+                              setThemeLibPreviewImg(url)
+                            }
+                            reader.readAsDataURL(f)
+                            e.target.value = '' // allow re-picking the same file
+                          }}
+                        />
+                      </div>
                     </div>
                     <div style={{ flex: 1, minHeight: 10 }} />
                     <div style={{ flexShrink: 0, paddingBottom: 20, display: 'flex', gap: 10 }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => { setThemeLibPreview(null); setThemeLibPreviewImg(null); setThemeLibPage('landing') }} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Close</button>
                       <button onClick={() => {
                         // Open the food-basic app with this theme pre-selected.
-                        // food-basic reads the ?theme= URL param and persists it
-                        // to vendor_accounts.landing_theme_id, then takes the
-                        // vendor straight into Design Studio to edit it as normal.
-                        try { localStorage.setItem('streetlocal_pending_theme', previewT.id) } catch {}
-                        window.location.href = '/food/chat/?theme=' + encodeURIComponent(previewT.id) + '&design=open'
+                        // food-basic reads the ?theme= URL param and applies it
+                        // to shopTheme/shopAccentColor + landingThemeId.
+                        // In dev each app runs on its own Vite port, so route
+                        // cross-origin to food-basic's port (matches the same
+                        // pattern used by the pro-themes "Open in Demo" link below).
+                        const isLocal = window.location.hostname === 'localhost'
+                        const base = isLocal ? 'http://localhost:5177/food/chat/' : '/food/chat/'
+                        window.location.href = base + '?theme=' + encodeURIComponent(previewT.id)
                       }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: `0 6px 18px ${ac}55` }}>Use This Theme</button>
                     </div>
                   </div>

@@ -63,7 +63,7 @@ import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils
 import { VENDOR_TYPES } from '@shared/data/foodVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
 import { DELIVERY_DEFAULTS, buildDeliveryZones, DEFAULT_DELIVERY_ZONES, getDeliveryDefaults, getDeliveryFee } from '@shared/delivery/delivery'
-import { MENU_CATEGORY_GROUPS, DIETARY_TAGS, CUSTOM_CATEGORY_ICONS } from '@shared/data/menuCategoryGroups'
+import { MENU_CATEGORY_GROUPS, THEME_CATEGORY_OVERRIDES, DIETARY_TAGS, CUSTOM_CATEGORY_ICONS } from '@shared/data/menuCategoryGroups'
 import {
   sendCustomerOrder,
   sendChatText,
@@ -285,7 +285,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
     // any phone size — small phones get a smaller msgList, large phones get a bigger one.
     panel: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 10, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, width: '100%', boxSizing: 'border-box' },
     header: { fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 6, flexShrink: 0 },
-    orderCard: { background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: 10, marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.85)', flexShrink: 0 },
+    orderCard: { background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: 10, marginBottom: 8, fontSize: 13, color: 'rgba(255,255,255,0.85)', flexShrink: 0 },
     // flex:1 so the message list absorbs whatever vertical space is left over after the
     // other rows (header/order-card/input). Internal overflow gives the chat its own
     // scrollbar — the OUTER page never scrolls.
@@ -304,7 +304,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
       wordBreak: 'break-word',
     }),
     avatar: { width: 26, height: 26, borderRadius: 13, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)' },
-    avatarFallback: { width: 26, height: 26, borderRadius: 13, flexShrink: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)' },
+    avatarFallback: { width: 26, height: 26, borderRadius: 13, flexShrink: 0, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)' },
     inputRow: { display: 'flex', gap: 8, flexShrink: 0 },
     input: { flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, minHeight: 44 },
     sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
@@ -318,7 +318,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
           <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13, color: '#FACC15' }}>Order {op.orderNumber || ''}</div>
           {/* Customer info — tidy single-block with icons */}
           {op.customer && (
-            <div style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 11, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
+            <div style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
               {op.customer.name && <div>👤 {op.customer.name}</div>}
               {op.customer.phone && <div>📱 {op.customer.phone}</div>}
               {op.customer.address && <div>📍 {op.customer.address}</div>}
@@ -332,15 +332,15 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
                 <span style={{ flexShrink: 0, color: 'rgba(255,255,255,0.65)' }}>{fmt ? fmt(it.lineTotal) : it.lineTotal}</span>
               </div>
               {(it.modifiers && it.modifiers.length > 0) && (
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginLeft: 14 }}>+ {it.modifiers.join(' · ')}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginLeft: 14 }}>+ {it.modifiers.join(' · ')}</div>
               )}
               {it.note && (
-                <div style={{ fontSize: 10, color: '#FACC15', marginLeft: 14, fontStyle: 'italic' }}>📝 {it.note}</div>
+                <div style={{ fontSize: 13, color: '#FACC15', marginLeft: 14, fontStyle: 'italic' }}>📝 {it.note}</div>
               )}
             </div>
           ))}
           {op.delivery?.fee > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
               <span>Delivery {op.delivery.zone ? `(${op.delivery.zone})` : ''}</span>
               <span>{fmt ? fmt(op.delivery.fee) : op.delivery.fee}</span>
             </div>
@@ -349,7 +349,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
             <span>Total</span>
             <span style={{ color: '#FACC15' }}>{fmt ? fmt(op.total) : op.total}</span>
           </div>
-          {op.note && <div style={{ marginTop: 4, opacity: 0.7, fontSize: 11, fontStyle: 'italic' }}>"{op.note}"</div>}
+          {op.note && <div style={{ marginTop: 4, opacity: 0.7, fontSize: 13, fontStyle: 'italic' }}>"{op.note}"</div>}
         </div>
       )}
       <div style={sStyle.msgList} ref={scrollRef}>
@@ -375,7 +375,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
         />
         <button style={sStyle.sendBtn} onClick={onSend} disabled={sending || !draft.trim()}>{sending ? '…' : 'Send'}</button>
       </div>
-      {err && <div style={{ marginTop: 6, color: '#FCA5A5', fontSize: 12 }}>{err}</div>}
+      {err && <div style={{ marginTop: 6, color: '#FCA5A5', fontSize: 13 }}>{err}</div>}
     </div>
   )
 }
@@ -408,7 +408,7 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
       wordBreak: 'break-word',
     }),
     statusRow: { display: 'flex', gap: 6, padding: '8px 12px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)' },
-    statusBtn: { padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 44 },
+    statusBtn: { padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 },
     inputRow: { display: 'flex', gap: 8, padding: 12, borderTop: '1px solid rgba(255,255,255,0.05)' },
     input: { flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 14, minHeight: 44 },
     sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
@@ -454,34 +454,34 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
           <div style={{ ...sty.orderCard, paddingTop: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <div style={{ fontWeight: 800, fontSize: 13 }}>Payment</div>
-              <span style={{ background: badgeColor, color: '#fff', fontSize: 10, fontWeight: 900, padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{statusLabel}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{order.gateway_id}</span>
+              <span style={{ background: badgeColor, color: '#fff', fontSize: 13, fontWeight: 900, padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{statusLabel}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{order.gateway_id}</span>
             </div>
             {isHeld && order.escrow_release_at && (
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>
                 Auto-releases {new Date(order.escrow_release_at).toLocaleString()}
               </div>
             )}
             {isHeld && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" disabled={payActionBusy} onClick={onReleaseEscrow}
-                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontSize: 13, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
                   {payActionBusy ? 'Working…' : 'Release funds'}
                 </button>
                 <button type="button" disabled={payActionBusy} onClick={onCancelEscrow}
-                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 12, fontWeight: 700, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 700, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
                   Cancel hold
                 </button>
               </div>
             )}
             {isPaid && (
               <button type="button" disabled={payActionBusy} onClick={onRefund}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.12)', color: '#FCA5A5', fontSize: 12, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.12)', color: '#FCA5A5', fontSize: 13, fontWeight: 800, cursor: payActionBusy ? 'wait' : 'pointer', minHeight: 40, opacity: payActionBusy ? 0.6 : 1 }}>
                 {payActionBusy ? 'Working…' : 'Issue refund'}
               </button>
             )}
             {payActionMsg && (
-              <div style={{ marginTop: 8, fontSize: 11, color: payActionMsg.toLowerCase().includes('fail') ? '#FCA5A5' : '#86EFAC' }}>{payActionMsg}</div>
+              <div style={{ marginTop: 8, fontSize: 13, color: payActionMsg.toLowerCase().includes('fail') ? '#FCA5A5' : '#86EFAC' }}>{payActionMsg}</div>
             )}
           </div>
         )
@@ -532,6 +532,49 @@ try {
     localStorage.setItem('foodlocalchat_vendorId', localStorage.getItem('vendorbasic_vendorId'))
   }
 } catch {}
+
+/* ─── FitIframe ──────────────────────────────────────────────────────
+   Mirrors the helper in landing/src/App.jsx. Renders an iframe at its
+   intrinsic design size (390×844 by default — the canonical phone-frame
+   used by all saved landing themes) and CSS-transform-scales it to cover
+   the parent. ResizeObserver re-measures on every parent reflow.
+
+   Used for the curated landing-theme snapshots (e.g. /themes/donuts.html)
+   so they fill the food-basic phone shell instead of rendering at their
+   native size in the top-left corner. */
+function FitIframe({ src, sandbox = 'allow-scripts allow-same-origin', designW = 390, designH = 844, fit = 'cover' }) {
+  const wrapRef = useRef(null)
+  useEffect(() => {
+    const wrap = wrapRef.current
+    if (!wrap) return
+    const iframe = wrap.querySelector('iframe')
+    const measure = () => {
+      const w = wrap.clientWidth, h = wrap.clientHeight
+      if (!w || !h || !iframe) return
+      // cover = fill parent, may crop. contain = show whole design, may letterbox.
+      const scale = fit === 'contain'
+        ? Math.min(w / designW, h / designH)
+        : Math.max(w / designW, h / designH)
+      const offsetX = (w - designW * scale) / 2
+      const offsetY = (h - designH * scale) / 2
+      iframe.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(wrap)
+    return () => ro.disconnect()
+  }, [src, designW, designH, fit])
+  return (
+    <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <iframe
+        src={src}
+        sandbox={sandbox}
+        title="Landing theme"
+        style={{ position: 'absolute', top: 0, left: 0, width: designW, height: designH, border: 'none', display: 'block', transformOrigin: 'top left' }}
+      />
+    </div>
+  )
+}
 
 /* ─── Main App ─── */
 export default function App() {
@@ -747,8 +790,140 @@ export default function App() {
   const [addingItem, setAddingItem] = useState(false)
   const [shopConfig, setShopConfig] = useState(false) // show shop config
   const [designStudio, setDesignStudio] = useState(false) // show design studio
+  const [menuCardsPage, setMenuCardsPage] = useState(false) // donut-only menu-cards customisation page
+  const [donutTypesPage, setDonutTypesPage] = useState(false) // donut-only "Meet our donuts" editor for the vendor
+  const [donutTypesGallery, setDonutTypesGallery] = useState(false) // customer-side swipe gallery
+  const [donutTypesIdx, setDonutTypesIdx] = useState(0) // active card in the swipe gallery
+  const [donutTypesEditIdx, setDonutTypesEditIdx] = useState(0) // active type in the vendor step-by-step editor
+  // Customer reviews — v1 stores to localStorage per vendor. Production-grade
+  // public visibility across customers requires Supabase (separate migration).
+  // Each: { id, rating: 1-5, comment, name, createdAt }
+  const [reviewsOpen, setReviewsOpen] = useState(false)
+  const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '', name: '' })
+  const [reviews, setReviews] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_reviews') || '[]') } catch { return [] }
+  })
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_reviews', JSON.stringify(reviews)) } catch {} }, [reviews])
+  const reviewsAvg = reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length) : 0
+  const submitReview = () => {
+    if (!reviewForm.rating) return
+    const review = {
+      id: Date.now(),
+      rating: reviewForm.rating,
+      comment: (reviewForm.comment || '').trim().slice(0, 280),
+      name: (reviewForm.name || '').trim().slice(0, 40) || 'Guest',
+      createdAt: new Date().toISOString(),
+    }
+    setReviews(prev => [review, ...prev])
+    setReviewForm({ rating: 0, comment: '', name: '' })
+  }
+  // Per-item reviews (donut theme). Map of itemId → Review[]. Each review:
+  // { id, rating, comment, name, orderRef, verified, createdAt }. Verification
+  // works only on the device that placed the order — `foodlocalchat_my_orders`
+  // is populated at checkout (see saveOrder below); entering a matching ref on
+  // the review form earns the ✓ Verified badge with the ref masked.
+  const [reviewsByItem, setReviewsByItem] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_reviews_by_item') || '{}') } catch { return {} }
+  })
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_reviews_by_item', JSON.stringify(reviewsByItem)) } catch {} }, [reviewsByItem])
+  const [itemReviewsOpen, setItemReviewsOpen] = useState(null) // the item object whose reviews page is showing
+  const [leaveReviewOpen, setLeaveReviewOpen] = useState(false)
+  const [itemReviewForm, setItemReviewForm] = useState({ rating: 0, comment: '', name: '', orderRef: '', error: '' })
+  const isVerifiedOrderRef = (ref) => {
+    const r = String(ref || '').trim().toUpperCase()
+    if (!r || !/^[A-Z]{1,4}-\d{6}$/.test(r)) return false
+    try {
+      const orders = JSON.parse(localStorage.getItem('foodlocalchat_my_orders') || '[]')
+      return orders.some(o => o.orderNumber === r)
+    } catch { return false }
+  }
+  const maskOrderRef = (ref) => {
+    const m = String(ref || '').match(/^([A-Z]{1,4})-(\d{3})(\d{3})$/)
+    return m ? `${m[1]}-•••${m[3]}` : ref
+  }
+  const submitItemReview = () => {
+    if (!itemReviewsOpen) return
+    if (!itemReviewForm.rating) {
+      setItemReviewForm(p => ({ ...p, error: 'Please pick a star rating before submitting.' }))
+      return
+    }
+    const ref = (itemReviewForm.orderRef || '').trim().toUpperCase()
+    if (!ref) {
+      setItemReviewForm(p => ({ ...p, error: 'Order reference number is required. Enter the ref from your order to leave a review.' }))
+      return
+    }
+    if (!/^[A-Z]{1,4}-\d{6}$/.test(ref)) {
+      setItemReviewForm(p => ({ ...p, error: 'Invalid format. Order ref looks like e.g. DD-487193 (letters, dash, 6 digits).' }))
+      return
+    }
+    if (!isVerifiedOrderRef(ref)) {
+      setItemReviewForm(p => ({ ...p, error: 'We couldn\'t verify that order ref. Only customers with a valid order can leave a review.' }))
+      return
+    }
+    const review = {
+      id: Date.now(),
+      rating: itemReviewForm.rating,
+      comment: (itemReviewForm.comment || '').trim().slice(0, 280),
+      name: (itemReviewForm.name || '').trim().slice(0, 40) || 'Guest',
+      orderRef: ref,
+      verified: true,
+      createdAt: new Date().toISOString(),
+    }
+    const key = itemReviewsOpen.id || itemReviewsOpen.name
+    setReviewsByItem(prev => ({ ...prev, [key]: [review, ...(prev[key] || [])] }))
+    setItemReviewForm({ rating: 0, comment: '', name: '', orderRef: '', error: '' })
+    setLeaveReviewOpen(false)
+  }
+  // Vendor-uploaded content per donut type: { typeName: { image, description } }.
+  // A type "publishes" to the customer swipe gallery only when BOTH image and
+  // description are filled — otherwise it lives only in the vendor dashboard.
+  const [donutTypesContent, setDonutTypesContent] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_donut_types') || '{}') } catch { return {} }
+  })
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_types', JSON.stringify(donutTypesContent)) } catch {} }, [donutTypesContent])
+  // Shared color palette drawer — opened from any color picker in the Menu
+  // Cards page. Holds { title, current, onPick(hex) }.
+  const [colorPalette, setColorPalette] = useState(null)
+  // Donut menu-card customisation. All values are empty strings on standard
+  // themes — the render paths only read them when shopTheme === 'donut', so
+  // other themes see no change.
+  const [donutCardStyle, setDonutCardStyle] = useState(() => localStorage.getItem('foodlocalchat_donut_card_style') || 'solid') // 'solid' | 'glass' | 'frosted' | 'image'
+  const [donutCardColor, setDonutCardColor] = useState(() => localStorage.getItem('foodlocalchat_donut_card_color') || '#1a1a1a') // drives Solid bg + Glass/Frosted tint. Default = near-black so first-time Solid renders white name + gray description.
+  const [donutCardImage, setDonutCardImage] = useState(() => localStorage.getItem('foodlocalchat_donut_card_image') || '')
+  const [donutFrameColor, setDonutFrameColor] = useState(() => localStorage.getItem('foodlocalchat_donut_frame_color') || '') // empty = use theme accent
+  const [donutPromoColor, setDonutPromoColor] = useState(() => localStorage.getItem('foodlocalchat_donut_promo_color') || '') // empty = use theme accent
+  // Donut Add-to-Cart button styling
+  const [donutAddBtnShape, setDonutAddBtnShape] = useState(() => localStorage.getItem('foodlocalchat_donut_addbtn_shape') || 'circle') // 'circle' | 'pill'
+  const [donutAddBtnColor, setDonutAddBtnColor] = useState(() => localStorage.getItem('foodlocalchat_donut_addbtn_color') || '') // empty = use promo bar color
+  const [donutAddBtnTextColor, setDonutAddBtnTextColor] = useState(() => localStorage.getItem('foodlocalchat_donut_addbtn_text_color') || '#ffffff')
+  const [donutAddBtnText, setDonutAddBtnText] = useState(() => localStorage.getItem('foodlocalchat_donut_addbtn_text') || 'Add to Cart')
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_addbtn_shape', donutAddBtnShape) } catch {} }, [donutAddBtnShape])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_addbtn_color', donutAddBtnColor) } catch {} }, [donutAddBtnColor])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_addbtn_text_color', donutAddBtnTextColor) } catch {} }, [donutAddBtnTextColor])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_addbtn_text', donutAddBtnText) } catch {} }, [donutAddBtnText])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_card_style', donutCardStyle) } catch {} }, [donutCardStyle])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_card_color', donutCardColor) } catch {} }, [donutCardColor])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_card_image', donutCardImage) } catch {} }, [donutCardImage])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_frame_color', donutFrameColor) } catch {} }, [donutFrameColor])
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_promo_color', donutPromoColor) } catch {} }, [donutPromoColor])
   const [landingThemePicker, setLandingThemePicker] = useState(false) // theme picker modal inside design studio
-  const [landingThemeId, setLandingThemeId] = useState(() => localStorage.getItem('foodlocalchat_landing_theme_id') || null)
+  const [landingThemeId, setLandingThemeId] = useState(() => {
+    // When the customer arrives from landing's "Use This Theme" with ?theme=donut,
+    // also auto-select the matching curated splash ('donuts') so the donut HTML
+    // renders as their app's landing — accent + bg already wired via THEME_PRESETS.
+    const urlTheme = new URLSearchParams(window.location.search).get('theme')
+    if (urlTheme === 'donut') {
+      try { localStorage.setItem('foodlocalchat_landing_theme_id', 'donuts') } catch {}
+      return 'donuts'
+    }
+    return localStorage.getItem('foodlocalchat_landing_theme_id') || null
+  })
+  const donutsHtmlSrc = window.location.hostname === 'localhost'
+    ? 'http://localhost:5173/themes/donuts.html'
+    : window.location.origin + '/themes/donuts.html'
+  // Clear any stale uploaded-hero state from previous sessions so the donut
+  // iframe always loads its original frozen illustration.
+  try { localStorage.removeItem('foodlocalchat_donut_hero') } catch {}
   // Listen for the frozen theme iframe's CTA tap (e.g. "Order Donuts" → posts
   // sl-theme-enter-menu). Drop the splash when received so the menu reveals.
   useEffect(() => {
@@ -817,6 +992,62 @@ export default function App() {
   const accentLight = accent + '25'
   const accentBorder = accent + '40'
   const isCustomAccent = shopAccentColor !== '#8DC63F'
+  // Donut menu-card derived styles. Single source of truth that all 3 card
+  // variants (grid / horizontal / fullwidth) read so a single state change
+  // updates every layout. Standard themes get null and fall back to legacy.
+  const donutCardStyles = (() => {
+    if (shopTheme !== 'donut') return null
+    const tint = donutCardColor || '#ffffff'
+    // Luminance-based text-colour pick — any dark surface gets white text,
+    // any light surface gets dark text. Replaces the previous two-value
+    // (only #1a1a1a / #000000) check so every colour the vendor picks reads.
+    const luminance = (hex) => {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return 1
+      const r = parseInt(hex.slice(1, 3), 16) / 255
+      const g = parseInt(hex.slice(3, 5), 16) / 255
+      const b = parseInt(hex.slice(5, 7), 16) / 255
+      return 0.299 * r + 0.587 * g + 0.114 * b
+    }
+    const textOn = (hex) => luminance(hex) < 0.55 ? '#fff' : '#1a1a1a'
+    if (donutCardStyle === 'image' && donutCardImage) {
+      // Image bg: assume mid-tone; default to white text with text-shadow at
+      // render time would be ideal, but for now lean dark since uploads tend
+      // to be light food photos.
+      return { background: `url("${donutCardImage}") center/cover repeat`, backdropFilter: 'none', WebkitBackdropFilter: 'none', textColor: '#1a1a1a' }
+    }
+    if (donutCardStyle === 'glass') {
+      return { background: tint + '1F', backdropFilter: 'blur(14px) saturate(150%)', WebkitBackdropFilter: 'blur(14px) saturate(150%)', textColor: textOn(tint) }
+    }
+    if (donutCardStyle === 'frosted') {
+      return { background: tint + '55', backdropFilter: 'blur(28px) saturate(180%)', WebkitBackdropFilter: 'blur(28px) saturate(180%)', textColor: textOn(tint) }
+    }
+    return { background: tint, backdropFilter: 'none', WebkitBackdropFilter: 'none', textColor: textOn(tint) }
+  })()
+  const donutFrameAccent = donutFrameColor || accent
+  const donutPromoBarColor = donutPromoColor || accent
+  // WCAG 2.1 contrast ratio (4.5:1 = AA normal text). Used by the Menu Cards
+  // page to flag low-contrast colour pairings without blocking the vendor.
+  const wcagContrastRatio = (hex1, hex2) => {
+    const lum = (hex) => {
+      const m = /^#([0-9A-Fa-f]{6})$/.exec(hex || '')
+      if (!m) return 1
+      const r = parseInt(m[1].slice(0, 2), 16) / 255
+      const g = parseInt(m[1].slice(2, 4), 16) / 255
+      const b = parseInt(m[1].slice(4, 6), 16) / 255
+      const toLin = (c) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+      return 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b)
+    }
+    const l1 = lum(hex1), l2 = lum(hex2)
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+  }
+  // Resolved Add-to-Cart button color (falls back to promo bar color so the
+  // CTA matches the active accents by default).
+  const donutAddBtnBg = donutAddBtnColor || donutPromoBarColor
+  // True when the donut "Image" card style is active and the vendor has
+  // uploaded a bg image — in that mode the food photo is inset/shrunk so
+  // the uploaded background pattern reads across the full card, not just
+  // the text strip below the photo.
+  const isDonutImageCard = shopTheme === 'donut' && donutCardStyle === 'image' && !!donutCardImage
   const savedBgPos = (() => { try { return JSON.parse(localStorage.getItem('foodlocalchat_bgPos')) } catch { return null } })()
   const bgStyle = shopTheme === 'custom' && savedBgPos ? { objectFit: 'cover', objectPosition: `${savedBgPos.x}% ${savedBgPos.y}%` } : { objectFit: 'fill' }
   const [delBaseFee, setDelBaseFee] = useState(() => parseInt(localStorage.getItem('foodlocalchat_delBase')) || 5000)
@@ -830,6 +1061,41 @@ export default function App() {
 
   /* Shop info */
   const [shopName, setShopName] = useState(() => localStorage.getItem('foodlocalchat_shopName') || 'Street Noodle')
+  // Shop-name validation — emojis stripped automatically, URLs / @ handles
+  // blocked outright. Error string surfaces under both shop-name inputs.
+  const [shopNameError, setShopNameError] = useState('')
+  const handleShopNameChange = (raw) => {
+    const value = String(raw || '')
+    // 1. Emojis — strip and warn (don't punish the typist; let them keep typing)
+    if (/\p{Extended_Pictographic}/u.test(value)) {
+      const cleaned = value.replace(/\p{Extended_Pictographic}/gu, '').replace(/\s+/g, ' ')
+      setShopName(cleaned)
+      setShopNameError('Emojis are not allowed in your shop name. They were removed.')
+      return
+    }
+    // 2. Protocols (http://, https://, ftp://)
+    if (/:\/\//i.test(value)) {
+      setShopNameError('Web links are not allowed in your shop name.')
+      return
+    }
+    // 3. www. prefix
+    if (/\bwww\./i.test(value)) {
+      setShopNameError('Web addresses (www.) are not allowed in your shop name.')
+      return
+    }
+    // 4. Common domain endings (word.tld pattern, so ordinary "St. Mark" is safe)
+    if (/[a-z0-9][a-z0-9-]*\.(com|net|org|io|co|app|live|shop|store|online|biz|info|me|us|uk|xyz|tech|site|page|link)\b/i.test(value)) {
+      setShopNameError('Web addresses are not allowed in your shop name.')
+      return
+    }
+    // 5. Social handles (@username)
+    if (/@/.test(value)) {
+      setShopNameError('Social handles (@username) are not allowed in your shop name.')
+      return
+    }
+    setShopName(value)
+    setShopNameError('')
+  }
   const [shopLogo, setShopLogo] = useState(() => localStorage.getItem('foodlocalchat_shopLogo') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsadaaaa-removebg-preview.png')
   const [shopLogoStyle, setShopLogoStyle] = useState(() => localStorage.getItem('foodlocalchat_logoStyle') || 'circle') // circle | bare | off
   const [logoScale, setLogoScale] = useState(() => Number(localStorage.getItem('foodlocalchat_logoScale')) || 200) // 50-300, default 200 (2x)
@@ -1771,10 +2037,28 @@ export default function App() {
   const [formPerkLimitType, setFormPerkLimitType] = useState('none') // 'none' | 'time' | 'stock'
   const [formPerkLimitEndAt, setFormPerkLimitEndAt] = useState('')   // ISO timestamp
   const [formPerkLimitStock, setFormPerkLimitStock] = useState('')   // string of integer
+  // Donut-theme-only fields. Persist on the menu item but only rendered as
+  // form controls when shopTheme === 'donut'; standard themes ignore them.
+  const [formFilling, setFormFilling] = useState('')        // '' | None | Cream | Custard | Jelly | Chocolate | Nutella | Peanut Butter
+  const [formGlaze, setFormGlaze] = useState('')            // '' | None | Sugar | Chocolate | Maple | Strawberry | Vanilla | Caramel
+  const [formTopping, setFormTopping] = useState('')        // '' | None | Sprinkles | Powdered Sugar | Cinnamon | Crushed Nuts | Coconut
+  const [formDoughType, setFormDoughType] = useState('')    // '' | Yeast | Cake | Mochi | Cronut
+  const [formFreshToday, setFormFreshToday] = useState(false) // "Baked fresh today" flag
+  // Aspect ratio (width / height) of the currently-loaded formPhoto.
+  // Drives the "How it looks on each card" preview + extreme-aspect warning.
+  // 0 = unknown / no photo yet.
+  const [formPhotoAspect, setFormPhotoAspect] = useState(0)
+  useEffect(() => {
+    if (!formPhoto) { setFormPhotoAspect(0); return }
+    const img = new Image()
+    img.onload = () => { if (img.width && img.height) setFormPhotoAspect(img.width / img.height) }
+    img.onerror = () => setFormPhotoAspect(0)
+    img.src = formPhoto
+  }, [formPhoto])
   // Tick state — drives the countdown on perk ribbons (1s interval when any item has a time limit)
   const [nowTick, setNowTick] = useState(() => Date.now())
   // Which optional sections are expanded in the item form
-  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
+  const [expandedSections, setExpandedSections] = useState({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false, donutCraft: false })
   const toggleSection = (k) => setExpandedSections(p => ({ ...p, [k]: !p[k] }))
 
   // --- Perk helpers ---
@@ -1815,21 +2099,25 @@ export default function App() {
   // Shared progressive-disclosure block for both add + edit item forms
   const renderItemOptionalFields = () => (
     <div style={{ padding: '0 14px 4px' }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Optional details</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {[
+          // Donut-only "craft" panel — surfaces Filling/Glaze/Topping/Dough +
+          // "Baked fresh today" flag. Listed first so it's the most prominent
+          // expander for donut vendors.
+          ...(shopTheme === 'donut' ? [{ key: 'donutCraft', label: '🍩 Donut Craft' }] : []),
           { key: 'perks', label: '🎁 Perk Ribbon' },
-          { key: 'variants', label: '📏 Sizes' },
+          { key: 'variants', label: shopTheme === 'donut' ? '📦 Box Pack' : '📏 Sizes' },
           { key: 'modifiers', label: '➕ Add-ons' },
           { key: 'allergens', label: '⚠️ Allergens' },
           { key: 'dietary', label: '🌱 Dietary' },
-          { key: 'portion', label: '⚖️ Grams' },
+          { key: 'portion', label: shopTheme === 'donut' ? '📐 Portion' : '⚖️ Grams' },
           { key: 'stock', label: '📦 Stock' },
         ].map(opt => (
           <button key={opt.key} type="button" onClick={() => toggleSection(opt.key)} style={{
             background: expandedSections[opt.key] ? (isCustomAccent ? `${accent}30` : 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.04)',
             border: '1px dashed ' + (expandedSections[opt.key] ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.12)'),
-            color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
             padding: '7px 11px', borderRadius: 12, minHeight: 32,
           }}>{expandedSections[opt.key] ? '−' : '+'} {opt.label}</button>
         ))}
@@ -1838,9 +2126,9 @@ export default function App() {
       {expandedSections.perks && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
           <button type="button" onClick={() => toggleSection('perks')} aria-label="Close perks" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${accent}66` }}>×</button>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Perk ribbon — shown across the top of this item's card.</div>
           {/* Preset chips */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Preset</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Preset</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
             {Object.entries(PERK_LABELS).map(([id, p]) => {
               const isActive = formPerks[0] === id && !formPerkText
@@ -1849,7 +2137,7 @@ export default function App() {
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: isActive ? accent : 'rgba(255,255,255,0.05)',
                   border: '1px solid ' + (isActive ? accent : 'rgba(255,255,255,0.1)'),
-                  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   padding: '6px 10px', borderRadius: 14, minHeight: 36,
                 }}>
                   <span>{p.emoji}</span>{p.text}
@@ -1858,17 +2146,17 @@ export default function App() {
             })}
           </div>
           {/* Custom text override */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>Or write your own (max 24 chars)</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>Or write your own (max 24 chars)</div>
           <input value={formPerkText} maxLength={24} onChange={e => { setFormPerkText(e.target.value); if (e.target.value) setFormPerks([]) }} placeholder="e.g. Free Cendol Today!" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
           {/* Countdown limit */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Limited offer? (countdown on right of ribbon)</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Limited offer? (countdown on right of ribbon)</div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {[
               { id: 'none', label: 'No limit' },
               { id: 'time', label: '⏱ Time' },
               { id: 'stock', label: '📦 Stock' },
             ].map(opt => (
-              <button key={opt.id} type="button" onClick={() => setFormPerkLimitType(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: formPerkLimitType === opt.id ? accent : 'rgba(255,255,255,0.08)', color: formPerkLimitType === opt.id ? '#fff' : 'rgba(255,255,255,0.6)', minHeight: 40 }}>{opt.label}</button>
+              <button key={opt.id} type="button" onClick={() => setFormPerkLimitType(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: formPerkLimitType === opt.id ? accent : 'rgba(255,255,255,0.08)', color: formPerkLimitType === opt.id ? '#fff' : 'rgba(255,255,255,0.6)', minHeight: 40 }}>{opt.label}</button>
             ))}
           </div>
           {formPerkLimitType === 'time' && (
@@ -1881,17 +2169,17 @@ export default function App() {
                   { label: '+48 h',  ms: 48 * 3600000 },
                   { label: '+7 days', ms: 7 * 24 * 3600000 },
                 ].map(opt => (
-                  <button key={opt.label} type="button" onClick={() => setFormPerkLimitEndAt(new Date(Date.now() + opt.ms).toISOString())} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 36 }}>{opt.label}</button>
+                  <button key={opt.label} type="button" onClick={() => setFormPerkLimitEndAt(new Date(Date.now() + opt.ms).toISOString())} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 36 }}>{opt.label}</button>
                 ))}
               </div>
               <input type="datetime-local" value={formPerkLimitEndAt ? new Date(formPerkLimitEndAt).toISOString().slice(0,16) : ''} onChange={e => setFormPerkLimitEndAt(e.target.value ? new Date(e.target.value).toISOString() : '')} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
-              {formPerkLimitEndAt && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Ends {new Date(formPerkLimitEndAt).toLocaleString()}</div>}
+              {formPerkLimitEndAt && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Ends {new Date(formPerkLimitEndAt).toLocaleString()}</div>}
             </div>
           )}
           {formPerkLimitType === 'stock' && (
             <div>
               <input type="number" min={0} value={formPerkLimitStock} onChange={e => setFormPerkLimitStock(e.target.value)} placeholder="e.g. 20" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>How many units of this perk available — ribbon hides at 0</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>How many units of this perk available — ribbon hides at 0</div>
             </div>
           )}
           {/* Live preview of the ribbon */}
@@ -1913,28 +2201,74 @@ export default function App() {
             }
             return (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Preview</div>
-                <div style={{ background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Preview</div>
+                <div style={{ background: accent, color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10 }}>
                   <span style={{ fontSize: 13 }}>{previewEmoji}</span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewText}</span>
-                  {cd && <span style={{ fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                  {cd && <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                 </div>
               </div>
             )
           })()}
         </div>
       )}
+      {expandedSections.donutCraft && shopTheme === 'donut' && (() => {
+        // Donut-only craft panel. All five fields are optional. Each renders as
+        // a chip group so the vendor taps to set/clear in one action.
+        const FILLINGS = ['None', 'Cream', 'Custard', 'Jelly', 'Chocolate', 'Nutella', 'Peanut Butter']
+        const GLAZES   = ['None', 'Sugar', 'Chocolate', 'Maple', 'Strawberry', 'Vanilla', 'Caramel']
+        const TOPPINGS = ['None', 'Sprinkles', 'Powdered Sugar', 'Cinnamon', 'Crushed Nuts', 'Coconut']
+        const DOUGHS   = ['Yeast', 'Cake', 'Mochi', 'Cronut']
+        const chipRow = (label, options, current, setter) => (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>{label}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {options.map(o => {
+                const isActive = current === o
+                return (
+                  <button key={o} type="button" onClick={() => setter(isActive ? '' : o)} style={{
+                    background: isActive ? accent : 'rgba(255,255,255,0.06)',
+                    border: '1px solid ' + (isActive ? accent : 'rgba(255,255,255,0.1)'),
+                    color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    padding: '6px 10px', borderRadius: 14, minHeight: 32,
+                  }}>{o}</button>
+                )
+              })}
+            </div>
+          </div>
+        )
+        return (
+          <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
+            <button type="button" onClick={() => toggleSection('donutCraft')} aria-label="Close donut craft" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#EF4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>×</button>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 10, paddingRight: 30 }}>Donut craft — surfaces on the item card and order receipt.</div>
+            {chipRow('Filling', FILLINGS, formFilling, setFormFilling)}
+            {chipRow('Glaze', GLAZES, formGlaze, setFormGlaze)}
+            {chipRow('Topping', TOPPINGS, formTopping, setFormTopping)}
+            {chipRow('Dough type', DOUGHS, formDoughType, setFormDoughType)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+              <button type="button" onClick={() => setFormFreshToday(!formFreshToday)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: formFreshToday ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: formFreshToday ? 19 : 3, transition: 'left 0.2s' }} />
+              </button>
+              <span style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>🥐 Baked fresh today</span>
+            </div>
+          </div>
+        )
+      })()}
       {expandedSections.allergens && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Contains — helps customers with allergies</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy'].map(a => {
+            {/* Donut shops: prune to the 4 allergens that actually apply (no Shellfish / Soy). */}
+            {(shopTheme === 'donut'
+              ? ['Gluten', 'Dairy', 'Nuts', 'Egg']
+              : ['Gluten', 'Dairy', 'Nuts', 'Shellfish', 'Egg', 'Soy']
+            ).map(a => {
               const isActive = formAllergens.includes(a)
               return (
                 <button key={a} type="button" onClick={() => setFormAllergens(p => isActive ? p.filter(x => x !== a) : [...p, a])} style={{
                   background: isActive ? '#EF4444' : 'rgba(255,255,255,0.05)',
                   border: '1px solid ' + (isActive ? '#fff' : 'rgba(255,255,255,0.1)'),
-                  color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   padding: '6px 10px', borderRadius: 14, minHeight: 32,
                 }}>{a}</button>
               )
@@ -1945,16 +2279,21 @@ export default function App() {
       {expandedSections.dietary && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', position: 'relative' }}>
           <button type="button" onClick={() => toggleSection('dietary')} aria-label="Close dietary" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#EF4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>×</button>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags · customers can filter the menu by these</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags · customers can filter the menu by these</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {DIETARY_TAGS.map(tag => {
+            {/* Donut shops: surface the 5 tags that matter — vegetarian, vegan,
+                halal, gluten-free, dairy-free. Hide protein/healthy/organic/kosher. */}
+            {(shopTheme === 'donut'
+              ? DIETARY_TAGS.filter(t => ['vegetarian', 'vegan', 'halal', 'gluten_free', 'dairy_free'].includes(t.id))
+              : DIETARY_TAGS
+            ).map(tag => {
               const isActive = formDietary.includes(tag.id)
               return (
                 <button key={tag.id} type="button" onClick={() => setFormDietary(p => isActive ? p.filter(x => x !== tag.id) : [...p, tag.id])} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: isActive ? `${tag.color}22` : 'rgba(255,255,255,0.05)',
                   border: '1px solid ' + (isActive ? tag.color : 'rgba(255,255,255,0.1)'),
-                  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   padding: '6px 10px', borderRadius: 14, minHeight: 32,
                 }}>
                   {tag.svg && <svg width="14" height="14" viewBox="0 0 24 24" fill={tag.color}><path d={tag.svg} /></svg>}
@@ -1967,43 +2306,82 @@ export default function App() {
       )}
       {expandedSections.portion && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Grams / weight</div>
-          <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · 350g · 1.2kg' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+          {shopTheme === 'donut' ? (
+            <>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Portion — how the donut is sold</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {['Single', '3-pack', 'Half Dozen', 'Dozen', 'Mini Pack'].map(p => {
+                  const isActive = formPortion === p
+                  return (
+                    <button key={p} type="button" onClick={() => setFormPortion(isActive ? '' : p)} style={{
+                      background: isActive ? accent : 'rgba(255,255,255,0.06)',
+                      border: '1px solid ' + (isActive ? accent : 'rgba(255,255,255,0.1)'),
+                      color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      padding: '7px 12px', borderRadius: 14, minHeight: 32,
+                    }}>{p}</button>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Grams / weight</div>
+              <input value={formPortion} onChange={(e) => setFormPortion(e.target.value)} placeholder='e.g. 200g · 350g · 1.2kg' style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+            </>
+          )}
         </div>
       )}
       {expandedSections.stock && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Stock — auto-hides item when 0. Leave blank for unlimited.</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input type="number" min={0} value={formStock} onChange={(e) => setFormStock(e.target.value)} placeholder='Unlimited' style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', minHeight: 44, boxSizing: 'border-box' }} />
-            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Unlimited</button>
+            <button type="button" onClick={() => setFormStock('')} style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: formStock === '' ? `${accent}25` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Unlimited</button>
           </div>
         </div>
       )}
       {expandedSections.variants && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Sizes / variants — customer picks one. Price delta added to base.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+            {shopTheme === 'donut'
+              ? 'Box packs — customer picks one. Price delta added to single-donut base.'
+              : 'Sizes / variants — customer picks one. Price delta added to base.'}
+          </div>
+          {/* Donut shortcut: one tap to scaffold Single / Half Dozen / Dozen with
+              auto price-delta = base × (6 × 0.85 - 1) and base × (12 × 0.80 - 1).
+              The 15%/20% discounts mirror typical donut-shop box pricing. */}
+          {shopTheme === 'donut' && formVariants.length === 0 && (
+            <button type="button" onClick={() => {
+              const base = Number(formPrice) || 0
+              const ts = Date.now()
+              setFormVariants([
+                { id: 'v_' + (ts + 0), name: 'Single', priceDelta: 0 },
+                { id: 'v_' + (ts + 1), name: 'Half Dozen (6)', priceDelta: Math.round(base * (6 * 0.85 - 1)) },
+                { id: 'v_' + (ts + 2), name: 'Dozen (12)', priceDelta: Math.round(base * (12 * 0.80 - 1)) },
+              ])
+            }} style={{ width: '100%', padding: '10px 12px', marginBottom: 8, borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📦 Quick add: Single / Half Dozen / Dozen</button>
+          )}
           {formVariants.map((v, i) => (
             <div key={v.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <input value={v.name} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Small / Large / Regular)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input value={v.name} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder={shopTheme === 'donut' ? 'Name (Single / Half Dozen / Dozen)' : 'Name (Small / Large / Regular)'} style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
               <input type="number" value={v.priceDelta} onChange={(e) => setFormVariants(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
               <button type="button" onClick={() => setFormVariants(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
             </div>
           ))}
-          <button type="button" onClick={() => setFormVariants(p => [...p, { id: 'v_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add size</button>
+          <button type="button" onClick={() => setFormVariants(p => [...p, { id: 'v_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ Add {shopTheme === 'donut' ? 'pack' : 'size'}</button>
         </div>
       )}
       {expandedSections.modifiers && (
         <div style={{ marginBottom: 12, padding: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Add-ons / modifiers — customer can pick multiple (each adds to price).</div>
           {formModifiers.map((m, i) => (
             <div key={m.id} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <input value={m.name} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder='Name (Extra cheese / No onion)' style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              <input value={m.name} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder={shopTheme === 'donut' ? 'Name (Extra glaze / Sprinkles)' : 'Name (Extra cheese / No onion)'} style={{ flex: 2, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
               <input type="number" value={m.priceDelta} onChange={(e) => setFormModifiers(p => p.map((x, j) => j === i ? { ...x, priceDelta: Number(e.target.value) || 0 } : x))} placeholder='+0' style={{ width: 90, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
               <button type="button" onClick={() => setFormModifiers(p => p.filter((_, j) => j !== i))} style={{ width: 34, padding: 0, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(139,0,0,0.4)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>&times;</button>
             </div>
           ))}
-          <button type="button" onClick={() => setFormModifiers(p => [...p, { id: 'm_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Add modifier</button>
+          <button type="button" onClick={() => setFormModifiers(p => [...p, { id: 'm_' + Date.now(), name: '', priceDelta: 0 }])} style={{ width: '100%', padding: '8px 10px', marginTop: 4, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ Add modifier</button>
         </div>
       )}
     </div>
@@ -2379,6 +2757,11 @@ export default function App() {
     setFormPerkLimitType(item.perkLimit?.type || 'none')
     setFormPerkLimitEndAt(item.perkLimit?.endAt || '')
     setFormPerkLimitStock(item.perkLimit?.remaining != null ? String(item.perkLimit.remaining) : '')
+    setFormFilling(item.filling || '')
+    setFormGlaze(item.glaze || '')
+    setFormTopping(item.topping || '')
+    setFormDoughType(item.doughType || '')
+    setFormFreshToday(!!item.freshToday)
     setExpandedSections({
       photos: (item.photos || []).length > 0,
       allergens: (item.allergens || []).length > 0,
@@ -2388,6 +2771,7 @@ export default function App() {
       variants: (item.variants || []).length > 0,
       modifiers: (item.modifiers || []).length > 0,
       perks: (item.perks || []).length > 0,
+      donutCraft: !!(item.filling || item.glaze || item.topping || item.doughType || item.freshToday),
     })
     setEditItem(item)
   }
@@ -2401,7 +2785,7 @@ export default function App() {
   const saveEdit = () => {
     if (!formName || !formPrice) return
     const stockNum = formStock === '' ? null : Number(formStock)
-    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit() }
+    const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit(), filling: formFilling || null, glaze: formGlaze || null, topping: formTopping || null, doughType: formDoughType || null, freshToday: !!formFreshToday }
     setMenuItems((prev) =>
       prev.map((m) =>
         m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
@@ -2435,7 +2819,12 @@ export default function App() {
     setFormPerkLimitType('none')
     setFormPerkLimitEndAt('')
     setFormPerkLimitStock('')
-    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false })
+    setFormFilling('')
+    setFormGlaze('')
+    setFormTopping('')
+    setFormDoughType('')
+    setFormFreshToday(false)
+    setExpandedSections({ photos: false, dietary: false, allergens: false, portion: false, stock: false, variants: false, modifiers: false, perks: false, donutCraft: false })
     setAddingItem(true)
   }
 
@@ -2444,7 +2833,9 @@ export default function App() {
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
     const stockNum = formStock === '' ? null : Number(formStock)
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit() }
+    // Donut-only fields persist on the item; standard themes ignore the keys
+    // (they're just stored as empty strings / false and don't render anywhere).
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit(), filling: formFilling || null, glaze: formGlaze || null, topping: formTopping || null, doughType: formDoughType || null, freshToday: !!formFreshToday }
     setMenuItems((prev) => [...prev, item])
     if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
@@ -2581,6 +2972,14 @@ export default function App() {
       prepMins: maxPrep,
       shop: { name: shopName, address: shopAddress },
     }
+
+    // Persist this device's order numbers so the customer can earn the
+    // ✓ Verified badge later when reviewing. Keep last 50.
+    try {
+      const existing = JSON.parse(localStorage.getItem('foodlocalchat_my_orders') || '[]')
+      existing.unshift({ orderNumber: `${initials}-${orderNum}`, placedAt: now.toISOString() })
+      localStorage.setItem('foodlocalchat_my_orders', JSON.stringify(existing.slice(0, 50)))
+    } catch {}
 
     const summaryItems = cart.map(c => `${c.qty}x ${c.name}`).join(', ')
     const summaryBody = `New order #${initials}-${orderNum}: ${summaryItems} · ${fmt(grandTotal)}${note ? ` · Note: ${note}` : ''}`
@@ -3049,7 +3448,32 @@ export default function App() {
   /* --- Menu category filter --- */
   const [menuFilter, setMenuFilter] = useState('All')
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
-  const MENU_CATEGORIES = ['All', ...new Set(menuItems.map(m => m.category).filter(Boolean))]
+  // Theme-specific category defaults: when shopTheme has a THEME_CATEGORY_OVERRIDES
+  // entry (e.g. 'donut' — donut subtypes + drink subtypes), seed those types
+  // so the customer-side toggle tabs + filter drawer show theme-relevant
+  // categories instead of food taxonomy even before the vendor has added any
+  // items. Drink subtypes (Fresh Juice / Soda Drinks / Water / Ice Drinks)
+  // are now in the override's second group — no hardcoded 'Drinks' fallback.
+  const themeMenuDefaults = (() => {
+    const groups = THEME_CATEGORY_OVERRIDES[shopTheme]
+    if (!groups || groups.length === 0) return []
+    return groups.flatMap(g => g.types)
+  })()
+  const MENU_CATEGORIES = ['All', ...new Set([...themeMenuDefaults, ...menuItems.map(m => m.category).filter(Boolean)])]
+  // Donut theme: pre-compute the two type sets so the toggle can render two
+  // virtual GROUP tabs ("Donuts" / "Drinks") that filter by any matching
+  // subtype, instead of forcing the vendor to scroll through 34 specific tabs
+  // to find drinks. Drawer still lists every subtype individually.
+  const DONUT_GROUP_FILTERS = (() => {
+    if (shopTheme !== 'donut') return null
+    const groups = THEME_CATEGORY_OVERRIDES.donut || []
+    const donutTypes = groups[0]?.types || []
+    const drinkTypes = groups[1]?.types || []
+    return {
+      donuts: new Set(donutTypes),
+      drinks: new Set(drinkTypes),
+    }
+  })()
 
   /* --- Vendor type (warung / bakery / cafe / restaurant / general) --- */
   const [vendorType, setVendorType] = useState(() => localStorage.getItem('vendorbasic_vendor_type') || null)
@@ -3084,7 +3508,15 @@ export default function App() {
 
   /* --- Visible menu --- */
   // Customers don't see items that are unavailable OR have stock === 0. Vendor admin sees everything.
-  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available && (m.stock == null || m.stock > 0))).filter(m => menuFilter === 'All' || m.category === menuFilter)
+  const visibleMenu = (isVendor ? menuItems : menuItems.filter((m) => m.available && (m.stock == null || m.stock > 0))).filter(m => {
+    if (menuFilter === 'All') return true
+    // Donut theme virtual group filters: __donuts__ matches any donut subtype,
+    // __drinks__ matches any drink subtype. Real category filters still match
+    // exact category names as before.
+    if (DONUT_GROUP_FILTERS && menuFilter === '__donuts__') return DONUT_GROUP_FILTERS.donuts.has(m.category)
+    if (DONUT_GROUP_FILTERS && menuFilter === '__drinks__') return DONUT_GROUP_FILTERS.drinks.has(m.category)
+    return m.category === menuFilter
+  })
 
   // Active daily deals — filter by current time
   const activeDeals = dailyDeals.filter(d => {
@@ -3145,11 +3577,20 @@ export default function App() {
     // posts a message back when the customer taps its CTA — we listen for that
     // and flip showLanding to false so the menu reveals (the existing menu flow
     // takes over after that point).
-    if (landingThemeId === 'donuts') {
-      // Render the saved donut theme exactly as approved — no URL-param
-      // overrides. The snapshot at /themes/donuts.html is pixel-accurate to
-      // the approved gallery design.
-      const donutsSrc = '/themes/donuts.html'
+    // Treat donut theme as the donut splash even if landingThemeId hasn't
+    // been synced yet from Supabase — prevents a 1-3s flash of the generic
+    // "Street Noodle" splash before vendor data arrives.
+    if (landingThemeId === 'donuts' || shopTheme === 'donut') {
+      // Render the saved donut theme exactly as approved. The snapshot at
+      // /themes/donuts.html is pixel-accurate to the approved gallery design.
+      // The HTML file is served from the landing app's /public, NOT from
+      // food-basic — and food-basic's Vite base is '/food/chat/', so a bare
+      // '/themes/donuts.html' here gets resolved to '/food/chat/themes/...'
+      // which 404s into food-basic's SPA fallback. donutsHtmlSrc (computed
+      // above) builds the right cross-origin URL in dev / same-origin in
+      // prod, and appends ?hero=<url> when the vendor has uploaded a custom
+      // hero image via Design Studio.
+      const donutsSrc = donutsHtmlSrc
       return (
         <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
           {/* Language toggle still available at top-right */}
@@ -3159,23 +3600,16 @@ export default function App() {
             setLocale(codes[(idx + 1) % codes.length])
           }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
           </button>
-          <iframe
-            src={donutsSrc}
-            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-            title="Donuts landing"
-            sandbox="allow-scripts allow-same-origin"
-          />
-          {/* Floating "Enter Menu" button — same hand-off as the default landing's
-              "View Menu" button. Until the frozen theme HTML posts an enter-menu
-              message back, this guarantees the customer can always proceed. */}
-          <button
-            onClick={() => setShowLanding(false)}
-            style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 20, padding: '14px 28px', borderRadius: 16, border: 'none', background: '#EC4899', color: '#fff', fontSize: 15, fontWeight: 900, cursor: 'pointer', boxShadow: '0 18px 60px rgba(236,72,153,0.5)' }}
-          >
-            View Menu
-          </button>
+          {/* FitIframe scales the 390×844 donut HTML to cover the app shell —
+              previously the iframe was 100% × 100% but the donut body is locked
+              to 390×844, so it rendered tiny in the top-left on any non-390px
+              parent (the user's "size not set correct" report). */}
+          <FitIframe src={donutsSrc} />
+          {/* The donut HTML's own "Order Donuts" CTA posts sl-theme-enter-menu
+              to drop the splash (listener at line ~828). No floating fallback
+              button — the in-theme CTA is the single entry point. */}
         </div>
       )
     }
@@ -3192,7 +3626,7 @@ export default function App() {
           setLocale(codes[(idx + 1) % codes.length])
         }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
           <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
         </button>
 
         {/* Background overlay */}
@@ -3339,7 +3773,7 @@ export default function App() {
           <a href="https://streetlocal.live" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 8, letterSpacing: 1, textDecoration: 'none' }}>streetlocal.live</a>
 
           {/* DEV: Quick dashboard access */}
-          {!previewMode && <button onClick={() => { setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5 }}>DEV: Dashboard</button>}
+          {!previewMode && <button onClick={() => { setIsVendor(true); setShowLanding(false); setVendorDrawer(true) }} style={{ marginTop: 10, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 13, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5 }}>DEV: Dashboard</button>}
           {/* Preview mode — back to dashboard */}
         </div>
       </div>
@@ -3371,9 +3805,9 @@ export default function App() {
               <div style={{ fontSize: 13, fontWeight: 800, color: urgent ? '#F59E0B' : '#FACC15' }}>
                 {daysLeft === 0 ? 'Subscription expires today' : daysLeft === 1 ? 'Subscription expires tomorrow' : `Subscription expires in ${daysLeft} days`}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Renew now to keep customers ordering — no downtime.</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Renew now to keep customers ordering — no downtime.</div>
             </div>
-            <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew</button>
+            <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Renew</button>
           </div>
         )
       })()}
@@ -3382,9 +3816,9 @@ export default function App() {
       {isVendor && (vendorStatus === 'pending' || (vendorStatus === null && vendorId && !String(vendorId).startsWith('local'))) && (
         <div style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: 12, margin: '8px 12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>Pay to activate your shop</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>You can build your menu in preview mode. Customers can't place orders until you pay your monthly plan.</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>You can build your menu in preview mode. Customers can't place orders until you pay your monthly plan.</div>
           <button onClick={() => { setSubError(''); setSubPickerOpen(true) }} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#22C55E', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>Choose Plan & Pay</button>
-          {subMessage && <div style={{ fontSize: 11, color: '#86EFAC' }}>{subMessage}</div>}
+          {subMessage && <div style={{ fontSize: 13, color: '#86EFAC' }}>{subMessage}</div>}
         </div>
       )}
 
@@ -3394,22 +3828,22 @@ export default function App() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
             <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
             <div style={{ fontSize: 17, fontWeight: 800 }}>Choose your plan</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.</div>
             <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('whatsapp')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.08)', color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800 }}>WhatsApp orders · Rp 35.000 / month</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Customers send orders to your WhatsApp — you handle the rest.</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Customers send orders to your WhatsApp — you handle the rest.</div>
               </div>
             </button>
             <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('chat')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: `1px solid ${accent}55`, background: `${accent}15`, color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800 }}>App Chat orders · Rp 50.000 / month</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time in-app chat + 16 payment gateways + order tracking.</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time in-app chat + 16 payment gateways + order tracking.</div>
               </div>
             </button>
-            {subError && <div style={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
+            {subError && <div style={{ fontSize: 13, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
             <button type="button" onClick={() => setSubPickerOpen(false)} disabled={subBusy} style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', minHeight: 44 }}>{subBusy ? 'Opening Midtrans…' : 'Cancel'}</button>
           </div>
         </div>
@@ -3431,13 +3865,13 @@ export default function App() {
           ) : null}
           <div>
             <span style={S.shopName}>{shopName}</span>
-            <span style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
+            <span style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopFoodType}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {/* DEV: Quick dashboard toggle */}
           {!isVendor && (
-            <button onClick={() => { setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 8, fontWeight: 700, cursor: 'pointer' }}>DEV</button>
+            <button onClick={() => { setIsVendor(true); setVendorDrawer(true) }} style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>DEV</button>
           )}
           {/* Hamburger menu (vendor only) */}
           {isVendor && (
@@ -3447,7 +3881,7 @@ export default function App() {
           {!isVendor && <button onClick={() => { if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 38, minHeight: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
             <span style={{ fontSize: 20 }}>🛒</span>
             {cart.length > 0 && (
-              <span style={{ position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {cart.reduce((s, c) => s + c.qty, 0)}
               </span>
             )}
@@ -3467,11 +3901,11 @@ export default function App() {
             {locale === 'id' ? 'Kami sedang mempersiapkan menu. Kunjungi lagi segera!' : 'We\'re preparing our menu. Check back shortly!'}
           </p>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, textAlign: 'center', width: '100%', maxWidth: 280 }}>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>Powered by</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>Powered by</p>
             <a href="https://streetlocal.live" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
               <div style={{ fontSize: 18, fontWeight: 900, color: '#FFD600' }}>StreetLocal</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Get your own food ordering software</div>
-              <div style={{ fontSize: 12, color: '#8DC63F', fontWeight: 700, marginTop: 4 }}>from $2.50/month →</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Get your own food ordering software</div>
+              <div style={{ fontSize: 13, color: '#8DC63F', fontWeight: 700, marginTop: 4 }}>from $2.50/month →</div>
             </a>
           </div>
         </div>
@@ -3510,10 +3944,308 @@ export default function App() {
         </div>
       )}
 
+      {/* ═══ Reviews modal — list + leave-a-review form ═══ */}
+      {reviewsOpen && shopTheme === 'donut' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 260, display: 'flex', flexDirection: 'column' }} onClick={() => setReviewsOpen(false)}>
+          {/* Theme bg + scrim — matches the rest of the app */}
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+          {/* Header */}
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, flexShrink: 0 }}>
+            <button onClick={() => setReviewsOpen(false)} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>Reviews</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
+                {reviews.length > 0 ? `${reviewsAvg.toFixed(1)} ★ · ${reviews.length} review${reviews.length === 1 ? '' : 's'}` : 'Be the first to review'}
+              </div>
+            </div>
+          </div>
+
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '0 16px 20px', maxWidth: 480, margin: '0 auto', width: '100%' }}>
+            {/* Leave-a-review form */}
+            <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Leave a review</div>
+              {/* Star picker */}
+              <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <button key={i} onClick={() => setReviewForm(f => ({ ...f, rating: f.rating === i ? 0 : i }))} aria-label={`${i} stars`} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: 'transparent', color: i <= reviewForm.rating ? '#FACC15' : 'rgba(255,255,255,0.25)', fontSize: 30, cursor: 'pointer', padding: 0, lineHeight: 1 }}>★</button>
+                ))}
+              </div>
+              {/* Comment */}
+              <textarea
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm(f => ({ ...f, comment: e.target.value.slice(0, 280) }))}
+                placeholder="What did you think of your donuts?"
+                rows={3}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, lineHeight: 1.5, outline: 'none', resize: 'none', fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'right', marginBottom: 10 }}>{reviewForm.comment.length}/280</div>
+              {/* Name */}
+              <input
+                value={reviewForm.name}
+                onChange={(e) => setReviewForm(f => ({ ...f, name: e.target.value.slice(0, 40) }))}
+                placeholder="Your name (optional)"
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 12, boxSizing: 'border-box' }}
+              />
+              <button onClick={submitReview} disabled={!reviewForm.rating} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none', background: reviewForm.rating ? accent : 'rgba(255,255,255,0.1)', color: reviewForm.rating ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 15, fontWeight: 900, cursor: reviewForm.rating ? 'pointer' : 'not-allowed', minHeight: 48, boxShadow: reviewForm.rating ? `0 6px 18px ${accent}55` : 'none' }}>
+                {reviewForm.rating ? 'Post Review' : 'Pick a star rating to continue'}
+              </button>
+            </div>
+
+            {/* All reviews */}
+            {reviews.length === 0 ? (
+              <div style={{ padding: '24px 20px', borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>★</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>No reviews yet</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>Be the first to share your experience.</div>
+              </div>
+            ) : (
+              reviews.map(r => (
+                <div key={r.id} style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 18, background: accent, color: '#fff', fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{r.name.charAt(0).toUpperCase()}</div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{r.name}</div>
+                        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <span key={i} style={{ fontSize: 13, color: i <= r.rating ? '#FACC15' : 'rgba(255,255,255,0.2)' }}>★</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{new Date(r.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  {r.comment && (
+                    <div style={{ fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{r.comment}</div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating donut button — customer entry to the Donut Types gallery.
+          Three donut images stacked + cross-faded so the button feels alive
+          and signals "multiple donuts inside". Cycle every 2.5s.
+          Home-page only: hide on splash, checkout/cart, item detail, the
+          gallery itself, and the reviews modal. */}
+      {shopTheme === 'donut' && !isVendor && !showLanding && !checkoutOpen && !itemModal && !donutTypesGallery && !reviewsOpen && (() => {
+        // Always render on donut theme — gallery uses mock donuts as fallback
+        // content when the vendor hasn't uploaded any yet.
+        const FLOAT_IMGS = [
+          'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129',
+          'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png?updatedAt=1778707873204',
+          'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2008_45_54%20PM.png',
+        ]
+        return (
+          <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true) }} aria-label="Meet our donuts" style={{
+            position: 'fixed', bottom: 20, right: 16, zIndex: 240,
+            width: 86, height: 86, borderRadius: 43, border: 'none',
+            background: 'transparent', cursor: 'pointer', padding: 0,
+            display: 'block', overflow: 'visible',
+            filter: `drop-shadow(0 8px 24px ${accent}99) drop-shadow(0 2px 6px rgba(0,0,0,0.5))`,
+            animation: 'donutFloatPulse 2.4s ease-in-out infinite',
+          }}>
+            <style>{`
+              @keyframes donutFloatPulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.08) rotate(2deg); } }
+              @keyframes donutFloatCycle {
+                0%, 28%   { opacity: 1; }
+                33%, 61%  { opacity: 0; }
+                66%, 94%  { opacity: 0; }
+                100%      { opacity: 1; }
+              }
+              @keyframes donutFloatCycle2 {
+                0%, 28%   { opacity: 0; }
+                33%, 61%  { opacity: 1; }
+                66%, 94%  { opacity: 0; }
+                100%      { opacity: 0; }
+              }
+              @keyframes donutFloatCycle3 {
+                0%, 28%   { opacity: 0; }
+                33%, 61%  { opacity: 0; }
+                66%, 94%  { opacity: 1; }
+                100%      { opacity: 0; }
+              }
+            `}</style>
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <img src={FLOAT_IMGS[0]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle 7.5s ease-in-out infinite' }} />
+              <img src={FLOAT_IMGS[1]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle2 7.5s ease-in-out infinite' }} />
+              <img src={FLOAT_IMGS[2]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle3 7.5s ease-in-out infinite' }} />
+            </div>
+          </button>
+        )
+      })()}
+
+      {/* ═══ DONUT TYPES gallery (customer-facing) ═══ */}
+      {donutTypesGallery && shopTheme === 'donut' && (() => {
+        // Mock donuts — shown when the vendor hasn't uploaded any content yet,
+        // so the gallery always has something to demonstrate. Real vendor
+        // content replaces these as soon as anything is published.
+        const MOCK_DONUTS = [
+          ['Sprinkle Donut', { image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129', description: 'A celebration in every bite. Rainbow sprinkles on a soft vanilla-iced ring — the one the kids fight over and the adults pretend they didn\'t want.', rating: 5 }],
+          ['Boston Cream', { image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2008_45_54%20PM.png', description: 'Filled with fresh vanilla custard, topped with rich chocolate ganache. Our most-ordered donut — and once you bite into it, you\'ll see why.', rating: 4 }],
+          ['Chocolate Frosted', { image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2009_19_03%20PM.png', description: 'Deep, glossy chocolate ganache on a soft yeast ring. Simple, decadent, and the one regulars order without thinking.', rating: 5 }],
+          ['Strawberry Frosted', { image: 'https://ik.imagekit.io/nepgaxllc/Untitledasdaaaavdddddd-removebg-preview%20(1).png', description: 'Real-strawberry icing in soft pink, dusted with pearl sprinkles. As pretty as it tastes — Instagram-bait with substance.', rating: 5 }],
+        ]
+        const publishedReal = Object.entries(donutTypesContent).filter(([, c]) => c && c.image && c.description)
+        // Always show mocks alongside any real uploads. Vendor uploads win
+        // when names collide; otherwise mocks fill out the carousel so there's
+        // always 3+ slides to swipe through — not just the one the vendor
+        // uploaded.
+        const realNames = new Set(publishedReal.map(([n]) => n))
+        const mocksToAdd = MOCK_DONUTS.filter(([n]) => !realNames.has(n))
+        const published = [...publishedReal, ...mocksToAdd]
+        const isMock = publishedReal.length === 0
+        const safeIdx = Math.min(donutTypesIdx, published.length - 1)
+        const [name, data] = published[safeIdx]
+        const rating = Math.max(0, Math.min(5, data.rating || 0))
+        const goPrev = () => {
+          const next = Math.max(0, safeIdx - 1)
+          setDonutTypesIdx(next)
+          const el = document.getElementById('donut-swipe-track')
+          if (el) el.scrollTo({ left: next * el.clientWidth, behavior: 'smooth' })
+        }
+        const goNext = () => {
+          const next = Math.min(published.length - 1, safeIdx + 1)
+          setDonutTypesIdx(next)
+          const el = document.getElementById('donut-swipe-track')
+          if (el) el.scrollTo({ left: next * el.clientWidth, behavior: 'smooth' })
+        }
+        const goTo = (i) => {
+          setDonutTypesIdx(i)
+          const el = document.getElementById('donut-swipe-track')
+          if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
+        }
+        const onScrollSnap = (e) => {
+          const el = e.currentTarget
+          const idx = Math.round(el.scrollLeft / el.clientWidth)
+          if (idx !== safeIdx && idx >= 0 && idx < published.length) setDonutTypesIdx(idx)
+        }
+        const orderThis = () => {
+          // Open the matching menu item modal so the user can Add to Cart in one
+          // tap. Match by case-insensitive name. If no menu item exists yet for
+          // this donut type, fall back to filtering the menu so they can browse.
+          const lower = name.toLowerCase().trim()
+          const match = menuItems.find(it => {
+            const n = (it.name || '').toLowerCase().trim()
+            return n === lower || n.includes(lower) || lower.includes(n)
+          })
+          if (match) {
+            setDonutTypesGallery(false)
+            setItemModal(match)
+            setModalQty(1)
+            setModalPhotoIdx(0)
+            setModalVariant(null)
+            setModalModifiers([])
+          } else {
+            setMenuFilter(name)
+            setDonutTypesGallery(false)
+          }
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 250, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Main-site theme bg (donut hero pink) + dark scrim so foreground
+                content stays legible. Matches the app's main background. */}
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
+            {/* Soft pink atmospheric glow behind the donut */}
+            <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '90vw', height: '40vh', background: `radial-gradient(closest-side, ${accent}55, transparent 70%)`, pointerEvents: 'none', filter: 'blur(20px)', zIndex: 0 }} />
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, position: 'relative', zIndex: 2 }}>
+              <button onClick={() => setDonutTypesGallery(false)} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Meet Our Donuts</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{safeIdx + 1} of {published.length}</div>
+              </div>
+              <div style={{ width: 44 }} />
+            </div>
+            {/* HERO — horizontal swipe track. Native scroll-snap so the user
+                can swipe-flick on touch. Drop-shadow on each PNG for depth. */}
+            <div
+              id="donut-swipe-track"
+              onScroll={onScrollSnap}
+              style={{
+                flex: '0 0 auto',
+                height: '46vh',
+                display: 'flex',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollSnapType: 'x mandatory',
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                position: 'relative',
+                zIndex: 1,
+              }}
+            >
+              <style>{`#donut-swipe-track::-webkit-scrollbar { display: none; }`}</style>
+              {published.map(([n, d]) => (
+                <div key={n} style={{
+                  // Bulletproof scroll-snap slide sizing — minWidth + flexShrink:0
+                  // forces each slide to be at least the container's width and
+                  // never collapse. `flex: 0 0 100%` was ambiguous in a
+                  // horizontally-scrolling flex container — basis 100% folded
+                  // back on itself and slides ended up zero-width.
+                  flexShrink: 0,
+                  minWidth: '100%',
+                  height: '100%',
+                  scrollSnapAlign: 'start',
+                  scrollSnapStop: 'always',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 8%',
+                  boxSizing: 'border-box',
+                }}>
+                  <img src={d.image} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.8)' : 'scale(0.9)' }} />
+                </div>
+              ))}
+            </div>
+            {/* Floating left/right arrows over the hero band */}
+            {published.length > 1 && (
+              <>
+                <button onClick={goPrev} disabled={safeIdx === 0} aria-label="Previous" style={{ position: 'absolute', top: 'calc(14vh + 70px)', left: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === 0 ? 'default' : 'pointer', opacity: safeIdx === 0 ? 0.25 : 1, lineHeight: 1 }}>‹</button>
+                <button onClick={goNext} disabled={safeIdx === published.length - 1} aria-label="Next" style={{ position: 'absolute', top: 'calc(14vh + 70px)', right: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === published.length - 1 ? 'default' : 'pointer', opacity: safeIdx === published.length - 1 ? 0.25 : 1, lineHeight: 1 }}>›</button>
+              </>
+            )}
+            {/* Dot indicators */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '12px 0 4px', flexShrink: 0, position: 'relative', zIndex: 2 }}>
+              {published.map((_, i) => (
+                <button key={i} onClick={() => goTo(i)} aria-label={`Go to ${i + 1}`} style={{ width: i === safeIdx ? 28 : 8, height: 8, borderRadius: 4, border: 'none', background: i === safeIdx ? accent : 'rgba(255,255,255,0.25)', cursor: 'pointer', padding: 0, transition: 'width 250ms ease, background 250ms ease' }} />
+              ))}
+            </div>
+            {/* Body container — name, rating, full description, order */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 20px', position: 'relative', zIndex: 2 }}>
+              <div style={{ borderRadius: 20, padding: '20px 18px 18px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${accent}33`, boxShadow: `0 16px 40px rgba(0,0,0,0.55)` }}>
+                {/* Name + Star rating row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                  <div style={{ flex: 1, fontSize: 24, fontWeight: 900, color: '#fff', minWidth: 0, lineHeight: 1.2 }}>{name}</div>
+                  {rating > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <span key={i} style={{ fontSize: 18, color: i <= rating ? '#FACC15' : 'rgba(255,255,255,0.25)' }}>★</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Description — full 1000 chars, scrolls inside if long */}
+                <div style={{ fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', marginBottom: 16, maxHeight: '24vh', overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{data.description}</div>
+                <button onClick={orderThis} style={{ width: '100%', padding: '16px 20px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 15, fontWeight: 900, cursor: 'pointer', boxShadow: `0 8px 24px ${accent}55`, minHeight: 48 }}>
+                  Order {name} →
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* --- Menu Banner Image carousel --- */}
       {menuBanners.length > 0 && (
         <div style={{ margin: '4px 12px 0' }}>
-          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '8 / 3', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
+          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '3 / 1', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
             {menuBanners.map((url, i) => (
               <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
             ))}
@@ -3544,7 +4276,7 @@ export default function App() {
         <div style={{ padding: '0 16px 8px' }}>
           <button onClick={() => setShowDeals(!showDeals)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', width: '100%', justifyContent: 'center' }}>
             🔥 Promo ({activeDeals.length})
-            <span style={{ fontSize: 12 }}>{showDeals ? '▲' : '▼'}</span>
+            <span style={{ fontSize: 13 }}>{showDeals ? '▲' : '▼'}</span>
           </button>
           {showDeals && (
             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -3562,9 +4294,9 @@ export default function App() {
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deal.name}</div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FFD600' }}>{fmt(deal.dealPrice)}</span>
-                        <span style={{ fontSize: 12, color: '#888', textDecoration: 'line-through' }}>{fmt(deal.originalPrice)}</span>
+                        <span style={{ fontSize: 13, color: '#888', textDecoration: 'line-through' }}>{fmt(deal.originalPrice)}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700, marginTop: 4 }}>
+                      <div style={{ fontSize: 13, color: '#F59E0B', fontWeight: 700, marginTop: 4 }}>
                         ⏰ {hrs}h {mins}m remaining
                       </div>
                     </div>
@@ -3572,7 +4304,7 @@ export default function App() {
                       const existing = cart.find(c => c.id === 'deal-' + deal.id)
                       if (existing) { setCart(cart.map(c => c.id === 'deal-' + deal.id ? { ...c, qty: c.qty + 1 } : c)) }
                       else { setCart([...cart, { id: 'deal-' + deal.id, name: deal.name + ' (Deal)', price: deal.dealPrice, qty: 1, photo: deal.photo }]) }
-                    }} style={{ background: '#FFD600', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 800, color: '#1a1a1a', cursor: 'pointer', flexShrink: 0 }}>
+                    }} style={{ background: '#FFD600', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 800, color: '#1a1a1a', cursor: 'pointer', flexShrink: 0 }}>
                       + Add
                     </button>
                   </div>
@@ -3590,11 +4322,39 @@ export default function App() {
           <div style={{ display: 'flex', gap: 24, flex: 1, overflowX: 'auto', scrollbarWidth: 'none', alignItems: 'center' }}>
           {(() => {
             const allCats = MENU_CATEGORIES.slice(1)
-            const friendly = (c) => c === 'Drink' ? 'Drinks' : c === 'Snack' ? 'Snacks' : c === 'Extra Sauce' ? 'Extra' : c
-            const topThree = allCats.slice(0, 3)
-            // Keep the active selection visible inline even if it's outside the top 3
-            const inlineCats = (menuFilter === 'All' || topThree.includes(menuFilter)) ? topThree : [...topThree, menuFilter]
-            const tabs = [{ label: 'Menu', filter: 'All' }, ...inlineCats.map(c => ({ label: friendly(c), filter: c }))]
+            // Donut-theme toggle compaction: drop the trailing " Donut" suffix
+            // so tabs like "Chocolate Frosted Donut" render as "Chocolate Frosted"
+            // — keeps the toggle bar from blowing out its width. Filter values
+            // and the side-drawer list still use the full category name; only
+            // the tab LABEL is shortened.
+            const stripDonut = (c) => c.replace(/ Donut$/, '')
+            const friendly = (c) => {
+              if (c === 'Drink') return 'Drinks'
+              if (c === 'Snack') return 'Snacks'
+              if (c === 'Extra Sauce') return 'Extra'
+              if (shopTheme === 'donut') return stripDonut(c)
+              return c
+            }
+            // Donut theme: always show "Donuts" + "Drinks" as group tabs so a
+            // vendor with items in both groups never loses sight of either tab.
+            // Other themes use the legacy top-3 + active-selection scheme.
+            let tabs
+            if (DONUT_GROUP_FILTERS) {
+              tabs = [
+                { label: 'All', filter: 'All' },
+                { label: 'Donuts', filter: '__donuts__' },
+                { label: 'Drinks', filter: '__drinks__' },
+              ]
+              // If the vendor has drilled into a specific subtype via the drawer,
+              // surface it as a 4th tab so they can see what's active.
+              if (menuFilter !== 'All' && menuFilter !== '__donuts__' && menuFilter !== '__drinks__') {
+                tabs.push({ label: friendly(menuFilter), filter: menuFilter })
+              }
+            } else {
+              const topThree = allCats.slice(0, 3)
+              const inlineCats = (menuFilter === 'All' || topThree.includes(menuFilter)) ? topThree : [...topThree, menuFilter]
+              tabs = [{ label: 'All', filter: 'All' }, ...inlineCats.map(c => ({ label: friendly(c), filter: c }))]
+            }
             return tabs.map(tab => {
               const isActive = menuFilter === tab.filter
               return (
@@ -3658,8 +4418,8 @@ export default function App() {
                     <span style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }}>{vt.emoji}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{vt.label}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 4, fontWeight: 500 }}>{vt.tagline}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500, lineHeight: 1.4 }}>{vt.categories.slice(0, 5).join(' · ')}{vt.categories.length > 5 ? ' · …' : ''}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 4, fontWeight: 500 }}>{vt.tagline}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500, lineHeight: 1.4 }}>{vt.categories.slice(0, 5).join(' · ')}{vt.categories.length > 5 ? ' · …' : ''}</div>
                     </div>
                   </button>
                 )
@@ -3677,7 +4437,14 @@ export default function App() {
 
         {/* ─── Global Category Picker — Browse all 85+ categories grouped, or add custom ─── */}
         {categoryPickerOpen && (() => {
-          const activeGroup = categoryPickerGroup ? MENU_CATEGORY_GROUPS.find(g => g.id === categoryPickerGroup) : null
+          // When the vendor's shopTheme has a theme-specific category override
+          // (e.g. donut theme → "Donuts" group with glazed/iced/cream-filled
+          // subtypes), prepend it so the donut shop sees its own taxonomy first
+          // — followed by the full global list (Beverages, Snacks, etc.) so
+          // they can still add drinks and cross-sell items.
+          const themeGroups = THEME_CATEGORY_OVERRIDES[shopTheme] || []
+          const groupsForPicker = [...themeGroups, ...MENU_CATEGORY_GROUPS]
+          const activeGroup = categoryPickerGroup ? groupsForPicker.find(g => g.id === categoryPickerGroup) : null
           const close = () => { setCategoryPickerOpen(false); setCategoryPickerGroup(null); setCustomCategoryName('') }
           return (
             <>
@@ -3693,13 +4460,13 @@ export default function App() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                   <div>
                     {activeGroup && (
-                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCustomCategoryName('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 4 }}>← Back to groups</button>
+                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCustomCategoryName('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 4 }}>← Back to groups</button>
                     )}
                     <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
                       {activeGroup && activeGroup.svg && <svg width="20" height="20" viewBox="0 0 24 24" fill="#EF4444"><path d={activeGroup.svg} /></svg>}
                       {activeGroup ? activeGroup.label : 'Pick a category'}
                     </div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{activeGroup ? activeGroup.desc : 'Tap a group, then pick a type — or add your own.'}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{activeGroup ? activeGroup.desc : 'Tap a group, then pick a type — or add your own.'}</div>
                   </div>
                   <button type="button" onClick={close} style={{ width: 32, height: 32, borderRadius: 16, background: '#EF4444', border: 'none', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>✕</button>
                 </div>
@@ -3707,7 +4474,7 @@ export default function App() {
                 {/* Group cards view */}
                 {!activeGroup && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {MENU_CATEGORY_GROUPS.map(g => (
+                    {groupsForPicker.map(g => (
                       <button key={g.id} type="button" onClick={() => setCategoryPickerGroup(g.id)} style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                         padding: 12, borderRadius: 14,
@@ -3720,7 +4487,7 @@ export default function App() {
                           {g.svg ? <svg width="22" height="22" viewBox="0 0 24 24" fill="#EF4444"><path d={g.svg} /></svg> : null}
                         </span>
                         <span style={{ fontSize: 13, fontWeight: 800 }}>{g.label}</span>
-                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500, marginTop: 2, lineHeight: 1.3 }}>{g.isCustom ? 'Type your own name' : `${g.types.length} types`}</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500, marginTop: 2, lineHeight: 1.3 }}>{g.isCustom ? 'Type your own name' : `${g.types.length} types`}</span>
                       </button>
                     ))}
                   </div>
@@ -3736,7 +4503,7 @@ export default function App() {
                           <button key={t} type="button" onClick={() => { setFormCategory(t); close() }} style={{
                             background: isPicked ? '#EF4444' : 'rgba(255,255,255,0.06)',
                             border: '1px solid ' + (isPicked ? '#EF4444' : 'rgba(255,255,255,0.1)'),
-                            color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                             padding: '7px 12px', borderRadius: 16, minHeight: 32,
                           }}>{t}</button>
                         )
@@ -3744,7 +4511,7 @@ export default function App() {
                     </div>
                     {/* Custom-name input inside the group too — for niche dish types */}
                     <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>Or type a new one in this group</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>Or type a new one in this group</div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <input
                           value={customCategoryName}
@@ -3768,7 +4535,7 @@ export default function App() {
                 {/* Other — custom category with icon picker */}
                 {activeGroup && activeGroup.isCustom && (
                   <div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Category name</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Category name</div>
                     <input
                       value={customCategoryName}
                       onChange={e => setCustomCategoryName(e.target.value)}
@@ -3776,7 +4543,7 @@ export default function App() {
                       maxLength={32}
                       style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 14, padding: '10px 12px', borderRadius: 10, outline: 'none', marginBottom: 14 }}
                     />
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Pick an icon</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Pick an icon</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14, maxHeight: 180, overflowY: 'auto', padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
                       {CUSTOM_CATEGORY_ICONS.map(ic => (
                         <button key={ic} type="button" onClick={() => setCustomCategoryIcon(ic)} style={{
@@ -3801,26 +4568,7 @@ export default function App() {
           )
         })()}
 
-        {/* Visit Us FAB — bottom-right, always visible while scrolling. Expands on first session. */}
-        {!isVendor && (
-          <button onClick={() => setShowLocation(true)} aria-label="Visit us" title="Visit us" style={{
-            position: 'fixed', right: 16, bottom: 24, zIndex: 100,
-            height: 56, minWidth: 56,
-            padding: fabExpanded ? '0 22px 0 18px' : 0,
-            borderRadius: 28, border: 'none',
-            background: isCustomAccent ? accent : '#1f1f1f',
-            color: '#fff', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            boxShadow: '0 6px 20px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3)',
-            transition: 'padding 250ms ease, min-width 250ms ease',
-            overflow: 'hidden', whiteSpace: 'nowrap',
-          }}>
-            <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />
-            {fabExpanded && (
-              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.3 }}>Visit Us</span>
-            )}
-          </button>
-        )}
+        {/* Visit Us moved to the vendor side drawer — see end of drawer items. */}
 
         {/* Full-category drawer — slides in from right when burger pressed */}
         {menuDrawerOpen && (
@@ -3849,9 +4597,20 @@ export default function App() {
               {/* Accent line on top — premium "title indicator" */}
               <div style={{ width: 36, height: 3, borderRadius: 2, background: isCustomAccent ? accent : 'rgba(255,255,255,0.4)', marginBottom: 14 }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div>
-                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Menu</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  {/* Donut theme: small donut photo to the left of the header text. */}
+                  {shopTheme === 'donut' && (
+                    <img
+                      src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png?updatedAt=1778707873204"
+                      alt=""
+                      onError={imgError('theme')}
+                      style={{ width: 80, height: 80, borderRadius: 40, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}
+                    />
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Menu</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
+                  </div>
                 </div>
                 <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: accent, border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: `0 2px 6px ${accent}66` }}>&times;</button>
               </div>
@@ -3901,13 +4660,13 @@ export default function App() {
                       </span>
                       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                         <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{opt.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.55)', lineHeight: 1.3, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{DESCS[opt.filter] || DESCS[opt.label] || ''}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.55)', lineHeight: 1.3, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{DESCS[opt.filter] || DESCS[opt.label] || ''}</span>
                       </span>
                       <span style={{
                         padding: '4px 10px', borderRadius: 11,
                         background: '#FACC15',
                         color: '#1a1a1a',
-                        fontSize: 11, fontWeight: 800, minWidth: 24, textAlign: 'center',
+                        fontSize: 13, fontWeight: 800, minWidth: 24, textAlign: 'center',
                         boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.15)',
                       }}>{count}</span>
                     </button>
@@ -3923,7 +4682,22 @@ export default function App() {
         {visibleMenu.map((item) => (
           menuCardStyle === 'grid' ? (
             /* GRID card style — 2 columns, image on top */
-            <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 14, overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+            <div key={item.id} style={{
+              background: donutCardStyles ? donutCardStyles.background : 'rgba(0,0,0,0.85)',
+              backdropFilter: donutCardStyles?.backdropFilter || 'none',
+              WebkitBackdropFilter: donutCardStyles?.WebkitBackdropFilter || 'none',
+              border: donutCardStyles ? 'none' : (isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)'),
+              // Match Design Studio preview card dimensions for donut theme:
+              // tighter radius, same compact body sizing.
+              borderRadius: donutCardStyles ? 10 : 14, overflow: 'hidden', position: 'relative',
+              ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {})
+            }}>
+              {/* Donut frame-side stripe — explicit element with rounded top/
+                  bottom-left corners so the frame colour visibly rounds at
+                  both ends, not just clipped flat by the card's overflow. */}
+              {donutCardStyles && (
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: donutFrameAccent, borderTopLeftRadius: 10, borderBottomLeftRadius: 10, zIndex: 4, pointerEvents: 'none' }} />
+              )}
               {/* Perk ribbon — overlay on top edge of image */}
               {(() => {
                 const p = getPerkDisplay(item)
@@ -3931,31 +4705,81 @@ export default function App() {
                 const cd = getPerkCountdown(item)
                 if (cd === 'expired' || cd === 'soldout') return null
                 return (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: 0.3, padding: '3px 6px', display: 'flex', alignItems: 'center', gap: 4, zIndex: 3 }}>
-                    <span style={{ fontSize: 11 }}>{p.emoji}</span>
+                  <div style={{ position: 'absolute', top: 0, left: donutCardStyles ? 4 : 0, right: 0, background: donutCardStyles ? donutPromoBarColor : accent, color: '#fff', fontSize: donutCardStyles ? 11 : 9, fontWeight: 800, letterSpacing: donutCardStyles ? 0.4 : 0.3, padding: donutCardStyles ? '6px 8px' : '3px 6px', display: 'flex', alignItems: 'center', gap: donutCardStyles ? 5 : 4, zIndex: 3 }}>
+                    <span style={{ fontSize: 13 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
-                    {cd && <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                    {cd && <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 28 : 6 })(), right: 6, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
-              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
-              {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
-              {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: 80, left: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
-              <div style={{ padding: '8px 10px 10px' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}</div>
+              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
+                donutCardStyles
+                  ? {
+                      // Match Design Studio preview: 4:3 landscape, contain
+                      // with gray bg, 4px left margin for inset frame stripe.
+                      width: 'calc(100% - 4px)',
+                      marginLeft: 4,
+                      aspectRatio: '4 / 3',
+                      objectFit: 'contain',
+                      background: '#f5f5f5',
+                      display: 'block',
+                    }
+                  : { width: '100%', height: 110, objectFit: 'cover', display: 'block' }
+              } onClick={() => { setItemModal(item); setModalQty(1) }} />
+              {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: 80, left: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+              <div style={{ padding: donutCardStyles ? '6px 8px 8px' : '8px 10px 10px' }}>
+                <div style={{ fontSize: donutCardStyles ? 13 : 13, fontWeight: donutCardStyles ? 800 : 700, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: donutCardStyles ? 4 : 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}</div>
+                {/* Description — donut only on grid. 12px / WCAG-min, higher
+                    contrast, wraps to 2 lines so it's actually readable. */}
+                {donutCardStyles && item.desc && (
+                  <div style={{ fontSize: 13, lineHeight: 1.3, color: donutCardStyles.textColor === '#fff' ? 'rgba(255,255,255,0.78)' : 'rgba(0,0,0,0.7)', marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.desc}</div>
+                )}
+                {/* Donut grid: price on its own row, add-to-cart full-width under it.
+                    Gives the price room to display without competing with the button. */}
+                {donutCardStyles ? (
+                  <>
+                    <div style={{ marginBottom: 4, whiteSpace: 'nowrap' }}>
+                      {item.promoPrice ? (
+                        <><span style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', textDecoration: 'line-through', marginRight: 4 }}>{fmt(item.price)}</span><span style={{ fontSize: 13, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
+                      ) : (
+                        <span style={{ fontSize: 13, fontWeight: 800, color: donutFrameAccent }}>{fmt(item.price)}</span>
+                      )}
+                    </div>
+                    {!isVendor && shopOpen && item.available && (
+                      donutAddBtnShape === 'pill' ? (
+                        <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ width: '100%', height: 26, padding: '0 10px', borderRadius: 13, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>{donutAddBtnText}</button>
+                      ) : (
+                        <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ width: '100%', height: 26, borderRadius: 13, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>+</button>
+                      )
+                    )}
+                    {isVendor && vendorStatus !== 'expired' && <button style={{ ...S.smallBtn('#8B0000'), marginTop: 6 }} onClick={() => startEdit(item)}>Edit</button>}
+                  </>
+                ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>{item.promoPrice ? <span style={{ fontSize: 13, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span> : <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>}</div>
-                  {!isVendor && shopOpen && item.available && <button style={{ ...S.addBtn, position: 'static', width: 28, height: 28, borderRadius: 14, fontSize: 16 }} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>}
+                  {!isVendor && shopOpen && item.available && (
+                    <button style={{ ...S.addBtn, position: 'static', width: 28, height: 28, borderRadius: 14, fontSize: 16 }} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
+                  )}
                   {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
                 </div>
+                )}
               </div>
             </div>
           ) : menuCardStyle === 'fullwidth' ? (
             /* FULLWIDTH card style — large image cards */
-            <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, margin: '8px 12px', overflow: 'hidden', position: 'relative', ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {}) }}>
+            <div key={item.id} style={{
+              background: donutCardStyles ? donutCardStyles.background : 'rgba(0,0,0,0.85)',
+              backdropFilter: donutCardStyles?.backdropFilter || 'none',
+              WebkitBackdropFilter: donutCardStyles?.WebkitBackdropFilter || 'none',
+              border: donutCardStyles ? 'none' : (isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)'),
+              boxShadow: donutCardStyles ? `inset 4px 0 0 ${donutFrameAccent}` : undefined,
+              borderRadius: 16, margin: '8px 12px', overflow: 'hidden', position: 'relative',
+              ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)' } : {})
+            }}>
               {/* Perk ribbon — overlay on top edge of image */}
               {(() => {
                 const p = getPerkDisplay(item)
@@ -3963,7 +4787,7 @@ export default function App() {
                 const cd = getPerkCountdown(item)
                 if (cd === 'expired' || cd === 'soldout') return null
                 return (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 3 }}>
+                  <div style={{ position: 'absolute', top: 0, left: donutCardStyles ? 4 : 0, right: 0, background: donutCardStyles ? donutPromoBarColor : accent, color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: 0.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 3 }}>
                     <span style={{ fontSize: 14 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
                     {cd && <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
@@ -3973,16 +4797,40 @@ export default function App() {
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 36 : 8 })(), right: 8, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
-              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} onClick={() => { setItemModal(item); setModalQty(1) }} />
-              {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
-              {item.halal && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 10, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
+              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
+                donutCardStyles
+                  ? {
+                      // Donut: image inset under the promo banner, shorter
+                      // height so the photo reads as a tidy block tucked
+                      // between the banner and the body content.
+                      width: 'calc(100% - 8px)',
+                      marginLeft: 4,
+                      marginTop: 32,
+                      height: isDonutImageCard ? 80 : 90,
+                      marginRight: 4,
+                      borderRadius: 10,
+                      objectFit: 'cover',
+                      display: 'block',
+                    }
+                  : { width: '100%', height: 180, objectFit: 'cover', display: 'block' }
+              } onClick={() => { setItemModal(item); setModalQty(1) }} />
+              {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {item.halal && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 58, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: '12px 14px' }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-                {item.desc && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{item.desc}</div>}
+                <div style={{ fontSize: 16, fontWeight: 800, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: 4 }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                {item.desc && <div style={{ fontSize: 13, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{item.desc}</div>}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>{item.promoPrice ? <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></> : <span style={{ fontSize: 16, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>}</div>
-                  {!isVendor && shopOpen && item.available && <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>}
+                  <div>{item.promoPrice ? <><span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></> : <span style={{ fontSize: 16, fontWeight: 800, color: donutCardStyles ? donutFrameAccent : '#FACC15' }}>{fmt(item.price)}</span>}</div>
+                  {!isVendor && shopOpen && item.available && (donutCardStyles ? (
+                    donutAddBtnShape === 'pill' ? (
+                      <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ height: 36, padding: '0 16px', borderRadius: 18, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>{donutAddBtnText}</button>
+                    ) : (
+                      <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ width: 36, height: 36, borderRadius: 18, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 20, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>+</button>
+                    )
+                  ) : (
+                    <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
+                  ))}
                   {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
                 </div>
               </div>
@@ -3991,7 +4839,26 @@ export default function App() {
             /* HORIZONTAL card style — default */
             <div
               key={item.id}
-              style={{ ...S.card, ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}), ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}), ...(getPerkDisplay(item) && getPerkCountdown(item) !== 'expired' && getPerkCountdown(item) !== 'soldout' ? { paddingTop: 30 } : {}) }}
+              style={{
+                ...S.card,
+                // Donut overrides for bg + frame side. Frame uses inset
+                // box-shadow (not borderLeft) so children align with the
+                // card's rounded outer edge. paddingBottom adds breathing
+                // room for the absolutely-positioned Add-to-Cart button so
+                // it doesn't overlap the item description.
+                ...(donutCardStyles ? {
+                  background: donutCardStyles.background,
+                  backdropFilter: donutCardStyles.backdropFilter,
+                  WebkitBackdropFilter: donutCardStyles.WebkitBackdropFilter,
+                  boxShadow: `inset 3px 0 0 ${donutFrameAccent}`,
+                  border: 'none',
+                  // Small bottom breathing room under the inline Add-to-Cart button.
+                  paddingBottom: 10,
+                } : {}),
+                ...(!item.available && isVendor ? { background: 'rgba(139,0,0,0.4)', border: '1px solid rgba(255,60,60,0.2)' } : {}),
+                ...(isCustomAccent && !donutCardStyles ? { borderLeft: `3px solid ${accent}` } : {}),
+                ...(getPerkDisplay(item) && getPerkCountdown(item) !== 'expired' && getPerkCountdown(item) !== 'soldout' ? { paddingTop: 30 } : {}),
+              }}
             >
               {/* Perk ribbon — always visible when item has perks, hidden when expired/sold out */}
               {(() => {
@@ -4000,10 +4867,10 @@ export default function App() {
                 const cd = getPerkCountdown(item)
                 if (cd === 'expired' || cd === 'soldout') return null
                 return (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: accent, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16, zIndex: 1 }}>
+                  <div style={{ position: 'absolute', top: 0, left: donutCardStyles ? 3 : 0, right: 0, background: donutCardStyles ? donutPromoBarColor : accent, color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: 0.5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, borderTopLeftRadius: donutCardStyles ? 0 : 16, borderTopRightRadius: 16, zIndex: 1 }}>
                     <span style={{ fontSize: 13 }}>{p.emoji}</span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.text}</span>
-                    {cd && <span style={{ fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
+                    {cd && <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{cd}</span>}
                   </div>
                 )
               })()}
@@ -4016,35 +4883,46 @@ export default function App() {
                 src={item.photo || PLACEHOLDER_SM}
                 alt={item.name}
                 onError={imgError('food')}
-                style={S.cardImg}
+                style={isDonutImageCard ? { ...S.cardImg, margin: 8, borderRadius: 10, width: 'auto', maxWidth: 'calc(100% - 16px)' } : S.cardImg}
                 onClick={() => { setItemModal(item); setModalQty(1) }}
               />
               {item.halal && (
-                <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 10, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
+                <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
               )}
               {item.popular && (
-                <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 10, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>
+                <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>
               )}
               {isVendor && vendorStatus !== 'expired' && (
                 <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
               )}
               <div style={S.cardBody}>
-                <div style={S.cardName} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-                <div style={S.cardDesc}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ ...S.cardName, color: donutCardStyles ? donutCardStyles.textColor : (S.cardName && S.cardName.color) }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                <div style={{ ...S.cardDesc, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : (S.cardDesc && S.cardDesc.color) }}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div>
                     {item.promoPrice ? (
-                      <><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
+                      <><span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></>
                     ) : (
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#FACC15' }}>{fmt(item.price)}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: donutCardStyles ? donutFrameAccent : '#FACC15' }}>{fmt(item.price)}</span>
                     )}
                   </div>
+                  {/* Donut: Add-to-Cart inline on the same row as the price,
+                      sitting below the description. Standard themes still use
+                      the absolute-positioned S.addBtn outside cardBody. */}
+                  {donutCardStyles && !isVendor && shopOpen && item.available && (
+                    donutAddBtnShape === 'pill' ? (
+                      <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ height: 26, padding: '0 12px', borderRadius: 13, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{donutAddBtnText}</button>
+                    ) : (
+                      <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ width: 28, height: 28, borderRadius: 14, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}>+</button>
+                    )
+                  )}
                   {isVendor && vendorStatus !== 'expired' && (
                     <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>
                   )}
                 </div>
               </div>
-              {!isVendor && shopOpen && item.available && (
+              {/* Standard-theme Add-to-Cart — absolute, original behaviour. */}
+              {!donutCardStyles && !isVendor && shopOpen && item.available && (
                 <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
               )}
             </div>
@@ -4060,8 +4938,8 @@ export default function App() {
       {/* --- StreetLocal Footer Link --- */}
       {!isVendor && (
         <a href="https://streetlocal.live" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', padding: '16px 0 8px', textDecoration: 'none' }}>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>Powered by </span>
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</span>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>Powered by </span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</span>
         </a>
       )}
       </div>
@@ -4098,12 +4976,12 @@ export default function App() {
               <button onClick={() => setItemModal(null)} style={{ width: 38, height: 38, borderRadius: 19, background: isCustomAccent ? accent : 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{shopFoodType}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{shopFoodType}</div>
               </div>
               <button onClick={() => { setItemModal(null); if (cart.length > 0) { setCheckoutOpen(true); setOrderDone(false) } }} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', cursor: 'pointer', padding: 6, minWidth: 44, minHeight: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
                 <span style={{ fontSize: 20 }}>🛒</span>
                 {cart.length > 0 && (
-                  <span style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderRadius: 10, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {cart.reduce((s, c) => s + c.qty, 0)}
                   </span>
                 )}
@@ -4147,7 +5025,7 @@ export default function App() {
                             ))}
                           </div>
                           {/* Counter badge */}
-                          <div style={{ position: 'absolute', top: 10, left: 10, padding: '4px 10px', borderRadius: 12, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: '#fff', fontSize: 11, fontWeight: 700, pointerEvents: 'none' }}>{modalPhotoIdx + 1} / {photoStrip.length}</div>
+                          <div style={{ position: 'absolute', top: 10, left: 10, padding: '4px 10px', borderRadius: 12, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: '#fff', fontSize: 13, fontWeight: 700, pointerEvents: 'none' }}>{modalPhotoIdx + 1} / {photoStrip.length}</div>
                         </>
                       )}
                     </div>
@@ -4167,10 +5045,34 @@ export default function App() {
                   </>
                 )
               })()}
-              {/* Category badge */}
-              {itemModal.category && (
-                <span style={{ position: 'absolute', top: 12, right: 26, fontSize: 11, fontWeight: 700, color: '#fff', background: accent, padding: '4px 10px', borderRadius: 8 }}>{itemModal.category}</span>
+              {/* Category badge — hidden on donut theme so the Reviews pill
+                  can sit at the very top-right of the image without stacking. */}
+              {itemModal.category && shopTheme !== 'donut' && (
+                <span style={{ position: 'absolute', top: 12, right: 26, fontSize: 13, fontWeight: 700, color: '#fff', background: accent, padding: '4px 10px', borderRadius: 8 }}>{itemModal.category}</span>
               )}
+              {/* Reviews pill — donut theme only. Top-right, just under the
+                  modal header. Opens the per-item reviews page. */}
+              {shopTheme === 'donut' && (() => {
+                const key = itemModal.id || itemModal.name
+                const list = reviewsByItem[key] || []
+                return (
+                  <button
+                    onClick={() => setItemReviewsOpen(itemModal)}
+                    style={{
+                      position: 'absolute', top: 12, right: 26,
+                      padding: '6px 12px', borderRadius: 100,
+                      background: '#FACC15', border: 'none', color: '#000',
+                      fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      minHeight: 32, zIndex: 3, fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ fontSize: 13 }}>★</span>
+                    Reviews{list.length > 0 ? ` · ${list.length}` : ''}
+                  </button>
+                )
+              })()}
             </div>
 
             {/* Info card — pulls up over image */}
@@ -4179,26 +5081,26 @@ export default function App() {
               {isCustomAccent && <div style={{ position: 'absolute', top: 20, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
               <h2 style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{itemModal.name}</h2>
-              {itemModal.spice > 0 && <span style={{ fontSize: 14 }}>{'🌶️'.repeat(itemModal.spice)}</span>}
+              {itemModal.spice > 0 && shopTheme !== 'donut' &&<span style={{ fontSize: 14 }}>{'🌶️'.repeat(itemModal.spice)}</span>}
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{itemModal.desc}</p>
 
               {/* Badges — popular, halal, dietary tags */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                {itemModal.popular && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>⭐ Popular</span>}
-                {(itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
+                {itemModal.popular && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>⭐ Popular</span>}
+                {(itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
                 {(itemModal.dietary || []).filter(d => d !== 'Halal').map(d => (
-                  <span key={d} style={{ fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '4px 10px', borderRadius: 8 }}>🌱 {d}</span>
+                  <span key={d} style={{ fontSize: 13, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '4px 10px', borderRadius: 8 }}>🌱 {d}</span>
                 ))}
-                {itemModal.portion && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: 8 }}>⚖️ {itemModal.portion}</span>}
+                {itemModal.portion && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: 8 }}>⚖️ {itemModal.portion}</span>}
                 {itemModal.stock != null && itemModal.stock > 0 && itemModal.stock <= 5 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#fca5a5', padding: '4px 10px', borderRadius: 8 }}>Only {itemModal.stock} left</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#fca5a5', padding: '4px 10px', borderRadius: 8 }}>Only {itemModal.stock} left</span>
                 )}
               </div>
               {/* Allergen warning — surfaces only if allergens present */}
               {(itemModal.allergens || []).length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10 }}>
                   <span style={{ fontSize: 14 }}>⚠️</span>
-                  <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 600 }}>Contains: {(itemModal.allergens || []).join(', ')}</span>
+                  <span style={{ fontSize: 13, color: '#fca5a5', fontWeight: 600 }}>Contains: {(itemModal.allergens || []).join(', ')}</span>
                 </div>
               )}
 
@@ -4233,7 +5135,7 @@ export default function App() {
             {/* Variants picker — required choice if item has variants */}
             {itemModal.variants && itemModal.variants.length > 0 && (
               <div style={{ padding: '0 14px 12px' }}>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Size · choose one</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Size · choose one</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {itemModal.variants.map(v => {
                     const isActive = modalVariant && modalVariant.id === v.id
@@ -4246,7 +5148,7 @@ export default function App() {
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       }}>
                         <span>{v.name}</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.85 }}>{v.priceDelta > 0 ? `+${fmt(v.priceDelta)}` : v.priceDelta < 0 ? fmt(v.priceDelta) : 'base'}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>{v.priceDelta > 0 ? `+${fmt(v.priceDelta)}` : v.priceDelta < 0 ? fmt(v.priceDelta) : 'base'}</span>
                       </button>
                     )
                   })}
@@ -4257,7 +5159,7 @@ export default function App() {
             {/* Modifiers — optional multi-select */}
             {itemModal.modifiers && itemModal.modifiers.length > 0 && (
               <div style={{ padding: '0 14px 12px' }}>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Add-ons · optional</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Add-ons · optional</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {itemModal.modifiers.map(m => {
                     const isChecked = modalModifiers.some(x => x.id === m.id)
@@ -4270,10 +5172,10 @@ export default function App() {
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)', background: isChecked ? (isCustomAccent ? accent : '#fff') : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: isCustomAccent ? '#fff' : '#000', fontWeight: 900 }}>{isChecked && '✓'}</span>
+                          <span style={{ width: 18, height: 18, borderRadius: 4, border: '1px solid rgba(255,255,255,0.3)', background: isChecked ? (isCustomAccent ? accent : '#fff') : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: isCustomAccent ? '#fff' : '#000', fontWeight: 900 }}>{isChecked && '✓'}</span>
                           {m.name}
                         </span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: m.priceDelta > 0 ? '#FACC15' : 'rgba(255,255,255,0.5)' }}>{m.priceDelta > 0 ? `+${fmt(m.priceDelta)}` : m.priceDelta < 0 ? fmt(m.priceDelta) : 'free'}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: m.priceDelta > 0 ? '#FACC15' : 'rgba(255,255,255,0.5)' }}>{m.priceDelta > 0 ? `+${fmt(m.priceDelta)}` : m.priceDelta < 0 ? fmt(m.priceDelta) : 'free'}</span>
                       </button>
                     )
                   })}
@@ -4297,17 +5199,17 @@ export default function App() {
                 ) : (
                   <div style={{ padding: 10, background: 'rgba(0,0,0,0.4)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>📝 Note for vendor</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>📝 Note for vendor</span>
                       <button onClick={() => setModalNoteOpen(false)} type="button" style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer', padding: 0, lineHeight: 1, width: 24, height: 24 }}>&times;</button>
                     </div>
                     <textarea
                       value={modalNote}
                       onChange={(e) => setModalNote(e.target.value.slice(0, 100))}
-                      placeholder="Extra spicy · no onion · less sugar"
+                      placeholder={shopTheme === 'donut' ? 'Extra glaze · no sprinkles · less sugar' : 'Extra spicy · no onion · less sugar'}
                       autoFocus
                       style={{ width: '100%', minHeight: 50, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
                     />
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, textAlign: 'right' }}>{modalNote.length}/100</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 4, textAlign: 'right' }}>{modalNote.length}/100</div>
                   </div>
                 )}
               </div>
@@ -4359,7 +5261,7 @@ export default function App() {
               <button onClick={() => setShowLocation(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{userDistance !== null ? `Distance ${userDistance} km` : 'Visit Us'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{userDistance !== null ? `Distance ${userDistance} km` : 'Visit Us'}</div>
               </div>
             </div>
 
@@ -4386,19 +5288,19 @@ export default function App() {
                 ) : null}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{shopName}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{shopFoodType}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{shopFoodType}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <div style={{ width: 8, height: 8, borderRadius: 4, background: shopOpen ? '#22c55e' : '#EF4444' }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: shopOpen ? '#22c55e' : '#EF4444' }}>{shopOpen ? 'Open Now' : 'Closed'}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: shopOpen ? '#22c55e' : '#EF4444' }}>{shopOpen ? 'Open Now' : 'Closed'}</span>
                   </div>
                   {/* WhatsApp on Visit Us — only when vendor opts in (foodlocalchat) */}
                   {(isVendor || showVisitUsWA) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
                     <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbv-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 14, height: 14, objectFit: 'contain' }} />
                     {!isVendor && shopPhone ? (
-                      <a href={`https://wa.me/${String(shopPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>{shopPhone}</a>
+                      <a href={`https://wa.me/${String(shopPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>{shopPhone}</a>
                     ) : (
-                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{shopPhone}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{shopPhone}</span>
                     )}
                   </div>
                   )}
@@ -4441,7 +5343,7 @@ export default function App() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Open Today Till {closeStr}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>From {openStr} · {dayRange}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>From {openStr} · {dayRange}</div>
                   </div>
                   {!todaySched?.off && isOpen && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -4451,14 +5353,14 @@ export default function App() {
                           <circle cx="16" cy="16" r="12" fill="none" stroke={ringColor} strokeWidth="2.5" strokeDasharray={2 * Math.PI * 12} strokeDashoffset={(2 * Math.PI * 12) * (1 - progress)} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
                         </svg>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: minsLeft <= 30 ? '#EF4444' : 'rgba(255,255,255,0.5)' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: minsLeft <= 30 ? '#EF4444' : 'rgba(255,255,255,0.5)' }}>
                         {minsLeft <= 30 ? `${mLeft}m left` : `${hrsLeft}h ${mLeft}m`}
                       </span>
                     </div>
                   )}
                 </div>
                 {closedDays.length > 0 && (
-                  <div style={{ fontSize: 12, color: '#EF4444', fontWeight: 600, marginTop: 6 }}>
+                  <div style={{ fontSize: 13, color: '#EF4444', fontWeight: 600, marginTop: 6 }}>
                     Closed on — {closedDays.map(d => (t[d.en.toLowerCase()] || d.en).slice(0, 3)).join(' / ')}
                   </div>
                 )}
@@ -4474,7 +5376,7 @@ export default function App() {
                 <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdvvvdsds-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{shopAddress || 'Address not set'}</div>
-                  {(shopCity || shopCountry) && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
+                  {(shopCity || shopCountry) && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
                   </div>
               </div>
               {shopMapsLink && (
@@ -4567,7 +5469,7 @@ export default function App() {
 
         const renderColorPicker = (current, setter, label) => (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
               {COLOR_SWATCHES.map(c => (
                 <button key={c} onClick={() => setter(c)} style={{ width: 28, height: 28, borderRadius: 14, border: current === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, boxShadow: current === c ? '0 0 8px rgba(255,255,255,0.3)' : 'none' }} />
@@ -4575,7 +5477,7 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <input key={current} defaultValue={current} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setter(v) } }} />
-              <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setter(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+              <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setter(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Set</button>
             </div>
           </div>
         )
@@ -4587,12 +5489,17 @@ export default function App() {
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
             {/* Content scroll container — sits above the fixed bg + overlay */}
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
-            {/* Header — sticky with translucent bg so content doesn't show through during scroll */}
-            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 5 }}>
+            {/* Header — sticky. Donut theme: no tinted container (clean look
+                over the pink theme bg). Other themes: keep the translucent
+                bg + blur for legibility while scrolling. */}
+            <div style={landingThemeId === 'donuts'
+              ? { padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 5 }
+              : { padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 5 }
+            }>
               <button onClick={() => setHeroEditor(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Customise your landing page brand</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Customise your landing page brand</div>
               </div>
             </div>
 
@@ -4609,7 +5516,16 @@ export default function App() {
                   <div style={{ width: '100%', height: '100%', borderRadius: 27, overflow: 'hidden', position: 'relative', background: '#000' }}>
                     {/* Dynamic island */}
                     <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
+                    {/* Donut theme: render the curated frozen HTML so the editor's
+                        phone preview matches what the customer actually sees on
+                        the landing. The custom hero-text/logo controls below are
+                        a no-op for the donut theme but stay reachable for other
+                        themes the vendor may switch to later. */}
+                    {landingThemeId === 'donuts' && (
+                      <FitIframe fit="contain" src={donutsHtmlSrc} />
+                    )}
                     {/* Background image */}
+                    {landingThemeId !== 'donuts' && (<>
                     <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
@@ -4637,8 +5553,9 @@ export default function App() {
                       {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
                       {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
                       {/* Mock View Menu button */}
-                      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 10, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
                     </div>
+                    </>)}
                     {/* Home indicator */}
                     <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 10 }} />
                   </div>
@@ -4646,33 +5563,45 @@ export default function App() {
               </div>
             </div>
 
-            {/* Controls */}
-            <div style={{ padding: '14px', position: 'relative', zIndex: 2 }}>
+            {/* Controls — donut theme wraps the section in a glass-black panel
+                so the dark-tinted inputs and effect buttons read as one cohesive
+                glass surface over the pink theme bg. Other themes keep the flat
+                14px padding so existing rendering is unchanged. */}
+            <div style={landingThemeId === 'donuts'
+              ? { margin: '14px', padding: '14px', borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 2 }
+              : { padding: '14px', position: 'relative', zIndex: 2 }
+            }>
 
               {/* Shop Name Input */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Shop Name</span>
-                  <span style={{ fontSize: 11, color: charWarning ? '#EF4444' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{shopName.length}/20</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Shop Name</span>
+                  <span style={{ fontSize: 13, color: charWarning ? '#EF4444' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{shopName.length}/20</span>
                 </div>
-                <input value={shopName} maxLength={20} onChange={e => setShopName(e.target.value)} placeholder="Your shop name" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: charWarning ? '2px solid #EF4444' : '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 16, fontWeight: 700, outline: 'none', fontFamily: ffE }} />
-                {lineWarning && <div style={{ fontSize: 11, color: '#EF4444', marginTop: 4, fontWeight: 600 }}>Name will stack to {pLines.length} lines. Try shorter words or a smaller size.</div>}
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Preview: {pLines.map((l, i) => (i > 0 ? ' / ' : '') + `"${l}"`)}</div>
+                <input value={shopName} maxLength={20} onChange={e => handleShopNameChange(e.target.value)} placeholder="Your shop name" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: (charWarning || shopNameError) ? '2px solid #EF4444' : '1px solid rgba(255,255,255,0.1)', background: landingThemeId === 'donuts' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.06)', backdropFilter: landingThemeId === 'donuts' ? 'blur(12px)' : 'none', WebkitBackdropFilter: landingThemeId === 'donuts' ? 'blur(12px)' : 'none', color: '#fff', fontSize: 16, fontWeight: 700, outline: 'none', fontFamily: ffE }} />
+                {shopNameError && (
+                  <div role="alert" style={{ marginTop: 6, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', fontSize: 13, fontWeight: 600, lineHeight: 1.45, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                    <span style={{ fontSize: 13, flexShrink: 0 }}>⚠</span>
+                    <span>{shopNameError}</span>
+                  </div>
+                )}
+                {lineWarning && <div style={{ fontSize: 13, color: '#EF4444', marginTop: 4, fontWeight: 600 }}>Name will stack to {pLines.length} lines. Try shorter words or a smaller size.</div>}
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Preview: {pLines.map((l, i) => (i > 0 ? ' / ' : '') + `"${l}"`)}</div>
               </div>
 
               {/* Size */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Size</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Size</div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                 {[{ id: 'normal', label: 'Normal', px: '42px' }, { id: 'large', label: 'Large', px: '52px' }, { id: 'xl', label: 'Extra Large', px: '62px' }].map(s => (
-                  <button key={s.id} onClick={() => setHeroSize(s.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: heroSize === s.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: heroSize === s.id ? `${accent}20` : 'rgba(255,255,255,0.04)', color: heroSize === s.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                  <button key={s.id} onClick={() => setHeroSize(s.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: heroSize === s.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: heroSize === s.id ? `${accent}20` : 'rgba(255,255,255,0.04)', color: heroSize === s.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>
                     <div>{s.label}</div>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{s.px}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{s.px}</div>
                   </button>
                 ))}
               </div>
 
               {/* Font */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Font</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Font</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
                 {[
                   { id: 'system', label: 'Default', ff: '-apple-system, sans-serif' },
@@ -4687,14 +5616,23 @@ export default function App() {
               </div>
 
               {/* Effects */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Effect</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Effect</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 14 }}>
-                {EFFECTS_LIST.map(fx => (
-                  <button key={fx.id} onClick={() => setHeroEffect(fx.id)} style={{ padding: '10px 8px', borderRadius: 10, border: heroEffect === fx.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: heroEffect === fx.id ? `${accent}20` : 'rgba(255,255,255,0.04)', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: heroEffect === fx.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{fx.label}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{fx.desc}</div>
+                {EFFECTS_LIST.map(fx => {
+                  // Donut theme: glass-black tint (backdrop-filter + black rgba)
+                  // per user spec; other themes keep the original light style.
+                  const isActive = heroEffect === fx.id
+                  const isDonut = landingThemeId === 'donuts'
+                  const bg = isDonut
+                    ? (isActive ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.55)')
+                    : (isActive ? `${accent}20` : 'rgba(255,255,255,0.04)')
+                  return (
+                  <button key={fx.id} onClick={() => setHeroEffect(fx.id)} style={{ padding: '10px 8px', borderRadius: 10, border: isActive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: bg, backdropFilter: isDonut ? 'blur(12px)' : 'none', WebkitBackdropFilter: isDonut ? 'blur(12px)' : 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}>{fx.label}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{fx.desc}</div>
                   </button>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Title Color */}
@@ -4702,8 +5640,8 @@ export default function App() {
 
               {/* Sub-text Color */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Sub-text Color</span>
-                {heroSubColor && <button onClick={() => setHeroSubColor('')} style={{ background: 'none', border: 'none', color: accent, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>Reset to auto</button>}
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Sub-text Color</span>
+                {heroSubColor && <button onClick={() => setHeroSubColor('')} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset to auto</button>}
               </div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
                 {COLOR_SWATCHES.map(c => (
@@ -4712,7 +5650,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                 <input key={heroSubColor} defaultValue={heroSubColor} placeholder="Auto from title" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroSubColor(v) } }} />
-                <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroSubColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+                <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setHeroSubColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Set</button>
               </div>
 
               {/* Reset all */}
@@ -4760,7 +5698,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>StreetLocal</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}>Theme Editor</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}>Theme Editor</div>
             </div>
             <button onClick={() => setThemeEditor(null)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
@@ -4785,8 +5723,8 @@ export default function App() {
                     <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
                   )}
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', textAlign: 'center', padding: '0 10px' }}>{shopName}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{shopFoodType}</div>
-                  <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 20px', borderRadius: 8, background: editorColor, fontSize: 9, fontWeight: 700, color: '#fff', transition: 'background 0.2s' }}>View Menu</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{shopFoodType}</div>
+                  <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 20px', borderRadius: 8, background: editorColor, fontSize: 13, fontWeight: 700, color: '#fff', transition: 'background 0.2s' }}>View Menu</div>
                 </div>
                 <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 50, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
               </div>
@@ -4832,7 +5770,7 @@ export default function App() {
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 6, background: editorColor, border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
                     <input type="text" placeholder="#8B0000" defaultValue={editorColor} maxLength={7} style={{ flex: 1, padding: '7px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace', outline: 'none' }} onKeyDown={(e) => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) { setEditorColor(v); setEditorBaseColor(v); setEditorTool('position') } } }} />
-                    <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) { setEditorColor(v); setEditorBaseColor(v); setEditorTool('position') } }} style={{ padding: '7px 10px', borderRadius: 6, border: 'none', background: editorColor, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Go</button>
+                    <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) { setEditorColor(v); setEditorBaseColor(v); setEditorTool('position') } }} style={{ padding: '7px 10px', borderRadius: 6, border: 'none', background: editorColor, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Go</button>
                   </div>
                 </div>
                 <div style={{ padding: '0 8px 20px' }}>
@@ -4871,7 +5809,7 @@ export default function App() {
                       : [18, 30, 42, 54, 66, 80].map(l => hslToHex(row.h, l < 25 ? s + 10 : l > 70 ? s - 20 : s, l))
                     return (
                       <div key={ri} style={{ marginBottom: 5 }}>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600, marginBottom: 2, paddingLeft: 2 }}>{row.label}</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 600, marginBottom: 2, paddingLeft: 2 }}>{row.label}</div>
                         <div style={{ display: 'flex', gap: 4 }}>
                           {shades.map((c, ci) => (
                             <button key={ci} onClick={() => { setEditorColor(c); setEditorBaseColor(c); setEditorTool('position') }} style={{
@@ -4891,6 +5829,195 @@ export default function App() {
         )
       })()}
 
+      {/* ═══ PER-ITEM REVIEWS PAGE (donut theme) ═══
+          Stacks over the item modal at z-index 250. The Leave Review form
+          stacks on top of THIS at z-index 260. Closing returns to the
+          item modal (we don't null out itemModal when opening reviews). */}
+      {itemReviewsOpen && shopTheme === 'donut' && (() => {
+        const item = itemReviewsOpen
+        const key = item.id || item.name
+        const realList = reviewsByItem[key] || []
+        // 5 sample reviews — shown only when no real reviews exist yet, so the
+        // page never looks empty. As soon as a customer posts, the mocks step
+        // aside and only real reviews show.
+        const MOCK_REVIEWS = [
+          { id: 'mock-1', rating: 5, name: 'Maya P.',   orderRef: 'DD-487193', verified: true,  comment: 'Absolutely the best donut I\'ve had in years. The icing is real fruit — you can taste it. Will order again.', createdAt: '2026-05-12T10:32:00Z' },
+          { id: 'mock-2', rating: 5, name: 'Jordan L.', orderRef: '',          verified: false, comment: 'Heavenly. Custard filling is so fresh, not too sweet. Five stars easy.', createdAt: '2026-05-10T14:15:00Z' },
+          { id: 'mock-3', rating: 4, name: 'Ravi G.',   orderRef: 'DD-624518', verified: true,  comment: 'Great donut, arrived warm. Lost a star because the box was slightly dented, but taste was 10/10.', createdAt: '2026-05-08T09:45:00Z' },
+          { id: 'mock-4', rating: 5, name: 'Chloe B.',  orderRef: '',          verified: false, comment: 'My kids devoured these. Rich frosting without being too sugary. Found my new Sunday breakfast.', createdAt: '2026-05-05T08:20:00Z' },
+          { id: 'mock-5', rating: 5, name: 'Ava M.',    orderRef: 'DD-301847', verified: true,  comment: 'Beautiful presentation, soft dough, perfect glaze. You can tell these are made with care.', createdAt: '2026-05-02T16:00:00Z' },
+        ]
+        const list = realList.length > 0 ? realList : MOCK_REVIEWS
+        const avgRating = list.length > 0 ? (list.reduce((s, r) => s + (r.rating || 0), 0) / list.length) : 0
+        const avatar = item.photo || (item.photos && item.photos[0]) || PLACEHOLDER_LG
+        const close = () => { setItemReviewsOpen(null); setLeaveReviewOpen(false); setItemReviewForm({ rating: 0, comment: '', name: '', orderRef: '', error: '' }) }
+        const closeLeaveSheet = () => { setLeaveReviewOpen(false); setItemReviewForm(p => ({ ...p, error: '' })) }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}>
+            {/* Same bg + glass as the item modal */}
+            <div style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 0 }} />
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, margin: '0 auto', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', flexShrink: 0 }}>
+                <button onClick={close} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>←</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>
+                    {list.length === 0 ? 'No reviews yet' : `${list.length} review${list.length === 1 ? '' : 's'} · ${avgRating.toFixed(1)} ★`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Leave Review button — above the container, right side */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 10px', flexShrink: 0 }}>
+                <button onClick={() => setLeaveReviewOpen(true)} style={{
+                  padding: '8px 16px', borderRadius: 100,
+                  background: '#FACC15', border: 'none', color: '#000',
+                  fontSize: 13, fontWeight: 900, cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  minHeight: 36, fontFamily: 'inherit',
+                }}>✎ Leave Review</button>
+              </div>
+
+              {/* Tinted glass container holding all reviews for this item */}
+              <div style={{ margin: '0 14px', padding: list.length > 0 ? '18px 16px' : 0, borderRadius: 20, background: list.length > 0 ? 'rgba(0,0,0,0.55)' : 'transparent', backdropFilter: list.length > 0 ? 'blur(14px)' : 'none', WebkitBackdropFilter: list.length > 0 ? 'blur(14px)' : 'none', border: list.length > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                {list.length === 0 ? (
+                  <div style={{ padding: '40px 20px', textAlign: 'center', background: 'rgba(0,0,0,0.4)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>★</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>No reviews yet</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Be the first to share your experience.</div>
+                  </div>
+                ) : (
+                  list.map((r, idx) => (
+                    <div key={r.id}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: idx === 0 ? '0 0 14px' : '14px 0' }}>
+                        <img src={avatar} alt={item.name} onError={imgError('food')} style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.12)' }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+                              <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+                                {[1,2,3,4,5].map(i => (
+                                  <span key={i} style={{ fontSize: 13, color: i <= r.rating ? '#FACC15' : 'rgba(255,255,255,0.18)' }}>★</span>
+                                ))}
+                              </div>
+                            </div>
+                            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                              {new Date(r.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                          {r.verified && r.orderRef && (
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6, padding: '3px 10px', borderRadius: 100, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                              <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 800 }}>✓ Verified Purchase</span>
+                              <span style={{ fontSize: 13, color: '#86efac', fontFamily: 'monospace' }}>· {maskOrderRef(r.orderRef)}</span>
+                            </div>
+                          )}
+                          {r.comment && (
+                            <p style={{ fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.82)', margin: '8px 0 0' }}>{r.comment}</p>
+                          )}
+                        </div>
+                      </div>
+                      {idx < list.length - 1 && (
+                        <div style={{ borderTop: '1.5px dotted rgba(255,255,255,0.22)' }} />
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Bottom Leave Review button — same action, easier reach */}
+              <div style={{ padding: '14px 14px 24px', flexShrink: 0 }}>
+                <button onClick={() => setLeaveReviewOpen(true)} style={{
+                  width: '100%', padding: '14px 16px', borderRadius: 14,
+                  background: '#FACC15', border: 'none', color: '#000',
+                  fontSize: 15, fontWeight: 900, cursor: 'pointer',
+                  minHeight: 48, fontFamily: 'inherit',
+                  boxShadow: '0 6px 20px rgba(250,204,21,0.35)',
+                }}>✎ Leave Review</button>
+              </div>
+            </div>
+
+            {/* Leave Review modal — bottom sheet inside the reviews page */}
+            {leaveReviewOpen && (
+              <div onClick={closeLeaveSheet} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 260, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: 'rgba(15,15,15,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '20px 18px calc(env(safe-area-inset-bottom, 0px) + 20px)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Leave a review</h3>
+                    <button onClick={closeLeaveSheet} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>×</button>
+                  </div>
+
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8, fontWeight: 700 }}>Your rating</div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {[1,2,3,4,5].map(n => (
+                        <button key={n} onClick={() => setItemReviewForm(p => ({ ...p, rating: n, error: '' }))} aria-label={`${n} stars`} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+                          <span style={{ fontSize: 28, color: n <= itemReviewForm.rating ? '#FACC15' : 'rgba(255,255,255,0.2)' }}>★</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={itemReviewForm.comment}
+                    onChange={(e) => setItemReviewForm(p => ({ ...p, comment: e.target.value, error: '' }))}
+                    placeholder={`Tell others about the ${item.name}...`}
+                    maxLength={280}
+                    rows={3}
+                    style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 10, boxSizing: 'border-box', resize: 'none' }}
+                  />
+
+                  <input
+                    value={itemReviewForm.name}
+                    onChange={(e) => setItemReviewForm(p => ({ ...p, name: e.target.value, error: '' }))}
+                    placeholder="Your name (optional)"
+                    maxLength={40}
+                    style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 10, boxSizing: 'border-box' }}
+                  />
+
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 6, fontWeight: 700 }}>
+                      Order reference <span style={{ color: '#EF4444' }}>* required</span>
+                    </div>
+                    <input
+                      value={itemReviewForm.orderRef}
+                      onChange={(e) => setItemReviewForm(p => ({ ...p, orderRef: e.target.value.toUpperCase(), error: '' }))}
+                      placeholder="e.g. DD-487193"
+                      maxLength={12}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid ' + (itemReviewForm.error && !isVerifiedOrderRef(itemReviewForm.orderRef) ? '#EF4444' : 'rgba(255,255,255,0.1)'), background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', fontVariantNumeric: 'tabular-nums' }}
+                    />
+                    <div style={{ fontSize: 13, color: isVerifiedOrderRef(itemReviewForm.orderRef) ? '#22c55e' : 'rgba(255,255,255,0.5)', marginTop: 6, fontWeight: 600 }}>
+                      {isVerifiedOrderRef(itemReviewForm.orderRef)
+                        ? '✓ Verified — proceed to post your review'
+                        : 'Only verified customers can leave a review. Enter the order ref from your purchase.'}
+                    </div>
+                  </div>
+
+                  {/* Error message — surfaces validation failures from submit. */}
+                  {itemReviewForm.error && (
+                    <div role="alert" style={{ padding: '12px 14px', marginBottom: 12, borderRadius: 12, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', fontSize: 13, fontWeight: 600, lineHeight: 1.45, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <span style={{ fontSize: 14, flexShrink: 0 }}>⚠</span>
+                      <span>{itemReviewForm.error}</span>
+                    </div>
+                  )}
+
+                  <button onClick={submitItemReview} style={{
+                    width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
+                    background: '#FACC15', color: '#000',
+                    fontSize: 15, fontWeight: 900, cursor: 'pointer',
+                    minHeight: 48, fontFamily: 'inherit',
+                    boxShadow: '0 6px 18px rgba(250,204,21,0.35)',
+                  }}>Post Review</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* ═══ CHECKOUT PAGE ═══ */}
       {checkoutOpen && (() => {
         const qtyBg = isCustomAccent ? accent : '#FACC15'
@@ -4906,11 +6033,11 @@ export default function App() {
               <button onClick={() => setCheckoutOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{shopName}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{t.checkout || 'Checkout'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{t.checkout || 'Checkout'}</div>
               </div>
               {!orderDone && (
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{cart.reduce((s, c) => s + c.qty, 0)} items</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{cart.reduce((s, c) => s + c.qty, 0)} items</div>
                   <div style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice)}</div>
                 </div>
               )}
@@ -4923,7 +6050,7 @@ export default function App() {
                   {/* Cart items */}
                   {cart.map((c) => (
                     <div key={c.id} style={{ display: 'flex', gap: 12, padding: 12, marginBottom: 8, background: 'rgba(0,0,0,0.6)', borderRadius: 16, position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)', ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
-                      <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, border: 'none', background: accent, color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
+                      <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
                       <img src={c.photo || PLACEHOLDER_SM} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 20 }}>{c.name}</div>
@@ -4944,19 +6071,19 @@ export default function App() {
                   {cart.length > 0 && (
                     <div style={{ background: isCustomAccent ? `${accent}25` : 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginBottom: 8, border: isCustomAccent ? `1px solid ${accent}40` : '1px solid rgba(255,255,255,0.06)' }}>
                       {cart.map(c => (
-                        <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                        <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                           <span>{c.name} x{c.qty}</span>
                           <span>{fmt(c.price * c.qty)}</span>
                         </div>
                       ))}
                       {delEnabled ? (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'rgba(255,255,255,0.5)', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
                           <span>Delivery ({deliveryZone.label})</span>
                           <span>{deliveryZone.fee > 0 ? fmt(deliveryZone.fee) : 'Free'}</span>
                         </div>
                       ) : (
                         <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>Collection Only</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>Collection Only</span>
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6 }}>
@@ -4969,7 +6096,7 @@ export default function App() {
                   {/* Your details — moved to bottom, the LAST thing customer fills before sending */}
                   {cart.length > 0 && (
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Your Details</div>
                       <input
                         type="text"
                         placeholder="Your name"
@@ -5001,7 +6128,7 @@ export default function App() {
                             style={{
                               flexShrink: 0, padding: '0 12px', minHeight: 44, borderRadius: 10,
                               border: 'none', background: isCustomAccent ? accent : 'rgba(255,255,255,0.18)',
-                              color: '#fff', fontSize: 12, fontWeight: 700, cursor: addressLoading ? 'wait' : 'pointer',
+                              color: '#fff', fontSize: 13, fontWeight: 700, cursor: addressLoading ? 'wait' : 'pointer',
                               display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                               opacity: addressLoading ? 0.6 : 1,
                             }}
@@ -5027,7 +6154,7 @@ export default function App() {
                         <span>{t.orderSent || 'Order Sent'}</span>
                         <span style={{ color: '#FACC15', fontWeight: 900, fontSize: 14 }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
                         {t.orderSentMsg || 'Vendor will reply shortly'}
                       </div>
                     </div>
@@ -5063,8 +6190,8 @@ export default function App() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Scan to Pay</div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
-                        <div style={{ fontSize: 10, color: '#FACC15', fontWeight: 700, marginTop: 3 }}>Tap to enlarge ›</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
+                        <div style={{ fontSize: 13, color: '#FACC15', fontWeight: 700, marginTop: 3 }}>Tap to enlarge ›</div>
                       </div>
                     </button>
                   )}
@@ -5081,7 +6208,7 @@ export default function App() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Funds held in escrow</div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2, lineHeight: 1.4 }}>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2, lineHeight: 1.4 }}>
                             {fmt(heldEscrowOrder.total)} authorised on your card. Released to the vendor when you confirm receipt{heldEscrowOrder.releaseAt ? ` (auto-releases ${new Date(heldEscrowOrder.releaseAt).toLocaleDateString()})` : ''}.
                           </div>
                         </div>
@@ -5105,12 +6232,12 @@ export default function App() {
                         </button>
                       </div>
                       {escrowMessage && (
-                        <div style={{ fontSize: 11, color: '#FACC15', marginTop: 2, textAlign: 'center' }}>{escrowMessage}</div>
+                        <div style={{ fontSize: 13, color: '#FACC15', marginTop: 2, textAlign: 'center' }}>{escrowMessage}</div>
                       )}
                     </div>
                   )}
                   {!heldEscrowOrder && escrowMessage && (
-                    <div style={{ background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 12, padding: 12, fontSize: 12, color: '#fff', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 12, padding: 12, fontSize: 13, color: '#fff', textAlign: 'center' }}>
                       {escrowMessage}
                     </div>
                   )}
@@ -5126,7 +6253,7 @@ export default function App() {
                         <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 280, height: 280, maxWidth: '70vw', maxHeight: '70vw', objectFit: 'contain', display: 'block' }} />
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginTop: 16 }}>Scan to Pay</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
                       <button onClick={() => setQrModalOpen(false)} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Close</button>
                     </div>
                   )}
@@ -5143,7 +6270,7 @@ export default function App() {
                 <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
                   <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
                   <div style={{ fontSize: 17, fontWeight: 800 }}>How would you like to send your order?</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>
                     Both reach the same vendor.
                   </div>
                   <button
@@ -5155,7 +6282,7 @@ export default function App() {
                     <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, border: `1px solid ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 800 }}>In-app chat</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time replies · pay in-app · order tracking</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Real-time replies · pay in-app · order tracking</div>
                     </div>
                   </button>
                   <button
@@ -5166,10 +6293,10 @@ export default function App() {
                     <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 800 }}>WhatsApp</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Opens WhatsApp with your order pre-filled · vendor confirms there</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Opens WhatsApp with your order pre-filled · vendor confirms there</div>
                     </div>
                   </button>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.6)', padding: '6px 2px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.6)', padding: '6px 2px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={orderModeRemember} onChange={e => setOrderModeRemember(e.target.checked)} style={{ accentColor: accent }} />
                     <span>Always use this for {shopName}</span>
                   </label>
@@ -5195,7 +6322,7 @@ export default function App() {
                   {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 16 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
                   <span style={{ position: 'relative', zIndex: 1 }}>{chatSending ? 'Sending…' : `Send Order — ${fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}`}</span>
                 </button>
-                {chatError && <div style={{ marginTop: 8, color: '#FCA5A5', fontSize: 12, textAlign: 'center' }}>{chatError}</div>}
+                {chatError && <div style={{ marginTop: 8, color: '#FCA5A5', fontSize: 13, textAlign: 'center' }}>{chatError}</div>}
               </div>
             )}
           </div>
@@ -5227,10 +6354,10 @@ export default function App() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{conv.customer_name || conv.customer_phone}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ''}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ''}</div>
                     </div>
                     {unread > 0 && (
-                      <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>
+                      <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>
                     )}
                   </button>
                 )
@@ -5268,7 +6395,7 @@ export default function App() {
             <button onClick={() => setVendorTab('shop')} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Order Alerts</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1, fontWeight: 500 }}>Sound · vibration · push notifications</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1, fontWeight: 500 }}>Sound · vibration · push notifications</div>
             </div>
           </div>
 
@@ -5282,10 +6409,10 @@ export default function App() {
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: `${accent}25`, border: `1px solid ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>🔔</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Sound &amp; Vibration</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Audio chime when inbox is open</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Audio chime when inbox is open</div>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
                 When the orders inbox is open and a new order arrives, the app plays a chime and vibrates. Tap below once to allow audio playback on this device.
               </div>
               <button onClick={() => { primeVendorChime(); playVendorChime(); try { navigator.vibrate && navigator.vibrate([200,100,200]) } catch {} }} style={{ padding: '11px 16px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, boxShadow: `0 4px 12px ${accent}50` }}>
@@ -5300,12 +6427,12 @@ export default function App() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
                     Push Notifications
-                    {vendorPushEnabled && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)' }}>ON</span>}
+                    {vendorPushEnabled && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)' }}>ON</span>}
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Alerts when app is closed</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Alerts when app is closed</div>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
                 Receive a system notification when a new order arrives even if the app is closed or the phone is asleep.
               </div>
               {!vendorPushEnabled ? (
@@ -5317,7 +6444,7 @@ export default function App() {
                   {vendorPushBusy ? 'Disabling…' : 'Disable Order Alerts'}
                 </button>
               )}
-              {vendorPushMsg && <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', fontSize: 11, color: 'rgba(255,255,255,0.75)', borderLeft: `3px solid ${accent}` }}>{vendorPushMsg}</div>}
+              {vendorPushMsg && <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', fontSize: 13, color: 'rgba(255,255,255,0.75)', borderLeft: `3px solid ${accent}` }}>{vendorPushMsg}</div>}
             </div>
 
             {/* Show WhatsApp toggle */}
@@ -5326,10 +6453,10 @@ export default function App() {
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>💬</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>WhatsApp on Visit Us</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Public contact channel</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Public contact channel</div>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.55 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.55 }}>
                 Off by default. When ON, your WhatsApp link appears on the public Visit Us page so customers can message you directly.
               </div>
               {/* Custom toggle pill matching app pattern */}
@@ -5389,12 +6516,12 @@ export default function App() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: 0.1 }}>{g.name}</span>
-                {isLive && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86efac', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>LIVE</span>}
-                {g.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.16)', color: '#D8B4FE', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>ENTERPRISE</span>}
-                {g.comingSoon && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245,158,11,0.18)', color: '#FCD34D', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>SOON</span>}
+                {isLive && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86efac', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>LIVE</span>}
+                {g.tier === 'enterprise' && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(168,85,247,0.16)', color: '#D8B4FE', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>ENTERPRISE</span>}
+                {g.comingSoon && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(245,158,11,0.18)', color: '#FCD34D', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>SOON</span>}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 2 }}>{g.tagline}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{g.countryCount}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 2 }}>{g.tagline}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{g.countryCount}</div>
             </div>
 
             {/* Right arrow — high-end "tap to enter" affordance */}
@@ -5417,16 +6544,16 @@ export default function App() {
             <button onClick={() => setPaymentMethodsOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Payment Methods</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
             </div>
           </div>
 
           {/* Trust banner */}
-          <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 14, background: `linear-gradient(135deg, ${accent}18 0%, rgba(0,0,0,0.35) 100%)`, border: `1px solid ${accent}33`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 14, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>🔒</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 3 }}>Your money goes directly to you</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>StreetLocal never holds or processes your funds. Each gateway sends payouts straight to your own account. We're just the checkout UI.</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 3 }}>Your money goes directly to you</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>StreetLocal never holds or processes your funds. Each gateway sends payouts straight to your own account. We're just the checkout UI.</div>
             </div>
           </div>
 
@@ -5435,24 +6562,24 @@ export default function App() {
 
             {liveOnes.length > 0 && (
               <>
-                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(34,197,94,0.85)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(34,197,94,0.85)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 6, height: 6, borderRadius: 3, background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
                   Live · Accepting Payments
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 18 }}>
+                <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 18 }}>
                   {liveOnes.map((g, i) => renderCard(g, true, i === liveOnes.length - 1))}
                 </div>
               </>
             )}
 
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available</div>
-            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available</div>
+            <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.08)' }}>
               {availableOnes.map((g, i) => renderCard(g, false, i === availableOnes.length - 1))}
             </div>
 
-            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>How payments work</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 6 }}>How payments work</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
                 1. Sign up directly with the gateway (Stripe, Midtrans, etc.)<br />
                 2. Paste your keys / account ID here<br />
                 3. Customers checkout in your app and pay via the gateway<br />
@@ -5503,10 +6630,10 @@ export default function App() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 {gw.name}
-                {isConnected && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(34,197,94,0.22)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.4)' }}>CONNECTED</span>}
-                {gw.tier === 'enterprise' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(168,85,247,0.18)', color: '#C084FC', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(168,85,247,0.35)' }}>ENTERPRISE</span>}
+                {isConnected && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.22)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.4)' }}>CONNECTED</span>}
+                {gw.tier === 'enterprise' && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(168,85,247,0.18)', color: '#C084FC', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(168,85,247,0.35)' }}>ENTERPRISE</span>}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{gw.countryCount} active</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{gw.countryCount} active</div>
             </div>
           </div>
 
@@ -5523,7 +6650,7 @@ export default function App() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{gw.tagline}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Best for: {gw.bestFor}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Best for: {gw.bestFor}</div>
               </div>
             </div>
 
@@ -5531,22 +6658,22 @@ export default function App() {
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 22 }}>🌍</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>Coverage</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>Coverage</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{gw.countryCount} active</div>
               </div>
             </div>
 
             {/* Setup steps */}
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>How to set up</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>How to set up</div>
               {gw.setupSteps.map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, background: `${gw.color}30`, border: `1px solid ${gw.color}60`, color: '#fff', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, background: `${gw.color}30`, border: `1px solid ${gw.color}60`, color: '#fff', fontSize: 13, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ flex: 1, lineHeight: 1.55 }}>{s}</span>
                 </div>
               ))}
               {gw.docUrl && (
-                <a href={gw.docUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, padding: '8px 12px', borderRadius: 10, background: `${gw.color}25`, border: `1px solid ${gw.color}45`, color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                <a href={gw.docUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, padding: '8px 12px', borderRadius: 10, background: `${gw.color}25`, border: `1px solid ${gw.color}45`, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
                   Open {gw.name} dashboard ↗
                 </a>
               )}
@@ -5554,7 +6681,7 @@ export default function App() {
 
             {/* Test/Live mode + Fields */}
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>Your credentials</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>Your credentials</div>
 
               {/* Test/Live mode pill */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 14, padding: 3, borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -5562,11 +6689,11 @@ export default function App() {
                   <button key={m} onClick={() => updateField('mode', m)} style={{
                     flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none',
                     background: (current.mode || 'test') === m ? (m === 'live' ? '#22C55E' : 'rgba(255,255,255,0.15)') : 'transparent',
-                    color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
+                    color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
                   }}>{m === 'test' ? '🧪 Test' : '🚀 Live'}</button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 12, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12, lineHeight: 1.5 }}>
                 {(current.mode || 'test') === 'test'
                   ? 'Test mode uses fake transactions. Use it to verify the setup before going live.'
                   : '⚠️ Live mode processes real customer payments. Make sure your business is fully verified with the gateway.'}
@@ -5575,9 +6702,9 @@ export default function App() {
               {/* Form fields */}
               {gw.fields.map(f => (
                 <div key={f.key} style={{ marginBottom: 12 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 5 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 5 }}>
                     {f.label} {f.required && <span style={{ color: '#EF4444' }}>*</span>}
-                    {f.secret && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>🔒 encrypted</span>}
+                    {f.secret && <span style={{ marginLeft: 6, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>🔒 encrypted</span>}
                   </label>
                   {f.type === 'bank-picker' ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 4 }}>
@@ -5589,7 +6716,7 @@ export default function App() {
                             padding: '8px 10px', borderRadius: 10, minHeight: 44,
                             background: picked ? `${accent}25` : 'rgba(255,255,255,0.04)',
                             border: picked ? `1px solid ${accent}60` : '1px solid rgba(255,255,255,0.08)',
-                            color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
+                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
                           }}>
                             {b.logo
                               ? <img src={b.logo} alt={b.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 24, height: 16, objectFit: 'contain', flexShrink: 0, background: '#fff', borderRadius: 3, padding: 2 }} />
@@ -5644,8 +6771,27 @@ export default function App() {
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
         <>
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
-          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#000', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Page dim + soft blur behind the drawer. Slightly stronger scrim
+              than before (0.5 → 0.65) plus a 4px backdrop-blur so the menu
+              below feels properly "in the background" while the drawer is open. */}
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 500 }} onClick={() => setVendorDrawer(false)} />
+          {/* Donut theme: dark drawer with a subtle pink wash at the top so
+              it's clearly the donut shop's chrome without a busy photo behind
+              the content. Standard themes keep solid black. */}
+          <div style={shopTheme === 'donut'
+            ? { position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: `1px solid ${accent}33`, background: `linear-gradient(180deg, ${accent}22 0%, #0a0a0a 30%, #0a0a0a 100%)` }
+            : { position: 'fixed', top: 0, right: 0, bottom: 0, width: '75vw', maxWidth: 320, background: '#000', zIndex: 501, overflowY: 'auto', overflowX: 'hidden', borderLeft: '1px solid rgba(255,255,255,0.08)' }
+          }>
+            {/* Donut: running pink light along the drawer's left edge — same
+                pattern as the customer-side menu drawer. */}
+            {shopTheme === 'donut' && (
+              <>
+                <style>{`@keyframes vendorDrawerRun { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }`}</style>
+                <div style={{ position: 'absolute', left: 0, top: 0, width: 3, height: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '60%', background: `linear-gradient(180deg, transparent 0%, ${accent} 40%, ${accent} 60%, transparent 100%)`, filter: `drop-shadow(0 0 6px ${accent}CC)`, animation: 'vendorDrawerRun 2.4s linear infinite' }} />
+                </div>
+              </>
+            )}
             {/* Header with logo */}
             <div style={{ padding: '20px 16px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -5658,7 +6804,7 @@ export default function App() {
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{shopName}</div>
-                  <div style={{ fontSize: 12, color: accent, fontWeight: 600, marginTop: 1 }}>{shopFoodType}</div>
+                  <div style={{ fontSize: 13, color: accent, fontWeight: 600, marginTop: 1 }}>{shopFoodType}</div>
                 </div>
                 <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: '#DC2626', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(220,38,38,0.4)' }}>✕</button>
               </div>
@@ -5671,19 +6817,36 @@ export default function App() {
                   <div style={{ width: 8, height: 8, borderRadius: 4, background: shopOpen ? '#22c55e' : '#EF4444' }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: shopOpen ? '#22c55e' : '#EF4444' }}>{shopOpen ? 'Shop Open' : 'Shop Closed'}</span>
                 </div>
-                <span style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{shopOpen ? 'Accepting orders' : 'Orders paused'}</span>
+                <span style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{shopOpen ? 'Accepting orders' : 'Orders paused'}</span>
               </div>
               <button style={{ ...S.toggle(shopOpen), background: shopOpen ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setShopOpen(!shopOpen)}>
                 <div style={S.toggleDot(shopOpen)} />
               </button>
             </div>
 
-            {/* Preview link */}
-            <div style={{ padding: '0 16px 12px', textAlign: 'center' }}>
-              <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 4 }}>
+            {/* Preview link — yellow pill button. Generous padding around it
+                so finger-tap doesn't catch the buttons above/below. */}
+            <div style={{ padding: '16px 16px 20px', textAlign: 'center' }}>
+              <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ background: '#FACC15', border: 'none', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', padding: '14px 24px', borderRadius: 22, lineHeight: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.35)', minHeight: 44 }}>
                 Preview as Customer →
               </button>
             </div>
+
+            {/* Meet the Donuts — 2nd button in the drawer per spec. Opens
+                the swipe gallery (mock content fills it if vendor hasn't
+                uploaded anything yet). Donut theme only. */}
+            {shopTheme === 'donut' && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: `${accent}18`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Meet the Donuts</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>Open the customer swipe gallery</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+                </button>
+              </div>
+            )}
 
             {/* Navigation items */}
             <div style={{ padding: '0 16px' }}>
@@ -5701,10 +6864,10 @@ export default function App() {
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.label}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{item.desc}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{item.desc}</div>
                   </div>
                   {item.badge ? (
-                    <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.badge}</span>
+                    <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.badge}</span>
                   ) : null}
                   <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
                 </button>
@@ -5717,7 +6880,102 @@ export default function App() {
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>🎨</span></div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Design Studio</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Theme, layout, effects, branding</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Theme, layout, effects, branding</div>
+                </div>
+                <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+              </button>
+            </div>
+
+            {/* Menu Cards link — donut theme only. Drives the new Menu Cards
+                page that customises card bg style, frame color, and promo bar
+                color for all three layouts (grid / horizontal / fullwidth). */}
+            {shopTheme === 'donut' && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <button onClick={() => { setMenuCardsPage(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Menu Cards</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Card colour, glass effect, frame, promo bar</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+                </button>
+              </div>
+            )}
+
+            {/* Donut Types — donut only. Vendor editor for the per-type
+                hero swipe gallery. Each type optionally gets an image +
+                description; when filled, it auto-publishes to the customer
+                "Meet our donuts" gallery. Types without content stay vendor-
+                side only. */}
+            {shopTheme === 'donut' && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <button onClick={() => { setDonutTypesPage(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Donut Types</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Upload image + story for each donut — shows live</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+                </button>
+              </div>
+            )}
+
+            {/* Meet the Donuts moved to the top of the drawer — see right
+                under "Preview as Customer" above. */}
+
+            {/* Reset Theme — donut only. Clears every donut customisation
+                (card style, colours, button shape/text/colours, hero upload,
+                card defaults) and restores the original Theme #6 look. */}
+            {shopTheme === 'donut' && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <button onClick={() => {
+                  if (!window.confirm('Reset all donut theme customisations back to the original Theme #6 design? This wipes your card style, colours, button settings, and hero image.')) return
+                  // Clear donut-specific localStorage keys
+                  const keys = [
+                    'foodlocalchat_donut_card_style',
+                    'foodlocalchat_donut_card_color',
+                    'foodlocalchat_donut_card_image',
+                    'foodlocalchat_donut_frame_color',
+                    'foodlocalchat_donut_promo_color',
+                    'foodlocalchat_donut_addbtn_shape',
+                    'foodlocalchat_donut_addbtn_color',
+                    'foodlocalchat_donut_addbtn_text_color',
+                    'foodlocalchat_donut_addbtn_text',
+                    'foodlocalchat_donut_hero',
+                  ]
+                  keys.forEach(k => { try { localStorage.removeItem(k) } catch {} })
+                  // Reset state to defaults
+                  setDonutCardStyle('solid')
+                  setDonutCardColor('#1a1a1a')
+                  setDonutCardImage('')
+                  setDonutFrameColor('')
+                  setDonutPromoColor('')
+                  setDonutAddBtnShape('circle')
+                  setDonutAddBtnColor('')
+                  setDonutAddBtnTextColor('#ffffff')
+                  setDonutAddBtnText('Add to Cart')
+                  setVendorDrawer(false)
+                }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #8B0000', background: 'rgba(139,0,0,0.18)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#8B0000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>↺</div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Reset Theme</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>Restore the original donut design</div>
+                  </div>
+                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
+                </button>
+              </div>
+            )}
+
+            {/* Visit Us — moved from the home-screen FAB to the end of the
+                drawer. Available to all themes. */}
+            <div style={{ padding: '0 16px 20px' }}>
+              <button onClick={() => { setShowLocation(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                  <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                </div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Visit Us</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Address, map, opening hours</div>
                 </div>
                 <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
               </button>
@@ -5750,7 +7008,7 @@ export default function App() {
                     </div>
                   </button>
                   <div onClick={(e) => { e.stopPropagation(); setThemeEditor({ url: theme.img }); setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); setBtnColor(''); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setVendorDrawer(false) }} style={{ position: 'absolute', top: -6, right: -6, width: 30, height: 30, borderRadius: 15, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 2 }}>
-                    <span style={{ fontSize: 9, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: '#1a1a1a', lineHeight: 1 }}>DEV</span>
                   </div>
                 </div>
               )
@@ -5816,7 +7074,7 @@ export default function App() {
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Theme</span>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 100.000</span>
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Exclusive background designed for your brand. Not shared with others. Unlimited revisions.</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Exclusive background designed for your brand. Not shared with others. Unlimited revisions.</div>
                       <a href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like a custom theme.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Order Theme — WhatsApp</a>
                     </div>
 
@@ -5826,7 +7084,7 @@ export default function App() {
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Logo</span>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 50.000</span>
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Professional logo designed for your food business. Includes round format optimized for your app.</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Professional logo designed for your food business. Includes round format optimized for your app.</div>
                       <a href={`https://wa.me/6281392000050?text=${encodeURIComponent(`Hi! I'd like a custom logo.\n\nShop: ${shopName}\nFood Type: ${shopFoodType}`)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Order Logo — WhatsApp</a>
                     </div>
                   </div>
@@ -5840,8 +7098,8 @@ export default function App() {
                 Logout
               </button>
               <div style={{ textAlign: 'center', marginTop: 12 }}>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>Powered by </span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>StreetLocal</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)' }}>Powered by </span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>StreetLocal</span>
               </div>
             </div>
           </div>
@@ -5860,7 +7118,7 @@ export default function App() {
               <button onClick={() => setShowDeliverySettings(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Delivery Settings</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
 
@@ -5876,7 +7134,7 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: delEnabled ? accent : '#F59E0B' }}>{delEnabled ? 'Delivery Available' : 'Collection Only'}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{delEnabled ? 'Customers will see delivery fees' : 'Customers collect from your location'}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{delEnabled ? 'Customers will see delivery fees' : 'Customers collect from your location'}</div>
                   </div>
                   <button style={{ ...S.toggle(delEnabled), background: delEnabled ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setDelEnabled(!delEnabled)}>
                     <div style={S.toggleDot(delEnabled)} />
@@ -5890,7 +7148,7 @@ export default function App() {
                   {isIndonesia && (
                     <div style={{ margin: '0 14px 12px', background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 14, padding: 14 }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', marginBottom: 4 }}>Tarif Ojol Resmi — {shopCity || 'Indonesia'}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
                         Rates are pre-set based on Indonesian government regulated ride-hailing tariffs (Kemenhub). You can adjust if needed.
                       </div>
                     </div>
@@ -5903,16 +7161,16 @@ export default function App() {
                     {/* Min Fee + Per KM — the two main rates */}
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Fare</label>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Starting price for the first km</div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Fare</label>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Starting price for the first km</div>
                         <input type="number" value={delMinCharge} onChange={e => setDelMinCharge(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 16, fontWeight: 800 }} />
-                        {delMinCharge > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</div>}
+                        {delMinCharge > 0 && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</div>}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Per KM</label>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Extra charge for each km after min distance</div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Per KM</label>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Extra charge for each km after min distance</div>
                         <input type="number" value={delPerKm} onChange={e => setDelPerKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 16, fontWeight: 800 }} />
-                        {delPerKm > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delPerKm).replace('Rp ', '')}/km</div>}
+                        {delPerKm > 0 && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delPerKm).replace('Rp ', '')}/km</div>}
                       </div>
                     </div>
 
@@ -5922,13 +7180,13 @@ export default function App() {
                     {/* Advanced settings */}
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Distance (km)</label>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Flat rate covers this distance</div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Distance (km)</label>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Flat rate covers this distance</div>
                         <input type="number" value={delMinKm} onChange={e => setDelMinKm(parseInt(e.target.value) || 1)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Max Distance (km)</label>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Furthest you will deliver</div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Max Distance (km)</label>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Furthest you will deliver</div>
                         <input type="number" value={delMaxKm} onChange={e => setDelMaxKm(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </div>
                     </div>
@@ -5936,28 +7194,28 @@ export default function App() {
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                       {!isIndonesia && (
                         <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Currency</label>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Your local currency symbol</div>
+                          <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Currency</label>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Your local currency symbol</div>
                           <input type="text" value={delCurrency} onChange={e => setDelCurrency(e.target.value)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
                         </div>
                       )}
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Free Above (0=off)</label>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Free delivery if order exceeds this amount</div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Free Above (0=off)</label>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Free delivery if order exceeds this amount</div>
                         <input type="number" value={delFreeAbove} onChange={e => setDelFreeAbove(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </div>
                     </div>
 
                     {/* Summary */}
                     <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
                         First {delMinKm}km = <strong style={{ color: '#FACC15' }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</strong> flat
                       </div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
                         After {delMinKm}km = <strong style={{ color: '#FACC15' }}>+{delCurrency} {fmt(delPerKm).replace('Rp ', '')}</strong> per km
                       </div>
                       {delFreeAbove > 0 && (
-                        <div style={{ fontSize: 12, color: accent, fontWeight: 700, marginTop: 4 }}>
+                        <div style={{ fontSize: 13, color: accent, fontWeight: 700, marginTop: 4 }}>
                           Free delivery on orders above {delCurrency} {fmt(delFreeAbove).replace('Rp ', '')}
                         </div>
                       )}
@@ -5974,14 +7232,14 @@ export default function App() {
                         {isCustomAccent && <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 14 }}><div style={{ position: 'absolute', top: 0, width: '50%', height: '100%', background: `linear-gradient(90deg, transparent, ${accent}30, transparent)`, animation: 'landingGlow 3s ease-in-out infinite' }} /></div>}
                         <span style={{ position: 'relative', zIndex: 1 }}>Reset to Indonesia Rates</span>
                       </button>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 6 }}>Based on Kemenhub regulated ojol tariffs</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 6 }}>Based on Kemenhub regulated ojol tariffs</div>
                     </div>
                   )}
 
                   {/* Info for non-Indonesia */}
                   {!isIndonesia && (
                     <div style={{ margin: '0 14px 12px', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }}>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, textAlign: 'center' }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, textAlign: 'center' }}>
                         Set your own delivery rates based on local ride-hailing services in your area
                       </div>
                     </div>
@@ -6015,13 +7273,13 @@ export default function App() {
               <button onClick={() => setEditItem(null)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Edit Item</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
 
             {/* Live card preview */}
             <div style={{ padding: '0 14px 12px' }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
               <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
                 <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   {formPhoto ? (
@@ -6036,7 +7294,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
-                      <span style={{ fontSize: 9, fontWeight: 700 }}>Add Photo</span>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>Add Photo</span>
                     </div>
                   )}
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
@@ -6063,15 +7321,15 @@ export default function App() {
                     reader.readAsDataURL(file)
                   }} />
                 </label>
-                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
                 <div style={{ ...S.cardBody }}>
-                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
+                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
                   <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {formHalal && <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formHalal && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
                     {formPriceMode === 'promo' && formPromoPrice ? (
                       <>
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(Number(formPromoPrice) || 0)}</span>
                       </>
                     ) : (
@@ -6079,7 +7337,7 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               </div>
 
               {/* 4 thumbnail slots — tap a filled thumbnail to swap with main image */}
@@ -6105,14 +7363,14 @@ export default function App() {
                         <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
                           <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
                         </button>
-                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                       </div>
                     )
                   }
                   return (
                     <label key={i} style={{ flex: 1, aspectRatio: '1 / 1', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', gap: 2 }}>
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" /></svg>
-                      <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>Add</span>
                       <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
                         const file = e.target.files[0]; if (!file) return
                         const reader = new FileReader()
@@ -6141,7 +7399,7 @@ export default function App() {
                   )
                 })}
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
             </div>
 
             {/* Form card */}
@@ -6149,17 +7407,17 @@ export default function App() {
               {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
               {/* Item name */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
               <input style={{ ...S.input, fontSize: 15, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. Nasi Goreng" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
 
               {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span>Category</span>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCategoryPickerOpen(true) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}>＋ Browse all</button>
-                      <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                      <button type="button" onClick={() => { setCategoryPickerGroup(null); setCategoryPickerOpen(true) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>＋ Browse all</button>
+                      <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
                     </div>
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
@@ -6169,7 +7427,7 @@ export default function App() {
                         <button key={c} type="button" onClick={() => setFormCategory(c)} style={{
                           background: isActive ? (isCustomAccent ? accent : 'rgba(255,255,255,0.18)') : 'rgba(255,255,255,0.06)',
                           border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)'),
-                          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                          color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                           padding: '6px 10px', borderRadius: 14, minHeight: 30,
                         }}>{c}</button>
                       )
@@ -6184,26 +7442,28 @@ export default function App() {
                       }}
                       style={{
                         background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
-                        color: '#fff', fontSize: 12, padding: '6px 10px', borderRadius: 14,
+                        color: '#fff', fontSize: 13, padding: '6px 10px', borderRadius: 14,
                         outline: 'none', minWidth: 100, fontWeight: 500,
                       }}
                     />
                   </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
-                  <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
-                    <option value={0} style={{ background: '#1a1a1a' }}>None</option>
-                    <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
-                    <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
-                    <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
-                  </select>
-                </div>
+                {shopTheme !== 'donut' && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
+                    <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
+                      <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                      <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
+                      <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
+                      <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Portion size — important: visible by default in main form */}
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Portion</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Portion</label>
                 <select value={formPortionSize} onChange={(e) => setFormPortionSize(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
                   <option value="" style={{ background: '#1a1a1a' }}>Choose portion size…</option>
                   <option value="Small" style={{ background: '#1a1a1a' }}>Small</option>
@@ -6227,28 +7487,28 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Price</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Price</label>
                   <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. 15000" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
-                  {formPrice && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
+                  {formPrice && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
                 </div>
                 {formPriceMode === 'promo' && (
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
                     <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
-                    {formPromoPrice && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
+                    {formPromoPrice && <div style={{ fontSize: 13, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
                   </div>
                 )}
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
               <textarea style={{ ...S.input, minHeight: 60, resize: 'none', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="Short description of the dish" value={formDesc} maxLength={60} onChange={(e) => setFormDesc(e.target.value.slice(0, 60))} />
 
               {/* Prep Time */}
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Prep Time (minutes)</label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Prep Time (minutes)</label>
               <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
                 {[0, 5, 10, 15, 20, 30].map(t => (
-                  <button key={t} onClick={() => setFormPrepTime(t)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: formPrepTime === t ? accent : 'rgba(255,255,255,0.06)', color: formPrepTime === t ? '#fff' : 'rgba(255,255,255,0.4)' }}>{t === 0 ? '—' : t}</button>
+                  <button key={t} onClick={() => setFormPrepTime(t)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: formPrepTime === t ? accent : 'rgba(255,255,255,0.06)', color: formPrepTime === t ? '#fff' : 'rgba(255,255,255,0.4)' }}>{t === 0 ? '—' : t}</button>
                 ))}
               </div>
             </div>
@@ -6277,13 +7537,13 @@ export default function App() {
               <button onClick={() => setAddingItem(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Add New Item</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
 
             {/* Live card preview — shows exactly how it will look */}
             <div style={{ padding: '0 14px 12px' }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
               <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
                 <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {formPhoto ? (
@@ -6291,7 +7551,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
-                      <span style={{ fontSize: 9, fontWeight: 700 }}>Add Photo</span>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>Add Photo</span>
                     </div>
                   )}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
@@ -6319,16 +7579,16 @@ export default function App() {
                 }} />
                 </label>
                 {/* Popular badge on image */}
-                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
                 {/* Card body preview */}
                 <div style={{ ...S.cardBody }}>
-                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && <span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
+                  <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
                   <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {formHalal && <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formHalal && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
                     {formPriceMode === 'promo' && formPromoPrice ? (
                       <>
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#EF4444' }}>{fmt(Number(formPromoPrice) || 0)}</span>
                       </>
                     ) : (
@@ -6336,7 +7596,7 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
+                {formPhoto && <button onClick={(e) => { e.preventDefault(); setFormPhoto('') }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               </div>
 
               {/* 4 thumbnail slots — tap a filled thumbnail to swap with main image */}
@@ -6362,14 +7622,14 @@ export default function App() {
                         <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
                           <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
                         </button>
-                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 11, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                       </div>
                     )
                   }
                   return (
                     <label key={i} style={{ flex: 1, aspectRatio: '1 / 1', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', gap: 2 }}>
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" /></svg>
-                      <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>Add</span>
                       <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
                         const file = e.target.files[0]; if (!file) return
                         const reader = new FileReader()
@@ -6398,7 +7658,7 @@ export default function App() {
                   )
                 })}
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
             </div>
 
             {/* Form card */}
@@ -6406,13 +7666,13 @@ export default function App() {
               {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
               {/* Item name */}
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
+              <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Item Name <span style={{ color: formName.length >= 25 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formName.length}/25)</span></label>
               <input style={{ ...S.input, fontSize: 15, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. Nasi Goreng" maxLength={25} value={formName} onChange={(e) => setFormName(e.target.value)} />
 
               {/* Category + Spice */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Category</label>
+                  <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Category</label>
                   <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
                     <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
                     <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
@@ -6421,15 +7681,17 @@ export default function App() {
                     <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Spice Level</label>
-                  <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
-                    <option value={0} style={{ background: '#1a1a1a' }}>None</option>
-                    <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
-                    <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
-                    <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
-                  </select>
-                </div>
+                {shopTheme !== 'donut' && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Spice Level</label>
+                    <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
+                      <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                      <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
+                      <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
+                      <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Badges row */}
@@ -6448,21 +7710,21 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Price</label>
+                  <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Price</label>
                   <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. 15000" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
-                  {formPrice && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
+                  {formPrice && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
                 </div>
                 {formPriceMode === 'promo' && (
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
                     <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
-                    {formPromoPrice && <div style={{ fontSize: 11, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
+                    {formPromoPrice && <div style={{ fontSize: 13, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
                   </div>
                 )}
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+              <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
               <textarea
                 style={{ ...S.input, minHeight: 60, resize: 'none', marginBottom: 0, fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                 placeholder="Short description of the dish"
@@ -6497,15 +7759,15 @@ export default function App() {
             <button onClick={() => setShopConfig(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>My Shop</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
             </div>
           </div>
           {/* Share link card */}
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 14, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
-            <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 6, display: 'block' }}>Your App Link</label>
+            <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 6, display: 'block' }}>Your App Link</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input readOnly value={`streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} style={{ ...S.input, marginBottom: 0, flex: 1, fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <button onClick={(e) => { navigator.clipboard.writeText(`https://streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`); e.target.textContent = '✓'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Copy</button>
+              <button onClick={(e) => { navigator.clipboard.writeText(`https://streetlocal.live/${shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`); e.target.textContent = '✓'; setTimeout(() => { e.target.textContent = 'Copy' }, 2000) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Copy</button>
             </div>
           </div>
 
@@ -6529,38 +7791,62 @@ export default function App() {
                 ) : (
                   <div style={{ width: 100, height: 100, borderRadius: 50, background: `${accent}20`, border: `2px dashed ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
                     <span style={{ fontSize: 28 }}>📷</span>
-                    <span style={{ fontSize: 10, color: accent, fontWeight: 700 }}>Add Logo</span>
+                    <span style={{ fontSize: 13, color: accent, fontWeight: 700 }}>Add Logo</span>
                   </div>
                 )}
               </label>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
-              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('foodlocalchat_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
+              {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('foodlocalchat_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
 
             </div>
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
-            <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopName} maxLength={20} onChange={(e) => setShopName(e.target.value)} />
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shop Name <span style={{ color: shopName.length >= 20 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopName.length}/20)</span></label>
+            <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid ' + (shopNameError ? '#EF4444' : 'rgba(255,255,255,0.1)') }} value={shopName} maxLength={20} onChange={(e) => handleShopNameChange(e.target.value)} />
+            {shopNameError && (
+              <div role="alert" style={{ marginTop: 6, marginBottom: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', fontSize: 13, fontWeight: 600, lineHeight: 1.45, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                <span style={{ fontSize: 13, flexShrink: 0 }}>⚠</span>
+                <span>{shopNameError}</span>
+              </div>
+            )}
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>WhatsApp Number</label>
             <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-              <div style={{ padding: '12px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{shopCountry === 'Indonesia' || shopCountry === '' ? '+62' : shopCountry === 'Malaysia' ? '+60' : shopCountry === 'Singapore' ? '+65' : shopCountry === 'Thailand' ? '+66' : '+'}</div>
-              <input style={{ ...S.input, marginBottom: 0, flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopPhone.replace(/^\+?\d{1,3}\s?/, '')} onChange={(e) => {
-                const prefix = shopCountry === 'Indonesia' || shopCountry === '' ? '+62' : shopCountry === 'Malaysia' ? '+60' : shopCountry === 'Singapore' ? '+65' : shopCountry === 'Thailand' ? '+66' : '+'
-                setShopPhone(prefix + e.target.value.replace(/[^0-9]/g, ''))
-              }} placeholder="812 3456 7890" type="tel" />
+              {(() => {
+                // Country-specific prefix (digits only, no +). Use precise
+                // startsWith stripping — the previous `\d{1,3}` regex was
+                // greedy and ate too many digits, causing cursor jumps and
+                // dropped/added digits on every keystroke.
+                const cc = shopCountry === 'Indonesia' || shopCountry === '' ? '62'
+                  : shopCountry === 'Malaysia' ? '60'
+                  : shopCountry === 'Singapore' ? '65'
+                  : shopCountry === 'Thailand' ? '66'
+                  : ''
+                const prefixLabel = cc ? `+${cc}` : '+'
+                const digitsOnly = String(shopPhone || '').replace(/[^0-9]/g, '')
+                const localPart = cc && digitsOnly.startsWith(cc) ? digitsOnly.slice(cc.length) : digitsOnly
+                return (
+                  <>
+                    <div style={{ padding: '12px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{prefixLabel}</div>
+                    <input style={{ ...S.input, marginBottom: 0, flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={localPart} onChange={(e) => {
+                      const next = e.target.value.replace(/[^0-9]/g, '')
+                      setShopPhone(cc ? cc + next : next)
+                    }} placeholder="812 3456 7890" type="tel" inputMode="numeric" maxLength={14} />
+                  </>
+                )
+              })()}
             </div>
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Food Type</label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopFoodType} onChange={(e) => setShopFoodType(e.target.value)} placeholder="e.g. Noodles" />
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About <span style={{ color: shopBio.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopBio.length}/350)</span></label>
-            <textarea style={{ ...S.input, minHeight: 120, resize: 'vertical', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5 }} value={shopBio} maxLength={350} onChange={(e) => setShopBio(e.target.value.slice(0, 350))} placeholder="Tell customers about your food, your story, what makes you special..." />
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>About <span style={{ color: shopBio.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({shopBio.length}/350)</span></label>
+            <textarea style={{ ...S.input, width: '100%', boxSizing: 'border-box', minHeight: 120, resize: 'vertical', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5, fontFamily: 'inherit' }} value={shopBio} maxLength={350} onChange={(e) => setShopBio(e.target.value)} placeholder="Tell customers about your food, your story, what makes you special..." />
           </div>
 
           {/* Location card */}
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Location</div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Address</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Address</label>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
               <input style={{ ...S.input, flex: 1, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopAddress} onChange={async (e) => {
                 setShopAddress(e.target.value)
@@ -6596,7 +7882,7 @@ export default function App() {
                 {locationSuggestions.map((s, i) => (
                   <button key={i} onClick={() => { setShopAddress(s); setLocationSuggestions([]) }} style={{
                     width: '100%', padding: '8px 12px', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)',
-                    background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 13, cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
                   }}>{s}</button>
                 ))}
@@ -6604,15 +7890,15 @@ export default function App() {
             )}
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>City</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>City</label>
                 <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCity} onChange={(e) => setShopCity(e.target.value)} placeholder="e.g. Yogyakarta" />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Country</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Country</label>
                 <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCountry} onChange={(e) => setShopCountry(e.target.value)} placeholder="e.g. Indonesia" />
               </div>
             </div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Google Maps Link</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Google Maps Link</label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopMapsLink} onChange={(e) => setShopMapsLink(e.target.value)} placeholder="Paste Google Maps link" />
           </div>
 
@@ -6624,17 +7910,17 @@ export default function App() {
               { key: 'thu', label: 'Thu' }, { key: 'fri', label: 'Fri' }, { key: 'sat', label: 'Sat' }, { key: 'sun', label: 'Sun' },
             ].map(day => (
               <div key={day.key} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: shopSchedule[day.key]?.off ? '#EF4444' : 'rgba(255,255,255,0.6)', width: 30, flexShrink: 0 }}>{day.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: shopSchedule[day.key]?.off ? '#EF4444' : 'rgba(255,255,255,0.6)', width: 30, flexShrink: 0 }}>{day.label}</span>
                 {shopSchedule[day.key]?.off ? (
-                  <span style={{ flex: 1, fontSize: 12, color: '#EF4444', fontWeight: 600 }}>Closed</span>
+                  <span style={{ flex: 1, fontSize: 13, color: '#EF4444', fontWeight: 600 }}>Closed</span>
                 ) : (
                   <>
-                    <input type="time" value={shopSchedule[day.key]?.open || '17:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], open: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', colorScheme: 'dark' }} />
-                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>–</span>
-                    <input type="time" value={shopSchedule[day.key]?.close || '23:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], close: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', colorScheme: 'dark' }} />
+                    <input type="time" value={shopSchedule[day.key]?.open || '17:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], open: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'dark' }} />
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>–</span>
+                    <input type="time" value={shopSchedule[day.key]?.close || '23:00'} onChange={e => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], close: e.target.value } })} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#1a1a1a', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'dark' }} />
                   </>
                 )}
-                <button onClick={() => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], off: !shopSchedule[day.key]?.off } })} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: shopSchedule[day.key]?.off ? 'rgba(239,68,68,0.2)' : '#FFD600', color: shopSchedule[day.key]?.off ? '#EF4444' : '#1a1a1a', fontSize: 10, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                <button onClick={() => setShopSchedule({ ...shopSchedule, [day.key]: { ...shopSchedule[day.key], off: !shopSchedule[day.key]?.off } })} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: shopSchedule[day.key]?.off ? 'rgba(239,68,68,0.2)' : '#FFD600', color: shopSchedule[day.key]?.off ? '#EF4444' : '#1a1a1a', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
                   {shopSchedule[day.key]?.off ? 'Off' : 'On'}
                 </button>
               </div>
@@ -6656,7 +7942,7 @@ export default function App() {
                   <img src={s.icon} alt="" onError={imgError('generic')} style={{ width: 20, height: 20 }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 2 }}>{s.label}</div>
                   <input style={{ width: '100%', padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} value={s.value} onChange={(e) => s.set(e.target.value)} placeholder={s.placeholder} />
                 </div>
               </div>
@@ -6666,7 +7952,7 @@ export default function App() {
           {/* QRIS Payment QR */}
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Payment QR Code</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Upload your QRIS or payment QR. Customers see it after placing an order.</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Upload your QRIS or payment QR. Customers see it after placing an order.</div>
             <div style={{ textAlign: 'center' }}>
               <label style={{ cursor: 'pointer', display: 'inline-block' }}>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
@@ -6680,13 +7966,13 @@ export default function App() {
                 ) : (
                   <div style={{ width: 160, height: 160, borderRadius: 12, background: `${accent}10`, border: `2px dashed ${accent}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <span style={{ fontSize: 36 }}>📱</span>
-                    <span style={{ fontSize: 12, color: accent, fontWeight: 700 }}>Upload QRIS</span>
+                    <span style={{ fontSize: 13, color: accent, fontWeight: 700 }}>Upload QRIS</span>
                   </div>
                 )}
               </label>
               {shopQris && (
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => { setShopQris(''); localStorage.removeItem('foodlocalchat_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
+                  <button onClick={() => { setShopQris(''); localStorage.removeItem('foodlocalchat_shopQris') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Remove QR</button>
                 </div>
               )}
             </div>
@@ -6737,7 +8023,7 @@ export default function App() {
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Themes · {THEME_PRESETS.length} available</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>Themes · {THEME_PRESETS.length} available</div>
                 </div>
               </div>
 
@@ -6753,9 +8039,9 @@ export default function App() {
                 </button>
               </div>
               {themeCountry !== 'all' && (
-                <div style={{ padding: '0 14px 8px', fontSize: 12, color: '#FFD600', fontWeight: 700 }}>
+                <div style={{ padding: '0 14px 8px', fontSize: 13, color: '#FFD600', fontWeight: 700 }}>
                   {FOOD_CATEGORIES.includes(themeCountry) ? themeCountry : (COUNTRY_LABELS[themeCountry] || themeCountry)}
-                  <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer', fontWeight: 600, marginLeft: 6 }}>Clear</button>
+                  <button onClick={() => setThemeCountry('all')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', fontWeight: 600, marginLeft: 6 }}>Clear</button>
                 </div>
               )}
 
@@ -6772,29 +8058,29 @@ export default function App() {
                     {/* All */}
                     <button onClick={() => { setThemeCountry('all'); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '12px 16px', border: 'none', background: themeCountry === 'all' ? '#FFD600' : 'transparent', color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 700, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>All Themes</span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{THEME_PRESETS.length}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: themeCountry === 'all' ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{THEME_PRESETS.length}</span>
                     </button>
 
                     {/* Food categories */}
-                    <div style={{ padding: '12px 16px 6px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Food Type</div>
+                    <div style={{ padding: '12px 16px 6px', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Food Type</div>
                     {FOOD_CATEGORIES.map(cat => {
                       const count = THEME_PRESETS.filter(t => t.category === cat).length
                       return (
                         <button key={cat} onClick={() => { setThemeCountry(cat); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '11px 16px', border: 'none', background: themeCountry === cat ? '#FFD600' : 'transparent', color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>{cat}</span>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: themeCountry === cat ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
                         </button>
                       )
                     })}
 
                     {/* Countries */}
-                    <div style={{ padding: '12px 16px 6px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Country</div>
+                    <div style={{ padding: '12px 16px 6px', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1 }}>Country</div>
                     {countries.map(c => {
                       const count = THEME_PRESETS.filter(t => t.countries.includes(c)).length
                       return (
                         <button key={c} onClick={() => { setThemeCountry(c); setThemeCountryDrawer(false) }} style={{ width: '100%', padding: '11px 16px', border: 'none', background: themeCountry === c ? '#FFD600' : 'transparent', color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>{COUNTRY_LABELS[c] || c}</span>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: themeCountry === c ? '#1a1a1a' : 'rgba(255,255,255,0.25)' }}>{count}</span>
                         </button>
                       )
                     })}
@@ -6808,14 +8094,14 @@ export default function App() {
                 const renderPhoneCard = (theme) => (
                   <div key={theme.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {/* Theme name header */}
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {theme.label.replace(/^#\d+\s/, '')}
-                      {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800, display: 'inline-block', ...newBadgeDance }}>NEW</span>}
-                      {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 8, fontWeight: 800 }}>Active</span>}
+                      {theme.isNew && <span style={{ background: '#FFD600', color: '#1a1a1a', padding: '1px 6px', borderRadius: 4, fontSize: 13, fontWeight: 800, display: 'inline-block', ...newBadgeDance }}>NEW</span>}
+                      {shopTheme === theme.id && <span style={{ background: '#22c55e', color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 13, fontWeight: 800 }}>Active</span>}
                     </div>
                     {/* Mini phone frame */}
                     <div style={{ width: 140, height: 250, borderRadius: 20, background: '#1a1a1a', padding: 2, position: 'relative', border: shopTheme === theme.id ? '2px solid #FFD600' : '2px solid #333', boxShadow: shopTheme === theme.id ? '0 0 12px rgba(255,214,0,0.3)' : '0 4px 12px rgba(0,0,0,0.3)' }}>
-                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
+                      <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
                       <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', width: 32, height: 8, background: '#000', borderRadius: 6, zIndex: 3 }} />
                         <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
@@ -6823,7 +8109,7 @@ export default function App() {
                       </div>
                     </div>
                     {/* View Theme button */}
-                    <button onClick={() => { setThemePreviewImg(null); setThemePreviewPage('landing'); setThemePreviewId(theme.id) }} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
+                    <button onClick={() => { setThemePreviewImg(null); setThemePreviewPage('landing'); setThemePreviewId(theme.id) }} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 8, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>View Theme</button>
                   </div>
                 )
 
@@ -6866,7 +8152,7 @@ export default function App() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 340, flexShrink: 0, padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
                       <div>
                         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>StreetLocal</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Business at your finger tips</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Business at your finger tips</div>
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{theme.label.replace(/^#\d+\s/, '')}</div>
                     </div>
@@ -6895,23 +8181,23 @@ export default function App() {
                         {themePreviewPage === 'menu' && (
                           <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflowY: 'auto' }}>
                             <div style={{ display: 'flex', alignItems: 'center', padding: '20px 8px 12px', background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)', position: 'sticky', top: 0, zIndex: 5 }}>
-                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
-                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6 }}><span style={{ fontSize: 8, fontWeight: 900, color: '#fff' }}>SN</span></div>
-                              <div><div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div><div style={{ fontSize: 7, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div></div>
+                              <button onClick={() => setThemePreviewPage('landing')} style={{ width: 22, height: 22, borderRadius: 11, background: ac, border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>←</button>
+                              <div style={{ width: 22, height: 22, borderRadius: 11, background: ac, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.15)', marginRight: 6 }}><span style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>SN</span></div>
+                              <div><div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>Street Noodle</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{theme.category}</div></div>
                             </div>
-                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>{['Menu', 'Drinks', 'Snacks'].map((t, i) => (<div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>))}</div>
+                            <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px' }}>{['Menu', 'Drinks', 'Snacks'].map((t, i) => (<div key={t} style={{ padding: '3px 8px', borderRadius: 6, fontSize: 13, fontWeight: 700, color: i === 0 ? ac : 'rgba(255,255,255,0.4)', borderBottom: i === 0 ? `2px solid ${ac}` : '2px solid transparent' }}>{t}</div>))}</div>
                             <div style={{ padding: '0 6px' }}>
                               {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 3).map(item => (
                                 <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
                                   <img src={item.photo} alt="" onError={imgError('food')} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 10, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice > 0 && ' 🌶️'}</div><div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div><div style={{ fontSize: 10, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{fmt(item.price)}</div></div>
-                                  <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
+                                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&' 🌶️'}</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div><div style={{ fontSize: 13, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{fmt(item.price)}</div></div>
+                                  <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
                                 </div>
                               ))}
                             </div>
                             <div style={{ position: 'absolute', bottom: 10, left: 6, right: 6, background: `linear-gradient(135deg, ${ac}, ${ac}cc)`, borderRadius: 10, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 5 }}>
-                              <div style={{ fontSize: 9, fontWeight: 600, color: '#fff' }}>2 items · {fmt(41000)}</div>
-                              <div style={{ background: '#fff', color: ac, borderRadius: 6, padding: '3px 8px', fontSize: 8, fontWeight: 700 }}>Checkout</div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>2 items · {fmt(41000)}</div>
+                              <div style={{ background: '#fff', color: ac, borderRadius: 6, padding: '3px 8px', fontSize: 13, fontWeight: 700 }}>Checkout</div>
                             </div>
                           </div>
                         )}
@@ -6954,24 +8240,44 @@ export default function App() {
       {/* ═══ LANDING THEME PICKER ═══ */}
       {landingThemePicker && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, background: '#0a0a0f', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Header — no tinted container (transparent over the page bg). */}
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <button onClick={() => setLandingThemePicker(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>Choose Landing Theme</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Tap a theme preview, then "Use This Theme"</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Tap a theme preview, then "Use This Theme"</div>
             </div>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'grid', gridTemplateColumns: '1fr', gap: 16, maxWidth: 480, width: '100%', margin: '0 auto' }}>
             {LANDING_THEMES.map(t => {
               const isSelected = landingThemeId === t.id
               return (
-                <div key={t.id} style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? accent : 'rgba(255,255,255,0.08)'}`, overflow: 'hidden' }}>
-                  <div style={{ width: '100%', aspectRatio: '9 / 19.6', background: '#000' }}>
-                    <iframe src={t.previewUrl} style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} title={t.name} sandbox="allow-scripts allow-same-origin" />
+                <div key={t.id} style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? accent : 'rgba(255,255,255,0.08)'}`, overflow: 'visible' }}>
+                  {/* Phone-shaped preview frame. 220×440 body — sized so the
+                      chassis + side-button protrusion + pink card border all
+                      coexist with breathing room (no edge-clipping). Internal
+                      horizontal padding 20px keeps the side button off the
+                      card border on narrow viewports. previewUrl is a
+                      root-absolute path served by the LANDING app — build the
+                      URL with the explicit origin to bypass Vite's /food/chat/
+                      base rewriting. cover so the donut fills the screen
+                      edge-to-edge (aspect already matches the donut design). */}
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 20px 14px' }}>
+                    <div style={{ width: 220, height: 440, borderRadius: 32, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${accent}25`, border: '2px solid #333', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', right: -3, top: 92, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 28, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                        <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
+                        <FitIframe
+                          src={window.location.hostname === 'localhost'
+                            ? 'http://localhost:5173' + t.previewUrl
+                            : window.location.origin + t.previewUrl}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div style={{ padding: 14 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.5 }}>{t.tagline}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.5 }}>{t.tagline}</div>
                     <button
                       onClick={() => {
                         setLandingThemeId(t.id)
@@ -6981,7 +8287,7 @@ export default function App() {
                         }
                         setLandingThemePicker(false)
                       }}
-                      style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: isSelected ? '#22C55E' : accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+                      style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: isSelected ? '#FACC15' : accent, color: isSelected ? '#1a1a1a' : '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
                     >
                       {isSelected ? '✓ Currently Selected' : 'Use This Theme'}
                     </button>
@@ -6989,7 +8295,7 @@ export default function App() {
                 </div>
               )
             })}
-            <div style={{ padding: 12, borderRadius: 12, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.3)', fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+            <div style={{ padding: 12, borderRadius: 12, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.3)', fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
               More themes coming soon. Each one comes with its own colour palette, hero image, and decorative elements — pick the vibe that matches your shop.
             </div>
           </div>
@@ -6997,6 +8303,492 @@ export default function App() {
       )}
 
       {/* ═══ DESIGN STUDIO PAGE ═══ */}
+      {/* ═══ MENU CARDS PAGE (donut theme only) ═══ */}
+      {/* ═══ DONUT TYPES — vendor editor (donut theme only). Step-by-step
+          flow: edit one type at a time → Save & Next advances → Save & Exit
+          closes back to the drawer. ═══ */}
+      {donutTypesPage && shopTheme === 'donut' && (() => {
+        const types = (THEME_CATEGORY_OVERRIDES.donut?.[0]?.types) || []
+        const publishedCount = Object.values(donutTypesContent).filter(c => c && c.image && c.description).length
+        const safeIdx = Math.min(Math.max(0, donutTypesEditIdx), types.length - 1)
+        const typeName = types[safeIdx]
+        const data = donutTypesContent[typeName] || {}
+        const isPublished = !!(data.image && data.description)
+        const updateType = (patch) => {
+          setDonutTypesContent(prev => ({ ...prev, [typeName]: { ...(prev[typeName] || {}), ...patch } }))
+        }
+        const removeCurrent = () => {
+          setDonutTypesContent(prev => { const next = { ...prev }; delete next[typeName]; return next })
+        }
+        const saveAndNext = () => {
+          if (safeIdx < types.length - 1) setDonutTypesEditIdx(safeIdx + 1)
+          else setDonutTypesPage(false) // wrapped past the end
+        }
+        const saveAndExit = () => setDonutTypesPage(false)
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
+              {/* Header — progress + back */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, flexShrink: 0 }}>
+                <button onClick={() => setDonutTypesPage(false)} style={{ width: 44, height: 44, borderRadius: 22, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Donut Types</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{safeIdx + 1} of {types.length} · {publishedCount} live</div>
+                </div>
+                {isPublished ? (
+                  <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#86EFAC', padding: '6px 10px', borderRadius: 8 }}>LIVE</span>
+                ) : (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Draft</span>
+                )}
+              </div>
+              {/* Type name banner */}
+              <div style={{ padding: '0 16px 8px', flexShrink: 0 }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{typeName}</div>
+              </div>
+              {/* Scrollable body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 20px' }}>
+                {/* IMAGE upload — large */}
+                <label style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, background: data.image ? '#000' : `${accent}18`, border: data.image ? '1px solid rgba(255,255,255,0.1)' : `2px dashed ${accent}55`, overflow: 'hidden', cursor: 'pointer', position: 'relative', marginBottom: 16 }}>
+                  {data.image ? (
+                    <img src={data.image} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  ) : (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'rgba(255,255,255,0.6)' }}>
+                      <span style={{ fontSize: 48 }}>📷</span>
+                      <span style={{ fontSize: 14, fontWeight: 700 }}>Tap to upload donut photo</span>
+                    </div>
+                  )}
+                  {data.image && (
+                    <div style={{ position: 'absolute', bottom: 10, right: 10, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 13, fontWeight: 700 }}>Tap to change</div>
+                  )}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    e.target.value = ''
+                    // Try Supabase upload first; fall back to a local data URL
+                    // so the image saves even without a backend connection.
+                    let url = null
+                    try { url = await uploadMenuImage(vendorId, file) } catch {}
+                    if (!url) {
+                      const reader = new FileReader()
+                      reader.onload = () => {
+                        const img = new Image()
+                        img.onload = () => {
+                          const canvas = document.createElement('canvas')
+                          const max = 900
+                          let w = img.width, h = img.height
+                          if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
+                          canvas.width = w; canvas.height = h
+                          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+                          updateType({ image: canvas.toDataURL('image/jpeg', 0.82) })
+                        }
+                        img.src = reader.result
+                      }
+                      reader.readAsDataURL(file)
+                      return
+                    }
+                    updateType({ image: url })
+                  }} />
+                </label>
+                {/* DESCRIPTION — large textarea, 1000 char max */}
+                <div style={{ marginBottom: 14, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Story / description</div>
+                    <div style={{ fontSize: 13, color: (data.description || '').length >= 950 ? '#FCD34D' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{(data.description || '').length}/1000</div>
+                  </div>
+                  <textarea
+                    value={data.description || ''}
+                    onChange={(e) => updateType({ description: e.target.value.slice(0, 1000) })}
+                    placeholder={`Tell the story of your ${typeName.toLowerCase()} — ingredients, how it's made, why customers love it. Up to 1000 characters.`}
+                    rows={10}
+                    style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14, lineHeight: 1.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', minHeight: 220, boxSizing: 'border-box' }}
+                  />
+                </div>
+                {/* Star rating */}
+                <div style={{ marginBottom: 14, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Rating</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <button key={i} type="button" onClick={() => updateType({ rating: (data.rating || 0) === i ? 0 : i })} aria-label={`${i} stars`} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: 'transparent', color: i <= (data.rating || 0) ? '#FACC15' : 'rgba(255,255,255,0.25)', fontSize: 28, cursor: 'pointer', padding: 0, lineHeight: 1 }}>★</button>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{data.rating || 0}/5</div>
+                </div>
+                {/* Clear / remove */}
+                {(data.image || data.description) && (
+                  <button onClick={removeCurrent} style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 8 }}>
+                    Clear this donut
+                  </button>
+                )}
+              </div>
+              {/* Preview Gallery button — opens the customer-facing swipe
+                  gallery so the vendor can see exactly what customers see.
+                  Only enabled when at least one type is published. */}
+              {publishedCount > 0 && (
+                <div style={{ padding: '0 16px 8px', flexShrink: 0 }}>
+                  <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true) }} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #FACC15', background: 'rgba(250,204,21,0.12)', color: '#FACC15', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+                    👁️ Preview Gallery ({publishedCount} live)
+                  </button>
+                </div>
+              )}
+              {/* Sticky action bar — Save & Next + Save & Exit */}
+              <div style={{ display: 'flex', gap: 10, padding: '12px 16px 16px', flexShrink: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 60%)' }}>
+                <button onClick={saveAndExit} style={{ flex: 1, padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}`, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
+                  Save & Exit
+                </button>
+                <button onClick={saveAndNext} style={{ flex: 1.4, padding: '14px 16px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', boxShadow: `0 6px 18px ${accent}55`, minHeight: 48 }}>
+                  {safeIdx < types.length - 1 ? `Save & Next → ${types[safeIdx + 1]}` : 'Save & Finish'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {menuCardsPage && shopTheme === 'donut' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+              <button onClick={() => setMenuCardsPage(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Menu Cards</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Style applies to all 3 layouts</div>
+              </div>
+            </div>
+
+            {/* Live preview of all 3 card variants — they all reflect the
+                current state so the vendor sees one change update everywhere. */}
+            {(() => {
+              const sample = { name: 'Glazed Donut', desc: 'Hand-glazed daily', price: 18000, photo: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png' }
+              // Landscape sample images supplied by the user. The horizontal/grid
+              // cards use a thumbnail-friendly shot; the full-width card uses a
+              // wider editorial-style donut shot.
+              const sampleLandscape = 'https://ik.imagekit.io/nepgaxllc/Untitleddasdaccc.png'
+              const sampleFullWidth = 'https://ik.imagekit.io/nepgaxllc/Untitledsdaaaaaa.png'
+              // Subtle gray rim around each card image so the photo doesn't bleed
+              // straight into the card surface.
+              const imgRim = '1px solid rgba(0,0,0,0.18)'
+              const cardBg = donutCardStyles?.background || '#ffffff'
+              const cardBdf = donutCardStyles?.backdropFilter || 'none'
+              const cardTxt = donutCardStyles?.textColor || '#1a1a1a'
+              const frameCol = donutFrameAccent
+              const promoCol = donutPromoBarColor
+              const dimTxt = cardTxt === '#fff' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)'
+              const cardBase = { background: cardBg, backdropFilter: cardBdf, WebkitBackdropFilter: cardBdf, color: cardTxt, boxShadow: `inset 4px 0 0 ${frameCol}`, borderRadius: 10, overflow: 'hidden', position: 'relative' }
+              // Add-to-Cart preview — reflects the live shape / colour / text settings.
+              const btnBg = donutAddBtnBg
+              const btnTxt = donutAddBtnTextColor
+              const AddBtn = ({ size = 22 }) => (
+                donutAddBtnShape === 'pill' ? (
+                  <div style={{ height: size, padding: '0 ' + Math.round(size * 0.45) + 'px', borderRadius: size / 2, background: btnBg, color: btnTxt, fontSize: Math.max(13, Math.round(size * 0.45)), fontWeight: 800, display: 'inline-flex', alignItems: 'center', flexShrink: 0, lineHeight: 1, whiteSpace: 'nowrap' }}>{donutAddBtnText}</div>
+                ) : (
+                  <div style={{ width: size, height: size, borderRadius: size / 2, background: btnBg, color: btnTxt, fontSize: Math.max(13, Math.round(size * 0.65)), fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, lineHeight: 1 }}>+</div>
+                )
+              )
+              // Donut theme bg URL (same as THEME_PRESETS['donut'].img). The
+              // preview container paints this as a LOCAL background so the
+              // glass cards blur the same pink surface they'll blur in the
+              // live customer view — instead of blurring the Design Studio's
+              // dark glass overlay, which was distorting the effect.
+              const previewBg = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'
+              return (
+                <div style={{ margin: '0 14px 14px', borderRadius: 16, overflow: 'hidden', position: 'relative', border: '1px solid rgba(255,255,255,0.06)', isolation: 'isolate' }}>
+                  {/* Local donut bg — what each glass card blurs */}
+                  <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("${previewBg}")`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }} />
+                  {/* Lightweight scrim so the preview-label text is readable
+                      without overpowering the bg for the glass-blur cards. */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.18)', zIndex: 0 }} />
+                  <div style={{ position: 'relative', zIndex: 1, padding: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Live preview · all 3 layouts</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* HORIZONTAL — image left + body right, mirrors real card layout */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Horizontal</div>
+                      <div style={{ ...cardBase, display: 'flex', gap: 8, padding: 8, paddingTop: 22 }}>
+                        {/* Active perk top strip */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 18, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 4 }}>🎁 Buy 1 Get 1</div>
+                        <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 60, height: 60, marginLeft: 4, borderRadius: 6, objectFit: 'contain', background: '#f5f5f5', flexShrink: 0, border: imgRim }} />
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
+                          <div style={{ fontSize: 13, color: dimTxt, marginTop: 2, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: frameCol }}>Rp {sample.price.toLocaleString()}</span>
+                            <AddBtn />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* GRID — image top, body below, price-row at the bottom */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Grid</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {[0, 1].map(i => (
+                          <div key={i} style={{ ...cardBase }}>
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 16, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 6px', display: 'flex', alignItems: 'center', gap: 3, zIndex: 2 }}>🎁 Buy 1 Get 1</div>
+                            <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, aspectRatio: '4 / 3', objectFit: 'contain', background: '#f5f5f5', display: 'block', border: imgRim }} />
+                            <div style={{ padding: '6px 8px 8px' }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
+                              <div style={{ fontSize: 13, color: dimTxt, marginBottom: 4, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                                <span style={{ fontSize: 13, fontWeight: 800, color: frameCol }}>Rp {sample.price.toLocaleString()}</span>
+                                <AddBtn size={22} />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* FULL WIDTH — wide image, body below with name + desc + price row */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Full Width</div>
+                      <div style={{ ...cardBase }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 20, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>🎁 Buy 1 Get 1 — 12h left</div>
+                        <img src={sampleFullWidth} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, height: 'auto', display: 'block', background: '#f5f5f5', border: imgRim }} />
+                        <div style={{ padding: '10px 12px 12px' }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
+                          <div style={{ fontSize: 13, color: dimTxt, marginBottom: 6, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: 14, fontWeight: 800, color: frameCol }}>Rp {sample.price.toLocaleString()}</span>
+                            <AddBtn size={26} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>{/* end content z:1 wrapper */}
+                  </div>{/* end preview container */}
+                </div>
+              )
+            })()}
+
+            {/* Card Style picker */}
+            <div style={{ margin: '0 14px 12px', padding: 14, borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Card Background</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>Pick how every menu card renders. Updates Grid, Horizontal, and Full Width.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 12 }}>
+                {[
+                  { id: 'solid', label: 'Solid' },
+                  { id: 'glass', label: 'Glass' },
+                  { id: 'frosted', label: 'Frosted' },
+                  { id: 'image', label: 'Image' },
+                ].map(opt => {
+                  const isActive = donutCardStyle === opt.id
+                  return (
+                    <button key={opt.id} type="button" onClick={() => setDonutCardStyle(opt.id)} style={{ padding: '10px 4px', borderRadius: 10, border: isActive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: isActive ? accent : 'rgba(0,0,0,0.55)', backdropFilter: !isActive ? 'blur(12px)' : 'none', WebkitBackdropFilter: !isActive ? 'blur(12px)' : 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40 }}>{opt.label}</button>
+                  )
+                })}
+              </div>
+              {/* Color swatch — drives Solid bg + Glass/Frosted tint */}
+              {donutCardStyle !== 'image' && (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>{donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour'}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
+                    {['#ffffff', '#FFF8F0', '#FCE7F3', '#FBCFE8', '#F9A8D4', '#FCD34D', '#FACC15', '#D4A373', '#A78BFA', '#7DD3FC', '#1a1a1a'].map(c => (
+                      <button key={c} type="button" onClick={() => setDonutCardColor(c)} style={{ width: 36, height: 36, borderRadius: 18, border: donutCardColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0 }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                    <input key={donutCardColor} defaultValue={donutCardColor} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) } }} />
+                    <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+                  </div>
+                  <button type="button" onClick={() => setColorPalette({ title: donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour', current: donutCardColor, onPick: setDonutCardColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+                </>
+              )}
+              {/* Image upload — drives the Image card style */}
+              {donutCardStyle === 'image' && (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 70, height: 70, borderRadius: 10, background: donutCardImage ? '#000' : `${accent}20`, border: donutCardImage ? '1px solid rgba(255,255,255,0.1)' : `2px dashed ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {donutCardImage ? <img src={donutCardImage} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22 }}>🖼️</span>}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {donutCardImage ? 'Change image' : '+ Upload image'}
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files[0]
+                        if (!file) return
+                        e.target.value = ''
+                        const url = await uploadMenuImage(vendorId, file)
+                        if (url) setDonutCardImage(url)
+                      }} />
+                    </label>
+                    {donutCardImage && (
+                      <button onClick={() => setDonutCardImage('')} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>Remove image</button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Frame side color */}
+            <div style={{ margin: '0 14px 12px', padding: 14, borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Frame Side Colour</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>Left accent stripe + price colour on every card.</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
+                {[accent, '#DB2777', '#EC4899', '#F472B6', '#FACC15', '#F97316', '#10B981', '#3B82F6', '#A855F7', '#1a1a1a', '#ffffff'].map((c, i) => (
+                  <button key={c + i} type="button" onClick={() => setDonutFrameColor(i === 0 ? '' : c)} style={{ width: 36, height: 36, borderRadius: 18, border: (donutFrameColor === c || (i === 0 && !donutFrameColor)) ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 13, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}>T</span>}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>"T" = theme accent (pink). Tap to reset.</div>
+              {/* Contrast warning: frame stripe vs card bg */}
+              {(() => {
+                const cardBg = donutCardStyle === 'image' ? '#888888' : donutCardColor
+                const ratio = wcagContrastRatio(donutFrameAccent, cardBg)
+                if (ratio >= 3.0) return null
+                return (
+                  <div style={{ marginBottom: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', fontSize: 13, color: '#FCA5A5', fontWeight: 600, lineHeight: 1.4 }}>
+                    ⚠️ Low contrast — frame stripe may be hard to see against your card colour ({ratio.toFixed(1)}:1, need ≥ 3:1).
+                  </div>
+                )
+              })()}
+              <button type="button" onClick={() => setColorPalette({ title: 'Frame Side Colour', current: donutFrameColor || accent, onPick: setDonutFrameColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+            </div>
+
+            {/* Add-to-Cart button — shape / colour / text colour / label */}
+            <div style={{ margin: '0 14px 12px', padding: 14, borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Add-to-Cart Button</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>Shape, color, and text — applies to every menu card.</div>
+              {/* Shape */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Shape</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+                {[
+                  { id: 'circle', label: 'Round +' },
+                  { id: 'pill', label: 'Pill — Add to Cart' },
+                ].map(opt => {
+                  const isActive = donutAddBtnShape === opt.id
+                  return (
+                    <button key={opt.id} type="button" onClick={() => setDonutAddBtnShape(opt.id)} style={{ padding: '10px 4px', borderRadius: 10, border: isActive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', background: isActive ? accent : 'rgba(0,0,0,0.55)', backdropFilter: !isActive ? 'blur(12px)' : 'none', WebkitBackdropFilter: !isActive ? 'blur(12px)' : 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40 }}>{opt.label}</button>
+                  )
+                })}
+              </div>
+              {/* Button text (only relevant for pill) */}
+              {donutAddBtnShape === 'pill' && (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Button text (max 16 chars)</div>
+                  <input value={donutAddBtnText} maxLength={16} onChange={e => setDonutAddBtnText(e.target.value)} placeholder="Add to Cart" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+                </>
+              )}
+              {/* Button bg color */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Button colour</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
+                {[donutPromoBarColor, '#DB2777', '#EC4899', '#FACC15', '#F97316', '#10B981', '#3B82F6', '#A855F7', '#1a1a1a', '#ffffff'].map((c, i) => (
+                  <button key={c + i} type="button" onClick={() => setDonutAddBtnColor(i === 0 ? '' : c)} style={{ width: 36, height: 36, borderRadius: 18, border: (donutAddBtnColor === c || (i === 0 && !donutAddBtnColor)) ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 13, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}>T</span>}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>"T" = match promo bar colour. Tap to reset.</div>
+              {/* Contrast warning: button bg vs button text */}
+              {(() => {
+                const ratio = wcagContrastRatio(donutAddBtnBg, donutAddBtnTextColor)
+                if (ratio >= 4.5) return null
+                return (
+                  <div style={{ marginBottom: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', fontSize: 13, color: '#FCA5A5', fontWeight: 600, lineHeight: 1.4 }}>
+                    ⚠️ Low contrast — button text may be hard to read on this button colour ({ratio.toFixed(1)}:1, need ≥ 4.5:1).
+                  </div>
+                )
+              })()}
+              <button type="button" onClick={() => setColorPalette({ title: 'Button colour', current: donutAddBtnColor || donutPromoBarColor, onPick: setDonutAddBtnColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, marginBottom: 12 }}>🎨 More colours →</button>
+              {/* Button text/icon color */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>{donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour'}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
+                {['#ffffff', '#1a1a1a', '#FACC15', '#FCE7F3', '#DB2777', '#10B981', '#3B82F6'].map(c => (
+                  <button key={c} type="button" onClick={() => setDonutAddBtnTextColor(c)} style={{ width: 36, height: 36, borderRadius: 18, border: donutAddBtnTextColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0 }} />
+                ))}
+              </div>
+              <button type="button" onClick={() => setColorPalette({ title: donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour', current: donutAddBtnTextColor, onPick: setDonutAddBtnTextColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+            </div>
+
+            {/* Promo bar color */}
+            <div style={{ margin: '0 14px 24px', padding: 14, borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Promo Bar Colour</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>Bar at the bottom of the menu showing your promo / running text.</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 6 }}>
+                {[accent, '#DB2777', '#EC4899', '#F472B6', '#FACC15', '#F97316', '#10B981', '#3B82F6', '#A855F7', '#1a1a1a'].map((c, i) => (
+                  <button key={c + i} type="button" onClick={() => setDonutPromoColor(i === 0 ? '' : c)} style={{ width: 36, height: 36, borderRadius: 18, border: (donutPromoColor === c || (i === 0 && !donutPromoColor)) ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 13, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}>T</span>}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>"T" = theme accent (pink). Tap to reset.</div>
+              <button type="button" onClick={() => setColorPalette({ title: 'Promo Bar Colour', current: donutPromoColor || accent, onPick: setDonutPromoColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+            </div>
+          </div>
+
+          {/* Full color palette side drawer — opens whenever a "More colours"
+              link sets `colorPalette`. Slides in from the right with a curated
+              55-color grid + custom hex entry. The picker section that opened
+              it stays mounted underneath, so close = back to the picker. */}
+          {colorPalette && (() => {
+            // Same 27-hue-row × 6-shade pattern used by the Theme Editor at
+            // line ~5277 — HSL-organised so the vendor can find the exact
+            // tint/shade they want by hue family rather than picking from a
+            // flat random grid.
+            function hslToHex(h, s, l) {
+              s /= 100; l /= 100
+              const a = s * Math.min(l, 1 - l)
+              const f = n => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1))) }
+              return '#' + [f(0), f(8), f(4)].map(x => x.toString(16).padStart(2, '0')).join('')
+            }
+            const HUE_ROWS = [
+              { label: 'Red', h: 0 }, { label: 'Crimson', h: 345 }, { label: 'Rose', h: 330 }, { label: 'Pink', h: 315 },
+              { label: 'Magenta', h: 300 }, { label: 'Fuchsia', h: 285 }, { label: 'Purple', h: 270 }, { label: 'Violet', h: 255 },
+              { label: 'Indigo', h: 240 }, { label: 'Blue', h: 220 }, { label: 'Sky', h: 200 }, { label: 'Cyan', h: 185 },
+              { label: 'Teal', h: 170 }, { label: 'Mint', h: 155 }, { label: 'Green', h: 140 }, { label: 'Emerald', h: 120 },
+              { label: 'Lime', h: 90 }, { label: 'Chartreuse', h: 75 }, { label: 'Yellow', h: 55 }, { label: 'Gold', h: 45 },
+              { label: 'Amber', h: 35 }, { label: 'Orange', h: 25 }, { label: 'Vermilion', h: 12 },
+              { label: 'Brown', h: 20, sat: 60 }, { label: 'Maroon', h: 0, sat: 70 },
+              { label: 'Grey', h: 0, sat: 0 }, { label: 'Cool Grey', h: 210, sat: 10 },
+            ]
+            const close = () => setColorPalette(null)
+            return (
+              <>
+                <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300 }} />
+                <div role="dialog" aria-label="Colour palette" style={{ position: 'fixed', top: 0, left: 0, width: '80%', maxWidth: 360, height: '100vh', zIndex: 502, overflowY: 'auto', background: '#111', boxShadow: '12px 0 40px rgba(0,0,0,0.55)' }}>
+                  {/* Sticky header: title + hex input — matches Theme Editor's
+                      "Pick Color" drawer pattern. */}
+                  <div style={{ padding: '16px 12px 0', position: 'sticky', top: 0, background: '#111', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{colorPalette.title || 'Pick Colour'}</span>
+                      <button onClick={close} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', padding: 8 }}>✕</button>
+                    </div>
+                    {/* Hex input row */}
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 6, background: colorPalette.current || '#1a1a1a', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                      <input type="text" placeholder="#8B0000" defaultValue={colorPalette.current} maxLength={7} style={{ flex: 1, padding: '7px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) { colorPalette.onPick(v); close() } } }} />
+                      <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) { colorPalette.onPick(v); close() } }} style={{ padding: '7px 10px', borderRadius: 6, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Go</button>
+                    </div>
+                  </div>
+                  {/* Hue × shade rows */}
+                  <div style={{ padding: '0 8px 20px' }}>
+                    {HUE_ROWS.map((row, ri) => {
+                      const s = row.sat !== undefined ? row.sat : 80
+                      const shades = row.sat === 0 || row.sat === 10
+                        ? [12, 25, 40, 55, 72, 88].map(l => hslToHex(row.h, row.sat, l))
+                        : [18, 30, 42, 54, 66, 80].map(l => hslToHex(row.h, l < 25 ? s + 10 : l > 70 ? s - 20 : s, l))
+                      return (
+                        <div key={ri} style={{ marginBottom: 5 }}>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 600, marginBottom: 2, paddingLeft: 2 }}>{row.label}</div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {shades.map((c, ci) => (
+                              <button key={ci} onClick={() => { colorPalette.onPick(c); close() }} style={{
+                                flex: 1, height: 36, borderRadius: 6,
+                                border: colorPalette.current === c ? '2px solid #fff' : 'none',
+                                background: c, cursor: 'pointer', padding: 0, minWidth: 0,
+                              }} />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </>
+            )
+          })()}
+        </div>
+      )}
+
       {designStudio && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
           <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
@@ -7007,15 +8799,15 @@ export default function App() {
               <button onClick={() => setDesignStudio(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Design Studio</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Customise your app appearance</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Customise your app appearance</div>
               </div>
             </div>
 
             {/* Choose Landing Theme — first step. Opens a curated theme picker; vendor's pick saves to landing_theme_id. */}
             <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 4 }}>Step 1</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 4 }}>Step 1</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Choose Landing Theme</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.45 }}>
                 Pick the look of your storefront. The colours from your theme apply across your whole shop — landing, menu, buttons.
               </div>
               <button
@@ -7030,6 +8822,36 @@ export default function App() {
             {/* Logo Style */}
             <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Logo Style</div>
+              {/* Upload Logo — feeds the same shopLogo state used by Shop Config.
+                  On donut theme the logo doesn't render in the landing (frozen
+                  HTML has its own hero) — only the in-app header consumes it,
+                  which is fine for every theme. */}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, padding: 10, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 28, background: shopLogo ? accent : `${accent}20`, border: shopLogo ? '2px solid rgba(255,255,255,0.15)' : `2px dashed ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                  {shopLogo ? (
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 48, height: 48, borderRadius: 24, objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: 22 }}>📷</span>
+                  )}
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {shopLogo ? 'Change logo' : '+ Upload logo'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                      const file = e.target.files[0]
+                      if (!file) return
+                      e.target.value = ''
+                      const url = await uploadMenuImage(vendorId, file)
+                      if (url) { setShopLogo(url); try { localStorage.setItem('foodlocalchat_shopLogo', url) } catch {} }
+                    }} />
+                  </label>
+                  {shopLogo && (
+                    <button onClick={() => { setShopLogo(''); try { localStorage.removeItem('foodlocalchat_shopLogo') } catch {} }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
                 {[
                   { id: 'circle', label: 'Circle' },
@@ -7041,13 +8863,13 @@ export default function App() {
               </div>
               {shopLogoStyle !== 'off' && (
                 <>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{shopLogoStyle === 'circle' ? 'Circle Size' : 'Logo Size'} ({logoScale}%)</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{shopLogoStyle === 'circle' ? 'Circle Size' : 'Logo Size'} ({logoScale}%)</label>
                   <input className="overlay-slider" type="range" min="50" max="300" step="10" value={logoScale} onChange={(e) => setLogoScale(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${((logoScale - 50) / 250) * 100}%, rgba(255,255,255,0.15) ${((logoScale - 50) / 250) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 10 }} />
                   {shopLogoStyle === 'circle' && (
                     <>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Logo Inside Circle ({logoInner}%)</label>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Logo Inside Circle ({logoInner}%)</label>
                       <input className="overlay-slider" type="range" min="40" max="100" step="2" value={logoInner} onChange={(e) => setLogoInner(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) ${((logoInner - 40) / 60) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 10 }} />
-                      <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 6, display: 'block' }}>Logo Position</label>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 6, display: 'block' }}>Logo Position</label>
                       {(() => {
                         // Match the phone-preview formula exactly so the circle here
                         // is the same pixel size as the one in the iPhone preview.
@@ -7083,7 +8905,7 @@ export default function App() {
                           </div>
                         )
                       })()}
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>X: {logoOffsetX}px · Y: {logoOffsetY}px · tap • to reset</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>X: {logoOffsetX}px · Y: {logoOffsetY}px · tap • to reset</div>
                     </>
                   )}
                 </>
@@ -7096,7 +8918,7 @@ export default function App() {
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: '#fff', fontWeight: 900 }}>T</div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Font, size, color, effects</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Font, size, color, effects</div>
                 </div>
                 <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
               </button>
@@ -7137,11 +8959,23 @@ export default function App() {
                         <div style={{ position: 'absolute', left: -3, top: 96, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                         <div style={{ width: '100%', height: '100%', borderRadius: 29, overflow: 'hidden', position: 'relative', background: '#000' }}>
                           <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
-                          {previewTab === 'landing' && (
+                          {previewTab === 'landing' && landingThemeId === 'donuts' && (
+                            // Donut theme uses a curated frozen HTML snapshot — its own
+                            // bg, hero text, logo, and CTA are baked in. The generic
+                            // customisable mock below would misrepresent what the real
+                            // landing shows, so render the actual donut HTML in the
+                            // preview phone too (same donutsHtmlSrc — includes any
+                            // uploaded hero image). fit="contain" so the whole donut
+                            // design is visible.
+                            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                              <FitIframe fit="contain" src={donutsHtmlSrc} />
+                            </div>
+                          )}
+                          {previewTab === 'landing' && landingThemeId !== 'donuts' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                               <img src={(THEME_PRESETS.find(t => t.id === shopTheme) || {}).img || localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
-                              {!shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 6, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
+                              {!shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 13, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
                               <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: landingLayout === 'footer' ? 'flex-end' : 'center', paddingBottom: landingLayout === 'footer' ? 54 : 0 }}>
                                 {shopLogoStyle !== 'off' && shopLogo ? (() => {
                                   // Preview phone is 220px wide vs real ~360px → ratio 0.611 for WYSIWYG.
@@ -7168,7 +9002,7 @@ export default function App() {
                                   return (
                                     <div style={{ padding: '0 8px', width: '100%', boxSizing: 'border-box' }}>
                                       {lines.map((line, i) => (
-                                        <div key={i} style={{ fontSize: 9, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: i === 0 ? 3 : 0, textShadow: '0 1px 2px rgba(0,0,0,0.9)', textAlign: 'center', wordBreak: 'break-word' }}>{line}</div>
+                                        <div key={i} style={{ fontSize: 13, color: heroSubColor || 'rgba(255,255,255,0.8)', fontFamily: ffC, marginTop: i === 0 ? 3 : 0, textShadow: '0 1px 2px rgba(0,0,0,0.9)', textAlign: 'center', wordBreak: 'break-word' }}>{line}</div>
                                       ))}
                                     </div>
                                   )
@@ -7210,14 +9044,18 @@ export default function App() {
                               <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
                                 {promoBanner && (() => {
                                   const pvAnim = { scroll: 'promoScroll 6s linear infinite', wave: 'promoPreviewWave 6s ease-in-out infinite', glow: 'promoScroll 6s linear infinite, promoPreviewGlow 2s ease-in-out infinite', pulse: 'promoPreviewPulse 6s ease-in-out infinite', fade: 'promoScroll 6s linear infinite, promoPreviewFade 2.5s ease-in-out infinite', shake: 'promoPreviewShake 6s linear infinite' }[promoBannerEffect] || 'promoScroll 6s linear infinite'
-                                  return <div style={{ padding: '2px 8px', marginBottom: 5, overflow: 'hidden', opacity: promoBannerEnabled ? 1 : 0.35, position: 'relative' }}><div style={{ fontSize: 7, color: '#9CA3AF', fontWeight: 700, whiteSpace: 'nowrap', animation: pvAnim, display: 'inline-block' }}>{promoBanner}</div>{!promoBannerEnabled && <div style={{ position: 'absolute', top: 1, right: 3, fontSize: 6, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '0 3px', borderRadius: 2, letterSpacing: 0.5 }}>OFF</div>}</div>
+                                  return <div style={{ padding: '2px 8px', marginBottom: 5, overflow: 'hidden', opacity: promoBannerEnabled ? 1 : 0.35, position: 'relative' }}><div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 700, whiteSpace: 'nowrap', animation: pvAnim, display: 'inline-block' }}>{promoBanner}</div>{!promoBannerEnabled && <div style={{ position: 'absolute', top: 1, right: 3, fontSize: 13, fontWeight: 800, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '0 3px', borderRadius: 2, letterSpacing: 0.5 }}>OFF</div>}</div>
                                 })()}
                                 {menuBanners.length > 0 && (
                                   <>
-                                    <div style={{ position: 'relative', width: '100%', height: 36, borderRadius: 5, overflow: 'hidden', marginBottom: menuBanners.length > 1 ? 2 : 5 }}>
+                                    {/* Hero banner in the preview phone — sized to match the
+                                        native 3:1 landscape aspect of menu banners (220px wide
+                                        × ~70px tall). The real menu banner above the customer
+                                        menu uses its own native size. */}
+                                    <div style={{ position: 'relative', width: '100%', height: 70, borderRadius: 6, overflow: 'hidden', marginBottom: menuBanners.length > 1 ? 4 : 6 }}>
                                       {menuBanners.map((url, i) => (
                                         <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
                                       ))}
@@ -7252,7 +9090,7 @@ export default function App() {
                           return (
                             <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 46, height: 46, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.08)', background: isActive ? '#FFD600' : '#000', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s', boxShadow: isActive ? '0 0 12px rgba(255,214,0,0.6), 0 0 20px rgba(255,214,0,0.3)' : 'none' }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : '#fff'}><path d={t.svg} /></svg>
-                              <span style={{ fontSize: 7, fontWeight: 800, color: isActive ? '#1a1a1a' : '#fff', letterSpacing: 0.3 }}>{t.label}</span>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: isActive ? '#1a1a1a' : '#fff', letterSpacing: 0.3 }}>{t.label}</span>
                             </button>
                           )
                         })}
@@ -7262,31 +9100,32 @@ export default function App() {
                     {/* Contextual Controls */}
                     {configTool && (
                       <div style={{ padding: 12, borderRadius: 14, border: `1px solid ${accent}30`, background: `${accent}08`, marginTop: 6 }}>
-                        {configTool === 'layout' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Layout & Overlay</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'center', label: 'Center' }, { id: 'footer', label: 'Footer' }].map(opt => (<button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label><style>{`.overlay-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.overlay-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.25);cursor:pointer;margin-top:-10px;}.overlay-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.overlay-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.overlay-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="overlay-slider" type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 8 }} /></>)}
-                        {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 4 }}>{[{c: accent, label: 'Theme'}, {c: '#FACC15'}, {c: '#F59E0B'}, {c: '#EF4444'}, {c: '#DC2626'}, {c: '#EC4899'}, {c: '#A855F7'}, {c: '#3B82F6'}, {c: '#06B6D4'}, {c: '#22C55E'}, {c: '#10B981'}, {c: '#1A1A1A'}, {c: '#FFFFFF'}, {c: '#F97316'}].map(({c, label}, i) => { const isPicked = btnColor === c || (i === 0 && !btnColor); return (<button key={i + c} type="button" onClick={() => setBtnColor(i === 0 ? '' : c)} aria-label={label || c} title={label || c} style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', background: c, border: isPicked ? `3px solid #fff` : (i === 0 ? '2px solid rgba(255,215,0,0.6)' : '1px solid rgba(255,255,255,0.18)'), cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 8, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)', letterSpacing: 0.5 }}>T</span>}</button>) })}</div><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>The "T" swatch matches your theme accent exactly.</div>{btnColor && <button type="button" onClick={() => setBtnColor('')} style={{ fontSize: 10, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '0 6px', marginBottom: 8 }}>Reset to theme</button>}<label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label><input style={{ ...S.input, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Effect</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginBottom: 10 }}>{[{ id: 'none', label: 'None' }, { id: 'glow', label: 'Glow' }, { id: 'shake', label: 'Shake' }, { id: 'signal', label: 'Signal' }, { id: 'heartbeat', label: 'Heart' }].map(opt => (<button key={opt.id} onClick={() => setBtnEffect(opt.id)} style={{ padding: '8px 2px', borderRadius: 8, border: 'none', fontSize: 10, fontWeight: 700, cursor: 'pointer', background: btnEffect === opt.id ? accent : 'rgba(255,255,255,0.06)', color: btnEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)', minHeight: 36 }}>{opt.label}</button>))}</div><label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Size ({btnSize}%)</label><style>{`.size-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.size-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.4);cursor:pointer;margin-top:-10px;}.size-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.size-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.size-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="size-slider" type="range" min="60" max="160" step="5" value={btnSize} onChange={(e) => setBtnSize(Number(e.target.value))} style={{ background: `linear-gradient(to right, #DC2626 0%, #DC2626 ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) 100%)`, marginBottom: 8 }} /></>)}
-                        {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline (Enter for line 2 — max 2 lines)</label><textarea value={customTagline} onChange={(e) => { const trimmed = e.target.value.split('\n').slice(0, 2).join('\n').slice(0, 60); setCustomTagline(trimmed) }} placeholder={"Line one\nLine two (optional)"} rows={2} maxLength={60} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, lineHeight: 1.4, outline: 'none', resize: 'none', fontFamily: 'inherit' }} /><div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page. Has padding so it never touches the screen edge.</div></>)}
+                        {configTool === 'layout' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Layout & Overlay</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Landing Layout</label><div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>{[{ id: 'center', label: 'Center' }, { id: 'footer', label: 'Footer' }].map(opt => (<button key={opt.id} onClick={() => setLandingLayout(opt.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: landingLayout === opt.id ? accent : 'rgba(255,255,255,0.08)', color: landingLayout === opt.id ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{opt.label}</button>))}</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Overlay Darkness ({overlayOpacity}%)</label><style>{`.overlay-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.overlay-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.25);cursor:pointer;margin-top:-10px;}.overlay-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#DC2626;border:2px solid #FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.overlay-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.overlay-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="overlay-slider" type="range" min="0" max="80" value={overlayOpacity} onChange={(e) => setOverlayOpacity(Number(e.target.value))} style={{ background: `linear-gradient(to right, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.45) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) ${(overlayOpacity / 80) * 100}%, rgba(255,255,255,0.15) 100%)`, marginBottom: 8 }} /></>)}
+                        {configTool === 'button' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Button Style</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Shape</label><div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>{['rounded', 'pill', 'square'].map(s => (<button key={s} onClick={() => setBtnShape(s)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: btnShape === s ? accent : 'rgba(255,255,255,0.08)', color: btnShape === s ? '#fff' : 'rgba(255,255,255,0.5)', minHeight: 40 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>))}</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Color</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 4 }}>{[{c: accent, label: 'Theme'}, {c: '#FACC15'}, {c: '#F59E0B'}, {c: '#EF4444'}, {c: '#DC2626'}, {c: '#EC4899'}, {c: '#A855F7'}, {c: '#3B82F6'}, {c: '#06B6D4'}, {c: '#22C55E'}, {c: '#10B981'}, {c: '#1A1A1A'}, {c: '#FFFFFF'}, {c: '#F97316'}].map(({c, label}, i) => { const isPicked = btnColor === c || (i === 0 && !btnColor); return (<button key={i + c} type="button" onClick={() => setBtnColor(i === 0 ? '' : c)} aria-label={label || c} title={label || c} style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', background: c, border: isPicked ? `3px solid #fff` : (i === 0 ? '2px solid rgba(255,215,0,0.6)' : '1px solid rgba(255,255,255,0.18)'), cursor: 'pointer', padding: 0, position: 'relative' }}>{i === 0 && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 13, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.7)', letterSpacing: 0.5 }}>T</span>}</button>) })}</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>The "T" swatch matches your theme accent exactly.</div>{btnColor && <button type="button" onClick={() => setBtnColor('')} style={{ fontSize: 13, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '0 6px', marginBottom: 8 }}>Reset to theme</button>}<label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Button Text</label><input style={{ ...S.input, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13 }} value={btnText} onChange={(e) => setBtnText(e.target.value)} placeholder="View Menu" maxLength={20} /><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Effect</label><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginBottom: 10 }}>{[{ id: 'none', label: 'None' }, { id: 'glow', label: 'Glow' }, { id: 'shake', label: 'Shake' }, { id: 'signal', label: 'Signal' }, { id: 'heartbeat', label: 'Heart' }].map(opt => (<button key={opt.id} onClick={() => setBtnEffect(opt.id)} style={{ padding: '8px 2px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: btnEffect === opt.id ? accent : 'rgba(255,255,255,0.06)', color: btnEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)', minHeight: 36 }}>{opt.label}</button>))}</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginTop: 4, marginBottom: 4, display: 'block' }}>Size ({btnSize}%)</label><style>{`.size-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;}.size-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.4);cursor:pointer;margin-top:-10px;}.size-slider::-moz-range-thumb{width:26px;height:26px;border-radius:13px;background:#FACC15;border:2px solid #DC2626;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;}.size-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;}.size-slider::-moz-range-track{height:6px;border-radius:3px;}`}</style><input className="size-slider" type="range" min="60" max="160" step="5" value={btnSize} onChange={(e) => setBtnSize(Number(e.target.value))} style={{ background: `linear-gradient(to right, #DC2626 0%, #DC2626 ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) ${((btnSize - 60) / 100) * 100}%, rgba(255,255,255,0.18) 100%)`, marginBottom: 8 }} /></>)}
+                        {configTool === 'text' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Tagline</div><label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Custom Tagline (Enter for line 2 — max 2 lines)</label><textarea value={customTagline} onChange={(e) => { const trimmed = e.target.value.split('\n').slice(0, 2).join('\n').slice(0, 60); setCustomTagline(trimmed) }} placeholder={"Line one\nLine two (optional)"} rows={2} maxLength={60} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, lineHeight: 1.4, outline: 'none', resize: 'none', fontFamily: 'inherit' }} /><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Replaces "{shopFoodType}" on your landing page. Has padding so it never touches the screen edge.</div></>)}
                         {configTool === 'cards' && (
                           <>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards & Banner</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Menu Cards</div>
                             <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 6, display: 'block' }}>Card Style</label>
                             <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                               {[{ id: 'horizontal', label: 'Horizontal' }, { id: 'grid', label: 'Grid' }, { id: 'fullwidth', label: 'Full Width' }].map(opt => (
                                 <button key={opt.id} onClick={() => setMenuCardStyle(opt.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: menuCardStyle === opt.id ? accent : 'rgba(255,255,255,0.08)', color: menuCardStyle === opt.id ? '#fff' : 'rgba(255,255,255,0.7)', minHeight: 44 }}>{opt.label}</button>
                               ))}
                             </div>
+                          </>
+                        )}
+                        {configTool === 'promo' && (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div>
+                            {/* Banner Carousel — moved from the Cards tool to live alongside
+                                the running-text promo. Wide landscape PNG/JPG above the menu,
+                                up to 5 images, auto-rotates every 4 seconds. */}
                             <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 4, display: 'block' }}>Banner Carousel Above Menu ({menuBanners.length}/5)</label>
-                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 6, lineHeight: 1.5 }}>Wide landscape image(s) shown above the menu. Add up to 5 — they auto-rotate every 4 seconds with an indicator bar below.</div>
-                            <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, color: '#fff', background: accent, padding: '6px 10px', borderRadius: 8, marginBottom: 10, letterSpacing: 0.3 }}>📐 Recommended size: 1200 × 400 px</div>
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-                              {menuBanners.length < 5 && (
-                                <label style={{ padding: '10px 16px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>+ Add Banner
-                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; e.target.value = ''; const blobUrl = URL.createObjectURL(file); setMenuBanners(prev => [...prev, blobUrl].slice(0, 5)); const url = await uploadMenuImage(vendorId, file); if (url) { setMenuBanners(prev => prev.map(u => u === blobUrl ? url : u)); URL.revokeObjectURL(blobUrl) } }} />
-                                </label>
-                              )}
-                              {menuBanners.length > 0 && <button onClick={() => setMenuBanners([])} style={{ fontSize: 13, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, minHeight: 44, padding: '0 8px' }}>Clear All</button>}
-                            </div>
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 6, lineHeight: 1.5 }}>Wide landscape image(s) shown above the menu. Add up to 5 — they auto-rotate every 4 seconds with an indicator bar below.</div>
+                            <div style={{ display: 'inline-block', fontSize: 13, fontWeight: 800, color: '#fff', background: accent, padding: '6px 10px', borderRadius: 8, marginBottom: 10, letterSpacing: 0.3 }}>📐 Recommended size: 1200 × 400 px</div>
+                            {/* Banner thumbnails grid — comes first now (above the action buttons). */}
                             {menuBanners.length > 0 && (
-                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
                                 {menuBanners.map((url, i) => (
                                   <div key={url + i} style={{ position: 'relative', width: 'calc(33% - 4px)' }}>
                                     <img src={url} alt="" onError={imgError('banner')} style={{ width: '100%', aspectRatio: '3 / 1', objectFit: 'cover', borderRadius: 6, border: i === menuBannerIdx ? `2px solid ${accent}` : '2px solid transparent' }} />
@@ -7295,12 +9134,21 @@ export default function App() {
                                 ))}
                               </div>
                             )}
-                          </>
-                        )}
-                        {configTool === 'promo' && (
-                          <>
-                            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Promo Banner</div>
-                            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label>
+                            {/* Action row — Add Banner left, Clear All as small dark-red on the right. */}
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                              {menuBanners.length < 5 && (
+                                <label style={{ padding: '10px 16px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>+ Add Banner
+                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; e.target.value = ''; const blobUrl = URL.createObjectURL(file); setMenuBanners(prev => [...prev, blobUrl].slice(0, 5)); const url = await uploadMenuImage(vendorId, file); if (url) { setMenuBanners(prev => prev.map(u => u === blobUrl ? url : u)); URL.revokeObjectURL(blobUrl) } }} />
+                                </label>
+                              )}
+                              {menuBanners.length > 0 && (
+                                <button onClick={() => setMenuBanners([])} style={{ marginLeft: 'auto', fontSize: 13, color: '#fff', background: '#8B0000', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '6px 12px', borderRadius: 8, lineHeight: 1, minHeight: 28 }}>Clear All</button>
+                              )}
+                            </div>
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, marginBottom: 6 }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Running Text Promo</div>
+                            </div>
+                            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Running Text</label>
                             <textarea
                               value={promoBanner}
                               onChange={(e) => setPromoBanner(e.target.value.slice(0, 300))}
@@ -7308,7 +9156,11 @@ export default function App() {
                               rows={3}
                               style={{
                                 width: '100%', boxSizing: 'border-box',
-                                background: 'rgba(255,255,255,0.06)',
+                                // Donut theme: tinted black glass per user spec; other themes keep the
+                                // original light-translucent input style.
+                                background: landingThemeId === 'donuts' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.06)',
+                                backdropFilter: landingThemeId === 'donuts' ? 'blur(12px)' : 'none',
+                                WebkitBackdropFilter: landingThemeId === 'donuts' ? 'blur(12px)' : 'none',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: 8, padding: '8px 12px',
                                 color: '#fff', fontSize: 13, lineHeight: 1.5,
@@ -7316,16 +9168,16 @@ export default function App() {
                                 minHeight: 90, marginBottom: 6,
                               }}
                             />
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
-                              Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 9 }}>Enter</kbd> for another promo line. Lines join with <span style={{ color: accent, fontWeight: 700 }}> · </span> in the banner. {promoBanner.length}/300
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 8, lineHeight: 1.4 }}>
+                              Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 13 }}>Enter</kbd> for another promo line. Lines join with <span style={{ color: accent, fontWeight: 700 }}> · </span> in the banner. {promoBanner.length}/300
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                               <button onClick={() => setPromoBannerEnabled(!promoBannerEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: promoBannerEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                                 <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: promoBannerEnabled ? 19 : 3, transition: 'left 0.2s' }} />
                               </button>
-                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span>
+                              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Enable</span>
                             </div>
-                            <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Effect</label>
+                            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Effect</label>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                               {[
                                 { id: 'scroll', label: 'Scroll' },
@@ -7335,12 +9187,22 @@ export default function App() {
                                 { id: 'fade',   label: 'Fade' },
                                 { id: 'shake',  label: 'Shake' },
                               ].map(opt => (
-                                <button key={opt.id} onClick={() => setPromoBannerEffect(opt.id)} style={{ padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', background: promoBannerEffect === opt.id ? accent : 'rgba(255,255,255,0.06)', color: promoBannerEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)', minHeight: 36 }}>{opt.label}</button>
+                                <button key={opt.id} onClick={() => setPromoBannerEffect(opt.id)} style={{
+                                  padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                  // Donut theme: unselected = tinted black glass; selected = pink accent.
+                                  background: promoBannerEffect === opt.id
+                                    ? accent
+                                    : (landingThemeId === 'donuts' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.06)'),
+                                  backdropFilter: (promoBannerEffect !== opt.id && landingThemeId === 'donuts') ? 'blur(12px)' : 'none',
+                                  WebkitBackdropFilter: (promoBannerEffect !== opt.id && landingThemeId === 'donuts') ? 'blur(12px)' : 'none',
+                                  color: promoBannerEffect === opt.id ? '#fff' : 'rgba(255,255,255,0.55)',
+                                  minHeight: 36,
+                                }}>{opt.label}</button>
                               ))}
                             </div>
                           </>
                         )}
-                        {configTool === 'splash' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Extra Features</div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s branded loading)</span></div></>)}
+                        {configTool === 'splash' && (<><div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Extra Features</div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button onClick={() => setSplashEnabled(!splashEnabled)} style={{ width: 40, height: 24, borderRadius: 12, border: 'none', background: splashEnabled ? accent : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}><div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', position: 'absolute', top: 3, left: splashEnabled ? 19 : 3, transition: 'left 0.2s' }} /></button><span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Splash Screen (2s branded loading)</span></div></>)}
                       </div>
                     )}
                   </>
@@ -7368,14 +9230,14 @@ export default function App() {
               <button onClick={() => setDomainPage(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Custom Domain</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>StreetLocal</div>
             </div>
 
             {/* Current URL Card */}
             <div style={{ margin: '0 16px 16px', padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Your current app link</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Your current app link</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   streetlocal.live/{shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30)}
@@ -7433,7 +9295,7 @@ export default function App() {
             ].map((tier, i) => (
               <div key={tier.name} style={{ margin: '0 16px 16px', padding: 20, borderRadius: 16, background: 'rgba(0,0,0,0.65)', border: `1px solid ${tier.badge}40` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <span style={{ padding: '4px 10px', borderRadius: 8, background: `${tier.badge}20`, color: tier.badge, fontSize: 12, fontWeight: 800 }}>Tier {i + 1}</span>
+                  <span style={{ padding: '4px 10px', borderRadius: 8, background: `${tier.badge}20`, color: tier.badge, fontSize: 13, fontWeight: 800 }}>Tier {i + 1}</span>
                   <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{tier.name}</span>
                 </div>
                 <div style={{ fontFamily: 'monospace', fontSize: 13, color: accent, fontWeight: 700, marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: `${accent}10`, border: `1px solid ${accent}25` }}>{tier.example}</div>
@@ -7470,7 +9332,7 @@ export default function App() {
                 'Your app content and menu stay on streetlocal.live even if you cancel the domain',
               ].map((note, i) => (
                 <div key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <span style={{ color: '#F59E0B', fontSize: 12, lineHeight: '18px' }}>•</span>
+                  <span style={{ color: '#F59E0B', fontSize: 13, lineHeight: '18px' }}>•</span>
                   <span>{note}</span>
                 </div>
               ))}
@@ -7510,7 +9372,7 @@ export default function App() {
               <button onClick={() => setTermsOfListing(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Terms Of Listing</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Search listing requirements & benefits</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Search listing requirements & benefits</div>
               </div>
             </div>
 
@@ -7537,7 +9399,7 @@ export default function App() {
                   <span style={{ fontSize: 14, marginTop: 1 }}>✓</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.field}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
                   </div>
                 </div>
               ))}
@@ -7558,7 +9420,7 @@ export default function App() {
                   <span style={{ fontSize: 14, marginTop: 1 }}>✓</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.field}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{r.desc}</div>
                   </div>
                 </div>
               ))}
@@ -7602,7 +9464,7 @@ export default function App() {
             {/* Important notice */}
             <div style={{ background: 'rgba(239,68,68,0.1)', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid rgba(239,68,68,0.2)' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Important</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
                 Menu items missing a photo, name, price, or category will be excluded from search results. Incomplete listings do not qualify for search visibility. Keep your menu complete and up to date to maximise orders.
               </div>
             </div>

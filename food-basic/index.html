@@ -80,8 +80,18 @@
       var params = new URLSearchParams(window.location.search);
       var isDemo = params.get('demo') === 'true';
       var bgParam = params.get('bg');
+      var themeParam = params.get('theme');
       var bgImg = document.getElementById('app-bg-img');
-      if (isDemo && bgImg) {
+      // When arriving from landing's "Use This Theme" with ?theme=donut, paint
+      // the donut hero bg immediately so the user never sees the previous
+      // theme's bg flash through before React mounts + the donut splash iframe
+      // finishes loading (~1–2s window). Hardcoded URL is the THEME_PRESETS
+      // 'donut' entry's img field — must stay in sync if that file changes.
+      if (themeParam === 'donut' && bgImg && !isDemo) {
+        bgImg.src = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png';
+        bgImg.style.objectFit = 'fill';
+        try { localStorage.setItem('foodlocalchat_themeBg', bgImg.src); } catch (e) {}
+      } else if (isDemo && bgImg) {
         // Demo mode is LOCKED to noodle background — ignore any ?theme= or ?bg= params
         bgImg.src = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-09_41_03-am.png';
         bgImg.style.objectFit = 'fill';

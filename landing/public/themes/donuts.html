@@ -78,8 +78,9 @@
               h('div', { key: 'kicker', className: 'text-white/40 text-xs tracking-[0.3em] uppercase mb-2 font-medium' }, 'Hand-crafted Daily'),
               h('div', { key: 'head-row', className: 'flex items-start gap-3 mb-2' }, [
                 h('h1', { key: 'head', className: 'text-[44px] leading-[0.85] tracking-[-0.06em] font-black flex-1 min-w-0' }, [
-                  'Sweet', h('br', { key: 'br' }), 'Glazed',
-                  h('span', { key: 'sp', className: 'block bg-gradient-to-r from-pink-400 to-pink-300 bg-clip-text text-transparent' }, 'Donuts'),
+                  'Sweet', h('br', { key: 'br' }),
+                  h('span', { key: 'glz', className: 'text-pink-400' }, 'Glazed'),
+                  h('span', { key: 'sp', className: 'block text-pink-400' }, 'Donuts'),
                 ]),
                 h('img', {
                   key: 'head-img',
@@ -111,7 +112,7 @@
                 onClick: () => {
                   try { window.parent && window.parent.postMessage({ type: 'sl-theme-enter-menu' }, '*') } catch {}
                 },
-                className: 'w-full h-11 rounded-[20px] bg-gradient-to-r from-pink-500 to-pink-400 text-base font-black shadow-[0_30px_100px_rgba(236,72,153,0.4)] hover:scale-[1.03] transition-all duration-300',
+                className: 'w-full h-14 rounded-[22px] bg-gradient-to-r from-pink-500 to-pink-400 text-lg font-black shadow-[0_30px_100px_rgba(236,72,153,0.45)] hover:scale-[1.03] transition-all duration-300',
               }, 'Order Donuts'),
             ]),
             h('div', { key: 'metrics', className: 'relative z-10 grid grid-cols-3 gap-2 mt-3' }, [
