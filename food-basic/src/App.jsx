@@ -466,7 +466,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
 }
 
 /* ─── Vendor thread view (inbox conversation) ─── */
-function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, setDraft, onSend, onStatus, order, onReleaseEscrow, onCancelEscrow, onRefund, payActionBusy, payActionMsg }) {
+function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, setDraft, onSend, onStatus, order, onReleaseEscrow, onCancelEscrow, onRefund, payActionBusy, payActionMsg, t = {} }) {
   const scrollRef = useRef(null)
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -506,15 +506,15 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
       </div>
       {op && op.items && (
         <div style={sty.orderCard}>
-          <div style={{ fontWeight: 800, marginBottom: 4 }}>Order {op.orderNumber || ''}</div>
+          <div style={{ fontWeight: 800, marginBottom: 4 }}>{t.orderLabel || 'Order'} {op.orderNumber || ''}</div>
           {op.items.map((it, i) => (
             <div key={i}>{it.qty}x {it.name} — {fmt ? fmt(it.lineTotal) : it.lineTotal}</div>
           ))}
-          {op.delivery?.fee > 0 && <div style={{ marginTop: 4 }}>Delivery: {fmt ? fmt(op.delivery.fee) : op.delivery.fee}</div>}
-          <div style={{ marginTop: 4, fontWeight: 800 }}>Total: {fmt ? fmt(op.total) : op.total}</div>
-          {op.note && <div style={{ marginTop: 4, opacity: 0.8 }}>Note: {op.note}</div>}
-          {op.customer?.address && <div style={{ marginTop: 4, opacity: 0.8 }}>Address: {op.customer.address}</div>}
-          <div style={{ marginTop: 4, opacity: 0.8 }}>Phone: {op.customer?.phone}</div>
+          {op.delivery?.fee > 0 && <div style={{ marginTop: 4 }}>{t.deliveryLabel || 'Delivery'}: {fmt ? fmt(op.delivery.fee) : op.delivery.fee}</div>}
+          <div style={{ marginTop: 4, fontWeight: 800 }}>{t.totalLabel || 'Total'}: {fmt ? fmt(op.total) : op.total}</div>
+          {op.note && <div style={{ marginTop: 4, opacity: 0.8 }}>{t.noteLabel || 'Note'}: {op.note}</div>}
+          {op.customer?.address && <div style={{ marginTop: 4, opacity: 0.8 }}>{t.addressLabel || 'Address'}: {op.customer.address}</div>}
+          <div style={{ marginTop: 4, opacity: 0.8 }}>{t.phoneLabel || 'Phone'}: {op.customer?.phone}</div>
         </div>
       )}
       {order && order.gateway_id && (() => {
@@ -538,7 +538,7 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
         return (
           <div style={{ ...sty.orderCard, paddingTop: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <div style={{ fontWeight: 800, fontSize: 13 }}>Payment</div>
+              <div style={{ fontWeight: 800, fontSize: 13 }}>{t.paymentLabel || 'Payment'}</div>
               <span style={{ background: badgeColor, color: '#fff', fontSize: 13, fontWeight: 900, padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{statusLabel}</span>
               <span style={{ marginLeft: 'auto', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{order.gateway_id}</span>
             </div>
@@ -586,7 +586,7 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
       {/* Quick reply chips — vendor taps to populate the input with a
           preset response. Saves 10-20 seconds per reply during busy hours. */}
       <div style={{ display: 'flex', gap: 6, padding: '0 12px 8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ width: '100%', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginTop: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.4 }}>Quick replies</div>
+        <div style={{ width: '100%', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginTop: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.4 }}>{t.quickReplies || 'Quick replies'}</div>
         {[
           'Got it! Preparing now 🍩',
           'Out for delivery 🛵',
@@ -5311,7 +5311,7 @@ export default function App() {
                     </div>
                     {/* Custom-name input inside the group too — for niche dish types */}
                     <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>Or type a new one in this group</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{t.orTypeNew || 'Or type a new one in this group'}</div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <input
                           value={customCategoryName}
@@ -5335,7 +5335,7 @@ export default function App() {
                 {/* Other — custom category with icon picker */}
                 {activeGroup && activeGroup.isCustom && (
                   <div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Category name</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>{t.categoryName || 'Category name'}</div>
                     <input
                       value={customCategoryName}
                       onChange={e => setCustomCategoryName(e.target.value)}
@@ -5343,7 +5343,7 @@ export default function App() {
                       maxLength={32}
                       style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 14, padding: '10px 12px', borderRadius: 10, outline: 'none', marginBottom: 14 }}
                     />
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>Pick an icon</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 }}>{t.pickIcon || 'Pick an icon'}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14, maxHeight: 180, overflowY: 'auto', padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
                       {CUSTOM_CATEGORY_ICONS.map(ic => (
                         <button key={ic} type="button" onClick={() => setCustomCategoryIcon(ic)} style={{
@@ -5408,7 +5408,7 @@ export default function App() {
                     />
                   )}
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Menu</div>
+                    <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>{t.menuLabel || 'Menu'}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
                   </div>
                 </div>
@@ -5529,7 +5529,7 @@ export default function App() {
                     }
                   : { width: '100%', height: 110, objectFit: 'cover', display: 'block' }
               } onClick={() => { setItemModal(item); setModalQty(1) }} />
-              {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {item.popular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 4px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: 80, left: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: donutCardStyles ? '6px 8px 8px' : '8px 10px 10px' }}>
                 <div style={{ fontSize: donutCardStyles ? 13 : 13, fontWeight: donutCardStyles ? 800 : 700, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: donutCardStyles ? 4 : 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}</div>
@@ -5556,7 +5556,7 @@ export default function App() {
                         <button onClick={() => { setItemModal(item); setModalQty(1) }} style={{ width: '100%', height: 26, borderRadius: 13, background: donutAddBtnBg, color: donutAddBtnTextColor, border: 'none', fontSize: 16, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>+</button>
                       )
                     )}
-                    {isVendor && vendorStatus !== 'expired' && <button style={{ ...S.smallBtn('#8B0000'), marginTop: 6 }} onClick={() => startEdit(item)}>Edit</button>}
+                    {isVendor && vendorStatus !== 'expired' && <button style={{ ...S.smallBtn('#8B0000'), marginTop: 6 }} onClick={() => startEdit(item)}>{t.editBtn || 'Edit'}</button>}
                   </>
                 ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -5564,7 +5564,7 @@ export default function App() {
                   {!isVendor && shopOpen && item.available && (
                     <button style={{ ...S.addBtn, position: 'static', width: 28, height: 28, borderRadius: 14, fontSize: 16 }} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
                   )}
-                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
+                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>{t.editBtn || 'Edit'}</button>}
                 </div>
                 )}
               </div>
@@ -5614,7 +5614,7 @@ export default function App() {
                     }
                   : { width: '100%', height: 180, objectFit: 'cover', display: 'block' }
               } onClick={() => { setItemModal(item); setModalQty(1) }} />
-              {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+              {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
               {item.halal && shopTheme !== 'donut' && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 58, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: '12px 14px' }}>
@@ -5631,7 +5631,7 @@ export default function App() {
                   ) : (
                     <button style={S.addBtn} onClick={() => { setItemModal(item); setModalQty(1) }}>+</button>
                   ))}
-                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>}
+                  {isVendor && vendorStatus !== 'expired' && <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>{t.editBtn || 'Edit'}</button>}
                 </div>
               </div>
             </div>
@@ -5690,7 +5690,7 @@ export default function App() {
                 <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
               )}
               {item.popular && (
-                <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>
+                <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>
               )}
               {isVendor && vendorStatus !== 'expired' && (
                 <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
@@ -5717,7 +5717,7 @@ export default function App() {
                     )
                   )}
                   {isVendor && vendorStatus !== 'expired' && (
-                    <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>Edit</button>
+                    <button style={S.smallBtn('#8B0000')} onClick={() => startEdit(item)}>{t.editBtn || 'Edit'}</button>
                   )}
                 </div>
               </div>
@@ -6067,7 +6067,7 @@ export default function App() {
 
             {/* Page title */}
             <div style={{ padding: '4px 16px 12px' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Visit Us</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{t.visitUs || 'Visit Us'}</div>
             </div>
 
             {/* Single info card */}
@@ -6353,7 +6353,7 @@ export default function App() {
                       {shopFoodType && <div style={{ fontSize: szE.sub, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 4, textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: heroSubColor ? 1 : 0.85, textAlign: 'center' }}>{shopFoodType}</div>}
                       {(shopCity || shopCountry) && <div style={{ fontSize: szE.city, fontWeight: 600, color: subC, fontFamily: ffE, marginTop: 2, opacity: 0.7, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
                       {/* Mock View Menu button */}
-                      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 13, fontWeight: 700, color: '#fff' }}>View Menu</div>
+                      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', padding: '6px 18px', borderRadius: 8, background: accent, fontSize: 13, fontWeight: 700, color: '#fff' }}>{t.viewMenuBtn || 'View Menu'}</div>
                     </div>
                     </>)}
                     {/* Home indicator */}
@@ -6603,7 +6603,7 @@ export default function App() {
             </div>
             {/* Footer save button — sticks to viewport bottom while page scrolls */}
             <div style={{ padding: 14, borderTop: '1px solid rgba(255,255,255,0.06)', position: 'sticky', bottom: 0, zIndex: 2 }}>
-              <button onClick={() => setHeroEditor(false)} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>Save Changes</button>
+              <button onClick={() => setHeroEditor(false)} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>{t.saveChanges || 'Save Changes'}</button>
             </div>
             </div>{/* end content scroll container */}
           </div>
@@ -6643,9 +6643,9 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>StreetLocal</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}>Theme Editor</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}>{t.themeEditorTitle || 'Theme Editor'}</div>
             </div>
-            <button onClick={() => setThemeEditor(null)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setThemeEditor(null)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{t.cancelBtn || 'Cancel'}</button>
           </div>
 
           {/* Phone preview — centered, flex area */}
@@ -6701,7 +6701,7 @@ export default function App() {
               const bgImg = document.getElementById('app-bg-img')
               if (bgImg) { bgImg.src = themeEditor.url; bgImg.style.objectFit = 'cover'; bgImg.style.objectPosition = `${editorPos.x}% ${editorPos.y}%` }
               setThemeEditor(null); setShowLanding(true)
-            }} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: editorColor, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }}>Save Theme</button>
+            }} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: editorColor, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }}>{t.saveTheme || 'Save Theme'}</button>
             <div style={{ flex: 1 }} />
             <button onClick={() => setEditorTool(editorTool === 'color' ? 'position' : 'color')} style={{ width: 48, height: 48, borderRadius: 24, border: `2px solid ${editorColor}`, background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <div style={{ width: 28, height: 28, borderRadius: 14, background: editorColor }} />
@@ -6715,7 +6715,7 @@ export default function App() {
               <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '80%', background: '#111', zIndex: 21, overflowY: 'auto' }}>
                 <div style={{ padding: '16px 12px 0', position: 'sticky', top: 0, background: '#111', zIndex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Pick Color</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{t.pickColor || 'Pick Color'}</span>
                     <button onClick={() => setEditorTool('position')} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', padding: 8 }}>✕</button>
                   </div>
                   {/* Hex input — sticky under title */}
@@ -6840,7 +6840,7 @@ export default function App() {
                 {list.length === 0 ? (
                   <div style={{ padding: '40px 20px', textAlign: 'center', background: 'rgba(0,0,0,0.4)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ fontSize: 36, marginBottom: 8 }}>★</div>
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>No reviews yet</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{t.noReviewsYet || 'No reviews yet'}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Be the first to share your experience.</div>
                   </div>
                 ) : (
@@ -6928,12 +6928,12 @@ export default function App() {
                     style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 140, height: 22, border: 'none', background: 'transparent', cursor: 'pointer' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Leave a review</h3>
+                    <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>{t.leaveReview || 'Leave a review'}</h3>
                     <button onClick={closeLeaveSheet} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 16, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', boxShadow: `0 2px 8px ${accent}66` }}>×</button>
                   </div>
 
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8, fontWeight: 700 }}>Your rating</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8, fontWeight: 700 }}>{t.yourRating || 'Your rating'}</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {[1,2,3,4,5].map(n => (
                         <button key={n} onClick={() => setItemReviewForm(p => ({ ...p, rating: n, error: '' }))} aria-label={`${n} stars`} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
@@ -6992,7 +6992,7 @@ export default function App() {
                     fontSize: 15, fontWeight: 900, cursor: 'pointer',
                     minHeight: 48, fontFamily: 'inherit',
                     boxShadow: '0 6px 18px rgba(250,204,21,0.35)',
-                  }}>Post Review</button>
+                  }}>{t.postReview || 'Post Review'}</button>
                 </div>
               </div>
             )}
@@ -7247,7 +7247,7 @@ export default function App() {
 
                   {!shopQris && (
                     <div style={{ background: 'rgba(0,0,0,0.45)', borderRadius: 14, padding: 14, width: '100%', maxWidth: 360, marginTop: 8 }}>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 4 }}>Order total</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 4 }}>{t.orderTotal || 'Order total'}</div>
                       <div style={{ fontSize: 24, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
                     </div>
                   )}
@@ -7320,7 +7320,7 @@ export default function App() {
                         <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 4, display: 'block' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Scan to Pay</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{t.scanToPay || 'Scan to Pay'}</div>
                         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
                         <div style={{ fontSize: 13, color: '#FACC15', fontWeight: 700, marginTop: 3 }}>Tap to enlarge ›</div>
                       </div>
@@ -7338,7 +7338,7 @@ export default function App() {
                           <span style={{ fontSize: 16, color: '#fff', fontWeight: 900, lineHeight: 1 }}>⏳</span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Funds held in escrow</div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{t.fundsEscrow || 'Funds held in escrow'}</div>
                           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2, lineHeight: 1.4 }}>
                             {fmt(heldEscrowOrder.total)} authorised on your card. Released to the vendor when you confirm receipt{heldEscrowOrder.releaseAt ? ` (auto-releases ${new Date(heldEscrowOrder.releaseAt).toLocaleDateString()})` : ''}.
                           </div>
@@ -7383,9 +7383,9 @@ export default function App() {
                       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, padding: 18, boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}>
                         <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 280, height: 280, maxWidth: '70vw', maxHeight: '70vw', objectFit: 'contain', display: 'block' }} />
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginTop: 16 }}>Scan to Pay</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginTop: 16 }}>{t.scanToPay || 'Scan to Pay'}</div>
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
-                      <button onClick={() => setQrModalOpen(false)} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>Close</button>
+                      <button onClick={() => setQrModalOpen(false)} style={{ marginTop: 20, padding: '10px 28px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>{t.closeBtn || 'Close'}</button>
                     </div>
                   )}
                 </div>
@@ -7502,7 +7502,7 @@ export default function App() {
                   {latest.body || 'Tap to view'}
                 </div>
               </div>
-              <button onClick={openFromBanner} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#fff', color: accent, fontSize: 13, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>View</button>
+              <button onClick={openFromBanner} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#fff', color: accent, fontSize: 13, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t.viewBtn || 'View'}</button>
               <button onClick={() => setPendingChatAlerts([])} aria-label="Acknowledge" style={{ width: 36, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(0,0,0,0.25)', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}>✓</button>
             </div>
           </>
@@ -7517,8 +7517,8 @@ export default function App() {
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Orders</div>
-            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>Close</button>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{t.ordersTab || 'Orders'}</div>
+            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>{t.closeBtn || 'Close'}</button>
           </div>
 
           {!vendorActiveConv && (() => {
@@ -7595,6 +7595,7 @@ export default function App() {
               onRefund={vendorRefund}
               payActionBusy={vendorPayActionBusy}
               payActionMsg={vendorPayActionMsg}
+              t={t}
             />
           )}
         </div>
@@ -7659,7 +7660,7 @@ export default function App() {
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <button onClick={() => setSalesDashboardOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Sales Dashboard</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{t.salesDashboard || 'Sales Dashboard'}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{shopName}</div>
               </div>
             </div>
@@ -7689,7 +7690,7 @@ export default function App() {
 
               {/* Top sellers */}
               <div style={{ marginTop: 6, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Top sellers</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>{t.topSellers || 'Top sellers'}</div>
                 {topSellers.length === 0 && (
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No orders yet. Top items will appear here.</div>
                 )}
@@ -7712,7 +7713,7 @@ export default function App() {
 
               {/* Recent activity */}
               <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Recent orders</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>{t.recentOrders || 'Recent orders'}</div>
                 {recentSorted.length === 0 && (
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No orders yet.</div>
                 )}
@@ -7741,7 +7742,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <button onClick={() => setVendorTab('shop')} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>Order Alerts</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2 }}>{t.orderAlerts || 'Order Alerts'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1, fontWeight: 500 }}>Sound · vibration · push notifications</div>
             </div>
           </div>
@@ -7756,7 +7757,7 @@ export default function App() {
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: `${accent}25`, border: `1px solid ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>🔔</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Sound &amp; Vibration</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Audio chime when inbox is open</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{t.audioChime || 'Audio chime when inbox is open'}</div>
                 </div>
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
@@ -7776,7 +7777,7 @@ export default function App() {
                     Push Notifications
                     {vendorPushEnabled && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 7px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)' }}>ON</span>}
                   </div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Alerts when app is closed</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{t.alertsWhenClosed || 'Alerts when app is closed'}</div>
                 </div>
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.55 }}>
@@ -7799,8 +7800,8 @@ export default function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>💬</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>WhatsApp on Visit Us</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Public contact channel</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{t.waOnVisitUs || 'WhatsApp on Visit Us'}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{t.publicContact || 'Public contact channel'}</div>
                 </div>
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.55 }}>
@@ -7815,7 +7816,7 @@ export default function App() {
                 color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 transition: 'all 150ms ease',
               }}>
-                <span>Show WhatsApp link</span>
+                <span>{t.showWaLink || 'Show WhatsApp link'}</span>
                 <span style={{
                   width: 38, height: 22, borderRadius: 11, padding: 2,
                   background: showVisitUsWA ? accent : 'rgba(255,255,255,0.18)',
@@ -7890,7 +7891,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
             <button onClick={() => setPaymentMethodsOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Payment Methods</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{t.paymentMethods || 'Payment Methods'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
             </div>
           </div>
@@ -7899,7 +7900,7 @@ export default function App() {
           <div style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 14, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>🔒</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 3 }}>Your money goes directly to you</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{t.fundsDirectToYou || 'Your money goes directly to you'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>StreetLocal never holds or processes your funds. Each gateway sends payouts straight to your own account. We're just the checkout UI.</div>
             </div>
           </div>
@@ -7919,13 +7920,13 @@ export default function App() {
               </>
             )}
 
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{t.availableLabel || 'Available'}</div>
             <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 14, padding: '4px 14px', border: '1px solid rgba(255,255,255,0.08)' }}>
               {availableOnes.map((g, i) => renderCard(g, false, i === availableOnes.length - 1))}
             </div>
 
             <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 6 }}>How payments work</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{t.howPaymentsWork || 'How payments work'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
                 1. Sign up directly with the gateway (Stripe, Midtrans, etc.)<br />
                 2. Paste your keys / account ID here<br />
@@ -8005,14 +8006,14 @@ export default function App() {
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 22 }}>🌍</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>Coverage</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 2 }}>{t.coverageLabel || 'Coverage'}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{gw.countryCount} active</div>
               </div>
             </div>
 
             {/* Setup steps */}
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>How to set up</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>{t.howToSetUp || 'How to set up'}</div>
               {gw.setupSteps.map((s, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, background: `${gw.color}30`, border: `1px solid ${gw.color}60`, color: '#fff', fontSize: 13, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
@@ -8028,7 +8029,7 @@ export default function App() {
 
             {/* Test/Live mode + Fields */}
             <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>Your credentials</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 }}>{t.yourCredentials || 'Your credentials'}</div>
 
               {/* Test/Live mode pill */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 14, padding: 3, borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -8098,7 +8099,7 @@ export default function App() {
                 <button onClick={disconnect} style={{
                   padding: '13px 16px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.4)',
                   background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 48,
-                }}>Disconnect</button>
+                }}>{t.disconnect || 'Disconnect'}</button>
               )}
               <button onClick={save} style={{
                 flex: 1, padding: '13px 16px', borderRadius: 12, border: 'none',
@@ -8468,7 +8469,7 @@ export default function App() {
             <div style={{ margin: '0 16px 12px', padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.04)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22c55e' }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Order Mode</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{t.orderMode || 'Order Mode'}</span>
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
                 {vendorOrderMode === 'whatsapp'
@@ -8652,7 +8653,7 @@ export default function App() {
 
               return (
                 <div style={{ padding: '16px' }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: accent, marginBottom: 4 }}>App Theme</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: accent, marginBottom: 4 }}>{t.appTheme || 'App Theme'}</h3>
 
                   {/* Section 1: Recommended for your food type */}
                   {byFoodType.length > 0 && (
@@ -8667,7 +8668,7 @@ export default function App() {
                   {/* Section 2: Popular in your region */}
                   {byCountry.length > 0 && (
                     <>
-                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>Popular in your region</p>
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>{t.popularInRegion || 'Popular in your region'}</p>
                       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
                         {byCountry.filter(t => !byFoodType.some(f => f.id === t.id)).map(renderThemeCard)}
                       </div>
@@ -8677,7 +8678,7 @@ export default function App() {
                   {/* Section 3: More themes */}
                   {rest.length > 0 && (
                     <>
-                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>More themes</p>
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 8, marginTop: 8 }}>{t.moreThemes || 'More themes'}</p>
                       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
                         {rest.map(renderThemeCard)}
                       </div>
@@ -8703,12 +8704,12 @@ export default function App() {
 
                   {/* Custom services */}
                   <div style={{ marginTop: 16, padding: 16, borderRadius: 14, background: `${accent}10`, border: `1px solid ${accent}25` }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 800, color: accent, marginBottom: 12 }}>Professional Services</h4>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, color: accent, marginBottom: 12 }}>{t.professionalServices || 'Professional Services'}</h4>
 
                     {/* Custom Theme */}
                     <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.3)', marginBottom: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Theme</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{t.customTheme || 'Custom Theme'}</span>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 100.000</span>
                       </div>
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Exclusive background designed for your brand. Not shared with others. Unlimited revisions.</div>
@@ -8718,7 +8719,7 @@ export default function App() {
                     {/* Custom Logo */}
                     <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.3)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Custom Logo</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{t.customLogo || 'Custom Logo'}</span>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#FACC15' }}>Rp 50.000</span>
                       </div>
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 8 }}>Professional logo designed for your food business. Includes round format optimized for your app.</div>
@@ -8754,7 +8755,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
               <button onClick={() => setShowDeliverySettings(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Delivery Settings</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{t.deliverySettings || 'Delivery Settings'}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
@@ -8793,12 +8794,12 @@ export default function App() {
 
                   {/* Rate settings card */}
                   <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Delivery Rates</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{t.deliveryRates || 'Delivery Rates'}</div>
 
                     {/* Min Fee + Per KM — the two main rates */}
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Min Fare</label>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>{t.minFare || 'Min Fare'}</label>
                         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Starting price for the first km</div>
                         <input type="number" value={delMinCharge} onChange={e => setDelMinCharge(parseInt(e.target.value) || 0)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 16, fontWeight: 800 }} />
                         {delMinCharge > 0 && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{delCurrency} {fmt(delMinCharge).replace('Rp ', '')}</div>}
@@ -8831,7 +8832,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                       {!isIndonesia && (
                         <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>Currency</label>
+                          <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 2 }}>{t.currencyLabel || 'Currency'}</label>
                           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Your local currency symbol</div>
                           <input type="text" value={delCurrency} onChange={e => setDelCurrency(e.target.value)} style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
                         </div>
@@ -8909,7 +8910,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
               <button onClick={() => setEditItem(null)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Edit Item</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{t.editItem || 'Edit Item'}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
@@ -8931,7 +8932,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>Add Photo</span>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{t.addPhoto || 'Add Photo'}</span>
                     </div>
                   )}
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
@@ -8958,7 +8959,7 @@ export default function App() {
                     reader.readAsDataURL(file)
                   }} />
                 </label>
-                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
                 <div style={{ ...S.cardBody }}>
                   <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
                   <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
@@ -9036,7 +9037,7 @@ export default function App() {
                   )
                 })}
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>{t.swapHint || 'Tap a thumbnail to swap it with the main image'}</div>
             </div>
 
             {/* Form card */}
@@ -9051,10 +9052,10 @@ export default function App() {
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <span>Category</span>
+                    <span>{t.categoryLabel || 'Category'}</span>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <button type="button" onClick={() => { setCategoryPickerGroup(null); setCategoryPickerOpen(true) }} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>＋ Browse all</button>
-                      <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 500, cursor: 'pointer', padding: 0 }}>Change vendor type</button>
+                      <button type="button" onClick={() => setVendorTypePickerOpen(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 500, cursor: 'pointer', padding: 0 }}>{t.changeVendorType || 'Change vendor type'}</button>
                     </div>
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
@@ -9087,9 +9088,9 @@ export default function App() {
                 </div>
                 {shopTheme !== 'donut' && (
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Spice Level</label>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.spiceLevel || 'Spice Level'}</label>
                     <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
-                      <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                      <option value={0} style={{ background: '#1a1a1a' }}>{t.noneLabel || 'None'}</option>
                       <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
                       <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
                       <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
@@ -9100,12 +9101,12 @@ export default function App() {
 
               {/* Portion size — important: visible by default in main form */}
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Portion</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.portionSize || 'Portion'}</label>
                 <select value={formPortionSize} onChange={(e) => setFormPortionSize(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                  <option value="" style={{ background: '#1a1a1a' }}>Choose portion size…</option>
-                  <option value="Small" style={{ background: '#1a1a1a' }}>Small</option>
-                  <option value="Medium" style={{ background: '#1a1a1a' }}>Medium</option>
-                  <option value="Large" style={{ background: '#1a1a1a' }}>Large</option>
+                  <option value="" style={{ background: '#1a1a1a' }}>{t.portionSize || 'Portion'}…</option>
+                  <option value="Small" style={{ background: '#1a1a1a' }}>{t.smallSize || 'Small'}</option>
+                  <option value="Medium" style={{ background: '#1a1a1a' }}>{t.mediumSize || 'Medium'}</option>
+                  <option value="Large" style={{ background: '#1a1a1a' }}>{t.largeSize || 'Large'}</option>
                 </select>
               </div>
 
@@ -9121,18 +9122,18 @@ export default function App() {
 
               {/* Price toggle */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Normal</button>
-                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Promo</button>
+                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{t.normalLabel || 'Normal'}</button>
+                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{t.promoLabel || 'Promo'}</button>
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Price</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.priceLabel || 'Price'}</label>
                   <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="e.g. 15000" type="number" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
                   {formPrice && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{fmt(Number(formPrice))}</div>}
                 </div>
                 {formPriceMode === 'promo' && (
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>{t.promoPrice || 'Promo Price'}</label>
                     <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
                     {formPromoPrice && <div style={{ fontSize: 13, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
                   </div>
@@ -9157,8 +9158,8 @@ export default function App() {
 
             {/* Buttons */}
             <div style={{ padding: '16px 14px 28px', display: 'flex', gap: 10 }}>
-              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditItem(null)}>Cancel</button>
-              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 15, fontWeight: 800, cursor: 'pointer' }} onClick={saveEdit}>Save Changes</button>
+              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#8B0000', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditItem(null)}>{t.cancelBtn || 'Cancel'}</button>
+              <button style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 15, fontWeight: 800, cursor: 'pointer' }} onClick={saveEdit}>{t.saveChanges || 'Save Changes'}</button>
             </div>
           </div>
         </div>
@@ -9175,7 +9176,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
               <button onClick={() => setAddingItem(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Add New Item</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{t.addNewItem || 'Add New Item'}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{shopName}</div>
               </div>
             </div>
@@ -9190,7 +9191,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>Add Photo</span>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{t.addPhoto || 'Add Photo'}</span>
                     </div>
                   )}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
@@ -9218,7 +9219,7 @@ export default function App() {
                 }} />
                 </label>
                 {/* Popular badge on image */}
-                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
+                {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
                 {/* Card body preview */}
                 <div style={{ ...S.cardBody }}>
                   <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
@@ -9297,7 +9298,7 @@ export default function App() {
                   )
                 })}
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>Tap a thumbnail to swap it with the main image</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>{t.swapHint || 'Tap a thumbnail to swap it with the main image'}</div>
             </div>
 
             {/* Form card */}
@@ -9357,7 +9358,7 @@ export default function App() {
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Spice Level</label>
                     <select value={formSpice} onChange={(e) => setFormSpice(Number(e.target.value))} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', color: formSpice > 0 ? '#EF4444' : '#fff' }}>
-                      <option value={0} style={{ background: '#1a1a1a' }}>None</option>
+                      <option value={0} style={{ background: '#1a1a1a' }}>{t.noneLabel || 'None'}</option>
                       <option value={1} style={{ background: '#1a1a1a' }}>🌶️ Medium</option>
                       <option value={2} style={{ background: '#1a1a1a' }}>🌶️🌶️ Hot</option>
                       <option value={3} style={{ background: '#1a1a1a' }}>🌶️🌶️🌶️ Very Hot</option>
@@ -9379,8 +9380,8 @@ export default function App() {
 
               {/* Price section */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Normal</button>
-                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Promo</button>
+                <button onClick={() => setFormPriceMode('normal')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'normal' ? accent : 'rgba(255,255,255,0.06)', color: formPriceMode === 'normal' ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{t.normalLabel || 'Normal'}</button>
+                <button onClick={() => setFormPriceMode('promo')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: formPriceMode === 'promo' ? '#FFD600' : 'rgba(255,255,255,0.06)', color: formPriceMode === 'promo' ? '#1a1a1a' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{t.promoLabel || 'Promo'}</button>
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
@@ -9390,7 +9391,7 @@ export default function App() {
                 </div>
                 {formPriceMode === 'promo' && (
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>Promo Price</label>
+                    <label style={{ fontSize: 13, color: '#EF4444', marginBottom: 4, display: 'block', fontWeight: 600 }}>{t.promoPrice || 'Promo Price'}</label>
                     <input style={{ ...S.input, marginBottom: 0, fontSize: 16, fontWeight: 800, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(239,68,68,0.3)' }} placeholder="e.g. 10000" type="number" value={formPromoPrice} onChange={(e) => setFormPromoPrice(e.target.value)} />
                     {formPromoPrice && <div style={{ fontSize: 13, color: '#EF4444', marginTop: 4 }}>{fmt(Number(formPromoPrice))}</div>}
                   </div>
