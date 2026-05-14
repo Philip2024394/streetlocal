@@ -159,7 +159,12 @@ async function deleteMenuItemSupa(itemId) {
 
 async function uploadMenuImage(vendorId, file) {
   if (!supabase) return null
-  const ext = 'jpg'
+  // Preserve transparency for PNG/WebP inputs (logos, product cut-outs with
+  // alpha channel). JPEG re-encoding turns transparent pixels black because
+  // JPEG doesn't carry an alpha channel.
+  const isPng = file.type === 'image/png' || file.type === 'image/webp' || /\.(png|webp)$/i.test(file.name || '')
+  const ext = isPng ? 'png' : 'jpg'
+  const mime = isPng ? 'image/png' : 'image/jpeg'
   const path = `vendor-menu/${vendorId}/${Date.now()}.${ext}`
   // Compress first
   const compressed = await new Promise((resolve) => {
@@ -173,13 +178,13 @@ async function uploadMenuImage(vendorId, file) {
         if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
         canvas.width = w; canvas.height = h
         canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        canvas.toBlob(resolve, 'image/jpeg', 0.7)
+        canvas.toBlob(resolve, mime, isPng ? undefined : 0.7)
       }
       img.src = reader.result
     }
     reader.readAsDataURL(file)
   })
-  const { error } = await supabase.storage.from('images').upload(path, compressed, { contentType: 'image/jpeg', upsert: false })
+  const { error } = await supabase.storage.from('images').upload(path, compressed, { contentType: mime, upsert: false })
   if (error) return null
   const { data } = supabase.storage.from('images').getPublicUrl(path)
   return data?.publicUrl || null
@@ -576,6 +581,369 @@ function FitIframe({ src, sandbox = 'allow-scripts allow-same-origin', designW =
   )
 }
 
+/* Country list for the Shop Config autocomplete (top 3 matches surface
+   under the input as the vendor types). Alphabetical. */
+const COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan',
+  'Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia',
+  'Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi',
+  'Cambodia','Cameroon','Canada','Cape Verde','Central African Republic','Chad','Chile','China','Colombia','Comoros',
+  'Congo','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic',
+  'Denmark','Djibouti','Dominica','Dominican Republic',
+  'Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia',
+  'Fiji','Finland','France',
+  'Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana',
+  'Haiti','Honduras','Hong Kong','Hungary',
+  'Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Ivory Coast',
+  'Jamaica','Japan','Jordan',
+  'Kazakhstan','Kenya','Kiribati','Kosovo','Kuwait','Kyrgyzstan',
+  'Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg',
+  'Macau','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius',
+  'Mexico','Micronesia','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar',
+  'Namibia','Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway',
+  'Oman',
+  'Pakistan','Palau','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal',
+  'Qatar',
+  'Romania','Russia','Rwanda',
+  'Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Saudi Arabia',
+  'Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia',
+  'South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria',
+  'Taiwan','Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu',
+  'Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan',
+  'Vanuatu','Vatican City','Venezuela','Vietnam',
+  'Yemen',
+  'Zambia','Zimbabwe',
+]
+
+/* Donut landing defaults — exact values from the frozen donuts.html
+   snapshot so a vendor who hasn't customised yet sees the original design. */
+const DONUT_LANDING_DEFAULTS = {
+  heroLine1: 'Sweet',
+  heroLine2: 'Glazed',
+  heroLine3: 'Donuts',
+  kicker: 'Freshly Made Daily',
+  subtitle: 'Hand-crafted donuts glazed and filled with love. Baked fresh every morning.',
+  openNow: 'Open Now',
+  flavourKicker: "Today's Flavour",
+  flavour1: 'Strawberry',
+  flavour2: 'Glazed',
+  cta: 'Order Donuts',
+  stat1Num: '24K', stat1Label: 'Guests',
+  stat2Num: '5★',  stat2Label: 'Rating',
+  stat3Num: '12m', stat3Label: 'Delivery',
+  heroImg: 'https://ik.imagekit.io/nepgaxllc/Untitleddasddasdfssdfsdfsdsdasdss-removebg-preview.png',
+  bouncingImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png',
+  bottomLeftImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png',
+  flavourOrbImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png',
+  bgImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png',
+  pink: '#F472B6',
+  pinkBright: '#EC4899',
+  heroFontSize: 44,
+  heroFontFamily: 'system',
+}
+
+/* DonutSplash — React port of the frozen donuts.html design. Renders the
+   ENTIRE design at the original 390x844 dimensions inside an absolutely-
+   positioned content layer, then uses CSS transform: scale() driven by
+   ResizeObserver to fit any parent (preview phone, full app shell, theme
+   browser preview, etc.). Same behaviour the old FitIframe gave us before
+   the iframe was replaced with this React component. */
+function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' }) {
+  const L = { ...DONUT_LANDING_DEFAULTS, ...(landing || {}) }
+  const FONT_MAP = {
+    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    nunito: '"Nunito", sans-serif',
+    poppins: '"Poppins", sans-serif',
+    playfair: '"Playfair Display", serif',
+    caveat: '"Caveat", cursive',
+    bebas: '"Bebas Neue", sans-serif',
+  }
+  const headingFont = FONT_MAP[L.heroFontFamily] || FONT_MAP.system
+  const wrapperRef = useRef(null)
+  const [scale, setScale] = useState(1)
+  // TIER 2 — confetti burst spawned from the CTA button on tap. Each
+  // particle is deterministic per burst (Math.random captured at fire
+  // time, not in render), so no jitter on re-renders.
+  const [confetti, setConfetti] = useState([])
+  const fireConfetti = () => {
+    const colors = ['#EC4899', '#FACC15', '#22C55E', '#3B82F6', '#F472B6', '#FB923C', '#FFFFFF']
+    const particles = Array.from({ length: 30 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 30 + (Math.random() - 0.5) * 0.35
+      const distance = 80 + Math.random() * 80
+      return {
+        id: Date.now() + i,
+        tx: Math.cos(angle) * distance,
+        ty: Math.sin(angle) * distance - 24, // bias upward — gravity feel
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 5 + Math.random() * 6,
+        rot: (Math.random() - 0.5) * 720,
+        shape: i % 3, // 0=disc, 1=streak, 2=square
+      }
+    })
+    setConfetti(particles)
+    setTimeout(() => setConfetti([]), 1200)
+  }
+  const handleCTA = (e) => {
+    e.stopPropagation()
+    fireConfetti()
+    // Give the burst a beat before transitioning away.
+    setTimeout(() => { if (onEnter) onEnter() }, 550)
+  }
+  // Memoize the heavy image + sprinkle elements so editing text in the
+  // Landing Page Edit doesn't re-render them every keystroke (which was
+  // causing the visible flash). Each useMemo lists ONLY the props that
+  // genuinely affect its output.
+  const sprinklesLayerMemo = React.useMemo(() => (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+      {Array.from({ length: 22 }, (_, i) => {
+        const colors = ['#2C1810', '#3D1F0F', '#5C3317', '#7B4B2A', '#8B5A2B', '#A0522D']
+        const leftPct = 60 + ((i * 19) % 38)
+        const topPx = 60 + ((i * 29) % 140)
+        const delay = ((i * 11) % 100) / 14
+        const duration = 4 + (i % 4) * 0.6
+        const size = 5 + (i % 3) * 2
+        const color = colors[i % colors.length]
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${leftPct}%`, top: `${topPx}px`,
+            width: size, height: size,
+            borderRadius: i % 2 === 0 ? '50%' : 3,
+            background: color,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
+            animation: `donutSprinkleFall ${duration}s linear infinite`,
+            animationDelay: `${delay}s`,
+            willChange: 'transform',
+          }} />
+        )
+      })}
+    </div>
+  ), [])
+  const bgImgEl = React.useMemo(() => (
+    L.bgImg ? <img src={L.bgImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} /> : null
+  ), [L.bgImg])
+  const bouncingImgEl = React.useMemo(() => (
+    L.bouncingImg ? <img src={L.bouncingImg} alt="" style={{ position: 'absolute', top: 64, right: -40, width: 208, height: 208, borderRadius: '50%', objectFit: 'cover', animation: 'donutBounce 1s infinite', zIndex: 2, willChange: 'transform' }} /> : null
+  ), [L.bouncingImg])
+  const bottomLeftImgEl = React.useMemo(() => (
+    L.bottomLeftImg ? <img src={L.bottomLeftImg} alt="" style={{ position: 'absolute', bottom: 0, left: -40, width: 176, height: 176, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 40px 140px rgba(34,211,238,0.4)', zIndex: 1 }} /> : null
+  ), [L.bottomLeftImg])
+  const heroImgEl = React.useMemo(() => (
+    L.heroImg ? <img src={L.heroImg} alt="" style={{ width: 125, height: 125, objectFit: 'contain', flexShrink: 0, alignSelf: 'center', filter: `drop-shadow(0 8px 24px ${L.pink}66)` }} /> : null
+  ), [L.heroImg, L.pink])
+  const flavourOrbImgEl = React.useMemo(() => (
+    L.flavourOrbImg ? <img src={L.flavourOrbImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null
+  ), [L.flavourOrbImg])
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const calc = () => {
+      const { width, height } = el.getBoundingClientRect()
+      if (!width || !height) return
+      const sx = width / 390
+      const sy = height / 844
+      const next = fit === 'contain' ? Math.min(sx, sy) : Math.max(sx, sy)
+      // Only update if the scale actually changed (prevents render loops if
+      // ResizeObserver fires on subpixel jitter during state updates).
+      setScale(prev => (Math.abs(prev - next) < 0.001 ? prev : next))
+    }
+    calc()
+    const ro = new ResizeObserver(calc)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fit])
+
+  // Centering offsets: when scaled content is smaller than the wrapper
+  // (contain mode) we centre it; when it's larger (cover mode) we keep it
+  // top-left so the most important part (hero card) stays in view.
+  const scaledW = 390 * scale
+  const scaledH = 844 * scale
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', color: '#fff', background: L.pink || '#F472B6' }}>
+      <div style={{
+        position: 'absolute',
+        width: 390, height: 844,
+        left: '50%', top: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center center',
+      }}>
+      {/* Static bg fills the frame — memoized, no re-render on text edits. */}
+      {bgImgEl}
+
+      {/* TIER 1 — Breathing pink wash. Sits over the bg image and pulses
+          warm pink → cool pink → cream every 8s so the page feels alive
+          without going one-note. Pure colour layer, no image required. */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 80% 60% at 50% 40%, ${L.pinkBright}33 0%, ${L.pink}22 50%, transparent 80%)`,
+        animation: 'donutBreath 8s ease-in-out infinite',
+      }} />
+
+      {languageButton}
+
+      {/* TIER 1 — Chocolate crumbs falling FROM the bouncing donut.
+          Memoized so text edits don't reflow this layer (which was the
+          main source of the "flashing images" issue). */}
+      {sprinklesLayerMemo}
+
+      {/* Frame padding mirrors donuts.html: 46px top, 8px bottom, 24px sides */}
+      <div style={{ position: 'absolute', inset: 0, padding: '46px 24px 8px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+
+        {/* Floating decoration donuts — memoized so text edits don't
+            reload or remount them (was causing the visible flash). */}
+        {bouncingImgEl}
+        {bottomLeftImgEl}
+        {/* Decorative glass circles */}
+        <div style={{ position: 'absolute', top: '42%', left: -20, width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', boxShadow: '0 20px 80px rgba(255,255,255,0.08)', zIndex: 1 }} />
+        <div style={{ position: 'absolute', bottom: 160, right: 40, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', boxShadow: '0 20px 80px rgba(255,255,255,0.08)', zIndex: 1 }} />
+
+        <style>{`
+          @keyframes donutBounce { 0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); } }
+          @keyframes donutPulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+          @keyframes donutBreath { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+          @keyframes donutSprinkleFall { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 8% { opacity: 0.85; } 92% { opacity: 0.85; } 100% { transform: translateY(900px) rotate(720deg); opacity: 0; } }
+          @keyframes donutHeadingGlow {
+            0%, 100% { text-shadow: 0 0 8px ${L.pink}99, 0 0 18px ${L.pink}66; }
+            50% { text-shadow: 0 0 24px ${L.pink}, 0 0 40px ${L.pink}99, 0 0 60px ${L.pink}55; }
+          }
+          @keyframes donutMarqueeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          @keyframes donutCardTilt {
+            0%, 100% { transform: perspective(1400px) rotateX(2deg) rotateY(-2deg); }
+            25% { transform: perspective(1400px) rotateX(-1deg) rotateY(2deg); }
+            50% { transform: perspective(1400px) rotateX(-2deg) rotateY(2deg); }
+            75% { transform: perspective(1400px) rotateX(1deg) rotateY(-1deg); }
+          }
+          @keyframes donutConfettiBurst {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg)) scale(0.6); opacity: 0; }
+          }
+        `}</style>
+
+        {/* Main card — ambient 3D tilt cycles continuously so the splash
+            feels physical without needing pointer/gyro input. */}
+        <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: 430, minHeight: 600, borderRadius: 48, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', overflow: 'visible', boxShadow: '0 40px 140px rgba(0,0,0,0.55)', padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', animation: 'donutCardTilt 14s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
+        {/* (scaled-content layer continues below) */}
+          {/* radial gradient overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 35%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 0, left: 40, width: 2, height: '100%', background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent)', pointerEvents: 'none' }} />
+
+          {/* Header — Open Now pill */}
+          <div style={{ position: 'relative', zIndex: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, background: L.pinkBright, border: `1px solid ${L.pink}66`, backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', boxShadow: '0 10px 40px rgba(236,72,153,0.5)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'donutPulseDot 2s ease-in-out infinite' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: '#fff', textTransform: 'uppercase' }}>{L.openNow}</span>
+            </span>
+          </div>
+
+          {/* Hero */}
+          <div style={{ position: 'relative', zIndex: 4, marginTop: 12 }}>
+            <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{L.kicker}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+              {/* Heading — pink lines render as solid colour (no glow / no
+                  animation) per user spec. */}
+              <h1 style={{ fontSize: L.heroFontSize, lineHeight: 0.85, letterSpacing: '-0.06em', fontWeight: 900, flex: 1, minWidth: 0, margin: 0, fontFamily: headingFont }}>
+                {L.heroLine1}<br />
+                <span style={{ color: L.pink }}>{L.heroLine2}</span>
+                <span style={{ display: 'block', color: L.pink }}>{L.heroLine3}</span>
+              </h1>
+              {heroImgEl}
+            </div>
+            <p style={{ color: '#fff', fontSize: 14, lineHeight: 1.4, maxWidth: 310, margin: 0, fontWeight: 500, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{L.subtitle}</p>
+            {/* TIER 1 — Live customer feed marquee. Scrolls horizontally with
+                a duplicated list so the loop appears seamless. Sample events
+                until we wire in real orders/reviews. */}
+            <div style={{ marginTop: 12, height: 22, overflow: 'hidden', position: 'relative', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
+              {(() => {
+                const events = [
+                  `👤 Maya P. just ordered ${L.flavour1} ${L.flavour2}`,
+                  '⭐ Jordan L. left a 5-star review',
+                  '🛵 Ravi G. picked up — delivery in 12m',
+                  '👤 Chloe B. just ordered Sprinkle Donut',
+                  '⭐ Ava M. left a 5-star review',
+                  '🍩 Marcus R. ordered Glazed × 6',
+                ]
+                const loop = [...events, ...events]
+                return (
+                  <div style={{ display: 'flex', gap: 28, whiteSpace: 'nowrap', animation: 'donutMarqueeScroll 40s linear infinite', willChange: 'transform' }}>
+                    {loop.map((e, i) => (
+                      <span key={i} style={{ fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>{e}</span>
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+
+          {/* Featured / CTA */}
+          <div style={{ position: 'relative', zIndex: 4, marginTop: 12, borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', padding: 12, boxShadow: '0 30px 100px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -30, right: -20, width: 128, height: 128, borderRadius: '50%', background: `${L.pinkBright}1a`, filter: 'blur(40px)', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 4, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>{L.flavourKicker}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 0.95 }}>
+                  {L.flavour1}
+                  <span style={{ display: 'block', color: L.pink }}>{L.flavour2}</span>
+                </div>
+              </div>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg, ${L.pinkBright}, ${L.pink})`, boxShadow: `0 20px 80px ${L.pinkBright}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                {flavourOrbImgEl}
+              </div>
+            </div>
+            {/* CTA + confetti burst. Wrapping div positions the particle
+                emitter precisely at the button's centre. */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={handleCTA}
+                style={{ width: '100%', height: 56, borderRadius: 22, border: 'none', background: `linear-gradient(to right, ${L.pinkBright}, ${L.pink})`, color: '#fff', fontSize: 18, fontWeight: 900, cursor: 'pointer', boxShadow: `0 30px 100px ${L.pinkBright}73`, transition: 'transform 0.3s ease', fontFamily: 'inherit' }}
+              >{L.cta}</button>
+              {confetti.length > 0 && (
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, pointerEvents: 'none', zIndex: 20 }}>
+                  {confetti.map(p => (
+                    <div
+                      key={p.id}
+                      style={{
+                        position: 'absolute',
+                        left: -p.size / 2, top: -p.size / 2,
+                        width: p.shape === 1 ? p.size * 0.5 : p.size,
+                        height: p.shape === 1 ? p.size * 2 : p.size,
+                        background: p.color,
+                        borderRadius: p.shape === 0 ? '50%' : p.shape === 2 ? 2 : 1,
+                        boxShadow: `0 0 6px ${p.color}88`,
+                        animation: 'donutConfettiBurst 1s ease-out forwards',
+                        ['--tx']: `${p.tx}px`,
+                        ['--ty']: `${p.ty}px`,
+                        ['--rot']: `${p.rot}deg`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div style={{ position: 'relative', zIndex: 4, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
+            {[
+              { num: L.stat1Num, label: L.stat1Label },
+              { num: L.stat2Num, label: L.stat2Label },
+              { num: L.stat3Num, label: L.stat3Label },
+            ].map((m, i) => (
+              <div key={i} style={{ borderRadius: 16, background: `${L.pinkBright}26`, border: `1px solid ${L.pink}4d`, backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: '#FACC15' }}>{m.num}</div>
+                <div style={{ fontSize: 13, color: '#fff', marginTop: 4, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main App ─── */
 export default function App() {
   // Route to admin or activate page
@@ -731,13 +1099,31 @@ export default function App() {
   const isDemo = new URLSearchParams(window.location.search).get('demo') === 'true'
   const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true' // isolated preview — ignores localStorage
   const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
+  // Vendor toggle: when off, the donut splash / branded landing is skipped
+  // and customers land directly on the menu/home. Persisted in localStorage.
+  const [landingEnabled, setLandingEnabled] = useState(() => {
+    if (isDemo) return true
+    const saved = localStorage.getItem('foodlocalchat_landing_enabled')
+    return saved === null ? true : saved === 'true'
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_landing_enabled', String(landingEnabled)) } catch {}
+  }, [landingEnabled])
   const [showLanding, setShowLanding] = useState(() => {
     if (isDemo) return demoPage === 'landing'
     // vendorbasic_vendorId fallback preserves state for users migrating from
     // the retired /food/whatsapp app (which used that localStorage key).
     const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
-    return !id
+    // Honour the landing-disabled toggle: customers land on the menu directly
+    // when the vendor has switched the landing splash off.
+    const landingOn = (localStorage.getItem('foodlocalchat_landing_enabled') !== 'false')
+    return !id && landingOn
   })
+  // If the vendor switches landing OFF mid-session, drop the splash immediately
+  // (e.g. they're toggling while previewing the customer flow).
+  useEffect(() => {
+    if (!landingEnabled && showLanding) setShowLanding(false)
+  }, [landingEnabled, showLanding])
   const [menuItems, setMenuItems] = useState(() => isDemo ? DEMO_MENU : loadJSON('foodlocalchat_menu', DEMO_MENU))
   const [cart, setCart] = useState([])
   const [isVendor, setIsVendor] = useState(() => {
@@ -921,6 +1307,29 @@ export default function App() {
   const donutsHtmlSrc = window.location.hostname === 'localhost'
     ? 'http://localhost:5173/themes/donuts.html'
     : window.location.origin + '/themes/donuts.html'
+
+  // Donut landing edit state — every text/image/colour the vendor can change
+  // on the donut landing splash. Defaults exactly match the frozen donuts.html
+  // snapshot so the page looks identical until the vendor customises it.
+  const [donutLanding, setDonutLanding] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('foodlocalchat_donut_landing') || 'null')
+      return { ...DONUT_LANDING_DEFAULTS, ...(saved || {}) }
+    } catch { return DONUT_LANDING_DEFAULTS }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_donut_landing', JSON.stringify(donutLanding)) } catch {}
+  }, [donutLanding])
+  const setDonutField = (k, v) => setDonutLanding(p => ({ ...p, [k]: v }))
+  const resetDonutLanding = () => setDonutLanding({ ...DONUT_LANDING_DEFAULTS })
+
+  // CASCADE — the master pink set in Landing Page Edit becomes the app
+  // accent for donut theme, so every downstream component that falls back
+  // to `accent` (frame stripes, promo bar, buttons, etc.) automatically
+  // follows the master. Per-section overrides still win if explicitly set.
+  // Shared palette picker drawer — any colour input opens this so vendors
+  // pick from one consistent palette across the whole donut customisation.
+  const [colorPickerTarget, setColorPickerTarget] = useState(null) // { value, onChange, label, allowInherit?, onInherit? }
   // Clear any stale uploaded-hero state from previous sessions so the donut
   // iframe always loads its original frozen illustration.
   try { localStorage.removeItem('foodlocalchat_donut_hero') } catch {}
@@ -957,6 +1366,17 @@ export default function App() {
   // Demo is locked to noodle (red) regardless of URL params. New vendors also start on noodle.
   const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : urlThemePreset ? urlThemePreset.id : isPreview ? 'noodle' : (localStorage.getItem('foodlocalchat_theme') || 'noodle'))
   const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : urlThemePreset ? urlThemePreset.accent : isPreview ? '#8B0000' : (localStorage.getItem('foodlocalchat_accentColor') || '#8B0000'))
+  // CASCADE — on donut theme, keep the app accent + saved accent in
+  // lock-step with the master pink from Landing Page Edit. Every section
+  // that falls back to `accent` (frame, promo, buttons, drawer chrome)
+  // therefore updates automatically when the vendor picks a new master
+  // colour. Declared AFTER both shopTheme + shopAccentColor (TDZ-safe).
+  useEffect(() => {
+    if (shopTheme === 'donut' && donutLanding.pink && donutLanding.pink !== shopAccentColor) {
+      setShopAccentColor(donutLanding.pink)
+      try { localStorage.setItem('foodlocalchat_accentColor', donutLanding.pink) } catch {}
+    }
+  }, [shopTheme, donutLanding.pink, shopAccentColor])
   const [themeEditor, setThemeEditor] = useState(null) // { url, posX, posY } or null
   const [editorColor, setEditorColor] = useState('#8DC63F')
   const [editorBaseColor, setEditorBaseColor] = useState('#8DC63F')
@@ -1125,6 +1545,7 @@ export default function App() {
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('foodlocalchat_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('foodlocalchat_shopCity') || '')
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('foodlocalchat_shopCountry') || '')
+  const [countrySuggestions, setCountrySuggestions] = useState([])
   const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('foodlocalchat_shopFoodType') || 'Indonesian Street Food')
 
   /* ─── Customization Features (all optional) ─── */
@@ -1273,6 +1694,9 @@ export default function App() {
 
   // Payment Methods — vendor connects their OWN gateway accounts. StreetLocal never touches funds.
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false)
+  // Sales dashboard — aggregates orders from vendorConversations + local
+  // order_payload history. Vendor-only.
+  const [salesDashboardOpen, setSalesDashboardOpen] = useState(false)
   const [setupGatewayId, setSetupGatewayId] = useState(null)        // which gateway is being configured
   const [paymentGateways, setPaymentGateways] = useState(() => {
     try { return JSON.parse(localStorage.getItem('foodlocalchat_payment_gateways') || '{}') } catch { return {} }
@@ -2281,10 +2705,10 @@ export default function App() {
           <button type="button" onClick={() => toggleSection('dietary')} aria-label="Close dietary" style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#EF4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>×</button>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8, paddingRight: 30 }}>Dietary tags · customers can filter the menu by these</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {/* Donut shops: surface the 5 tags that matter — vegetarian, vegan,
-                halal, gluten-free, dairy-free. Hide protein/healthy/organic/kosher. */}
+            {/* Donut shops: surface the 4 tags that matter — vegetarian, vegan,
+                gluten-free, dairy-free. Halal is removed at the user's request. */}
             {(shopTheme === 'donut'
-              ? DIETARY_TAGS.filter(t => ['vegetarian', 'vegan', 'halal', 'gluten_free', 'dairy_free'].includes(t.id))
+              ? DIETARY_TAGS.filter(t => ['vegetarian', 'vegan', 'gluten_free', 'dairy_free'].includes(t.id))
               : DIETARY_TAGS
             ).map(tag => {
               const isActive = formDietary.includes(tag.id)
@@ -2784,14 +3208,18 @@ export default function App() {
 
   const saveEdit = () => {
     if (!formName || !formPrice) return
+    // Normalize the "Other" placeholder. If the vendor picked Other but
+    // didn't fill in a custom name, the sentinel '__OTHER__' is still in
+    // formCategory — we drop it down to empty string on save.
+    const safeCategory = formCategory === '__OTHER__' ? '' : formCategory
     const stockNum = formStock === '' ? null : Number(formStock)
     const extras = { photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit(), filling: formFilling || null, glaze: formGlaze || null, topping: formTopping || null, doughType: formDoughType || null, freshToday: !!formFreshToday }
     setMenuItems((prev) =>
       prev.map((m) =>
-        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras } : m
+        m.id === editItem.id ? { ...m, name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: safeCategory, prepTime: formPrepTime || 0, ...extras } : m
       )
     )
-    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, ...extras }).catch(() => {})
+    if (vendorId) saveMenuItem(vendorId, { ...menuItems.find(m => m.id === editItem.id), name: formName, price: Number(formPrice), photo: formPhoto, desc: formDesc, category: safeCategory, prepTime: formPrepTime || 0, ...extras }).catch(() => {})
     setEditItem(null)
   }
 
@@ -2833,9 +3261,11 @@ export default function App() {
     const newId = Date.now()
     const promoPrice = formPriceMode === 'promo' && formPromoPrice ? Number(formPromoPrice) : null
     const stockNum = formStock === '' ? null : Number(formStock)
+    // Normalize the "Other" placeholder — see saveEdit for the same logic.
+    const safeCategory = formCategory === '__OTHER__' ? '' : formCategory
     // Donut-only fields persist on the item; standard themes ignore the keys
     // (they're just stored as empty strings / false and don't render anywhere).
-    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: formCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit(), filling: formFilling || null, glaze: formGlaze || null, topping: formTopping || null, doughType: formDoughType || null, freshToday: !!formFreshToday }
+    const item = { id: newId, name: formName, price: Number(formPrice), promoPrice, spice: formSpice, halal: formHalal, popular: formPopular, photo: formPhoto, desc: formDesc, category: safeCategory, prepTime: formPrepTime || 0, available: true, photos: formPhotos, allergens: formAllergens, dietary: formDietary, portion: formPortion, portionSize: formPortionSize, stock: stockNum, variants: formVariants, modifiers: formModifiers, perks: formPerks, perkText: formPerkText || null, perkLimit: buildPerkLimit(), filling: formFilling || null, glaze: formGlaze || null, topping: formTopping || null, doughType: formDoughType || null, freshToday: !!formFreshToday }
     setMenuItems((prev) => [...prev, item])
     if (vendorId) saveMenuItem(vendorId, item).catch(() => {})
     setAddingItem(false)
@@ -2943,6 +3373,34 @@ export default function App() {
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
     if (!vendorId && !isDemo) { setChatError('Vendor not set'); return }
+
+    // Stock guard — block oversell. Any cart item whose qty exceeds the
+    // current stock (when stock is tracked, i.e. not null) is rejected here
+    // BEFORE the order is sent. After the check, we decrement local stock
+    // optimistically so concurrent customers see the new availability
+    // immediately. Items with stock === null are treated as unlimited.
+    const stockShortages = cart.reduce((acc, c) => {
+      const item = menuItems.find(m => m.id === c.id)
+      if (item && item.stock != null && item.stock < c.qty) {
+        acc.push({ name: c.name || item.name, qty: c.qty, stock: item.stock })
+      }
+      return acc
+    }, [])
+    if (stockShortages.length > 0) {
+      const s = stockShortages[0]
+      setChatError(
+        stockShortages.length === 1
+          ? `Sorry — only ${s.stock} ${s.name} left (you ordered ${s.qty}). Reduce the quantity and try again.`
+          : `Stock changed since you started: ${stockShortages.map(x => `${x.name} (${x.stock} left)`).join(', ')}. Adjust your cart and try again.`
+      )
+      return
+    }
+    // Decrement local stock for tracked items (null stock = unlimited).
+    setMenuItems(prev => prev.map(m => {
+      const c = cart.find(x => x.id === m.id)
+      if (!c || m.stock == null) return m
+      return { ...m, stock: Math.max(0, m.stock - c.qty) }
+    }))
 
     const orderPayload = {
       orderNumber: `${initials}-${orderNum}`,
@@ -3488,12 +3946,19 @@ export default function App() {
     if (isVendor && !vendorType && !isDemo) setVendorTypePickerOpen(true)
   }, [isVendor, vendorType, isDemo])
 
-  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu
+  // Quick-chip suggestions: preset for current type ∪ any custom categories already in menu.
+  // Donut theme overrides the preset with the 10 curated donut categories so
+  // vendors aren't shown irrelevant warung/cafe taxonomy. The "+ Add custom"
+  // input next to the chips acts as the Other path.
   const vendorPreset = vendorType ? VENDOR_TYPES[vendorType] : VENDOR_TYPES.warung
-  const categoryChips = [...new Set([
-    ...vendorPreset.categories,
-    ...menuItems.map(m => m.category).filter(Boolean),
-  ])]
+  const categoryChips = (() => {
+    const existing = menuItems.map(m => m.category).filter(Boolean)
+    if (shopTheme === 'donut') {
+      const donutCats = (THEME_CATEGORY_OVERRIDES.donut?.[0]?.types) || []
+      return [...new Set([...donutCats, ...existing])]
+    }
+    return [...new Set([...vendorPreset.categories, ...existing])]
+  })()
 
   /* --- Visit Us FAB — expanded with "Visit Us" label on first session, collapses to pin only --- */
   const [fabExpanded, setFabExpanded] = useState(() => !localStorage.getItem('vendorbasic_visit_seen'))
@@ -3592,7 +4057,7 @@ export default function App() {
       // hero image via Design Studio.
       const donutsSrc = donutsHtmlSrc
       return (
-        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
+        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: donutLanding.pink || '#F472B6' }}>
           {/* Language toggle still available at top-right */}
           <button onClick={() => {
             const codes = LANGUAGES.map(l => l.code)
@@ -3602,14 +4067,10 @@ export default function App() {
             <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
           </button>
-          {/* FitIframe scales the 390×844 donut HTML to cover the app shell —
-              previously the iframe was 100% × 100% but the donut body is locked
-              to 390×844, so it rendered tiny in the top-left on any non-390px
-              parent (the user's "size not set correct" report). */}
-          <FitIframe src={donutsSrc} />
-          {/* The donut HTML's own "Order Donuts" CTA posts sl-theme-enter-menu
-              to drop the splash (listener at line ~828). No floating fallback
-              button — the in-theme CTA is the single entry point. */}
+          {/* DonutSplash — React port of the frozen donuts.html design.
+              Reads from `donutLanding` state so every text / image / colour
+              is editable from the Landing Page Edit. */}
+          <DonutSplash landing={donutLanding} onEnter={() => setShowLanding(false)} />
         </div>
       )
     }
@@ -4039,10 +4500,14 @@ export default function App() {
           'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129',
           'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png?updatedAt=1778707873204',
           'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2008_45_54%20PM.png',
+          'https://ik.imagekit.io/nepgaxllc/Untitledasdaaaavdddddd-removebg-preview%20(1).png',
+          'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2009_19_03%20PM.png',
         ]
         return (
           <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true) }} aria-label="Meet our donuts" style={{
-            position: 'fixed', bottom: 20, right: 16, zIndex: 240,
+            // When the sticky checkout bar is showing (cart > 0) push the
+            // floating donut above it so it doesn't cover the Checkout button.
+            position: 'fixed', bottom: totalItems > 0 ? 80 : 20, right: 16, zIndex: 240,
             width: 86, height: 86, borderRadius: 43, border: 'none',
             background: 'transparent', cursor: 'pointer', padding: 0,
             display: 'block', overflow: 'visible',
@@ -4051,29 +4516,22 @@ export default function App() {
           }}>
             <style>{`
               @keyframes donutFloatPulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.08) rotate(2deg); } }
-              @keyframes donutFloatCycle {
-                0%, 28%   { opacity: 1; }
-                33%, 61%  { opacity: 0; }
-                66%, 94%  { opacity: 0; }
-                100%      { opacity: 1; }
-              }
-              @keyframes donutFloatCycle2 {
-                0%, 28%   { opacity: 0; }
-                33%, 61%  { opacity: 1; }
-                66%, 94%  { opacity: 0; }
-                100%      { opacity: 0; }
-              }
-              @keyframes donutFloatCycle3 {
-                0%, 28%   { opacity: 0; }
-                33%, 61%  { opacity: 0; }
-                66%, 94%  { opacity: 1; }
-                100%      { opacity: 0; }
-              }
+              @keyframes donutFloatCycle1 { 0%, 18% { opacity: 1; } 22%, 98% { opacity: 0; } 100% { opacity: 1; } }
+              @keyframes donutFloatCycle2 { 0%, 18% { opacity: 0; } 22%, 38% { opacity: 1; } 42%, 100% { opacity: 0; } }
+              @keyframes donutFloatCycle3 { 0%, 38% { opacity: 0; } 42%, 58% { opacity: 1; } 62%, 100% { opacity: 0; } }
+              @keyframes donutFloatCycle4 { 0%, 58% { opacity: 0; } 62%, 78% { opacity: 1; } 82%, 100% { opacity: 0; } }
+              @keyframes donutFloatCycle5 { 0%, 78% { opacity: 0; } 82%, 98% { opacity: 1; } 100% { opacity: 0; } }
             `}</style>
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <img src={FLOAT_IMGS[0]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle 7.5s ease-in-out infinite' }} />
-              <img src={FLOAT_IMGS[1]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle2 7.5s ease-in-out infinite' }} />
-              <img src={FLOAT_IMGS[2]} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: 'donutFloatCycle3 7.5s ease-in-out infinite' }} />
+              {FLOAT_IMGS.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  onError={imgError('food')}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 43, objectFit: 'cover', animation: `donutFloatCycle${i + 1} 10s ease-in-out infinite` }}
+                />
+              ))}
             </div>
           </button>
         )
@@ -4155,7 +4613,7 @@ export default function App() {
             <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '90vw', height: '40vh', background: `radial-gradient(closest-side, ${accent}55, transparent 70%)`, pointerEvents: 'none', filter: 'blur(20px)', zIndex: 0 }} />
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, position: 'relative', zIndex: 2 }}>
-              <button onClick={() => setDonutTypesGallery(false)} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+              <button onClick={() => setDonutTypesGallery(false)} style={{ width: 44, height: 44, borderRadius: 22, background: '#000', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>←</button>
               <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Meet Our Donuts</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{safeIdx + 1} of {published.length}</div>
@@ -4200,15 +4658,15 @@ export default function App() {
                   padding: '0 8%',
                   boxSizing: 'border-box',
                 }}>
-                  <img src={d.image} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.8)' : 'scale(0.9)' }} />
+                  <img src={d.image} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.68)' : 'scale(0.9)' }} />
                 </div>
               ))}
             </div>
             {/* Floating left/right arrows over the hero band */}
             {published.length > 1 && (
               <>
-                <button onClick={goPrev} disabled={safeIdx === 0} aria-label="Previous" style={{ position: 'absolute', top: 'calc(14vh + 70px)', left: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === 0 ? 'default' : 'pointer', opacity: safeIdx === 0 ? 0.25 : 1, lineHeight: 1 }}>‹</button>
-                <button onClick={goNext} disabled={safeIdx === published.length - 1} aria-label="Next" style={{ position: 'absolute', top: 'calc(14vh + 70px)', right: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === published.length - 1 ? 'default' : 'pointer', opacity: safeIdx === published.length - 1 ? 0.25 : 1, lineHeight: 1 }}>›</button>
+                <button onClick={goPrev} disabled={safeIdx === 0} aria-label="Previous" style={{ position: 'absolute', top: 'calc(14vh + 70px)', left: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: '#EC4899', border: 'none', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === 0 ? 'default' : 'pointer', opacity: safeIdx === 0 ? 0.35 : 1, lineHeight: 1, boxShadow: '0 6px 20px rgba(236,72,153,0.45)' }}>‹</button>
+                <button onClick={goNext} disabled={safeIdx === published.length - 1} aria-label="Next" style={{ position: 'absolute', top: 'calc(14vh + 70px)', right: 12, zIndex: 3, width: 48, height: 48, borderRadius: 24, background: '#EC4899', border: 'none', color: '#fff', fontSize: 26, fontWeight: 700, cursor: safeIdx === published.length - 1 ? 'default' : 'pointer', opacity: safeIdx === published.length - 1 ? 0.35 : 1, lineHeight: 1, boxShadow: '0 6px 20px rgba(236,72,153,0.45)' }}>›</button>
               </>
             )}
             {/* Dot indicators */}
@@ -4612,7 +5070,7 @@ export default function App() {
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 2 }}>{MENU_CATEGORIES.length - 1} categories · {menuItems.length} items</div>
                   </div>
                 </div>
-                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: accent, border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: `0 2px 6px ${accent}66` }}>&times;</button>
+                <button onClick={() => setMenuDrawerOpen(false)} aria-label="Close" style={{ background: accent, border: 'none', color: '#fff', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0, lineHeight: 1, width: 36, height: 36, borderRadius: 12, boxShadow: `0 2px 6px ${accent}66`, alignSelf: 'flex-start', marginTop: -4 }}>&times;</button>
               </div>
               {(() => {
                 // Short description shown under each category label
@@ -4815,7 +5273,7 @@ export default function App() {
                   : { width: '100%', height: 180, objectFit: 'cover', display: 'block' }
               } onClick={() => { setItemModal(item); setModalQty(1) }} />
               {item.popular && <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>Popular</span>}
-              {item.halal && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
+              {item.halal && shopTheme !== 'donut' && <span style={{ position: 'absolute', top: 8, left: 70, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>}
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 58, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: '12px 14px' }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: 4 }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
@@ -4886,7 +5344,7 @@ export default function App() {
                 style={isDonutImageCard ? { ...S.cardImg, margin: 8, borderRadius: 10, width: 'auto', maxWidth: 'calc(100% - 16px)' } : S.cardImg}
                 onClick={() => { setItemModal(item); setModalQty(1) }}
               />
-              {item.halal && (
+              {item.halal && shopTheme !== 'donut' && (
                 <span style={{ position: 'absolute', bottom: 8, left: isVendor ? 40 : 8, fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700, zIndex: 2 }}>Halal</span>
               )}
               {item.popular && (
@@ -5087,7 +5545,7 @@ export default function App() {
               {/* Badges — popular, halal, dietary tags */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
                 {itemModal.popular && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(250,204,21,0.15)', color: '#FACC15', padding: '4px 10px', borderRadius: 8 }}>⭐ Popular</span>}
-                {(itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
+                {shopTheme !== 'donut' && (itemModal.halal || (itemModal.dietary || []).includes('Halal')) && <span style={{ fontSize: 13, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: 8 }}>☪️ Halal</span>}
                 {(itemModal.dietary || []).filter(d => d !== 'Halal').map(d => (
                   <span key={d} style={{ fontSize: 13, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '4px 10px', borderRadius: 8 }}>🌱 {d}</span>
                 ))}
@@ -5498,8 +5956,8 @@ export default function App() {
             }>
               <button onClick={() => setHeroEditor(false)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Customise your landing page brand</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{landingThemeId === 'donuts' ? 'Landing Page Edit' : 'Hero Text Editor'}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{landingThemeId === 'donuts' ? 'Edit every text, image, and colour on your donut landing' : 'Customise your landing page brand'}</div>
               </div>
             </div>
 
@@ -5522,7 +5980,7 @@ export default function App() {
                         a no-op for the donut theme but stay reachable for other
                         themes the vendor may switch to later. */}
                     {landingThemeId === 'donuts' && (
-                      <FitIframe fit="contain" src={donutsHtmlSrc} />
+                      <DonutSplash landing={donutLanding} onEnter={() => {}} fit="cover" />
                     )}
                     {/* Background image */}
                     {landingThemeId !== 'donuts' && (<>
@@ -5572,6 +6030,150 @@ export default function App() {
               : { padding: '14px', position: 'relative', zIndex: 2 }
             }>
 
+              {/* ═══ DONUT LANDING EDIT PANEL ═══ */}
+              {landingThemeId === 'donuts' && (() => {
+                const L = donutLanding
+                const labelStyle = { fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 4, display: 'block' }
+                const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
+                const SectionHeading = ({ children }) => (
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 18, marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>{children}</div>
+                )
+                const ImageRow = ({ label, valueKey }) => (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ ...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{label}</span>
+                      <button type="button" onClick={() => setDonutField(valueKey, DONUT_LANDING_DEFAULTS[valueKey])} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {L[valueKey] ? (
+                        <img src={L[valueKey]} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                      ) : (
+                        <div style={{ width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📷</div>
+                      )}
+                      <label style={{ flex: 1, padding: '10px 12px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {L[valueKey] ? 'Replace' : 'Upload'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; const url = await uploadMenuImage(vendorId, f); if (url) setDonutField(valueKey, url) }} />
+                      </label>
+                      {L[valueKey] && (
+                        <button type="button" onClick={() => setDonutField(valueKey, '')} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.12)', color: '#fca5a5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                      )}
+                    </div>
+                  </div>
+                )
+                return (
+                  <>
+                    <SectionHeading>Hero</SectionHeading>
+                    <label style={labelStyle}>Line 1</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.heroLine1} onChange={(e) => setDonutField('heroLine1', e.target.value)} />
+                    <label style={labelStyle}>Line 2 (accent colour)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.heroLine2} onChange={(e) => setDonutField('heroLine2', e.target.value)} />
+                    <label style={labelStyle}>Line 3 (accent colour)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.heroLine3} onChange={(e) => setDonutField('heroLine3', e.target.value)} />
+                    <label style={labelStyle}>Kicker (small caps above heading)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={40} value={L.kicker} onChange={(e) => setDonutField('kicker', e.target.value)} />
+                    <label style={labelStyle}>Subtitle paragraph</label>
+                    <textarea style={{ ...inputStyle, marginBottom: 8, resize: 'vertical', minHeight: 72, lineHeight: 1.4 }} maxLength={140} rows={2} value={L.subtitle} onChange={(e) => setDonutField('subtitle', e.target.value)} />
+                    <label style={labelStyle}>Status pill (top-left)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={20} value={L.openNow} onChange={(e) => setDonutField('openNow', e.target.value)} />
+
+                    <SectionHeading>Today&apos;s Flavour</SectionHeading>
+                    <label style={labelStyle}>Section heading</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.flavourKicker} onChange={(e) => setDonutField('flavourKicker', e.target.value)} />
+                    <label style={labelStyle}>Flavour name (line 1)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={20} value={L.flavour1} onChange={(e) => setDonutField('flavour1', e.target.value)} />
+                    <label style={labelStyle}>Flavour name (line 2, accent colour)</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={20} value={L.flavour2} onChange={(e) => setDonutField('flavour2', e.target.value)} />
+                    <label style={labelStyle}>CTA button text</label>
+                    <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.cta} onChange={(e) => setDonutField('cta', e.target.value)} />
+
+                    <SectionHeading>Stats (3 small cards)</SectionHeading>
+                    {[1, 2, 3].map(n => (
+                      <div key={n} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                        <input style={{ ...inputStyle, flex: '0 0 32%' }} maxLength={8} placeholder={`#${n} number`} value={L[`stat${n}Num`]} onChange={(e) => setDonutField(`stat${n}Num`, e.target.value)} />
+                        <input style={{ ...inputStyle, flex: 1 }} maxLength={16} placeholder={`#${n} label`} value={L[`stat${n}Label`]} onChange={(e) => setDonutField(`stat${n}Label`, e.target.value)} />
+                      </div>
+                    ))}
+
+                    <SectionHeading>Images</SectionHeading>
+                    <ImageRow label="Background" valueKey="bgImg" />
+                    <ImageRow label="Hero donut (next to heading)" valueKey="heroImg" />
+                    <ImageRow label="Bouncing donut (top-right)" valueKey="bouncingImg" />
+                    <ImageRow label="Bottom-left donut" valueKey="bottomLeftImg" />
+                    <ImageRow label="Today&apos;s Flavour orb" valueKey="flavourOrbImg" />
+
+                    <SectionHeading>Colours (master theme)</SectionHeading>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 10, lineHeight: 1.4 }}>
+                      These two colours cascade to the whole donut app — buttons, cards, frames, promo bar all follow unless you set a specific override in Menu Cards.
+                    </div>
+                    {/* Master accent pink — opens the shared palette drawer */}
+                    <button
+                      type="button"
+                      onClick={() => setColorPickerTarget({
+                        value: L.pink,
+                        onChange: (c) => setDonutField('pink', c),
+                        label: 'Accent pink (headings + outlines)',
+                      })}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', marginBottom: 10, minHeight: 52 }}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: L.pink, border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Accent pink</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', marginTop: 2 }}>{L.pink}</div>
+                      </div>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>🎨 Open palette</span>
+                    </button>
+                    {/* Bright pink — opens the shared palette drawer */}
+                    <button
+                      type="button"
+                      onClick={() => setColorPickerTarget({
+                        value: L.pinkBright,
+                        onChange: (c) => setDonutField('pinkBright', c),
+                        label: 'Bright pink (CTA + status pill)',
+                      })}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', marginBottom: 12, minHeight: 52 }}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: L.pinkBright, border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Bright pink (CTA)</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', marginTop: 2 }}>{L.pinkBright}</div>
+                      </div>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>🎨 Open palette</span>
+                    </button>
+
+                    <SectionHeading>Hero size &amp; font</SectionHeading>
+                    <label style={labelStyle}>Heading size ({L.heroFontSize}px)</label>
+                    <style>{`
+                      .donut-size-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; cursor: pointer; }
+                      .donut-size-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 11px; background: #EC4899; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(236,72,153,0.55), inset 0 1px 2px rgba(255,255,255,0.35); cursor: pointer; margin-top: -8px; }
+                      .donut-size-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 11px; background: #EC4899; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(236,72,153,0.55); cursor: pointer; }
+                      .donut-size-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; }
+                      .donut-size-slider::-moz-range-track { height: 6px; border-radius: 3px; }
+                    `}</style>
+                    <input
+                      className="donut-size-slider"
+                      type="range" min={28} max={64} step={1}
+                      value={L.heroFontSize}
+                      onChange={(e) => setDonutField('heroFontSize', Number(e.target.value))}
+                      style={{
+                        // Track: gradient from white (filled portion) → grey (remaining)
+                        background: `linear-gradient(to right, #ffffff 0%, #ffffff ${((L.heroFontSize - 28) / 36) * 100}%, rgba(255,255,255,0.18) ${((L.heroFontSize - 28) / 36) * 100}%, rgba(255,255,255,0.18) 100%)`,
+                        marginBottom: 12,
+                      }}
+                    />
+                    <label style={labelStyle}>Heading font</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
+                      {[{ id: 'system', label: 'Default' }, { id: 'nunito', label: 'Rounded' }, { id: 'poppins', label: 'Bold' }, { id: 'playfair', label: 'Elegant' }, { id: 'caveat', label: 'Handwritten' }, { id: 'bebas', label: 'Street' }].map(f => (
+                        <button key={f.id} type="button" onClick={() => setDonutField('heroFontFamily', f.id)} style={{ padding: '10px 6px', borderRadius: 10, border: L.heroFontFamily === f.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: L.heroFontFamily === f.id ? `${accent}20` : 'rgba(255,255,255,0.04)', color: L.heroFontFamily === f.id ? '#fff' : 'rgba(255,255,255,0.4)' }}>{f.label}</button>
+                      ))}
+                    </div>
+
+                    <button type="button" onClick={resetDonutLanding} style={{ width: '100%', padding: 12, borderRadius: 12, border: 'none', background: '#000', color: '#FACC15', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>Reset Landing to Defaults</button>
+                  </>
+                )
+              })()}
+
+              {/* ─── Non-donut controls (Shop Name, Size, Font, Effects, Colours) ─── */}
+              {landingThemeId !== 'donuts' && (<>
               {/* Shop Name Input */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -5655,6 +6257,7 @@ export default function App() {
 
               {/* Reset all */}
               <button onClick={() => { setHeroSize('normal'); setHeroFont('system'); setHeroColor('#ffffff'); setHeroSubColor(''); setHeroEffect('shadow') }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset All to Default</button>
+              </>)}
             </div>
             {/* Footer save button — sticks to viewport bottom while page scrolls */}
             <div style={{ padding: 14, borderTop: '1px solid rgba(255,255,255,0.06)', position: 'sticky', bottom: 0, zIndex: 2 }}>
@@ -5715,12 +6318,19 @@ export default function App() {
                 <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 46, height: 14, background: '#000', borderRadius: 14, zIndex: 5 }} />
                 <img src={themeEditor.url} alt="" onError={imgError('theme')} style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${editorPos.x}% ${editorPos.y}%`, transition: 'object-position 0.2s ease' }} />
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-                  {shopLogo ? (
-                    <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', transition: 'background 0.2s' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 62, height: 62, borderRadius: 31, objectFit: 'cover' }} />
-                    </div>
+                  {/* Respects shopLogoStyle — single source of truth. */}
+                  {shopLogoStyle === 'off' ? null : shopLogo ? (
+                    shopLogoStyle === 'bare' ? (
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }} />
+                    ) : (
+                      <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', transition: 'background 0.2s' }}>
+                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 62, height: 62, borderRadius: 31, objectFit: 'cover' }} />
+                      </div>
+                    )
                   ) : (
-                    <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
+                    shopLogoStyle === 'bare' ? null : (
+                      <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>{shopName.charAt(0).toUpperCase()}</div>
+                    )
                   )}
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', textAlign: 'center', padding: '0 10px' }}>{shopName}</div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{shopFoodType}</div>
@@ -6093,6 +6703,54 @@ export default function App() {
                     </div>
                   )}
 
+                  {/* Payment method picker — the customer picks ONE before
+                      submitting. Previously hardcoded to 'cod' which silently
+                      ignored card selections. Methods shown depend on what
+                      the vendor has set up. */}
+                  {cart.length > 0 && (() => {
+                    const cardConnected = SUPPORTED_GATEWAYS.some(g => paymentGateways[g.id]?.connected && LIVE_GATEWAY_IDS.has(g.id))
+                    const methods = [
+                      { id: 'cod',  icon: '💵', label: 'Cash on delivery',  desc: 'Pay when your order arrives.', show: true },
+                      { id: 'qris', icon: '📲', label: 'QRIS / E-wallet',   desc: 'GoPay · OVO · DANA · ShopeePay. Scan after order.', show: !!shopQris },
+                      { id: 'bank', icon: '🏦', label: 'Bank transfer',     desc: 'Vendor confirms transfer manually.', show: true },
+                      { id: 'card', icon: '💳', label: 'Pay by card',       desc: 'Charged securely at checkout.', show: cardConnected },
+                    ].filter(m => m.show)
+                    return (
+                      <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Pay with</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {methods.map(m => {
+                            const isActive = payMethod === m.id
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => setPayMethod(m.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 12,
+                                  padding: '12px 14px', borderRadius: 12,
+                                  border: isActive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)',
+                                  background: isActive ? `${accent}1f` : 'rgba(255,255,255,0.03)',
+                                  cursor: 'pointer', textAlign: 'left', minHeight: 56, color: '#fff',
+                                  transition: 'background 0.15s, border-color 0.15s',
+                                }}
+                              >
+                                <div style={{ width: 38, height: 38, borderRadius: 10, background: isActive ? accent : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, color: '#fff' }}>{m.icon}</div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 14, fontWeight: 800 }}>{m.label}</div>
+                                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{m.desc}</div>
+                                </div>
+                                <div style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${isActive ? accent : 'rgba(255,255,255,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  {isActive && <div style={{ width: 10, height: 10, borderRadius: 5, background: accent }} />}
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   {/* Your details — moved to bottom, the LAST thing customer fills before sending */}
                   {cart.length > 0 && (
                     <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 14, padding: 14, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -6333,37 +6991,73 @@ export default function App() {
 
       {/* ═══ VENDOR ORDERS INBOX ═══ */}
       {isVendor && vendorTab === 'orders' && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
+          {/* Same bg + glass scrim as the main app — pulled from the saved
+              theme bg so the Orders page sits inside the donut atmosphere. */}
+          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
+
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Orders</div>
-            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 }}>Close</button>
+            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>Close</button>
           </div>
 
-          {!vendorActiveConv && (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-              {vendorConversations.length === 0 && (
-                <div style={{ padding: 24, color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center' }}>No orders yet. New orders will appear here with a chime + vibration.</div>
-              )}
-              {vendorConversations.map((conv) => {
-                const isFlash = flashConvId === conv.id
-                const unread = conv.unread_vendor_count || 0
-                return (
-                  <button key={conv.id} onClick={() => openVendorConv(conv)} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', border: 'none', background: isFlash ? 'rgba(250,204,21,0.18)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', textAlign: 'left', minHeight: 44, transition: 'background 200ms ease' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.08)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>
-                      {(conv.customer_name || conv.customer_phone || '?').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{conv.customer_name || conv.customer_phone}</div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ''}</div>
-                    </div>
-                    {unread > 0 && (
-                      <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+          {!vendorActiveConv && (() => {
+            // Mock conversations — shown when there are no real orders yet
+            // AND the vendor is on donut theme. Gives a fresh shop a populated
+            // preview so they can see what the inbox looks like in use.
+            const now = Date.now()
+            const MOCK_DONUT_CONVS = shopTheme === 'donut' && vendorConversations.length === 0 ? [
+              { id: 'mock-1', customer_name: 'Maya P.',    customer_phone: '+62 812 3456 7890', last_message_at: new Date(now - 5*60*1000).toISOString(),       unread_vendor_count: 2, isMock: true, preview: 'Hi! Could I get 6 Glazed and 2 Boston Cream?' },
+              { id: 'mock-2', customer_name: 'Jordan L.',  customer_phone: '+62 813 4567 8901', last_message_at: new Date(now - 32*60*1000).toISOString(),      unread_vendor_count: 0, isMock: true, preview: 'Thanks, picked up — these are amazing!' },
+              { id: 'mock-3', customer_name: 'Ravi G.',    customer_phone: '+62 821 2345 6789', last_message_at: new Date(now - 2*60*60*1000).toISOString(),    unread_vendor_count: 1, isMock: true, preview: 'Is delivery available to Yogyakarta city centre?' },
+              { id: 'mock-4', customer_name: 'Chloe B.',   customer_phone: '+62 815 6789 0123', last_message_at: new Date(now - 6*60*60*1000).toISOString(),    unread_vendor_count: 0, isMock: true, preview: '4 Sprinkle Donuts ordered · DD-487193' },
+              { id: 'mock-5', customer_name: 'Ava M.',     customer_phone: '+62 819 1234 5678', last_message_at: new Date(now - 26*60*60*1000).toISOString(),   unread_vendor_count: 0, isMock: true, preview: 'Left a 5-star review · DD-301847' },
+              { id: 'mock-6', customer_name: 'Marcus R.',  customer_phone: '+62 817 8901 2345', last_message_at: new Date(now - 2*24*60*60*1000).toISOString(), unread_vendor_count: 0, isMock: true, preview: 'Pickup confirmed for 3pm tomorrow' },
+            ] : []
+            const list = vendorConversations.length > 0 ? vendorConversations : MOCK_DONUT_CONVS
+            const showingMocks = vendorConversations.length === 0 && MOCK_DONUT_CONVS.length > 0
+            return (
+              <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+                {showingMocks && (
+                  <div style={{ margin: '4px 16px 10px', padding: '10px 12px', borderRadius: 10, background: `${accent}18`, border: `1px solid ${accent}55`, fontSize: 13, color: '#fff', lineHeight: 1.4, fontWeight: 500 }}>
+                    👀 <span style={{ fontWeight: 800 }}>Sample orders</span> — real orders from customers will replace these here as soon as the first one arrives.
+                  </div>
+                )}
+                {list.length === 0 && (
+                  <div style={{ padding: 24, color: 'rgba(255,255,255,0.7)', fontSize: 14, textAlign: 'center' }}>No orders yet. New orders will appear here with a chime + vibration.</div>
+                )}
+                {list.map((conv) => {
+                  const isFlash = flashConvId === conv.id
+                  const unread = conv.unread_vendor_count || 0
+                  return (
+                    <button
+                      key={conv.id}
+                      onClick={() => { if (!conv.isMock) openVendorConv(conv) }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', border: 'none', background: isFlash ? 'rgba(250,204,21,0.18)' : 'rgba(0,0,0,0.35)', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: conv.isMock ? 'default' : 'pointer', textAlign: 'left', minHeight: 44, transition: 'background 200ms ease', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+                    >
+                      <div style={{ width: 40, height: 40, borderRadius: 20, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.18)' }}>
+                        {(conv.customer_name || conv.customer_phone || '?').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{conv.customer_name || conv.customer_phone}</span>
+                          {conv.isMock && (
+                            <span style={{ fontSize: 13, fontWeight: 700, color: accent, background: `${accent}22`, border: `1px solid ${accent}55`, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>SAMPLE</span>
+                          )}
+                        </div>
+                        {conv.preview && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.preview}</div>}
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ''}</div>
+                      </div>
+                      {unread > 0 && (
+                        <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
           {vendorActiveConv && (
             <VendorThreadView
@@ -6386,6 +7080,140 @@ export default function App() {
           )}
         </div>
       )}
+
+      {/* ═══ SALES DASHBOARD ═══
+          Aggregates orders from vendorConversations + their order_payload
+          history. Shows today / week / month / all-time revenue, top
+          sellers, and a recent activity feed. Vendor-only. */}
+      {isVendor && salesDashboardOpen && (() => {
+        // Pull every order_payload available across all conversations.
+        const orders = []
+        vendorConversations.forEach(conv => {
+          const msgs = (conv.messages || []).filter(m => m.order_payload)
+          msgs.forEach(m => orders.push({ ...m.order_payload, conv_id: conv.id, sender: conv.customer_name || conv.customer_phone || 'Customer' }))
+        })
+        // Donut-theme mock orders so a fresh vendor sees a populated dashboard.
+        const useMocks = shopTheme === 'donut' && orders.length === 0
+        const now = Date.now()
+        const mockOrders = useMocks ? [
+          { orderNumber: 'DD-487193', placedAt: new Date(now - 5*60*1000).toISOString(),       total: 84000,  items: [{ name: 'Glazed Donut', qty: 6, lineTotal: 60000 }, { name: 'Boston Cream', qty: 2, lineTotal: 24000 }], sender: 'Maya P.', isMock: true },
+          { orderNumber: 'DD-301847', placedAt: new Date(now - 2*60*60*1000).toISOString(),    total: 36000,  items: [{ name: 'Sprinkle Donut', qty: 3, lineTotal: 36000 }], sender: 'Ravi G.', isMock: true },
+          { orderNumber: 'DD-624518', placedAt: new Date(now - 6*60*60*1000).toISOString(),    total: 96000,  items: [{ name: 'Chocolate Frosted', qty: 4, lineTotal: 48000 }, { name: 'Glazed Donut', qty: 4, lineTotal: 40000 }, { name: 'Iced Coffee', qty: 1, lineTotal: 8000 }], sender: 'Chloe B.', isMock: true },
+          { orderNumber: 'DD-958432', placedAt: new Date(now - 28*60*60*1000).toISOString(),   total: 60000,  items: [{ name: 'Strawberry Frosted', qty: 5, lineTotal: 50000 }, { name: 'Iced Coffee', qty: 1, lineTotal: 10000 }], sender: 'Jordan L.', isMock: true },
+          { orderNumber: 'DD-117462', placedAt: new Date(now - 36*60*60*1000).toISOString(),   total: 120000, items: [{ name: 'Glazed Donut', qty: 12 }], sender: 'Marcus R.', isMock: true },
+          { orderNumber: 'DD-840291', placedAt: new Date(now - 4*24*60*60*1000).toISOString(), total: 48000,  items: [{ name: 'Boston Cream', qty: 4, lineTotal: 48000 }], sender: 'Ava M.', isMock: true },
+          { orderNumber: 'DD-553301', placedAt: new Date(now - 8*24*60*60*1000).toISOString(), total: 72000,  items: [{ name: 'Mochi Donut', qty: 6, lineTotal: 72000 }], sender: 'Lina K.', isMock: true },
+          { orderNumber: 'DD-220947', placedAt: new Date(now - 22*24*60*60*1000).toISOString(),total: 144000, items: [{ name: 'Chocolate Frosted', qty: 6, lineTotal: 72000 }, { name: 'Glazed Donut', qty: 6, lineTotal: 60000 }], sender: 'Sara H.', isMock: true },
+        ] : []
+        const allOrders = orders.length > 0 ? orders : mockOrders
+        const dayMs = 24*60*60*1000
+        const todayStart = new Date(); todayStart.setHours(0,0,0,0)
+        const weekStart  = new Date(now - 7*dayMs)
+        const monthStart = new Date(now - 30*dayMs)
+        const inRange = (o, since) => o.placedAt && new Date(o.placedAt) >= since
+        const buckets = {
+          today: allOrders.filter(o => inRange(o, todayStart)),
+          week:  allOrders.filter(o => inRange(o, weekStart)),
+          month: allOrders.filter(o => inRange(o, monthStart)),
+          all:   allOrders,
+        }
+        const sum = arr => arr.reduce((s, o) => s + (Number(o.total) || 0), 0)
+        const avg = arr => arr.length ? Math.round(sum(arr) / arr.length) : 0
+        // Top sellers across all orders
+        const itemTotals = {}
+        allOrders.forEach(o => (o.items || []).forEach(it => {
+          if (!it.name) return
+          if (!itemTotals[it.name]) itemTotals[it.name] = { qty: 0, revenue: 0 }
+          itemTotals[it.name].qty += Number(it.qty) || 0
+          itemTotals[it.name].revenue += Number(it.lineTotal) || 0
+        }))
+        const topSellers = Object.entries(itemTotals)
+          .sort((a, b) => b[1].qty - a[1].qty)
+          .slice(0, 5)
+        const recentSorted = [...allOrders].sort((a, b) => new Date(b.placedAt) - new Date(a.placedAt)).slice(0, 8)
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <button onClick={() => setSalesDashboardOpen(false)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>Sales Dashboard</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{shopName}</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
+              {useMocks && (
+                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, background: `${accent}18`, border: `1px solid ${accent}55`, fontSize: 13, color: '#fff', lineHeight: 1.4, fontWeight: 500 }}>
+                  👀 <span style={{ fontWeight: 800 }}>Sample data</span> — the numbers below come from sample orders so a fresh shop has something to look at. Real orders replace these as they arrive.
+                </div>
+              )}
+
+              {/* Top stat tiles */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                {[
+                  { label: 'Today',       orders: buckets.today, accent: '#22C55E' },
+                  { label: 'Last 7 days', orders: buckets.week,  accent: '#FACC15' },
+                  { label: 'Last 30 days', orders: buckets.month, accent: accent },
+                  { label: 'All time',    orders: buckets.all,   accent: '#A855F7' },
+                ].map((b, i) => (
+                  <div key={i} style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 14, padding: 14, border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{b.label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginTop: 6 }}>{fmt(sum(b.orders))}</div>
+                    <div style={{ fontSize: 13, color: b.accent, fontWeight: 700, marginTop: 4 }}>{b.orders.length} order{b.orders.length === 1 ? '' : 's'}{b.orders.length > 0 ? ` · avg ${fmt(avg(b.orders))}` : ''}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Top sellers */}
+              <div style={{ marginTop: 6, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Top sellers</div>
+                {topSellers.length === 0 && (
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No orders yet. Top items will appear here.</div>
+                )}
+                {topSellers.map(([name, stats], i) => {
+                  const max = topSellers[0][1].qty || 1
+                  const pct = Math.max(8, Math.round(stats.qty / max * 100))
+                  return (
+                    <div key={name} style={{ marginBottom: i === topSellers.length - 1 ? 0 : 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{i + 1}. {name}</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{stats.qty} sold · {fmt(stats.revenue)}</span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: accent, borderRadius: 3 }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Recent activity */}
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Recent orders</div>
+                {recentSorted.length === 0 && (
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No orders yet.</div>
+                )}
+                {recentSorted.map((o, i) => (
+                  <div key={o.orderNumber || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 0', borderBottom: i === recentSorted.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>{o.sender || 'Customer'}</span>
+                        {o.isMock && <span style={{ fontSize: 13, fontWeight: 700, color: accent, background: `${accent}22`, border: `1px solid ${accent}55`, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>SAMPLE</span>}
+                      </div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, fontFamily: 'monospace' }}>{o.orderNumber || '—'} · {o.placedAt ? new Date(o.placedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</div>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#FACC15', flexShrink: 0 }}>{fmt(o.total || 0)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ═══ VENDOR ORDER ALERTS / SETTINGS ═══ */}
       {isVendor && vendorTab === 'settings' && (
@@ -6768,6 +7596,88 @@ export default function App() {
         )
       })()}
 
+      {/* ═══ SHARED COLOUR PALETTE DRAWER ═══
+          Opens from any "Open palette" button. The opener supplies the
+          target config (value + onChange + label + optional onInherit).
+          Same palette across Landing Page Edit, Menu Cards, buttons — one
+          source of truth for colours. */}
+      {colorPickerTarget && (() => {
+        const PALETTE = {
+          Pinks:    ['#FFC0CB','#FFB6C1','#FF69B4','#FF1493','#F472B6','#EC4899','#DB2777','#BE185D','#9D174D'],
+          Reds:     ['#FECACA','#FCA5A5','#F87171','#EF4444','#DC2626','#B91C1C','#8B0000'],
+          Oranges:  ['#FED7AA','#FDBA74','#FB923C','#F97316','#EA580C','#C2410C'],
+          Yellows:  ['#FEF08A','#FDE047','#FACC15','#EAB308','#CA8A04'],
+          Greens:   ['#BBF7D0','#86EFAC','#4ADE80','#22C55E','#16A34A','#15803D'],
+          Cyans:    ['#A5F3FC','#67E8F9','#22D3EE','#06B6D4','#0891B2'],
+          Blues:    ['#BFDBFE','#93C5FD','#60A5FA','#3B82F6','#2563EB','#1D4ED8'],
+          Purples:  ['#DDD6FE','#C4B5FD','#A855F7','#9333EA','#7E22CE'],
+          Neutrals: ['#FFFFFF','#F5F5F5','#D4D4D8','#71717A','#404040','#1A1A1A','#000000'],
+        }
+        const close = () => setColorPickerTarget(null)
+        const pick = (c) => { colorPickerTarget.onChange(c); close() }
+        return (
+          <>
+            <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 700 }} />
+            <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '80vw', maxWidth: 360, background: '#0a0a0a', borderLeft: `1px solid ${accent}33`, zIndex: 701, overflowY: 'auto', boxShadow: '-12px 0 40px rgba(0,0,0,0.6)' }}>
+              {/* Header */}
+              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{colorPickerTarget.label || 'Pick a colour'}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Current: <span style={{ fontFamily: 'monospace' }}>{colorPickerTarget.value || '(inherits theme)'}</span></div>
+                </div>
+                <button onClick={close} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 16, background: '#8B0000', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>✕</button>
+              </div>
+
+              {/* Current swatch + hex input */}
+              <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: colorPickerTarget.value || donutLanding.pink, border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                <input
+                  key={colorPickerTarget.value || ''}
+                  defaultValue={colorPickerTarget.value || ''}
+                  placeholder="#F472B6"
+                  maxLength={7}
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontFamily: 'monospace', outline: 'none' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const v = e.currentTarget.value.trim()
+                      if (/^#[0-9A-Fa-f]{6}$/.test(v)) pick(v)
+                    }
+                  }}
+                />
+                <button onClick={(e) => { const inp = e.currentTarget.previousSibling; const v = inp.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) pick(v) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Set</button>
+              </div>
+
+              {/* Inherit theme button — for overrides that can fall back */}
+              {colorPickerTarget.allowInherit && colorPickerTarget.onInherit && (
+                <div style={{ padding: '0 16px 12px' }}>
+                  <button onClick={() => { colorPickerTarget.onInherit(); close() }} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${accent}55`, background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>↺ Inherit theme colour</span>
+                    <span style={{ width: 20, height: 20, borderRadius: 10, background: donutLanding.pink, border: '2px solid rgba(255,255,255,0.2)' }} />
+                  </button>
+                </div>
+              )}
+
+              {/* Grouped swatches */}
+              <div style={{ padding: '8px 16px 24px' }}>
+                {Object.entries(PALETTE).map(([group, colors]) => (
+                  <div key={group} style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{group}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {colors.map(c => {
+                        const isPicked = colorPickerTarget.value && colorPickerTarget.value.toUpperCase() === c.toUpperCase()
+                        return (
+                          <button key={c} onClick={() => pick(c)} aria-label={c} title={c} style={{ width: 38, height: 38, borderRadius: 10, border: isPicked ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0, boxShadow: isPicked ? '0 0 0 2px rgba(255,255,255,0.25)' : 'none' }} />
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )
+      })()}
+
       {/* ═══ VENDOR SIDE DRAWER ═══ */}
       {vendorDrawer && (
         <>
@@ -6795,18 +7705,27 @@ export default function App() {
             {/* Header with logo */}
             <div style={{ padding: '20px 16px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {shopLogo ? (
-                  <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: 18, objectFit: 'cover' }} />
-                  </div>
+                {/* Honour shopLogoStyle everywhere — 'off' renders nothing,
+                    'bare' renders the bare image (no circle, no tile),
+                    'circle' renders the colour-tinted circle with image inside. */}
+                {shopLogoStyle === 'off' ? null : shopLogo ? (
+                  shopLogoStyle === 'bare' ? (
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
+                  ) : (
+                    <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: 18, objectFit: 'cover' }} />
+                    </div>
+                  )
                 ) : (
-                  <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                  shopLogoStyle === 'bare' ? null : (
+                    <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                  )
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{shopName}</div>
                   <div style={{ fontSize: 13, color: accent, fontWeight: 600, marginTop: 1 }}>{shopFoodType}</div>
                 </div>
-                <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: '#DC2626', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(220,38,38,0.4)' }}>✕</button>
+                <button onClick={() => setVendorDrawer(false)} style={{ width: 32, height: 32, borderRadius: 16, background: '#8B0000', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(139,0,0,0.45)' }}>✕</button>
               </div>
             </div>
 
@@ -6824,162 +7743,136 @@ export default function App() {
               </button>
             </div>
 
+            {/* Landing Page toggle — when off, customers skip the splash and
+                go straight to the menu/home. Vendor-controlled. */}
+            <div style={{ margin: '0 16px 12px', padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: landingEnabled ? '#22c55e' : 'rgba(255,255,255,0.3)' }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: landingEnabled ? '#fff' : 'rgba(255,255,255,0.6)' }}>{landingEnabled ? 'Landing Page On' : 'Landing Page Off'}</span>
+                </div>
+                <span style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{landingEnabled ? 'Customers see the splash first' : 'Customers go straight to the menu'}</span>
+              </div>
+              <button style={{ ...S.toggle(landingEnabled), background: landingEnabled ? accent : 'rgba(255,255,255,0.15)' }} onClick={() => setLandingEnabled(!landingEnabled)}>
+                <div style={S.toggleDot(landingEnabled)} />
+              </button>
+            </div>
+
             {/* Preview link — yellow pill button. Generous padding around it
                 so finger-tap doesn't catch the buttons above/below. */}
             <div style={{ padding: '16px 16px 20px', textAlign: 'center' }}>
               <button onClick={() => { setPreviewMode(true); setIsVendor(false); setShowLanding(true); setVendorDrawer(false) }} style={{ background: '#FACC15', border: 'none', color: '#1a1a1a', fontSize: 14, fontWeight: 800, cursor: 'pointer', padding: '14px 24px', borderRadius: 22, lineHeight: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.35)', minHeight: 44 }}>
-                Preview as Customer →
+                Preview as Customer
               </button>
             </div>
 
-            {/* Meet the Donuts — 2nd button in the drawer per spec. Opens
-                the swipe gallery (mock content fills it if vendor hasn't
-                uploaded anything yet). Donut theme only. */}
-            {shopTheme === 'donut' && (
-              <div style={{ padding: '0 16px 12px' }}>
-                <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: `${accent}18`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Meet the Donuts</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>Open the customer swipe gallery</div>
+            {/* ═══ GROUPED DRAWER SECTIONS ═══
+                BRAND / MENU / ORDERS / ACCOUNT / ADVANCED. Section headers
+                use small-caps + a coloured left bar to break the list into
+                scannable buckets. Landing Page Edit is promoted to top-level
+                in BRAND (was previously buried inside Design Studio). */}
+            {(() => {
+              const sectionHeader = (label) => (
+                <div key={`sh-${label}`} style={{ margin: '14px 16px 6px', padding: '6px 0 6px 10px', borderLeft: `3px solid ${accent}`, fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em' }}>{label}</div>
+              )
+              const drawerBtn = (item) => (
+                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick(); setVendorDrawer(false) }} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                  padding: '12px 14px', borderRadius: 14,
+                  border: `1.5px solid ${item.danger ? '#8B0000' : '#DC2626'}`,
+                  background: item.danger ? 'rgba(139,0,0,0.18)' : 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                  cursor: 'pointer', textAlign: 'left', minHeight: 44, marginBottom: 8,
+                }}>
+                  {/* Coloured tile + white icon silhouette (filter inverts the
+                      emoji to pure white). Clean, uniform look across all
+                      buttons regardless of which emoji is used. */}
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: item.danger ? '#8B0000' : accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, lineHeight: 1 }}>
+                    <span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span>
                   </div>
-                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-                </button>
-              </div>
-            )}
-
-            {/* Navigation items */}
-            <div style={{ padding: '0 16px' }}>
-              {[
-                { icon: '🔔', label: 'Orders', desc: 'In-app chat orders inbox', onClick: () => { setVendorTab('orders'); setVendorDrawer(false) }, badge: vendorConversations.reduce((s, c) => s + (c.unread_vendor_count || 0), 0) },
-                { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => { setShopConfig(true); setVendorDrawer(false) } },
-                { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => { setThemeBrowser(true); setVendorDrawer(false) } },
-                { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => { setShowDeliverySettings(true); setVendorDrawer(false) } },
-                { icon: '🌐', label: 'Domains', desc: 'Custom domain for your app', onClick: () => { setDomainPage(true); setVendorDrawer(false) } },
-                { icon: '📋', label: 'Terms Of Listing', desc: 'Search listing requirements', onClick: () => { setTermsOfListing(true); setVendorDrawer(false) } },
-                { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => { setVendorTab('settings'); setVendorDrawer(false) } },
-                { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => { setPaymentMethodsOpen(true); setVendorDrawer(false) } },
-              ].map(item => (
-                <button key={item.label} onClick={() => { primeVendorChime(); item.onClick && item.onClick() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 44 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span></div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{item.label}</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>{item.desc}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{item.desc}</div>
                   </div>
                   {item.badge ? (
                     <span style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.badge}</span>
                   ) : null}
                   <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
                 </button>
-              ))}
-            </div>
+              )
+              const orderBadge = vendorConversations.reduce((s, c) => s + (c.unread_vendor_count || 0), 0)
+              const isDonut = shopTheme === 'donut'
 
-            {/* Design Studio link */}
-            <div style={{ padding: '0 16px 12px' }}>
-              <button onClick={() => { setDesignStudio(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #DC2626', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><span style={{ filter: 'brightness(0) invert(1)' }}>🎨</span></div>
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Design Studio</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Theme, layout, effects, branding</div>
-                </div>
-                <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-              </button>
-            </div>
+              const orders = [
+                { icon: '🔔', label: 'Orders', desc: 'In-app chat orders inbox', onClick: () => setVendorTab('orders'), badge: orderBadge },
+                { icon: '📊', label: 'Sales Dashboard', desc: 'Revenue, top items, daily / weekly view', onClick: () => setSalesDashboardOpen(true) },
+                { icon: '🛡️', label: 'Order Alerts', desc: 'Sound, vibration, push setup', onClick: () => setVendorTab('settings') },
+                { icon: '🛵', label: 'Delivery', desc: 'Rates, distance, collection', onClick: () => setShowDeliverySettings(true) },
+                { icon: '💳', label: 'Payment Methods', desc: 'Connect Stripe, Midtrans, PayPal, bank', onClick: () => setPaymentMethodsOpen(true) },
+              ]
 
-            {/* Menu Cards link — donut theme only. Drives the new Menu Cards
-                page that customises card bg style, frame color, and promo bar
-                color for all three layouts (grid / horizontal / fullwidth). */}
-            {shopTheme === 'donut' && (
-              <div style={{ padding: '0 16px 12px' }}>
-                <button onClick={() => { setMenuCardsPage(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Menu Cards</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Card colour, glass effect, frame, promo bar</div>
-                  </div>
-                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-                </button>
-              </div>
-            )}
+              // Brand = content-level customisation (text, images, donut-specific
+              // card visuals). Design = app-wide visual system (themes, studio).
+              const brand = [
+                { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
+                isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
+              ].filter(Boolean)
 
-            {/* Donut Types — donut only. Vendor editor for the per-type
-                hero swipe gallery. Each type optionally gets an image +
-                description; when filled, it auto-publishes to the customer
-                "Meet our donuts" gallery. Types without content stay vendor-
-                side only. */}
-            {shopTheme === 'donut' && (
-              <div style={{ padding: '0 16px 12px' }}>
-                <button onClick={() => { setDonutTypesPage(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${accent}`, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🍩</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Donut Types</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Upload image + story for each donut — shows live</div>
-                  </div>
-                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-                </button>
-              </div>
-            )}
+              const design = [
+                { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
+                { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
+              ]
 
-            {/* Meet the Donuts moved to the top of the drawer — see right
-                under "Preview as Customer" above. */}
+              const menu = [
+                isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
+                isDonut && { icon: '🍩', label: 'Meet the Donuts', desc: 'Open the customer swipe gallery', onClick: () => { setDonutTypesIdx(0); setDonutTypesGallery(true) } },
+              ].filter(Boolean)
 
-            {/* Reset Theme — donut only. Clears every donut customisation
-                (card style, colours, button shape/text/colours, hero upload,
-                card defaults) and restores the original Theme #6 look. */}
-            {shopTheme === 'donut' && (
-              <div style={{ padding: '0 16px 12px' }}>
-                <button onClick={() => {
-                  if (!window.confirm('Reset all donut theme customisations back to the original Theme #6 design? This wipes your card style, colours, button settings, and hero image.')) return
-                  // Clear donut-specific localStorage keys
+              const account = [
+                { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
+                { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
+                { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
+                { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
+              ]
+
+              const advanced = isDonut ? [
+                { icon: '↺', label: 'Reset Theme', desc: 'Restore the original donut design', danger: true, onClick: () => {
+                  if (!window.confirm('Reset all donut theme customisations back to the original Theme #6 design? This wipes your card style, colours, button settings, hero image, and landing page edits.')) return
                   const keys = [
-                    'foodlocalchat_donut_card_style',
-                    'foodlocalchat_donut_card_color',
-                    'foodlocalchat_donut_card_image',
-                    'foodlocalchat_donut_frame_color',
-                    'foodlocalchat_donut_promo_color',
-                    'foodlocalchat_donut_addbtn_shape',
-                    'foodlocalchat_donut_addbtn_color',
-                    'foodlocalchat_donut_addbtn_text_color',
-                    'foodlocalchat_donut_addbtn_text',
-                    'foodlocalchat_donut_hero',
+                    'foodlocalchat_donut_card_style', 'foodlocalchat_donut_card_color', 'foodlocalchat_donut_card_image',
+                    'foodlocalchat_donut_frame_color', 'foodlocalchat_donut_promo_color',
+                    'foodlocalchat_donut_addbtn_shape', 'foodlocalchat_donut_addbtn_color', 'foodlocalchat_donut_addbtn_text_color', 'foodlocalchat_donut_addbtn_text',
+                    'foodlocalchat_donut_hero', 'foodlocalchat_donut_landing',
                   ]
                   keys.forEach(k => { try { localStorage.removeItem(k) } catch {} })
-                  // Reset state to defaults
-                  setDonutCardStyle('solid')
-                  setDonutCardColor('#1a1a1a')
-                  setDonutCardImage('')
-                  setDonutFrameColor('')
-                  setDonutPromoColor('')
-                  setDonutAddBtnShape('circle')
-                  setDonutAddBtnColor('')
-                  setDonutAddBtnTextColor('#ffffff')
-                  setDonutAddBtnText('Add to Cart')
-                  setVendorDrawer(false)
-                }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #8B0000', background: 'rgba(139,0,0,0.18)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#8B0000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>↺</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Reset Theme</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>Restore the original donut design</div>
-                  </div>
-                  <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-                </button>
-              </div>
-            )}
+                  setDonutCardStyle('solid'); setDonutCardColor('#1a1a1a'); setDonutCardImage('')
+                  setDonutFrameColor(''); setDonutPromoColor('')
+                  setDonutAddBtnShape('circle'); setDonutAddBtnColor(''); setDonutAddBtnTextColor('#ffffff'); setDonutAddBtnText('Add to Cart')
+                  resetDonutLanding()
+                }}
+              ] : []
 
-            {/* Visit Us — moved from the home-screen FAB to the end of the
-                drawer. Available to all themes. */}
-            <div style={{ padding: '0 16px 20px' }}>
-              <button onClick={() => { setShowLocation(true); setVendorDrawer(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                  <img src="https://ik.imagekit.io/nepgaxllc/Untitledsdasdvvvdsds-removebg-preview.png?updatedAt=1777253439520" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+              return (
+                <div style={{ paddingBottom: 20 }}>
+                  {sectionHeader('Orders')}
+                  <div style={{ padding: '0 16px' }}>{orders.map(drawerBtn)}</div>
+                  {sectionHeader('Brand')}
+                  <div style={{ padding: '0 16px' }}>{brand.map(drawerBtn)}</div>
+                  {sectionHeader('Design')}
+                  <div style={{ padding: '0 16px' }}>{design.map(drawerBtn)}</div>
+                  {menu.length > 0 && (<>
+                    {sectionHeader('Menu')}
+                    <div style={{ padding: '0 16px' }}>{menu.map(drawerBtn)}</div>
+                  </>)}
+                  {sectionHeader('Account')}
+                  <div style={{ padding: '0 16px' }}>{account.map(drawerBtn)}</div>
+                  {advanced.length > 0 && (<>
+                    {sectionHeader('Advanced')}
+                    <div style={{ padding: '0 16px' }}>{advanced.map(drawerBtn)}</div>
+                  </>)}
                 </div>
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Visit Us</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>Address, map, opening hours</div>
-                </div>
-                <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
-              </button>
-            </div>
+              )
+            })()}
 
             {/* HIDDEN — Theme Backgrounds (kept for reference, moved to Design Studio) */}
             {false && (() => {
@@ -7326,7 +8219,7 @@ export default function App() {
                   <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
                   <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {formHalal && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formHalal && shopTheme !== 'donut' && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
                     {formPriceMode === 'promo' && formPromoPrice ? (
                       <>
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
@@ -7474,7 +8367,9 @@ export default function App() {
 
               {/* Badges */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                {shopTheme !== 'donut' && (
+                  <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                )}
                 <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formPopular ? '2px solid #FACC15' : '1px solid rgba(255,255,255,0.1)', background: formPopular ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.04)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
               </div>
 
@@ -7501,8 +8396,8 @@ export default function App() {
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
-              <textarea style={{ ...S.input, minHeight: 60, resize: 'none', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="Short description of the dish" value={formDesc} maxLength={60} onChange={(e) => setFormDesc(e.target.value.slice(0, 60))} />
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
+              <textarea style={{ ...S.input, width: '100%', boxSizing: 'border-box', minHeight: 110, resize: 'vertical', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5, fontFamily: 'inherit' }} placeholder="Describe the dish — ingredients, flavour, what makes it special..." value={formDesc} maxLength={350} onChange={(e) => setFormDesc(e.target.value)} />
 
               {/* Prep Time */}
               <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Prep Time (minutes)</label>
@@ -7585,7 +8480,7 @@ export default function App() {
                   <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
                   <div style={S.cardDesc}>{formDesc || 'Description...'}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {formHalal && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
+                    {formHalal && shopTheme !== 'donut' && <span style={{ fontSize: 13, background: 'rgba(34,197,94,0.8)', color: '#fff', borderRadius: 4, padding: '1px 4px', fontWeight: 700 }}>Halal</span>}
                     {formPriceMode === 'promo' && formPromoPrice ? (
                       <>
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>{fmt(Number(formPrice) || 0)}</span>
@@ -7673,13 +8568,46 @@ export default function App() {
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Category</label>
-                  <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
-                    <option value="Meal" style={{ background: '#1a1a1a' }}>Meal</option>
-                    <option value="Snack" style={{ background: '#1a1a1a' }}>Snack</option>
-                    <option value="Drink" style={{ background: '#1a1a1a' }}>Drink</option>
-                    <option value="Extra Sauce" style={{ background: '#1a1a1a' }}>Extra Sauce</option>
-                    <option value="Dessert" style={{ background: '#1a1a1a' }}>Dessert</option>
-                  </select>
+                  {(() => {
+                    // Donut theme uses the 10 curated donut categories + Other
+                    // (custom name input). Other themes keep the original
+                    // Meal/Snack/Drink/etc. options unchanged.
+                    const DONUT_FORM_CATS = (THEME_CATEGORY_OVERRIDES.donut?.[0]?.types) || []
+                    const STD_CATS = ['Meal','Snack','Drink','Extra Sauce','Dessert']
+                    const cats = shopTheme === 'donut' ? DONUT_FORM_CATS : STD_CATS
+                    const inList = cats.includes(formCategory)
+                    const isCustom = !!formCategory && !inList
+                    const selectVal = inList ? formCategory : (isCustom || formCategory === '__OTHER__' ? '__OTHER__' : '')
+                    return (
+                      <>
+                        <select value={selectVal} onChange={(e) => {
+                          if (e.target.value === '__OTHER__') {
+                            // Clear formCategory so the input below starts empty
+                            setFormCategory('__OTHER__')
+                          } else {
+                            setFormCategory(e.target.value)
+                          }
+                        }} style={{ ...S.input, marginBottom: 0, fontSize: 13, padding: '10px 12px', appearance: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%' }}>
+                          {!inList && !isCustom && formCategory !== '__OTHER__' && (
+                            <option value="" style={{ background: '#1a1a1a' }} disabled>Choose a category…</option>
+                          )}
+                          {cats.map(c => (
+                            <option key={c} value={c} style={{ background: '#1a1a1a' }}>{c}</option>
+                          ))}
+                          <option value="__OTHER__" style={{ background: '#1a1a1a' }}>Other (custom name)</option>
+                        </select>
+                        {(formCategory === '__OTHER__' || isCustom) && (
+                          <input
+                            value={formCategory === '__OTHER__' ? '' : formCategory}
+                            onChange={(e) => setFormCategory(e.target.value)}
+                            placeholder="Type your category name (e.g. Indonesian, Vegan, Savory)"
+                            maxLength={30}
+                            style={{ ...S.input, marginTop: 6, marginBottom: 0, fontSize: 13, padding: '10px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
                 {shopTheme !== 'donut' && (
                   <div style={{ flex: 1 }}>
@@ -7696,7 +8624,9 @@ export default function App() {
 
               {/* Badges row */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                {shopTheme !== 'donut' && (
+                  <button onClick={() => setFormHalal(!formHalal)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formHalal ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: formHalal ? `${accent}20` : 'rgba(255,255,255,0.04)', color: formHalal ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>☪️ Halal</button>
+                )}
                 <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formPopular ? '2px solid #FACC15' : '1px solid rgba(255,255,255,0.1)', background: formPopular ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.04)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
               </div>
 
@@ -7724,13 +8654,13 @@ export default function App() {
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 60 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/60)</span></label>
+              <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
               <textarea
-                style={{ ...S.input, minHeight: 60, resize: 'none', marginBottom: 0, fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-                placeholder="Short description of the dish"
+                style={{ ...S.input, width: '100%', boxSizing: 'border-box', minHeight: 110, resize: 'vertical', marginBottom: 0, fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5, fontFamily: 'inherit' }}
+                placeholder="Describe the dish — ingredients, flavour, what makes it special..."
                 value={formDesc}
-                maxLength={60}
-                onChange={(e) => setFormDesc(e.target.value.slice(0, 60))}
+                maxLength={350}
+                onChange={(e) => setFormDesc(e.target.value)}
               />
             </div>
 
@@ -7785,9 +8715,20 @@ export default function App() {
                   if (url) { setShopLogo(url); localStorage.setItem('foodlocalchat_shopLogo', url) }
                 }} />
                 {shopLogo ? (
-                  <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 86, height: 86, borderRadius: 43, objectFit: 'cover' }} />
-                  </div>
+                  // Honour the chosen logo style so the preview matches the
+                  // landing page exactly. Bare = image only, no ring, no
+                  // background. Off = nothing rendered on landing.
+                  shopLogoStyle === 'bare' ? (
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 100, height: 100, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
+                  ) : shopLogoStyle === 'off' ? (
+                    <div style={{ width: 100, height: 100, borderRadius: 50, border: '1px dashed rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px', textAlign: 'center', boxSizing: 'border-box' }}>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600, lineHeight: 1.3 }}>Logo hidden on landing</span>
+                    </div>
+                  ) : (
+                    <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 86, height: 86, borderRadius: 43, objectFit: 'cover' }} />
+                    </div>
+                  )
                 ) : (
                   <div style={{ width: 100, height: 100, borderRadius: 50, background: `${accent}20`, border: `2px dashed ${accent}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
                     <span style={{ fontSize: 28 }}>📷</span>
@@ -7893,9 +8834,46 @@ export default function App() {
                 <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>City</label>
                 <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCity} onChange={(e) => setShopCity(e.target.value)} placeholder="e.g. Yogyakarta" />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, position: 'relative' }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Country</label>
-                <input style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopCountry} onChange={(e) => setShopCountry(e.target.value)} placeholder="e.g. Indonesia" />
+                <input
+                  style={{ ...S.input, marginBottom: 0, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  value={shopCountry}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setShopCountry(val)
+                    const q = val.trim().toLowerCase()
+                    if (q.length === 0) { setCountrySuggestions([]); return }
+                    // startsWith first (best matches), then includes to top 3
+                    const starts = COUNTRIES.filter(c => c.toLowerCase().startsWith(q))
+                    const extras = COUNTRIES.filter(c => !starts.includes(c) && c.toLowerCase().includes(q))
+                    setCountrySuggestions([...starts, ...extras].slice(0, 3))
+                  }}
+                  onBlur={() => setTimeout(() => setCountrySuggestions([]), 150)}
+                  placeholder="e.g. Indonesia"
+                  autoComplete="off"
+                />
+                {countrySuggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: 'rgba(15,15,15,0.97)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, overflow: 'hidden', zIndex: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+                    {countrySuggestions.map((c, i) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); setShopCountry(c); setCountrySuggestions([]) }}
+                        style={{
+                          width: '100%', textAlign: 'left',
+                          padding: '10px 12px', minHeight: 40,
+                          border: 'none', background: 'transparent',
+                          color: '#fff', fontSize: 14, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          borderBottom: i < countrySuggestions.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                        }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Google Maps Link</label>
@@ -8014,12 +8992,19 @@ export default function App() {
               {/* Header — branded with vendor's logo so it feels like their app */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
                 <button onClick={() => setThemeBrowser(false)} style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
-                {shopLogo ? (
-                  <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)' }}>
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain', transform: `translate(${logoOffsetX * 32 / 156}px, ${logoOffsetY * 32 / 156}px)` }} />
-                  </div>
+                {/* Respects shopLogoStyle — single source of truth. */}
+                {shopLogoStyle === 'off' ? null : shopLogo ? (
+                  shopLogoStyle === 'bare' ? (
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 38, height: 38, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }} />
+                  ) : (
+                    <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)' }}>
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain', transform: `translate(${logoOffsetX * 32 / 156}px, ${logoOffsetY * 32 / 156}px)` }} />
+                    </div>
+                  )
                 ) : (
-                  <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                  shopLogoStyle === 'bare' ? null : (
+                    <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{shopName.charAt(0).toUpperCase()}</div>
+                  )
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
@@ -8826,14 +9811,27 @@ export default function App() {
                   On donut theme the logo doesn't render in the landing (frozen
                   HTML has its own hero) — only the in-app header consumes it,
                   which is fine for every theme. */}
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, padding: 10, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 28, background: shopLogo ? accent : `${accent}20`, border: shopLogo ? '2px solid rgba(255,255,255,0.15)' : `2px dashed ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                  {shopLogo ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 48, height: 48, borderRadius: 24, objectFit: 'cover' }} />
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, padding: shopLogoStyle === 'bare' ? 0 : 10, borderRadius: 12, background: shopLogoStyle === 'bare' ? 'transparent' : 'rgba(255,255,255,0.04)', border: shopLogoStyle === 'bare' ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+                {/* Honour the picked Logo Style so this preview tile matches the
+                    actual landing page. "No Circle" → bare PNG with no
+                    wrapper background AND no surrounding row container. */}
+                {shopLogo ? (
+                  shopLogoStyle === 'bare' ? (
+                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 56, height: 56, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
+                  ) : shopLogoStyle === 'off' ? (
+                    <div style={{ width: 56, height: 56, borderRadius: 28, border: '1px dashed rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 4px', textAlign: 'center' }}>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600, lineHeight: 1.2 }}>Off</span>
+                    </div>
                   ) : (
+                    <div style={{ width: 56, height: 56, borderRadius: 28, background: accent, border: '2px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 48, height: 48, borderRadius: 24, objectFit: 'cover' }} />
+                    </div>
+                  )
+                ) : (
+                  <div style={{ width: 56, height: 56, borderRadius: 28, background: `${accent}20`, border: `2px dashed ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span style={{ fontSize: 22 }}>📷</span>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {shopLogo ? 'Change logo' : '+ Upload logo'}
@@ -8917,8 +9915,8 @@ export default function App() {
               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeroEditor(true); setDesignStudio(false) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}40`, background: 'rgba(0,0,0,0.65)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: '#fff', fontWeight: 900 }}>T</div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Hero Text Editor</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Font, size, color, effects</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{landingThemeId === 'donuts' ? 'Landing Page Edit' : 'Hero Text Editor'}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{landingThemeId === 'donuts' ? 'Text, images, colours, size, font' : 'Font, size, color, effects'}</div>
                 </div>
                 <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>›</span>
               </button>
@@ -8968,7 +9966,7 @@ export default function App() {
                             // uploaded hero image). fit="contain" so the whole donut
                             // design is visible.
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <FitIframe fit="contain" src={donutsHtmlSrc} />
+                              <DonutSplash landing={donutLanding} onEnter={() => {}} fit="cover" />
                             </div>
                           )}
                           {previewTab === 'landing' && landingThemeId !== 'donuts' && (
@@ -9083,14 +10081,15 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Side Toolbar */}
+                      {/* Side Toolbar — wider buttons so 13px bold labels
+                          ("Layout", "Button") don't overflow inside the chip. */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                         {TOOLS.map(t => {
                           const isActive = configTool === t.id
                           return (
-                            <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 46, height: 46, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.08)', background: isActive ? '#FFD600' : '#000', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s', boxShadow: isActive ? '0 0 12px rgba(255,214,0,0.6), 0 0 20px rgba(255,214,0,0.3)' : 'none' }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : '#fff'}><path d={t.svg} /></svg>
-                              <span style={{ fontSize: 13, fontWeight: 800, color: isActive ? '#1a1a1a' : '#fff', letterSpacing: 0.3 }}>{t.label}</span>
+                            <button key={t.id} onClick={() => { setConfigTool(isActive ? null : t.id); setConfigPreviewTab(t.page) }} style={{ width: 64, height: 56, borderRadius: 14, border: isActive ? '2px solid #FFD600' : '1px solid rgba(255,255,255,0.08)', background: isActive ? '#FFD600' : '#000', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, transition: 'all 0.2s', boxShadow: isActive ? '0 0 12px rgba(255,214,0,0.6), 0 0 20px rgba(255,214,0,0.3)' : 'none', padding: '4px 2px' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive ? '#1a1a1a' : '#fff'}><path d={t.svg} /></svg>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: isActive ? '#1a1a1a' : '#fff', letterSpacing: 0.2, lineHeight: 1, whiteSpace: 'nowrap' }}>{t.label}</span>
                             </button>
                           )
                         })}

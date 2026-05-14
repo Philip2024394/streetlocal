@@ -12,6 +12,11 @@ import { supabase } from './supabase'
 const APP_ID = 'food-basic'
 const SESSION_KEY = 'sl_session_id'
 
+// Once an emit fails (e.g. 401 from a missing RLS policy on funnel_events),
+// stop trying for the rest of the page load. Otherwise every re-mount keeps
+// firing into the same wall and floods the console with 401s.
+let funnelDisabled = false
+
 function getSessionId() {
   if (typeof window === 'undefined') return null
   try {
@@ -28,6 +33,7 @@ function getSessionId() {
 
 export function emitFunnelStep(step, { vendorId = null, metadata = {} } = {}) {
   try {
+    if (funnelDisabled) return
     if (!supabase) return
     const sessionId = getSessionId()
     if (!sessionId) return
@@ -41,7 +47,7 @@ export function emitFunnelStep(step, { vendorId = null, metadata = {} } = {}) {
       vendor_id: vendorId || null,
       step,
       metadata: metadata || {},
-    }, { onConflict: 'session_id,step', ignoreDuplicates: true }).then(() => {}, () => {})
+    }, { onConflict: 'session_id,step', ignoreDuplicates: true }).then(() => {}, () => { funnelDisabled = true })
   } catch {
     /* never block UI for analytics */
   }

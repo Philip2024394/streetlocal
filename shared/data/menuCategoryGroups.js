@@ -182,42 +182,21 @@ export const THEME_CATEGORY_OVERRIDES = {
       icon: '🍩',
       svg: SVG.desserts,
       desc: 'Donut shop specialties — glazed, filled, iced, infused',
-      // Full 30-type donut taxonomy (user-provided). The first 3 appear inline
-      // as menu-page toggle tabs (Glazed / Chocolate Frosted / Jelly Filled);
-      // the rest are accessible from the side drawer. food-basic strips the
-      // trailing " Donut" suffix in the toggle display so tabs stay compact,
-      // while filters + drawer use the full label.
+      // 10 essential donut categories (curated down from 30 varieties). Each
+      // covers a distinct flavour/format profile so vendors can place any
+      // donut into exactly one bucket without overlap. Niche flavours
+      // (Indonesian, vegan, savoury, kids') go under custom names via the
+      // "Other" option exposed in the edit/add forms.
       types: [
-        'Glazed Donut',
-        'Chocolate Frosted Donut',
-        'Jelly Filled Donut',
-        'Boston Cream Donut',
-        'Powdered Sugar Donut',
-        'Cinnamon Sugar Donut',
-        'Old Fashioned Donut',
-        'Cruller Donut',
-        'Apple Fritter',
-        'Maple Bar',
-        'Long John Donut',
-        'Sprinkle Donut',
-        'Strawberry Frosted Donut',
-        'Blueberry Cake Donut',
-        'Coconut Donut',
-        'Custard Filled Donut',
-        'Cream Filled Donut',
-        'Mochi Donut',
-        'Cronut',
-        'Ring Donut',
-        'Yeast Donut',
-        'Cake Donut',
-        'Twist Donut',
-        'Caramel Donut',
-        'Red Velvet Donut',
-        'Matcha Donut',
-        'Peanut Butter Donut',
-        'Nutella Donut',
-        'Banana Donut',
-        'Mini Donut',
+        'Classic Donuts',
+        'Filled Donuts',
+        'Chocolate Donuts',
+        'Cake Donuts',
+        'Premium & Gourmet Donuts',
+        'Mochi & Specialty Donuts',
+        'Mini & Bite Size Donuts',
+        'Seasonal & Limited Edition',
+        'Mixed Boxes & Combos',
       ],
     },
     {
