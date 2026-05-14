@@ -1361,6 +1361,18 @@ export default function App() {
     setItemReviewForm({ rating: 0, comment: '', name: '', orderRef: '', error: '' })
     setLeaveReviewOpen(false)
   }
+  // Helper: returns `{ avg, count }` for an item's verified reviews. Pulls
+  // straight from `reviewsByItem` so the rating reflects the same data the
+  // reviews page is showing. Returns null when there are no reviews — caller
+  // decides whether to render a "no reviews yet" hint or nothing at all.
+  const getItemRating = (item) => {
+    if (!item) return null
+    const key = item.id || item.name
+    const arr = reviewsByItem[key] || []
+    if (arr.length === 0) return null
+    const avg = arr.reduce((s, r) => s + (r.rating || 0), 0) / arr.length
+    return { avg, count: arr.length }
+  }
   // Vendor-uploaded content per donut type: { typeName: { image, description } }.
   // A type "publishes" to the customer swipe gallery only when BOTH image and
   // description are filled — otherwise it lives only in the vendor dashboard.
@@ -5538,6 +5550,21 @@ export default function App() {
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: 80, left: 6, width: 22, height: 22, borderRadius: 11, border: 'none', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: donutCardStyles ? '6px 8px 8px' : '8px 10px 10px' }}>
                 <div style={{ fontSize: donutCardStyles ? 13 : 13, fontWeight: donutCardStyles ? 800 : 700, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: donutCardStyles ? 4 : 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}</div>
+                {/* Rating badge — only shows when the item has verified
+                    reviews. Tapping opens the per-item reviews page so
+                    customers can read what others said. */}
+                {(() => {
+                  const r = getItemRating(item)
+                  if (!r) return null
+                  const dark = donutCardStyles && donutCardStyles.textColor !== '#fff'
+                  return (
+                    <div onClick={(e) => { e.stopPropagation(); setItemReviewsOpen(item) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700, color: dark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.9)', marginBottom: 4, cursor: 'pointer' }}>
+                      <span style={{ color: '#FACC15', fontSize: 13 }}>★</span>
+                      <span>{r.avg.toFixed(1)}</span>
+                      <span style={{ opacity: 0.6, fontWeight: 600 }}>({r.count})</span>
+                    </div>
+                  )
+                })()}
                 {/* Description — donut only on grid. 12px / WCAG-min, higher
                     contrast, wraps to 2 lines so it's actually readable. */}
                 {donutCardStyles && item.desc && (
@@ -5624,6 +5651,18 @@ export default function App() {
               {isVendor && vendorStatus !== 'expired' && <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 58, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>}
               <div style={{ padding: '12px 14px' }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: donutCardStyles ? donutCardStyles.textColor : '#fff', marginBottom: 4 }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                {(() => {
+                  const r = getItemRating(item)
+                  if (!r) return null
+                  const dark = donutCardStyles && donutCardStyles.textColor !== '#fff'
+                  return (
+                    <div onClick={(e) => { e.stopPropagation(); setItemReviewsOpen(item) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700, color: dark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.9)', marginBottom: 6, cursor: 'pointer' }}>
+                      <span style={{ color: '#FACC15', fontSize: 13 }}>★</span>
+                      <span>{r.avg.toFixed(1)}</span>
+                      <span style={{ opacity: 0.6, fontWeight: 600 }}>({r.count})</span>
+                    </div>
+                  )
+                })()}
                 {item.desc && <div style={{ fontSize: 13, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{item.desc}</div>}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>{item.promoPrice ? <><span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', marginRight: 6 }}>{fmt(item.price)}</span><span style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{fmt(item.promoPrice)}</span></> : <span style={{ fontSize: 16, fontWeight: 800, color: donutCardStyles ? donutFrameAccent : '#FACC15' }}>{fmt(item.price)}</span>}</div>
@@ -5702,6 +5741,18 @@ export default function App() {
               )}
               <div style={S.cardBody}>
                 <div style={{ ...S.cardName, color: donutCardStyles ? donutCardStyles.textColor : (S.cardName && S.cardName.color) }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
+                {(() => {
+                  const r = getItemRating(item)
+                  if (!r) return null
+                  const dark = donutCardStyles && donutCardStyles.textColor !== '#fff'
+                  return (
+                    <div onClick={(e) => { e.stopPropagation(); setItemReviewsOpen(item) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700, color: dark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.9)', marginBottom: 4, cursor: 'pointer' }}>
+                      <span style={{ color: '#FACC15', fontSize: 13 }}>★</span>
+                      <span>{r.avg.toFixed(1)}</span>
+                      <span style={{ opacity: 0.6, fontWeight: 600 }}>({r.count})</span>
+                    </div>
+                  )
+                })()}
                 <div style={{ ...S.cardDesc, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : (S.cardDesc && S.cardDesc.color) }}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div>
@@ -8207,9 +8258,10 @@ export default function App() {
             <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2004_20_51%20AM.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 0, pointerEvents: 'none' }} />
 
-            {/* HEADER — WhatsApp-style sticky bar with shop avatar + name */}
-            <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', background: `linear-gradient(180deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`, boxShadow: `0 4px 14px ${accent}55` }}>
-              <button onClick={close} aria-label="Back" style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
+            {/* HEADER — sticky bar with rounded left + right corners and
+                shop avatar + name. Back arrow removed; customers close via
+                the page Close button or the existing close handle. */}
+            <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', margin: '6px 8px 0', borderRadius: 18, background: `linear-gradient(180deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`, boxShadow: `0 4px 14px ${accent}55` }}>
               {shopLogo ? (
                 <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.4)', flexShrink: 0 }} />
               ) : (
@@ -8222,6 +8274,9 @@ export default function App() {
                   {shopOpen ? 'Online · typically replies within minutes' : 'Currently closed · will reply when open'}
                 </div>
               </div>
+              {/* Close (×) — subtle, on the right of the rounded header.
+                  Replaces the previous left-side back arrow. */}
+              <button onClick={close} aria-label="Close chat" style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, lineHeight: 1 }}>×</button>
             </div>
 
             {/* MESSAGE THREAD */}
