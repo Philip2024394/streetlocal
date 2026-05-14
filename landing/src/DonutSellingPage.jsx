@@ -138,7 +138,7 @@ export default function DonutSellingPage() {
           <div className="ds-hero__copy">
             <span className="ds-eyebrow">
               <span className="ds-eyebrow__dot" aria-hidden></span>
-              For donut sellers
+              Donut sellers
             </span>
             <h1 className="ds-h1">
               Your donut shop.<br />
