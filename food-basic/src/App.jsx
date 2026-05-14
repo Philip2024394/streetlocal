@@ -1761,6 +1761,11 @@ export default function App() {
   const [preOrderMessage, setPreOrderMessage] = useState('')
   const [preOrderSending, setPreOrderSending] = useState(false)
   const [preOrderSentNote, setPreOrderSentNote] = useState('')
+  // Liked-message tracking for the pre-order chat. Each entry is a
+  // message id the customer has tapped the ❤ on. Bursts is a transient
+  // array of {id, x, y} renders that vanish after the animation runs.
+  const [likedChatMsgs, setLikedChatMsgs] = useState(() => new Set())
+  const [heartBursts, setHeartBursts] = useState([])
   // Unread badge on the header 💬 icon — increments when a vendor reply
   // arrives via the pre-order conversation while the modal is closed.
   // Resets to 0 when the customer opens the modal.
@@ -8184,9 +8189,23 @@ export default function App() {
         const fmtTime = (ts) => { try { return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) } catch { return '' } }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', background: '#0a0a0a' }}>
-            {/* Theme bg + glass scrim — matches the rest of the app */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-6-2026-01_19_01-pm.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
+            {/* Keyframes for the floating-heart burst + bubble heart pop */}
+            <style>{`
+              @keyframes chat-heart-float {
+                0%   { transform: translate(-50%, 0) scale(0.6) rotate(0deg);   opacity: 0; }
+                15%  { transform: translate(-50%, -10px) scale(1.0) rotate(-8deg); opacity: 1; }
+                100% { transform: translate(calc(-50% + var(--hx, 0px)), -80px) scale(0.7) rotate(var(--hr, 12deg)); opacity: 0; }
+              }
+              @keyframes chat-heart-pop {
+                0% { transform: scale(1); }
+                30% { transform: scale(1.6); }
+                60% { transform: scale(0.9); }
+                100% { transform: scale(1); }
+              }
+            `}</style>
+            {/* Custom chat backdrop (donut-themed) */}
+            <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2004_20_51%20AM.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* HEADER — WhatsApp-style sticky bar with shop avatar + name */}
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', background: `linear-gradient(180deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`, boxShadow: `0 4px 14px ${accent}55` }}>
@@ -8216,26 +8235,90 @@ export default function App() {
               )}
               {nonOrderMsgs.map((m, idx) => {
                 const isCust = m.sender_role === 'customer'
+                // Owner avatar appears on the left of the first bubble in
+                // each vendor "run" — keeps repeated replies compact.
                 const showAvatar = !isCust && (idx === 0 || nonOrderMsgs[idx - 1].sender_role !== m.sender_role)
+                const liked = likedChatMsgs.has(m.id)
+                // Burst handler — toggles the like + spawns 5 floating
+                // hearts that drift up and fade. Bursts are removed after
+                // the animation duration so the DOM stays clean.
+                const toggleLike = () => {
+                  setLikedChatMsgs(prev => {
+                    const next = new Set(prev)
+                    if (next.has(m.id)) { next.delete(m.id); return next }
+                    next.add(m.id)
+                    return next
+                  })
+                  // Only spawn floats when going from un-liked → liked.
+                  if (!liked) {
+                    const burstId = `b-${m.id}-${Date.now()}`
+                    const float = Array.from({ length: 5 }).map((_, i) => ({
+                      id: `${burstId}-${i}`,
+                      msgId: m.id,
+                      hx: (Math.random() - 0.5) * 60, // px horizontal drift
+                      hr: (Math.random() - 0.5) * 30, // deg rotation
+                      delay: i * 60,
+                    }))
+                    setHeartBursts(prev => [...prev, ...float])
+                    setTimeout(() => {
+                      setHeartBursts(prev => prev.filter(h => !h.id.startsWith(burstId)))
+                    }, 1100)
+                  }
+                }
                 return (
                   <div key={m.id}>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, justifyContent: isCust ? 'flex-end' : 'flex-start' }}>
                       {!isCust && (showAvatar
                         ? (shopLogo
-                          ? <img src={shopLogo} alt="" style={{ width: 26, height: 26, borderRadius: 13, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }} />
-                          : <div style={{ width: 26, height: 26, borderRadius: 13, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{(shopName || '?').charAt(0)}</div>)
-                        : <div style={{ width: 26, flexShrink: 0 }} />)}
+                          ? <img src={shopLogo} alt="" style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }} />
+                          : <div style={{ width: 28, height: 28, borderRadius: 14, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }}>{(shopName || '?').charAt(0)}</div>)
+                        : <div style={{ width: 28, flexShrink: 0 }} />)}
+                      {/* Bubble — customer = black tinted, vendor = light pink */}
                       <div style={{
-                        maxWidth: '78%', padding: '8px 12px', borderRadius: 14,
+                        position: 'relative',
+                        maxWidth: '78%', padding: '9px 28px 9px 13px', borderRadius: 16,
                         fontSize: 14, lineHeight: 1.4,
-                        background: isCust ? accent : 'rgba(0,0,0,0.55)',
-                        color: '#fff', wordBreak: 'break-word',
-                        border: isCust ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                        boxShadow: isCust ? `0 2px 8px ${accent}44` : 'none',
-                      }}>{m.body}</div>
+                        background: isCust ? 'rgba(0,0,0,0.78)' : 'linear-gradient(180deg, #FCE4EC 0%, #F8BBD0 100%)',
+                        color: isCust ? '#fff' : '#3a1a2a',
+                        wordBreak: 'break-word',
+                        border: isCust ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(236,72,153,0.25)',
+                        boxShadow: isCust ? '0 2px 8px rgba(0,0,0,0.45)' : '0 2px 10px rgba(236,72,153,0.25)',
+                      }}>
+                        {m.body}
+                        {/* Like button — pinned bottom-right of each bubble */}
+                        <button
+                          onClick={toggleLike}
+                          aria-label={liked ? 'Unlike' : 'Like'}
+                          style={{
+                            position: 'absolute', bottom: 2, right: 4,
+                            width: 22, height: 22, padding: 0,
+                            background: 'transparent', border: 'none',
+                            cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            fontSize: 13, lineHeight: 1,
+                            color: liked ? '#EF4444' : (isCust ? 'rgba(255,255,255,0.35)' : 'rgba(58,26,42,0.4)'),
+                            animation: liked ? 'chat-heart-pop 0.4s ease-out' : 'none',
+                            filter: liked ? 'drop-shadow(0 0 4px rgba(239,68,68,0.6))' : 'none',
+                          }}
+                        >{liked ? '♥' : '♡'}</button>
+                        {/* Floating heart burst — anchored to the bubble */}
+                        {heartBursts.filter(h => h.msgId === m.id).map(h => (
+                          <span
+                            key={h.id}
+                            style={{
+                              position: 'absolute', left: 'calc(100% - 14px)', bottom: 10,
+                              pointerEvents: 'none', fontSize: 18, color: '#EF4444',
+                              animation: `chat-heart-float 1s ease-out forwards`,
+                              animationDelay: `${h.delay}ms`,
+                              '--hx': `${h.hx}px`,
+                              '--hr': `${h.hr}deg`,
+                            }}
+                          >❤</span>
+                        ))}
+                      </div>
                     </div>
                     {m.created_at && (
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', padding: isCust ? '2px 4px 0 0' : '2px 0 0 32px', textAlign: isCust ? 'right' : 'left' }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', padding: isCust ? '2px 4px 0 0' : '2px 0 0 34px', textAlign: isCust ? 'right' : 'left' }}>
                         {fmtTime(m.created_at)}
                       </div>
                     )}
