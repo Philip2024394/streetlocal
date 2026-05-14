@@ -109,10 +109,10 @@ export default function DonutSellingPage() {
       {/* ═══ NAVIGATION ═══ */}
       <header className={`ds-nav ${scrolled ? 'ds-nav--scrolled' : ''}`}>
         <div className="ds-nav__inner">
-          <a href="#top" className="ds-brand" aria-label="Donut Shop home">
+          <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
             <span className="ds-brand__bubble" aria-hidden>🍩</span>
             <span className="ds-brand__text">
-              Donut Shop<span className="ds-brand__suffix"> · StreetLocal</span>
+              Fresh Donuts Baked Daily<span className="ds-brand__suffix"> · StreetLocal</span>
             </span>
           </a>
           <nav className="ds-nav__links" aria-label="Primary">
@@ -318,7 +318,7 @@ export default function DonutSellingPage() {
                 <tr>
                   <th className="ds-table__col-feature">Feature</th>
                   <th className="ds-table__col-us">
-                    <span className="ds-table__chip">🍩 Donut Shop</span>
+                    <span className="ds-table__chip">🍩 Fresh Donuts Baked Daily</span>
                   </th>
                   <th>WhatsApp DMs</th>
                   <th>Shopify</th>
@@ -413,10 +413,10 @@ export default function DonutSellingPage() {
       <footer className="ds-footer">
         <div className="ds-container ds-footer__grid">
           <div className="ds-footer__brand">
-            <a href="#top" className="ds-brand" aria-label="Donut Shop home">
+            <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
               <span className="ds-brand__bubble" aria-hidden>🍩</span>
               <span className="ds-brand__text ds-brand__text--light">
-                Donut Shop<span className="ds-brand__suffix ds-brand__suffix--light"> · StreetLocal</span>
+                Fresh Donuts Baked Daily<span className="ds-brand__suffix ds-brand__suffix--light"> · StreetLocal</span>
               </span>
             </a>
             <p className="ds-footer__about">
