@@ -5765,23 +5765,33 @@ export default function App() {
               {item.popular && (
                 <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>
               )}
+              {/* Star rating badge — top-right corner of the landscape
+                  card. Pulls the per-item average from reviewsByItem.
+                  Tapping opens the per-item reviews page. Pushed inboard
+                  when the vendor availability toggle occupies right: 8. */}
+              {(() => {
+                const r = getItemRating(item)
+                if (!r) return null
+                const cd = getPerkCountdown(item)
+                const topOffset = getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 38 : 8
+                const rightOffset = isVendor && vendorStatus !== 'expired' ? 50 : 8
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setItemReviewsOpen(item) }}
+                    aria-label={`Rating ${r.avg.toFixed(1)} from ${r.count} reviews`}
+                    style={{ position: 'absolute', top: topOffset, right: rightOffset, zIndex: 3, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 12, background: 'rgba(0,0,0,0.72)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', border: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+                  >
+                    <span style={{ color: '#FACC15', fontSize: 14, lineHeight: 1 }}>★</span>
+                    <span>{r.avg.toFixed(1)}</span>
+                  </button>
+                )
+              })()}
               {isVendor && vendorStatus !== 'expired' && (
                 <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', bottom: 8, left: 8, width: 26, height: 26, borderRadius: 13, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
               )}
               <div style={S.cardBody}>
                 <div style={{ ...S.cardName, color: donutCardStyles ? donutCardStyles.textColor : (S.cardName && S.cardName.color) }} onClick={() => { setItemModal(item); setModalQty(1) }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(item.spice)}</span>}</div>
-                {(() => {
-                  const r = getItemRating(item)
-                  if (!r) return null
-                  const dark = donutCardStyles && donutCardStyles.textColor !== '#fff'
-                  return (
-                    <div onClick={(e) => { e.stopPropagation(); setItemReviewsOpen(item) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700, color: dark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.9)', marginBottom: 4, cursor: 'pointer' }}>
-                      <span style={{ color: '#FACC15', fontSize: 13 }}>★</span>
-                      <span>{r.avg.toFixed(1)}</span>
-                      <span style={{ opacity: 0.6, fontWeight: 600 }}>({r.count})</span>
-                    </div>
-                  )
-                })()}
                 <div style={{ ...S.cardDesc, color: donutCardStyles ? 'rgba(0,0,0,0.55)' : (S.cardDesc && S.cardDesc.color) }}>{item.desc}{item.prepTime > 0 && <span style={{ marginLeft: 6, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>⏱ {item.prepTime}min</span>}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div>
