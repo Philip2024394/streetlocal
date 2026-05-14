@@ -1847,25 +1847,8 @@ export default function App() {
       try { clearCustomerUnread(chatConversation.id) } catch {}
     }
   }, [preOrderChatOpen, chatConversation?.id])
-  // Vendor: fetch all conversations for the shop when the chat-list panel
-  // is opened. Each row carries `unread_vendor_count` which drives the
-  // red badge. Re-fetches whenever the panel re-opens so counts stay
-  // current after the owner has read other threads.
-  useEffect(() => {
-    if (!vendorChatListOpen || !isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const { data } = await supabase
-          .from('chat_conversations')
-          .select('*')
-          .eq('vendor_id', vendorId)
-          .order('last_message_at', { ascending: false })
-        if (!cancelled) setVendorAllChats(data || [])
-      } catch {}
-    })()
-    return () => { cancelled = true }
-  }, [vendorChatListOpen, isVendor, vendorId])
+  // (Vendor all-chats fetch effect moved to AFTER the vendorId useState
+  // declaration below — keeping it here triggered a TDZ error.)
   // Order channel picker — shown before submission only when the vendor's
   // plan_tier === 'both'. For 'whatsapp' or 'chat' tiers the customer is
   // routed directly to that channel; no choice surfaced.
@@ -2416,6 +2399,27 @@ export default function App() {
     return DEMO_VENDOR_UUID
   })
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
+  // Vendor: fetch all conversations for the shop when the chat-list panel
+  // is opened. Each row carries `unread_vendor_count` which drives the
+  // red badge. Re-fetches whenever the panel re-opens so counts stay
+  // current after the owner has read other threads. Declared HERE
+  // (after vendorId/isVendor) to avoid the TDZ error that broke render
+  // when this effect lived above the state declarations.
+  useEffect(() => {
+    if (!vendorChatListOpen || !isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('chat_conversations')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('last_message_at', { ascending: false })
+        if (!cancelled) setVendorAllChats(data || [])
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [vendorChatListOpen, isVendor, vendorId])
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     // Demo vendor IDs (e.g. local-demo-*) aren't UUIDs — Supabase rejects
