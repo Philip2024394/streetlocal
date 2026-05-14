@@ -4698,7 +4698,10 @@ export default function App() {
 
       {/* --- Header --- */}
       <div style={S.header}>
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: 10 }}>
+        {/* minWidth: 0 lets this flex column shrink so its nowrap'd
+            shop name can ellipsize instead of pushing the right-hand
+            action buttons (cart, chat) off the side of the screen. */}
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, gap: 10 }}>
           {shopLogoStyle !== 'off' && shopLogo ? (
             shopLogoStyle === 'bare' ? (
               <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
