@@ -1778,6 +1778,12 @@ export default function App() {
   // array of {id, x, y} renders that vanish after the animation runs.
   const [likedChatMsgs, setLikedChatMsgs] = useState(() => new Set())
   const [heartBursts, setHeartBursts] = useState([])
+  // Vendor-only chat list panel — opens from the ⚙ button in the chat
+  // header. Lists every conversation for this vendor with an unread-
+  // message count badge so the owner can jump between customer threads
+  // without leaving the chat view.
+  const [vendorChatListOpen, setVendorChatListOpen] = useState(false)
+  const [vendorAllChats, setVendorAllChats] = useState([])
   // Unread badge on the header 💬 icon — increments when a vendor reply
   // arrives via the pre-order conversation while the modal is closed.
   // Resets to 0 when the customer opens the modal.
@@ -1841,6 +1847,25 @@ export default function App() {
       try { clearCustomerUnread(chatConversation.id) } catch {}
     }
   }, [preOrderChatOpen, chatConversation?.id])
+  // Vendor: fetch all conversations for the shop when the chat-list panel
+  // is opened. Each row carries `unread_vendor_count` which drives the
+  // red badge. Re-fetches whenever the panel re-opens so counts stay
+  // current after the owner has read other threads.
+  useEffect(() => {
+    if (!vendorChatListOpen || !isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('chat_conversations')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('last_message_at', { ascending: false })
+        if (!cancelled) setVendorAllChats(data || [])
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [vendorChatListOpen, isVendor, vendorId])
   // Order channel picker — shown before submission only when the vendor's
   // plan_tier === 'both'. For 'whatsapp' or 'chat' tiers the customer is
   // routed directly to that channel; no choice surfaced.
@@ -8269,15 +8294,75 @@ export default function App() {
               )}
               <div style={{ flex: 1, minWidth: 0, color: '#fff' }}>
                 <div style={{ fontSize: 16, fontWeight: 900, lineHeight: 1.1 }}>{shopName || 'Chat'}</div>
-                <div style={{ fontSize: 13, opacity: 0.85, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: 4, background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,0.8)' }} />
-                  {shopOpen ? 'Online · typically replies within minutes' : 'Currently closed · will reply when open'}
+                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 4, background: shopOpen ? '#22C55E' : '#EF4444', boxShadow: shopOpen ? '0 0 6px rgba(34,197,94,0.85)' : '0 0 6px rgba(239,68,68,0.8)' }} />
+                  {shopOpen ? 'Online' : 'Offline'}
                 </div>
               </div>
+              {/* Owner-only: settings ⚙ button opens the all-chats panel
+                  so the shop owner can jump between customer threads,
+                  with a red unread-count badge on each row. */}
+              {isVendor && (() => {
+                const totalUnread = (vendorAllChats || []).reduce((s, c) => s + (c.unread_vendor_count || 0), 0)
+                return (
+                  <button onClick={() => setVendorChatListOpen(true)} aria-label="All chats" style={{ position: 'relative', width: 32, height: 32, borderRadius: 16, background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, lineHeight: 1 }}>
+                    ⚙
+                    {totalUnread > 0 && (
+                      <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#DC2626', color: '#fff', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                        {totalUnread > 99 ? '99+' : totalUnread}
+                      </span>
+                    )}
+                  </button>
+                )
+              })()}
               {/* Close (×) — subtle, on the right of the rounded header.
                   Replaces the previous left-side back arrow. */}
               <button onClick={close} aria-label="Close chat" style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, lineHeight: 1 }}>×</button>
             </div>
+            {/* Owner-only: slide-in panel listing every conversation for
+                this shop, sorted newest first, with a red unread badge
+                per row. Tapping a row switches the chat thread. */}
+            {vendorChatListOpen && (
+              <div onClick={() => setVendorChatListOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(360px, 88%)', background: '#0f0f14', borderLeft: '1px solid rgba(255,255,255,0.08)', boxShadow: '-8px 0 30px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, fontSize: 16, fontWeight: 900, color: '#fff' }}>All chats</div>
+                    <button onClick={() => setVendorChatListOpen(false)} aria-label="Close" style={{ width: 30, height: 30, borderRadius: 15, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
+                    {vendorAllChats.length === 0 && (
+                      <div style={{ padding: '40px 16px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>No conversations yet.</div>
+                    )}
+                    {vendorAllChats.map(c => {
+                      const unread = c.unread_vendor_count || 0
+                      const isActive = chatConversation?.id === c.id
+                      const switchTo = async () => {
+                        setChatConversation(c)
+                        try {
+                          const msgs = await loadMessages(c.id)
+                          setChatMessages(msgs || [])
+                        } catch {}
+                        setVendorChatListOpen(false)
+                      }
+                      const when = (() => { try { return new Date(c.last_message_at || c.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) } catch { return '' } })()
+                      return (
+                        <button key={c.id} onClick={switchTo} style={{ width: '100%', textAlign: 'left', padding: '12px 12px', borderRadius: 12, border: 'none', background: isActive ? `${accent}22` : 'transparent', color: '#fff', cursor: 'pointer', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.customer_name || c.customer_phone || 'Guest'}</div>
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{when}</div>
+                          </div>
+                          {unread > 0 && (
+                            <span style={{ minWidth: 22, height: 22, padding: '0 7px', borderRadius: 11, background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(220,38,38,0.5)' }}>
+                              {unread > 99 ? '99+' : unread}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* MESSAGE THREAD */}
             <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -8403,8 +8488,10 @@ export default function App() {
               </div>
             )}
 
-            {/* FOOTER — message input + pink send button */}
-            <div style={{ position: 'relative', zIndex: 2, padding: '10px 12px calc(env(safe-area-inset-bottom, 0px) + 10px)', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {/* FOOTER — message input + pink send button. Rounded left and
+                right to match the rounded header pill, with a small bottom
+                margin so the curve isn't clipped by the safe-area. */}
+            <div style={{ position: 'relative', zIndex: 2, margin: '0 8px calc(env(safe-area-inset-bottom, 0px) + 6px)', borderRadius: 18, padding: '10px 12px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
                 <textarea
                   value={preOrderMessage}
