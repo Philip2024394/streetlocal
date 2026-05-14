@@ -145,7 +145,7 @@ export default function DonutSellingPage() {
               Online in <span className="ds-pink">5 minutes.</span>
             </h1>
             <p className="ds-lede">
-              Take WhatsApp orders, manage your menu, accept payments — without writing a single line of code, and with 0% commission. Keep every rupiah you earn.
+              Take WhatsApp orders, manage your menu, accept payments — without writing a single line of code, and with zero% commission. You keep 100% of what you earn.
             </p>
             <div className="ds-cta-row">
               <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--lg">Start your shop →</a>
@@ -160,6 +160,28 @@ export default function DonutSellingPage() {
 
           <div className="ds-hero__phone-wrap">
             <div className="ds-glow" aria-hidden></div>
+            {/* Dancing donut sits BEHIND the phone (z-index 0) and bounces
+                in place. Chocolate-coloured crumbs spawn from around its
+                base and fall past the phone for a continuous shower. */}
+            <img
+              className="ds-dance-donut"
+              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png"
+              alt=""
+              aria-hidden
+            />
+            <div className="ds-crumbs" aria-hidden>
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="ds-crumb"
+                  style={{
+                    left: `${(i / 14) * 100}%`,
+                    animationDelay: `${(i * 0.37) % 5}s`,
+                    animationDuration: `${4 + (i % 4)}s`,
+                  }}
+                />
+              ))}
+            </div>
             <div className="ds-phone">
               <div className="ds-phone__notch" aria-hidden></div>
               <iframe
@@ -518,6 +540,13 @@ function PageStyles() {
       .ds-trust li { display: inline-flex; align-items: center; }
 
       .ds-hero__phone-wrap { position: relative; display: flex; align-items: center; justify-content: center; min-height: 520px; }
+      /* Dancing donut + chocolate crumb shower — sit behind the phone
+         (z-index 0) so they decorate without blocking interaction. */
+      .ds-dance-donut { position: absolute; top: 30px; right: 8%; width: 180px; height: 180px; border-radius: 50%; object-fit: cover; z-index: 0; animation: dsDonutBounce 1.2s ease-in-out infinite; filter: drop-shadow(0 14px 30px rgba(91,48,23,0.45)); will-change: transform; pointer-events: none; }
+      .ds-crumbs { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+      .ds-crumb { position: absolute; top: 160px; width: 9px; height: 9px; border-radius: 3px; background: linear-gradient(135deg, #6b3a1a, #3d1e0a); animation: dsCrumbFall linear infinite; box-shadow: inset -1px -1px 2px rgba(0,0,0,0.35); }
+      @keyframes dsDonutBounce { 0%, 100% { transform: translateY(-12%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); } }
+      @keyframes dsCrumbFall { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 8% { opacity: 0.9; } 92% { opacity: 0.9; } 100% { transform: translateY(580px) rotate(540deg); opacity: 0; } }
       .ds-hero__float { position: absolute; border-radius: 50%; object-fit: cover; display: none; pointer-events: none; }
       .ds-hero__float--tr { top: -40px; right: -120px; width: 280px; height: 280px; filter: drop-shadow(0 30px 60px rgba(236,72,153,0.22)); }
       .ds-hero__float--bl { bottom: -80px; left: -120px; width: 240px; height: 240px; filter: drop-shadow(0 30px 60px rgba(34,211,238,0.18)); }
