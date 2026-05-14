@@ -95,12 +95,27 @@ const FAQS = [
 
 export default function DonutSellingPage() {
   const [scrolled, setScrolled] = useState(false)
+  // Settings dropdown — slides down from the ⚙ button on the right of
+  // the nav. Holds 4 menu items that each open a full-screen info page.
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [activePage, setActivePage] = useState(null) // 'faq' | 'setup' | 'about' | 'support'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Lock body scroll when a full-screen info page is open — otherwise the
+  // page under the overlay scrolls behind and breaks the reading flow.
+  useEffect(() => {
+    if (!activePage) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [activePage])
+
+  const openPage = (p) => { setMenuOpen(false); setActivePage(p) }
 
   return (
     <div className="ds">
@@ -115,19 +130,159 @@ export default function DonutSellingPage() {
               Fresh Donuts Baked Daily<span className="ds-brand__suffix"> · StreetLocal</span>
             </span>
           </a>
-          <nav className="ds-nav__links" aria-label="Primary">
-            <a href="#features">Features</a>
-            <a href="#demo">Live demo</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#compare">Compare</a>
-            <a href="#faq">FAQ</a>
-          </nav>
-          <div className="ds-nav__cta">
-            <a href="#demo" className="ds-nav__link-cta">See demo</a>
-            <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--sm">Start your shop</a>
+          {/* Settings ⚙ — opens a slide-down menu with the four info
+              pages (FAQ, Setup, About us, Customer service). Replaces
+              the old "See demo / Start your shop" CTA cluster. */}
+          <button
+            type="button"
+            className={`ds-gear ${menuOpen ? 'ds-gear--open' : ''}`}
+            aria-label="Menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(o => !o)}
+          >
+            <span aria-hidden style={{ display: 'block', transition: 'transform 0.4s ease' }}>⚙</span>
+          </button>
+        </div>
+        {menuOpen && (
+          <div className="ds-menu-drop" role="menu">
+            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('faq')}>
+              <span className="ds-menu-icon">❓</span>
+              <span className="ds-menu-text">
+                <span className="ds-menu-title">FAQ</span>
+                <span className="ds-menu-sub">Common questions — answered</span>
+              </span>
+            </button>
+            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('setup')}>
+              <span className="ds-menu-icon">🚀</span>
+              <span className="ds-menu-text">
+                <span className="ds-menu-title">Setup</span>
+                <span className="ds-menu-sub">5 steps to your live shop</span>
+              </span>
+            </button>
+            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('about')}>
+              <span className="ds-menu-icon">🏠</span>
+              <span className="ds-menu-text">
+                <span className="ds-menu-title">About us</span>
+                <span className="ds-menu-sub">Who built this and why</span>
+              </span>
+            </button>
+            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('support')}>
+              <span className="ds-menu-icon">💬</span>
+              <span className="ds-menu-text">
+                <span className="ds-menu-title">Customer service</span>
+                <span className="ds-menu-sub">Email, WhatsApp, hours</span>
+              </span>
+            </button>
+          </div>
+        )}
+      </header>
+      {/* Backdrop closes the menu when tapping outside */}
+      {menuOpen && <div className="ds-menu-backdrop" aria-hidden onClick={() => setMenuOpen(false)} />}
+
+      {/* ═══ INFO PAGES (full-screen overlays) ═══ */}
+      {activePage && (
+        <div className="ds-info" role="dialog" aria-modal="true">
+          <div className="ds-info__bar">
+            <button type="button" className="ds-info__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
+            <div className="ds-info__title">
+              {activePage === 'faq' && 'FAQ'}
+              {activePage === 'setup' && 'Setup'}
+              {activePage === 'about' && 'About us'}
+              {activePage === 'support' && 'Customer service'}
+            </div>
+            <span style={{ width: 36 }} />
+          </div>
+          <div className="ds-info__body">
+            {activePage === 'faq' && (
+              <>
+                <p className="ds-info__lede">Short answers to the questions every donut seller asks before signing up.</p>
+                {FAQS.map(([q, a], i) => (
+                  <details key={i} className="ds-info-faq" open={i === 0}>
+                    <summary>{q}</summary>
+                    <p>{a}</p>
+                  </details>
+                ))}
+              </>
+            )}
+
+            {activePage === 'setup' && (
+              <>
+                <p className="ds-info__lede">From signup to your first sale in about 5 minutes. No installs, no cards, no contracts.</p>
+                <ol className="ds-info-steps">
+                  <li>
+                    <strong>1. Sign up with your WhatsApp number.</strong>
+                    <p>That's your login. No long forms, no email verification loop. You're inside the app within 30 seconds.</p>
+                  </li>
+                  <li>
+                    <strong>2. Add your donuts.</strong>
+                    <p>Photo, name, price, a short description. Repeat for every flavour. Mark some as Popular and they get a yellow badge. Out of stock → toggle off, it hides from customers automatically.</p>
+                  </li>
+                  <li>
+                    <strong>3. Pick your order channel.</strong>
+                    <p>Two modes. <em>WhatsApp orders</em> — customers tap "Order now" and the cart drops into your WhatsApp DM. <em>In-app chat</em> — customers pay by card / QRIS / bank in your shop, and you reply in a chat panel. You can switch any time.</p>
+                  </li>
+                  <li>
+                    <strong>4. Make it yours.</strong>
+                    <p>Upload your logo, pick a theme colour, choose card style (grid, fullwidth, horizontal). Edit the landing text. Add a delivery zone with a per-km rate. The whole brand surface is editable.</p>
+                  </li>
+                  <li>
+                    <strong>5. Pay to activate. Then share your link.</strong>
+                    <p>Rp 35,000/month for WhatsApp orders, Rp 50,000/month for in-app chat + payments. Pay via QRIS, GoPay, OVO, ShopeePay, card, or bank transfer. Your link goes live the moment payment clears. Copy it, post it on your Instagram bio, and you're trading.</p>
+                  </li>
+                </ol>
+              </>
+            )}
+
+            {activePage === 'about' && (
+              <>
+                <p className="ds-info__lede">A small team building tools that let local sellers keep their margin.</p>
+                <h3 className="ds-info-h3">Who we are</h3>
+                <p>StreetLocal is a family of apps built for street vendors, makers, and small businesses across Southeast Asia. We started with food because that's where the platform commissions hurt most — donut shops, noodle stalls, coffee carts — small operations giving up 20-30% per order to apps that didn't make their product.</p>
+                <h3 className="ds-info-h3">Why we built this</h3>
+                <p>Most "shop builders" are designed for shops that already have a customer base, a logo, an SEO plan, a credit card on file. Donut sellers don't need a website. They need a phone-shaped storefront they can drop into a WhatsApp message — and a way to get paid without losing a third of the sale.</p>
+                <h3 className="ds-info-h3">Where we operate</h3>
+                <p>Indonesia first (because that's where we live), then Malaysia, Singapore, Thailand, Vietnam, and the Philippines. Currency, language, and payment rails are localised for each market. 11 UI languages so far — every menu in the app translates to the customer's phone language automatically.</p>
+                <h3 className="ds-info-h3">What we don't do</h3>
+                <p>We don't take a commission on your orders. We don't see your customers' card data — payments go straight from the buyer's bank to your bank via your chosen gateway. We don't lock your customer list inside a closed platform; you own the relationship.</p>
+              </>
+            )}
+
+            {activePage === 'support' && (
+              <>
+                <p className="ds-info__lede">We respond within one business day. Most issues resolved same-day.</p>
+                <div className="ds-info-card">
+                  <div className="ds-info-card__label">📧 Email</div>
+                  <a className="ds-info-card__value" href="mailto:streetlocallive@gmail.com">streetlocallive@gmail.com</a>
+                  <div className="ds-info-card__hint">Best for account issues, billing questions, feature requests.</div>
+                </div>
+                <div className="ds-info-card">
+                  <div className="ds-info-card__label">📱 WhatsApp</div>
+                  <a className="ds-info-card__value" href="https://wa.me/6281234567890?text=Hi%20StreetLocal" target="_blank" rel="noreferrer">Open WhatsApp chat</a>
+                  <div className="ds-info-card__hint">Best for fast questions during setup or a live order issue.</div>
+                </div>
+                <div className="ds-info-card">
+                  <div className="ds-info-card__label">🕐 Support hours</div>
+                  <div className="ds-info-card__value">Mon–Sat · 09:00 – 21:00 WIB</div>
+                  <div className="ds-info-card__hint">Indonesia time. Outside these hours we reply by email next morning.</div>
+                </div>
+                <h3 className="ds-info-h3">Common issues</h3>
+                <details className="ds-info-faq" open>
+                  <summary>My link isn't working after I paid.</summary>
+                  <p>Subscriptions activate within 60 seconds of payment confirmation. If your link still shows "shop activating" after 5 minutes, message us — we'll force-refresh it manually.</p>
+                </details>
+                <details className="ds-info-faq">
+                  <summary>Payment gateway not connecting.</summary>
+                  <p>Most gateway connect errors come from incorrect API keys (missing trailing characters, wrong test/live key). Send us a screenshot of the error and which gateway — we'll walk you through it.</p>
+                </details>
+                <details className="ds-info-faq">
+                  <summary>I want to cancel.</summary>
+                  <p>Cancel any time from your shop's settings. No phone call, no exit interview. Your shop stays live until the end of the paid period, then deactivates.</p>
+                </details>
+              </>
+            )}
           </div>
         </div>
-      </header>
+      )}
 
       {/* ═══ HERO ═══ */}
       <section className="ds-hero" id="top">
@@ -511,6 +666,49 @@ function PageStyles() {
       .ds-nav__links a:hover { color: #EC4899; }
       .ds-nav__cta { display: flex; align-items: center; gap: 12px; }
       .ds-nav__link-cta { display: none; font-size: 14px; font-weight: 700; color: #EC4899; }
+
+      /* ── GEAR + SLIDE-DOWN MENU ───────────────────────────────── */
+      .ds-gear { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(236,72,153,0.25); background: linear-gradient(180deg, #fff 0%, #FFF5F8 100%); color: #EC4899; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(236,72,153,0.12); transition: all 0.2s ease; line-height: 1; }
+      .ds-gear:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(236,72,153,0.22); }
+      .ds-gear--open span { transform: rotate(90deg); }
+      .ds-menu-backdrop { position: fixed; inset: 0; background: rgba(45,27,27,0.35); z-index: 90; backdrop-filter: blur(2px); }
+      .ds-menu-drop { position: absolute; top: 100%; right: 12px; left: 12px; margin-top: 8px; padding: 8px; background: #fff; border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.18), 0 4px 14px rgba(236,72,153,0.15); z-index: 95; animation: dsMenuDrop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; gap: 4px; max-width: 480px; margin-left: auto; }
+      @keyframes dsMenuDrop { 0% { transform: translateY(-12px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+      .ds-menu-row { display: flex; align-items: center; gap: 14px; padding: 14px 14px; border-radius: 14px; border: none; background: transparent; cursor: pointer; text-align: left; font-family: inherit; transition: background 0.15s ease; min-height: 64px; }
+      .ds-menu-row:hover { background: #FDF2F8; }
+      .ds-menu-row:active { background: #FCE7F3; }
+      .ds-menu-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #FFE4EC 0%, #FBCFE8 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+      .ds-menu-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .ds-menu-title { font-size: 16px; font-weight: 800; color: #2D1B1B; line-height: 1.2; }
+      .ds-menu-sub { font-size: 13px; font-weight: 500; color: #8B6B6B; line-height: 1.3; }
+
+      /* ── FULL-SCREEN INFO PAGE OVERLAY ────────────────────────── */
+      .ds-info { position: fixed; inset: 0; z-index: 100; background: #FFF8FA; display: flex; flex-direction: column; animation: dsInfoSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+      @keyframes dsInfoSlide { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+      .ds-info__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 12px; background: #fff; border-bottom: 1px solid rgba(236,72,153,0.12); position: sticky; top: 0; z-index: 2; box-shadow: 0 2px 8px rgba(45,27,27,0.04); }
+      .ds-info__back { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(236,72,153,0.2); background: #fff; color: #EC4899; font-size: 20px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+      .ds-info__back:hover { background: #FDF2F8; }
+      .ds-info__title { flex: 1; text-align: center; font-size: 17px; font-weight: 800; color: #2D1B1B; }
+      .ds-info__body { flex: 1; overflow-y: auto; padding: 18px 18px 60px; max-width: 720px; width: 100%; margin: 0 auto; -webkit-overflow-scrolling: touch; }
+      .ds-info__lede { font-size: 15px; line-height: 1.55; color: #5C3A3A; margin: 0 0 22px; padding: 14px 16px; background: linear-gradient(135deg, #FFE4EC 0%, #FCE7F3 100%); border-radius: 14px; border-left: 4px solid #EC4899; }
+      .ds-info-h3 { font-size: 17px; font-weight: 800; color: #2D1B1B; margin: 22px 0 8px; }
+      .ds-info__body p { font-size: 14px; line-height: 1.6; color: #4A2E2E; margin: 0 0 12px; }
+      .ds-info__body p em { color: #EC4899; font-style: normal; font-weight: 700; }
+      .ds-info-faq { background: #fff; border-radius: 12px; border: 1px solid rgba(236,72,153,0.12); padding: 0; margin-bottom: 10px; overflow: hidden; }
+      .ds-info-faq summary { padding: 14px 16px; font-size: 14px; font-weight: 700; color: #2D1B1B; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+      .ds-info-faq summary::-webkit-details-marker { display: none; }
+      .ds-info-faq summary::after { content: '+'; color: #EC4899; font-size: 20px; font-weight: 800; transition: transform 0.2s ease; flex-shrink: 0; }
+      .ds-info-faq[open] summary::after { transform: rotate(45deg); }
+      .ds-info-faq p { padding: 0 16px 14px; margin: 0; font-size: 14px; line-height: 1.55; color: #5C3A3A; }
+      .ds-info-steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+      .ds-info-steps li { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px; border: 1px solid rgba(236,72,153,0.12); }
+      .ds-info-steps li strong { display: block; font-size: 15px; font-weight: 800; color: #2D1B1B; margin-bottom: 6px; }
+      .ds-info-steps li p { font-size: 14px; line-height: 1.6; color: #5C3A3A; margin: 0; }
+      .ds-info-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(236,72,153,0.12); }
+      .ds-info-card__label { font-size: 12px; font-weight: 800; color: #8B6B6B; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+      .ds-info-card__value { display: block; font-size: 16px; font-weight: 800; color: #EC4899; text-decoration: none; margin-bottom: 6px; word-break: break-word; }
+      .ds-info-card__value:hover { color: #BE185D; text-decoration: underline; }
+      .ds-info-card__hint { font-size: 13px; color: #8B6B6B; line-height: 1.5; }
 
       /* ── BUTTONS ───────────────────────────────────────────────── */
       .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; border: none; font-family: inherit; text-decoration: none; min-height: 44px; padding: 10px 18px; border-radius: 12px; font-size: 14px; line-height: 1; }
