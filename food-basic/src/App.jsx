@@ -1657,6 +1657,11 @@ export default function App() {
   // used. Lets vendors run banner rotations like a small campaign.
   const [marketingRandomLandscape, setMarketingRandomLandscape] = useState(() => localStorage.getItem('foodlocalchat_marketing_random_landscape') === 'true')
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_random_landscape', marketingRandomLandscape ? 'true' : 'false') }, [marketingRandomLandscape])
+  // ── MULTI-STAFF ───────────────────────────────────────────────
+  const [staffPageOpen, setStaffPageOpen] = useState(false)
+  const [staffList, setStaffList] = useState([])
+  const [staffEditingId, setStaffEditingId] = useState(null)
+  const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
   // (Marketing-banners Supabase fetch lives further down, after the
   // vendorId state declaration — putting it here caused a TDZ.)
   // Vendor's own uploaded backgrounds — persisted so they survive
@@ -2682,6 +2687,24 @@ export default function App() {
       } catch {}
     })()
   }, [isVendor, vendorId])
+  // Multi-staff: fetch the staff list for this shop when the page opens
+  // or on mount for active vendors. Lives here (after vendorId useState)
+  // for TDZ safety.
+  useEffect(() => {
+    if (!isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('vendor_staff')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('created_at', { ascending: false })
+        if (!cancelled && data) setStaffList(data)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [isVendor, vendorId, staffPageOpen])
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     // Demo vendor IDs (e.g. local-demo-*) aren't UUIDs — Supabase rejects
@@ -10840,6 +10863,7 @@ export default function App() {
         ].filter(Boolean)
         const account = [
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
+          { icon: '👥', label: 'Staff Accounts', desc: 'Invite team — manager / cashier / kitchen', onClick: () => setStaffPageOpen(true) },
           { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
           { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
           { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
@@ -11628,6 +11652,122 @@ export default function App() {
                   )}
                 </>
               )}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ STAFF ACCOUNTS PAGE ═══
+          Vendors invite up to 10 staff per shop with a name, phone, PIN
+          and role (manager / cashier / kitchen). Saved in vendor_staff
+          on Supabase. Role-aware drawer entries will follow in a v2
+          pass; current pass focuses on CRUD + roster. */}
+      {staffPageOpen && (() => {
+        const ROLES = [
+          { id: 'manager', label: 'Manager', emoji: '👔', desc: 'Full access — orders, menu, settings, payouts' },
+          { id: 'cashier', label: 'Cashier', emoji: '💵', desc: 'Take orders, mark dispatched, run reports' },
+          { id: 'kitchen', label: 'Kitchen', emoji: '🍩', desc: 'See incoming orders, mark ready' },
+        ]
+        const saveStaff = async () => {
+          const name = (staffForm.name || '').trim()
+          const phone = (staffForm.phone || '').trim().replace(/[^0-9+]/g, '')
+          const pin = (staffForm.pin || '').replace(/[^0-9]/g, '')
+          if (!name) { alert('Name is required.'); return }
+          if (phone.length < 6) { alert('Enter a valid phone number.'); return }
+          if (pin.length < 4 || pin.length > 6) { alert('PIN must be 4–6 digits.'); return }
+          if (staffList.length >= 10 && !staffEditingId) { alert('Maximum 10 staff per shop.'); return }
+          if (!supabase || !vendorId || !isUuid(vendorId)) { alert('Sign in as a real vendor to add staff.'); return }
+          const payload = { vendor_id: vendorId, name, phone, pin, role: staffForm.role, active: true }
+          try {
+            if (staffEditingId) {
+              const { data } = await supabase.from('vendor_staff').update(payload).eq('id', staffEditingId).select().single()
+              if (data) setStaffList(prev => prev.map(s => s.id === staffEditingId ? data : s))
+            } else {
+              const { data } = await supabase.from('vendor_staff').insert(payload).select().single()
+              if (data) setStaffList(prev => [data, ...prev])
+            }
+            setStaffEditingId(null)
+            setStaffForm({ name: '', phone: '', pin: '', role: 'cashier' })
+          } catch (e) {
+            alert(e?.message || 'Could not save staff member.')
+          }
+        }
+        const editStaff = (s) => { setStaffEditingId(s.id); setStaffForm({ name: s.name, phone: s.phone, pin: s.pin, role: s.role }) }
+        const removeStaff = async (s) => {
+          if (!window.confirm(`Remove ${s.name} from staff?`)) return
+          try {
+            await supabase.from('vendor_staff').delete().eq('id', s.id)
+            setStaffList(prev => prev.filter(x => x.id !== s.id))
+          } catch (e) { alert(e?.message || 'Could not delete.') }
+        }
+        const toggleActive = async (s) => {
+          try {
+            const { data } = await supabase.from('vendor_staff').update({ active: !s.active }).eq('id', s.id).select().single()
+            if (data) setStaffList(prev => prev.map(x => x.id === s.id ? data : x))
+          } catch {}
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => { setStaffPageOpen(false); setStaffEditingId(null); setStaffForm({ name: '', phone: '', pin: '', role: 'cashier' }) }} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>👥 Staff Accounts</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{staffList.length}/10 staff · roles drive drawer access</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', WebkitOverflowScrolling: 'touch' }}>
+              {/* Add / edit form */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>{staffEditingId ? 'Edit staff' : 'Invite new staff'}</div>
+                <input value={staffForm.name} onChange={(e) => setStaffForm(f => ({ ...f, name: e.target.value }))} placeholder="Name" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={staffForm.phone} onChange={(e) => setStaffForm(f => ({ ...f, phone: e.target.value }))} placeholder="Phone (e.g. +62 812…)" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={staffForm.pin} onChange={(e) => setStaffForm(f => ({ ...f, pin: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) }))} placeholder="4–6 digit PIN" inputMode="numeric" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', marginBottom: 10, boxSizing: 'border-box', letterSpacing: 3 }} />
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Role</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                  {ROLES.map(r => (
+                    <button key={r.id} type="button" onClick={() => setStaffForm(f => ({ ...f, role: r.id }))} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: staffForm.role === r.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: staffForm.role === r.id ? `${accent}1a` : 'rgba(255,255,255,0.04)', color: '#fff', textAlign: 'left', cursor: 'pointer', minHeight: 56 }}>
+                      <span style={{ fontSize: 22 }}>{r.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800 }}>{r.label}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>{r.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={saveStaff} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', minHeight: 44 }}>{staffEditingId ? 'Save' : '+ Add staff'}</button>
+                  {staffEditingId && (
+                    <button onClick={() => { setStaffEditingId(null); setStaffForm({ name: '', phone: '', pin: '', role: 'cashier' }) }} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Roster */}
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Your team</div>
+              {staffList.length === 0 && (
+                <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No staff yet. Add your first team member above.</div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {staffList.map(s => {
+                  const role = ROLES.find(r => r.id === s.role) || ROLES[1]
+                  return (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)', opacity: s.active ? 1 : 0.55 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{role.emoji}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{s.name}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{role.label} · {s.phone}</div>
+                      </div>
+                      <button onClick={() => toggleActive(s)} aria-label={s.active ? 'Deactivate' : 'Activate'} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: s.active ? '#86EFAC' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{s.active ? 'On' : 'Off'}</button>
+                      <button onClick={() => editStaff(s)} aria-label="Edit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => removeStaff(s)} aria-label="Remove" style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: '#8B0000', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>×</button>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )
