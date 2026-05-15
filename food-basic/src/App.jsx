@@ -82,6 +82,37 @@ const PLAN_PRICING = {
   AE:   { code: 'AE', currency: 'AED', symbol: 'AED',label: 'AED 18',     display: '18',      amountLocal: 18,     amountIDR: 76000 },
   SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',label: 'SAR 18',     display: '18',      amountLocal: 18,     amountIDR: 75000 },
 }
+// ─── MARKETING BANNER FORMATS + TEMPLATES ─────────────────────
+// Three formats. Aspect ratios match the channels they're built for:
+//   landscape  — 1.91:1   chat / WhatsApp / Facebook feed share
+//   square     — 1:1      Instagram feed
+//   story      — 9:16     Instagram / Facebook story
+// Display pixel sizes (used in the editor + chat-card render) are
+// chosen so the preview fits inside a 480px viewport with margin.
+const BANNER_FORMATS = {
+  landscape: { label: 'Landscape', subtitle: 'Chat · WhatsApp · Facebook', aspect: '1.91 / 1', w: 380, h: 199 },
+  square:    { label: 'Square',    subtitle: 'Instagram feed',             aspect: '1 / 1',   w: 320, h: 320 },
+  story:     { label: 'Story',     subtitle: 'Instagram / Facebook story', aspect: '9 / 16',  w: 240, h: 427 },
+}
+// Starter templates per format. User will replace these with curated
+// brand artwork; the array stays the same shape.
+const BANNER_TEMPLATES = {
+  landscape: [
+    { id: 'land-pink',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png', tint: 'rgba(236,72,153,0.35)', textColor: '#fff' },
+    { id: 'land-choco', bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_07_42%20PM.png', tint: 'rgba(0,0,0,0.45)',     textColor: '#fff' },
+    { id: 'land-cream', bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_00_09%20PM.png', tint: 'rgba(0,0,0,0.30)',     textColor: '#fff' },
+  ],
+  square: [
+    { id: 'sq-pink',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_13_34%20PM.png', tint: 'rgba(0,0,0,0.35)', textColor: '#fff' },
+    { id: 'sq-choco',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_09_32%20PM.png', tint: 'rgba(0,0,0,0.4)',  textColor: '#fff' },
+    { id: 'sq-cream',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_01_57%20PM.png', tint: 'rgba(0,0,0,0.3)',  textColor: '#fff' },
+  ],
+  story: [
+    { id: 'st-pink',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_15_02%20PM.png', tint: 'rgba(236,72,153,0.3)', textColor: '#fff' },
+    { id: 'st-choco',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_11_16%20PM.png', tint: 'rgba(0,0,0,0.4)',     textColor: '#fff' },
+    { id: 'st-cream',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_16_59%20PM.png', tint: 'rgba(0,0,0,0.3)',     textColor: '#fff' },
+  ],
+}
 // Map any country code → the right plan entry. Western/EU fallback
 // for unmapped countries; same logic as currency selection in
 // landing/checkout pages.
@@ -1593,6 +1624,27 @@ export default function App() {
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeLibraryOpen, setThemeLibraryOpen] = useState(false) // curated background picker
   const [settingsHubOpen, setSettingsHubOpen] = useState(false)   // grouped settings page
+  // ── MARKETING ─────────────────────────────────────────────────
+  // Banner-based promo builder: vendor picks a template OR uploads
+  // their own background, types in a headline / discount / subtitle,
+  // chooses a format (landscape for chat/WA/FB, square or story for
+  // Instagram), and saves. Active banner can auto-post in chat after
+  // each dispatched order or after 14 days of customer inactivity.
+  const [marketingPageOpen, setMarketingPageOpen] = useState(false)
+  const [marketingBanners, setMarketingBanners] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_marketing_banners') || '[]') } catch { return [] }
+  })
+  useEffect(() => { try { localStorage.setItem('foodlocalchat_marketing_banners', JSON.stringify(marketingBanners)) } catch {} }, [marketingBanners])
+  const [marketingEditingBannerId, setMarketingEditingBannerId] = useState(null)
+  const [marketingActiveBannerId, setMarketingActiveBannerId] = useState(() => localStorage.getItem('foodlocalchat_marketing_active_banner') || null)
+  useEffect(() => {
+    if (marketingActiveBannerId) localStorage.setItem('foodlocalchat_marketing_active_banner', marketingActiveBannerId)
+    else localStorage.removeItem('foodlocalchat_marketing_active_banner')
+  }, [marketingActiveBannerId])
+  const [marketingAutoPostDispatch, setMarketingAutoPostDispatch] = useState(() => localStorage.getItem('foodlocalchat_marketing_autopost_dispatch') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_dispatch', marketingAutoPostDispatch ? 'true' : 'false') }, [marketingAutoPostDispatch])
+  const [marketingAutoPost14Days, setMarketingAutoPost14Days] = useState(() => localStorage.getItem('foodlocalchat_marketing_autopost_14days') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_14days', marketingAutoPost14Days ? 'true' : 'false') }, [marketingAutoPost14Days])
   // Vendor's own uploaded backgrounds — persisted so they survive
   // reloads and can be re-selected later. Capped at 8 to avoid
   // unbounded growth.
@@ -7934,6 +7986,16 @@ export default function App() {
                       setOrderActionStatuses(p => ({ ...p, [conv.id]: 'dispatched' }))
                       if (!conv.isMock) {
                         try { await sendSystemStatus({ conversationId: conv.id, body: 'Your order is on the way! 🛵' }) } catch {}
+                        // Auto-post the active marketing banner right after
+                        // the dispatch confirmation — best window for a
+                        // repeat-purchase nudge.
+                        if (marketingAutoPostDispatch && marketingActiveBannerId) {
+                          const banner = marketingBanners.find(b => b.id === marketingActiveBannerId)
+                          if (banner) {
+                            const promoBody = `🎁 ${banner.discount} · ${banner.headline}${banner.subtitle ? '\n' + banner.subtitle : ''}${banner.bgImage ? '\n' + banner.bgImage : ''}`
+                            try { await sendSystemStatus({ conversationId: conv.id, body: promoBody }) } catch {}
+                          }
+                        }
                       }
                     }
                     const cancelOrder = async (e) => {
@@ -10610,6 +10672,7 @@ export default function App() {
         // because most onClick handlers close over component state.
         const brand = [
           { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
+          { icon: '📣', label: 'Marketing', desc: 'Promo banners + auto-post to chat', onClick: () => setMarketingPageOpen(true) },
           isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
         ].filter(Boolean)
         // Old "Themes" entry removed — Theme Library (in the drawer's
@@ -10709,6 +10772,279 @@ export default function App() {
                 {sectionHeader('Advanced')}
                 {advanced.map(hubBtn)}
               </>)}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ MARKETING PAGE ═══
+          Banner builder: pick a format (landscape/square/story), pick
+          a template or upload your own background, type headline +
+          discount + subtitle, save. Active banner can auto-post to
+          chat after dispatch and after 14 days of customer
+          inactivity. Renders banners as React components — for
+          external share we use a simple "copy text + download"
+          flow until canvas-export is wired up in v2. */}
+      {marketingPageOpen && (() => {
+        const editing = marketingEditingBannerId ? marketingBanners.find(b => b.id === marketingEditingBannerId) : null
+        const updateBanner = (patch) => {
+          if (!marketingEditingBannerId) return
+          setMarketingBanners(prev => prev.map(b => b.id === marketingEditingBannerId ? { ...b, ...patch } : b))
+        }
+        const removeBanner = (id) => {
+          setMarketingBanners(prev => prev.filter(b => b.id !== id))
+          if (marketingActiveBannerId === id) setMarketingActiveBannerId(null)
+          if (marketingEditingBannerId === id) setMarketingEditingBannerId(null)
+        }
+        const createBanner = (format, template) => {
+          const id = 'b-' + Date.now()
+          const next = {
+            id,
+            format,                  // 'landscape' | 'square' | 'story'
+            bgImage: template?.bg || '',
+            tint: template?.tint || 'rgba(0,0,0,0.4)',
+            textColor: template?.textColor || '#fff',
+            headline: 'Limited time offer',
+            discount: '20% OFF',
+            subtitle: 'Order today only',
+            showLogo: true,
+            showShopName: true,
+            createdAt: Date.now(),
+          }
+          setMarketingBanners(prev => [next, ...prev])
+          setMarketingEditingBannerId(id)
+        }
+        const uploadBanner = async (format, file) => {
+          if (!file) return
+          let url = null
+          try { url = await uploadMenuImage(vendorId, file) } catch {}
+          if (!url) return
+          const id = 'b-' + Date.now()
+          setMarketingBanners(prev => [{
+            id, format, bgImage: url, tint: 'rgba(0,0,0,0.4)', textColor: '#fff',
+            headline: 'Limited time offer', discount: '20% OFF', subtitle: 'Order today only',
+            showLogo: true, showShopName: true, createdAt: Date.now(),
+          }, ...prev])
+          setMarketingEditingBannerId(id)
+        }
+
+        // ── INNER PREVIEW RENDER ──────────────────────────────
+        // Renders one banner at the given pixel size. Used in the
+        // editor, the saved-banners list, and (eventually) inside
+        // chat messages when the banner is auto-posted.
+        const renderBanner = (b, opts = {}) => {
+          const fmt = BANNER_FORMATS[b.format] || BANNER_FORMATS.landscape
+          const w = opts.width || fmt.w
+          const h = opts.height || fmt.h
+          const isStory = b.format === 'story'
+          return (
+            <div style={{ position: 'relative', width: w, height: h, borderRadius: 12, overflow: 'hidden', background: '#1a1a1a', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
+              {b.bgImage && <img src={b.bgImage} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+              <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${b.tint} 0%, ${b.tint} 100%)` }} />
+              {/* Header row: logo + shop name (top-left) */}
+              <div style={{ position: 'absolute', top: w * 0.04, left: w * 0.04, display: 'flex', alignItems: 'center', gap: w * 0.025 }}>
+                {b.showLogo && shopLogo && (
+                  <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: w * 0.11, height: w * 0.11, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.8)' }} />
+                )}
+                {b.showShopName && (
+                  <div style={{ fontSize: Math.max(11, w * 0.04), fontWeight: 800, color: b.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.55)', maxWidth: w * 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
+                )}
+              </div>
+              {/* Discount — huge, anchored bottom-left */}
+              <div style={{ position: 'absolute', left: w * 0.04, bottom: isStory ? h * 0.28 : h * 0.32, fontSize: Math.max(28, w * (isStory ? 0.18 : 0.14)), fontWeight: 900, color: b.textColor, lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.55)', letterSpacing: -0.5 }}>{b.discount}</div>
+              {/* Headline */}
+              <div style={{ position: 'absolute', left: w * 0.04, bottom: isStory ? h * 0.18 : h * 0.15, fontSize: Math.max(13, w * 0.052), fontWeight: 800, color: b.textColor, textShadow: '0 1px 6px rgba(0,0,0,0.5)', maxWidth: w * 0.92 }}>{b.headline}</div>
+              {/* Subtitle */}
+              {b.subtitle && (
+                <div style={{ position: 'absolute', left: w * 0.04, bottom: isStory ? h * 0.1 : h * 0.06, fontSize: Math.max(11, w * 0.035), fontWeight: 600, color: b.textColor, opacity: 0.92, textShadow: '0 1px 4px rgba(0,0,0,0.45)', maxWidth: w * 0.92 }}>{b.subtitle}</div>
+              )}
+            </div>
+          )
+        }
+
+        // ── SHARE HELPERS ─────────────────────────────────────
+        const shareText = (b) => `🍩 ${shopName} · ${b.discount}\n${b.headline}\n${b.subtitle || ''}`.trim()
+        const shareWhatsApp = (b) => {
+          const txt = encodeURIComponent(shareText(b) + (b.bgImage ? `\n\n${b.bgImage}` : ''))
+          window.open(`https://wa.me/?text=${txt}`, '_blank', 'noopener,noreferrer')
+        }
+        const shareFacebook = (b) => {
+          // Facebook share dialog accepts a URL — share the bg image
+          // URL with the caption baked into the share text. Best
+          // result: vendor downloads the rendered banner and uploads
+          // manually. This is the deeplink fallback for now.
+          const u = encodeURIComponent(b.bgImage || window.location.href)
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${encodeURIComponent(shareText(b))}`, '_blank', 'noopener,noreferrer')
+        }
+        const copyShareText = async (b) => {
+          try { await navigator.clipboard.writeText(shareText(b)); alert('Copied promo text — paste it into your post.') } catch { alert('Copy failed. Long-press the text to copy manually.') }
+        }
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            {/* Header */}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => { setMarketingEditingBannerId(null); setMarketingPageOpen(false) }} aria-label="Back" style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>←</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', lineHeight: 1.1 }}>📣 Marketing</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{editing ? 'Edit banner' : 'Build promos, auto-post to chat'}</div>
+              </div>
+              {editing && (
+                <button onClick={() => setMarketingEditingBannerId(null)} style={{ padding: '8px 14px', borderRadius: 10, background: accent, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>Done</button>
+              )}
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', WebkitOverflowScrolling: 'touch' }}>
+              {/* ── EDITOR MODE ─────────────────────────────── */}
+              {editing && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Live preview */}
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+                    {renderBanner(editing)}
+                  </div>
+
+                  {/* Text fields */}
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: 4 }}>Discount (huge text)</label>
+                      <input value={editing.discount} maxLength={20} onChange={(e) => updateBanner({ discount: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 800, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: 4 }}>Headline</label>
+                      <input value={editing.headline} maxLength={48} onChange={(e) => updateBanner({ headline: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: 4 }}>Smaller text</label>
+                      <input value={editing.subtitle} maxLength={60} onChange={(e) => updateBanner({ subtitle: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    </div>
+                  </div>
+
+                  {/* Style row: text colour + tint */}
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>Text colour</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                      {['#fff','#000','#FACC15','#EC4899','#22c55e','#3B82F6'].map(c => (
+                        <button key={c} type="button" onClick={() => updateBanner({ textColor: c })} aria-label={`Text colour ${c}`} style={{ width: 34, height: 34, borderRadius: 17, border: editing.textColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)', background: c, cursor: 'pointer' }} />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>Overlay tint</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {[
+                        { v: 'rgba(0,0,0,0.25)', name: 'Soft dark' },
+                        { v: 'rgba(0,0,0,0.5)',  name: 'Dark' },
+                        { v: 'rgba(236,72,153,0.35)', name: 'Pink' },
+                        { v: 'rgba(250,204,21,0.3)',  name: 'Gold' },
+                      ].map(t => (
+                        <button key={t.v} type="button" onClick={() => updateBanner({ tint: t.v })} style={{ padding: '8px 12px', borderRadius: 10, border: editing.tint === t.v ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.15)', background: t.v, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{t.name}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Toggles */}
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { k: 'showLogo', label: 'Show shop logo' },
+                      { k: 'showShopName', label: 'Show shop name' },
+                    ].map(({ k, label }) => (
+                      <label key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
+                        <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>{label}</span>
+                        <input type="checkbox" checked={!!editing[k]} onChange={(e) => updateBanner({ [k]: e.target.checked })} style={{ width: 20, height: 20, accentColor: accent, cursor: 'pointer' }} />
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Share + activate row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <button type="button" onClick={() => shareWhatsApp(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.12)', color: '#86EFAC', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📱 WhatsApp</button>
+                    <button type="button" onClick={() => shareFacebook(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.12)', color: '#93C5FD', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📘 Facebook</button>
+                    <button type="button" onClick={() => copyShareText(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📋 Copy text</button>
+                    <button type="button" onClick={() => setMarketingActiveBannerId(editing.id)} style={{ padding: '12px', borderRadius: 12, border: 'none', background: marketingActiveBannerId === editing.id ? '#22c55e' : accent, color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', minHeight: 44 }}>{marketingActiveBannerId === editing.id ? '✓ Active' : 'Set as active'}</button>
+                  </div>
+
+                  <button type="button" onClick={() => { if (window.confirm('Delete this banner?')) removeBanner(editing.id) }} style={{ padding: 12, borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🗑 Delete banner</button>
+                </div>
+              )}
+
+              {/* ── LIST MODE ───────────────────────────────── */}
+              {!editing && (
+                <>
+                  {/* AUTO-POST settings — show first since they're the
+                      most-changed setting on this page once banners exist. */}
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Auto-post to customer chat</div>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer', padding: '8px 0' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>After dispatched</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends the active banner right after you tap Dispatched on an order. Best window for repeat purchases.</div>
+                      </div>
+                      <input type="checkbox" checked={marketingAutoPostDispatch} onChange={(e) => setMarketingAutoPostDispatch(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>14-day re-engagement</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends the active banner to customers who haven't ordered in 14 days. Win-back the inactive ones.</div>
+                      </div>
+                      <input type="checkbox" checked={marketingAutoPost14Days} onChange={(e) => setMarketingAutoPost14Days(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                    </label>
+                    {marketingActiveBannerId
+                      ? <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', color: '#86EFAC', fontSize: 13, fontWeight: 700 }}>✓ Active banner is set</div>
+                      : <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', color: '#FCD34D', fontSize: 13, fontWeight: 700 }}>⚠ No active banner — pick one below.</div>}
+                  </div>
+
+                  {/* Saved banners list */}
+                  {marketingBanners.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Your banners</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+                        {marketingBanners.map(b => (
+                          <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: 14, background: 'rgba(0,0,0,0.5)', border: marketingActiveBannerId === b.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }} onClick={() => setMarketingEditingBannerId(b.id)}>
+                            <div style={{ flexShrink: 0, transform: 'scale(0.45)', transformOrigin: 'left center', width: BANNER_FORMATS[b.format]?.w || 380, height: BANNER_FORMATS[b.format]?.h || 199 }}>
+                              {renderBanner(b)}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0, marginLeft: `calc(${(BANNER_FORMATS[b.format]?.w || 380) * 0.45}px - ${BANNER_FORMATS[b.format]?.w || 380}px + 12px)` }}>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{b.discount}</div>
+                              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{BANNER_FORMATS[b.format]?.label} · {b.headline.slice(0, 28)}{b.headline.length > 28 ? '…' : ''}</div>
+                              {marketingActiveBannerId === b.id && <div style={{ fontSize: 11, fontWeight: 800, color: accent, marginTop: 4 }}>✓ ACTIVE</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Create-new section: pick a format, then a template or upload */}
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '8px 4px 10px' }}>Create new</div>
+                  {Object.entries(BANNER_FORMATS).map(([fmtKey, fmt]) => (
+                    <div key={fmtKey} style={{ marginBottom: 18 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{fmt.label}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{fmt.subtitle}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                        {BANNER_TEMPLATES[fmtKey].map(tpl => (
+                          <button key={tpl.id} type="button" onClick={() => createBanner(fmtKey, tpl)} style={{ flexShrink: 0, padding: 0, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', borderRadius: 12, cursor: 'pointer', overflow: 'hidden' }}>
+                            <div style={{ width: 120, aspectRatio: fmt.aspect, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
+                              <img src={tpl.bg} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', inset: 0, background: tpl.tint }} />
+                              <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 13, fontWeight: 900, color: tpl.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>20% OFF</div>
+                            </div>
+                          </button>
+                        ))}
+                        <label style={{ flexShrink: 0, width: 120, aspectRatio: fmt.aspect, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `2px dashed ${accent}55`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', color: '#fff' }}>
+                          <span style={{ fontSize: 22 }}>＋</span>
+                          <span style={{ fontSize: 11, fontWeight: 700 }}>Upload</span>
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadBanner(fmtKey, f) }} />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )
