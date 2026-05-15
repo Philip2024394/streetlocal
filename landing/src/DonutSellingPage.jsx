@@ -47,21 +47,38 @@ const STEPS = [
 const PRICING_INCLUDES = [
   'Unlimited donuts in menu',
   'Unlimited orders / month',
-  'WhatsApp ordering',
+  'In-app chat + WhatsApp ordering',
+  'All 16 payment gateways (Midtrans · QRIS · Stripe · …)',
   'Delivery + pickup zones',
-  'Verified reviews',
-  'Multi-language support',
-  'Custom branding & landing',
-  'Daily deals + promo banners',
-  'Custom subdomain',
-  '24/7 hosting + backups',
+  'Marketing banners + auto-post to chat',
+  'Promo codes (% / flat / first-order / expiry)',
+  'Tipping at checkout (10/15/20/custom)',
+  'Loyalty stamps + member card',
+  '4-template A4 invoices with your letterhead',
+  'Tax / VAT (PPN 11% preset)',
+  'Production planner + wastage logger',
+  'Kitchen Display System (KDS) for tablets',
+  'Build-your-own dozen mix box',
+  'Bluetooth thermal printer',
+  'Customer accounts + order history',
+  'Pre-order windows (Mother\'s Day, Valentine\'s)',
+  'Catering / wholesale orders',
+  'End-of-day cash reconciliation',
+  'Self-serve kiosk mode',
+  'Allergen tags + recipe cost analysis',
+  'SMS notifications (Twilio)',
+  'Email campaigns (Resend)',
+  'CSV sales export · backup & restore',
+  'Image library + curated stock photos',
+  '11 languages, 15 currencies',
+  '24/7 hosting + daily backups',
   'WhatsApp support',
   'No commission, ever',
 ]
 
 const COMPARISON = [
   ['Setup time',                   '5 min',  'Already chaos', '1–2 days',  'Days/weeks'],
-  ['Monthly cost',                 '35K IDR', 'Free',         '500K+ IDR', 'Free'],
+  ['Monthly cost',                 '38K IDR', 'Free',         '500K+ IDR', 'Free'],
   ['Commission per order',         '0%',     '0%',            '0–5%',      '20–30%'],
   ['Branded landing page',         '✓',      '✗',             '✓',         '✗'],
   ['One-tap customer ordering',    '✓',      '✗',             '✓',         '✓'],
@@ -525,10 +542,10 @@ export default function DonutSellingPage() {
                 <span className="ds-badge-pop">Most popular</span>
               </div>
               <div className="ds-pricing-card__price">
-                <span className="ds-price-num">35,000</span>
+                <span className="ds-price-num">38,000</span>
                 <span className="ds-price-cur">IDR</span>
               </div>
-              <p className="ds-price-sub">per month · ~$2 USD</p>
+              <p className="ds-price-sub">per month · ~$2.50 USD · everything included</p>
               <ul className="ds-pricing-card__list">
                 {PRICING_INCLUDES.map((feat, i) => (
                   <li key={i}><span className="ds-check">✓</span>{feat}</li>
