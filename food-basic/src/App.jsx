@@ -10097,8 +10097,38 @@ export default function App() {
           coherent surface. The 6 starter images are placeholders the
           user will replace with their own curated set. */}
       {themeLibraryOpen && (() => {
-        const donutPreset = THEME_PRESETS.find(t => t.id === 'donut')
-        const LIBRARY = donutPreset ? [donutPreset.img, ...(donutPreset.variants || [])] : []
+        // Curated background tones — each group has 3 images. Light
+        // reads brightest behind dark cards; Dark sits well behind
+        // light cards / glass cards. Medium is the safe middle.
+        const GROUPS = [
+          {
+            label: 'Light',
+            note: 'Best with dark menu cards',
+            images: [
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_00_09%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_01_57%20PM.png',
+            ],
+          },
+          {
+            label: 'Medium',
+            note: 'Balanced — works with most card styles',
+            images: [
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_13_34%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_15_02%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_16_59%20PM.png',
+            ],
+          },
+          {
+            label: 'Dark',
+            note: 'Best with light or glass cards',
+            images: [
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_07_42%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_09_32%20PM.png',
+              'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_11_16%20PM.png',
+            ],
+          },
+        ]
         // Track which bg is currently active so the selected tile gets
         // a visible "Active" outline + chip.
         const currentBg = donutLanding.bgImg || localStorage.getItem('foodlocalchat_themeBg') || ''
@@ -10132,43 +10162,58 @@ export default function App() {
               </div>
             </div>
 
-            {/* Scrollable grid */}
+            {/* Scrollable grouped grid — Light → Medium → Dark, then upload */}
             <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', WebkitOverflowScrolling: 'touch' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                {LIBRARY.map((url, idx) => {
-                  const isActive = currentBg === url
-                  return (
-                    <button key={idx} type="button" onClick={() => applyBg(url)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                      {/* iPhone frame */}
-                      <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
-                        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
-                        <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                          <img src={url} alt={`Background ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          {/* Subtle bottom shadow for the home-indicator effect */}
-                          <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
-                        </div>
-                        {isActive && (
-                          <div style={{ position: 'absolute', top: -8, right: -8, padding: '3px 8px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 900, boxShadow: '0 2px 6px rgba(34,197,94,0.5)', zIndex: 4 }}>Active</div>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Theme {idx + 1}</div>
-                    </button>
-                  )
-                })}
-
-                {/* Upload-your-own tile — same iPhone frame size so the
-                    grid stays balanced. Tap opens the file picker. */}
-                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
-                  <div style={{ width: 140, height: 250, borderRadius: 22, background: 'rgba(255,255,255,0.06)', padding: 4, position: 'relative', border: `2px dashed ${accent}55`, boxShadow: '0 6px 16px rgba(0,0,0,0.3)' }}>
-                    <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
-                    <div style={{ width: '100%', height: '100%', borderRadius: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: `linear-gradient(180deg, ${accent}15 0%, rgba(0,0,0,0.4) 100%)`, color: '#fff' }}>
-                      <div style={{ width: 52, height: 52, borderRadius: 26, background: `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>＋</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '0 8px', lineHeight: 1.3 }}>Upload<br />your own</div>
-                    </div>
+              {GROUPS.map((group, gi) => (
+                <div key={group.label} style={{ marginTop: gi === 0 ? 4 : 22 }}>
+                  {/* Group header — accent rail + label + 1-line note */}
+                  <div style={{ margin: '0 4px 10px', padding: '6px 0 6px 12px', borderLeft: `3px solid ${accent}`, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{group.label}</span>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{group.note}</span>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>From your photos</div>
-                </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    {group.images.map((url, idx) => {
+                      const isActive = currentBg === url
+                      return (
+                        <button key={url} type="button" onClick={() => applyBg(url)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                          {/* iPhone frame */}
+                          <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
+                            <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
+                            <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                              <img src={url} alt={`${group.label} ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
+                            </div>
+                            {isActive && (
+                              <div style={{ position: 'absolute', top: -8, right: -8, padding: '3px 8px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 900, boxShadow: '0 2px 6px rgba(34,197,94,0.5)', zIndex: 4 }}>Active</div>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{group.label} {idx + 1}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Upload-your-own — its own group at the bottom */}
+              <div style={{ marginTop: 22 }}>
+                <div style={{ margin: '0 4px 10px', padding: '6px 0 6px 12px', borderLeft: `3px solid ${accent}`, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Custom</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Use your own photo</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
+                    <div style={{ width: 140, height: 250, borderRadius: 22, background: 'rgba(255,255,255,0.06)', padding: 4, position: 'relative', border: `2px dashed ${accent}55`, boxShadow: '0 6px 16px rgba(0,0,0,0.3)' }}>
+                      <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
+                      <div style={{ width: '100%', height: '100%', borderRadius: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: `linear-gradient(180deg, ${accent}15 0%, rgba(0,0,0,0.4) 100%)`, color: '#fff' }}>
+                        <div style={{ width: 52, height: 52, borderRadius: 26, background: `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>＋</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '0 8px', lineHeight: 1.3 }}>Upload<br />your own</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>From your photos</div>
+                  </label>
+                </div>
               </div>
 
               <div style={{ marginTop: 28, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.45)', border: `1px solid ${accent}33`, fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
