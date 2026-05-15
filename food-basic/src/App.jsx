@@ -246,6 +246,14 @@ const BANNER_TEMPLATES = {
     { id: 'land-pink',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png', tint: 'rgba(236,72,153,0.35)', textColor: '#fff' },
     { id: 'land-choco', bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_07_42%20PM.png', tint: 'rgba(0,0,0,0.45)',     textColor: '#fff' },
     { id: 'land-cream', bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_00_09%20PM.png', tint: 'rgba(0,0,0,0.30)',     textColor: '#fff' },
+    // WhatsApp / Facebook ad templates — landscape 1200×628 fits both
+    // (FB feed + WA link preview share the same aspect). Tint kept low
+    // since these are already finished designs; vendor's discount /
+    // headline overlay sits on top without obscuring the artwork.
+    { id: 'land-wa-1',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_03_43%20PM.png', tint: 'rgba(0,0,0,0.25)',     textColor: '#fff' },
+    { id: 'land-wa-2',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_04_18%20PM.png', tint: 'rgba(0,0,0,0.25)',     textColor: '#fff' },
+    { id: 'land-wa-3',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_05_19%20PM.png', tint: 'rgba(0,0,0,0.25)',     textColor: '#fff' },
+    { id: 'land-wa-4',  bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_08_46%20PM.png', tint: 'rgba(0,0,0,0.25)',     textColor: '#fff' },
   ],
   square: [
     { id: 'sq-pink',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_13_34%20PM.png', tint: 'rgba(0,0,0,0.35)', textColor: '#fff' },
