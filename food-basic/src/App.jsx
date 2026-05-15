@@ -14414,12 +14414,14 @@ export default function App() {
                   <div style={{ width: size, height: size, borderRadius: size / 2, background: btnBg, color: btnTxt, fontSize: Math.max(13, Math.round(size * 0.65)), fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, lineHeight: 1 }}>+</div>
                 )
               )
-              // Donut theme bg URL (same as THEME_PRESETS['donut'].img). The
-              // preview container paints this as a LOCAL background so the
-              // glass cards blur the same pink surface they'll blur in the
-              // live customer view — instead of blurring the Design Studio's
-              // dark glass overlay, which was distorting the effect.
-              const previewBg = 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'
+              // Preview painted with the vendor's ACTUAL theme bg (the
+              // same image their customers see). Previously hardcoded a
+              // pink donut placeholder which meant the preview never
+              // matched what the customer actually got — defeating the
+              // point of a live preview. Falls back to the donut default
+              // if no theme bg is set yet.
+              const previewBg = localStorage.getItem('foodlocalchat_themeBg')
+                || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-9-2026-01_52_32-pm.png'
               return (
                 <div style={{ margin: '0 14px 14px', borderRadius: 16, overflow: 'hidden', position: 'relative', border: '1px solid rgba(255,255,255,0.06)', isolation: 'isolate' }}>
                   {/* Local donut bg — what each glass card blurs */}
