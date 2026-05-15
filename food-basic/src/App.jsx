@@ -8445,7 +8445,23 @@ export default function App() {
         const dayMs = 24*60*60*1000
         const todayStart = new Date(); todayStart.setHours(0,0,0,0)
         const weekStart  = new Date(now - 7*dayMs)
+        const lastWeekStart = new Date(now - 14*dayMs)
         const monthStart = new Date(now - 30*dayMs)
+        // Week-over-week growth: revenue last 7d vs the 7d before that.
+        const wow = (() => {
+          const thisWeek = allOrders.filter(o => o.placedAt && new Date(o.placedAt) >= weekStart)
+          const lastWeek = allOrders.filter(o => o.placedAt && new Date(o.placedAt) >= lastWeekStart && new Date(o.placedAt) < weekStart)
+          const a = thisWeek.reduce((s, o) => s + (Number(o.total) || 0), 0)
+          const b = lastWeek.reduce((s, o) => s + (Number(o.total) || 0), 0)
+          const pct = b > 0 ? Math.round(((a - b) / b) * 100) : (a > 0 ? 100 : 0)
+          return { thisWeek: a, lastWeek: b, pct, dir: a >= b ? 'up' : 'down' }
+        })()
+        // Top customers by lifetime spend
+        const customerTotals = {}
+        allOrders.forEach(o => { const c = o.sender || 'Customer'; if (!customerTotals[c]) customerTotals[c] = { total: 0, count: 0 }; customerTotals[c].total += Number(o.total) || 0; customerTotals[c].count++ })
+        const topCustomers = Object.entries(customerTotals).sort((a, b) => b[1].total - a[1].total).slice(0, 5)
+        // Profit estimator: single global margin % saved in localStorage
+        const marginPct = parseInt(localStorage.getItem('foodlocalchat_profit_margin') || '40', 10)
         const inRange = (o, since) => o.placedAt && new Date(o.placedAt) >= since
         const buckets = {
           today: allOrders.filter(o => inRange(o, todayStart)),
@@ -8525,6 +8541,63 @@ export default function App() {
                     </div>
                   )
                 })}
+              </div>
+
+              {/* Week-over-week growth — green / red headline number */}
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Week-over-week</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 32, fontWeight: 900, color: wow.dir === 'up' ? '#22C55E' : '#EF4444' }}>{wow.pct > 0 ? '+' : ''}{wow.pct}%</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>This week {fmt(wow.thisWeek)} · Last week {fmt(wow.lastWeek)}</div>
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>
+                  {wow.dir === 'up' && wow.pct > 0 ? '↗ Growing — keep the marketing posts going.' : wow.dir === 'down' && wow.pct < 0 ? '↘ Down vs last week — consider a promo banner.' : 'Steady week.'}
+                </div>
+              </div>
+
+              {/* Top customers — cohort analysis by spend */}
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Top customers</div>
+                {topCustomers.length === 0 && <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No customers yet.</div>}
+                {topCustomers.map(([name, s], i) => (
+                  <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i === topCustomers.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 16, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0 }}>{name.charAt(0).toUpperCase()}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{s.count} {s.count === 1 ? 'order' : 'orders'}</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: '#FACC15', flexShrink: 0 }}>{fmt(s.total)}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Profit estimator — single global margin % */}
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Estimated profit</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Margin</span>
+                    <input type="number" min={0} max={100} defaultValue={marginPct} onBlur={(e) => { localStorage.setItem('foodlocalchat_profit_margin', String(Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 40)))); window.location.reload() }} style={{ width: 56, padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13, fontWeight: 800, outline: 'none', textAlign: 'center' }} />
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>%</span>
+                  </div>
+                </div>
+                {['today', 'week', 'month', 'all'].map(bucket => {
+                  const labels = { today: 'Today', week: 'Last 7d', month: 'Last 30d', all: 'All time' }
+                  const revenue = buckets[bucket].reduce((s, o) => s + (Number(o.total) || 0), 0)
+                  const profit = Math.round(revenue * marginPct / 100)
+                  return (
+                    <div key={bucket} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderBottom: bucket === 'all' ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{labels[bucket]}</span>
+                      <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{fmt(revenue)} rev</span>
+                        <span style={{ fontSize: 15, fontWeight: 900, color: '#22C55E' }}>{fmt(profit)}</span>
+                      </span>
+                    </div>
+                  )
+                })}
+                <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>Tap the margin % to change. Default 40%. Edit reloads the page.</div>
               </div>
 
               {/* Recent activity — each row is tappable. Closes the
