@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { recordVendorImage, listVendorImages, softDeleteVendorImage, backfillVendorImages } from './lib/imageLibrary'
+import { STREETLOCAL_STOCK, KIND_LABEL } from './imageStock'
+import ImagePickerModal from './ImagePickerModal'
 import { renderLandingSplash, LANDING_THEMES } from './LandingSplashes'
 import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
@@ -309,6 +312,7 @@ const TIER_FEATURES = {
     label: 'Starter',
     staffCap: 1,
     locationCap: 1,
+    imageLibraryCap: 50,
     paymentGateways: false,    // 15 gateway integrations
     bluetoothPrinter: false,
     scheduledOrders: false,
@@ -327,6 +331,7 @@ const TIER_FEATURES = {
     label: 'Professional',
     staffCap: 5,
     locationCap: 1,
+    imageLibraryCap: 500,
     paymentGateways: true,
     bluetoothPrinter: true,
     scheduledOrders: true,
@@ -345,6 +350,7 @@ const TIER_FEATURES = {
     label: 'Enterprise',
     staffCap: Infinity,
     locationCap: Infinity,
+    imageLibraryCap: Infinity,
     paymentGateways: true,
     bluetoothPrinter: true,
     scheduledOrders: true,
@@ -557,7 +563,7 @@ async function deleteMenuItemSupa(itemId) {
   await supabase.from('vendor_menu_items').delete().eq('id', itemId)
 }
 
-async function uploadMenuImage(vendorId, file) {
+async function uploadMenuImage(vendorId, file, kind = 'other') {
   if (!supabase) return null
   // Preserve transparency for PNG/WebP inputs (logos, product cut-outs with
   // alpha channel). JPEG re-encoding turns transparent pixels black because
@@ -567,6 +573,7 @@ async function uploadMenuImage(vendorId, file) {
   const mime = isPng ? 'image/png' : 'image/jpeg'
   const path = `vendor-menu/${vendorId}/${Date.now()}.${ext}`
   // Compress first
+  let outW = 0, outH = 0
   const compressed = await new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = () => {
@@ -576,6 +583,7 @@ async function uploadMenuImage(vendorId, file) {
         const max = 600
         let w = img.width, h = img.height
         if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
+        outW = w; outH = h
         canvas.width = w; canvas.height = h
         canvas.getContext('2d').drawImage(img, 0, 0, w, h)
         canvas.toBlob(resolve, mime, isPng ? undefined : 0.7)
@@ -587,7 +595,18 @@ async function uploadMenuImage(vendorId, file) {
   const { error } = await supabase.storage.from('images').upload(path, compressed, { contentType: mime, upsert: false })
   if (error) return null
   const { data } = supabase.storage.from('images').getPublicUrl(path)
-  return data?.publicUrl || null
+  const url = data?.publicUrl || null
+  if (url) {
+    // Fire-and-forget: record into the image library so the vendor can
+    // re-pick this upload from any other slot later.
+    recordVendorImage(vendorId, url, kind, {
+      label: file.name || null,
+      bytes: compressed?.size || null,
+      width: outW || null,
+      height: outH || null,
+    })
+  }
+  return url
 }
 
 const FOOD_TYPE_KEYS = Object.keys(FOOD_TYPES)
@@ -629,7 +648,7 @@ function getFilteredThemes(countryCode, foodType, langCountries) {
 /* ─── Styles ─── */
 
 /* ─── Customer Chat Panel (inline below cart confirmation) ─── */
-function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopLogoStyle = 'circle', shopName, loyaltyEnabled, loyaltyGoal, loyaltyReward, loyaltyStamps, loyaltyCardImage, customerPhone, t = {} }) {
+function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopLogoStyle = 'circle', shopName, loyaltyEnabled, loyaltyGoal, loyaltyReward, loyaltyStamps, loyaltyRewardsUnclaimed = 0, loyaltyCardImage, customerPhone, t = {} }) {
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
   // Order card collapses after the first message exchange so long chats
@@ -797,6 +816,14 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
           <div style={{ fontSize: 11, opacity: 0.95 }}>
             <strong>{stampsFilled}/{goal}</strong> · {t.loyaltyReward || 'Reward'}: <strong>{loyaltyReward || '1 free item'}</strong>
           </div>
+          {/* Unclaimed-rewards pill — shown only when the customer has
+              earned 1+ rewards they haven't redeemed yet. Tells them
+              they can ask the vendor to redeem in chat. */}
+          {loyaltyRewardsUnclaimed > 0 && (
+            <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.95)', color: accent, fontSize: 12, fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              🎁 {loyaltyRewardsUnclaimed} {loyaltyRewardsUnclaimed === 1 ? 'reward' : 'rewards'} ready — message us to redeem
+            </div>
+          )}
           </div>
         </div>
       )}
@@ -1110,6 +1137,337 @@ try {
    Used for the curated landing-theme snapshots (e.g. /themes/donuts.html)
    so they fill the food-basic phone shell instead of rendering at their
    native size in the top-left corner. */
+// ─── Feature-sweep list components (mig 20260615) ────────────────────
+// Lightweight, self-loading list views used by the Settings pages.
+// Each fetches its own data and handles the empty / loading / error
+// states inline so the parent JSX stays tidy.
+
+function CustomerList ({ vendorId, supabase, pink, fmt }) {
+  const [rows, setRows] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  React.useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!supabase || !vendorId) { setLoading(false); return }
+      const { data } = await supabase.from('customer_accounts').select('*').eq('vendor_id', vendorId).order('last_order_at', { ascending: false, nullsFirst: false }).limit(100)
+      if (!cancelled) { setRows(data || []); setLoading(false) }
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, supabase])
+  const toggleExempt = async (id, next) => {
+    if (!supabase) return
+    await supabase.from('customer_accounts').update({ tax_exempt: next }).eq('id', id)
+    setRows(rows.map(r => r.id === id ? { ...r, tax_exempt: next } : r))
+  }
+  if (loading) return <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading…</div>
+  if (rows.length === 0) return <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>No customers yet. They appear automatically after their first order.</div>
+  return (
+    <div>
+      {rows.map(c => (
+        <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{c.name || c.phone}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{c.total_orders} orders · {fmt(Math.round(c.total_spent || 0))} lifetime</div>
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!c.tax_exempt} onChange={(e) => toggleExempt(c.id, e.target.checked)} style={{ accentColor: pink }} />
+            Tax exempt
+          </label>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RecurringList ({ vendorId, supabase, pink }) {
+  const [rows, setRows] = React.useState([])
+  React.useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!supabase || !vendorId) return
+      const { data } = await supabase.from('recurring_orders').select('*').eq('vendor_id', vendorId).order('next_run', { ascending: true })
+      if (!cancelled) setRows(data || [])
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, supabase])
+  if (rows.length === 0) return <div style={{ padding: 16, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No active subscriptions yet. Customers create these from their "My orders" view.</div>
+  return rows.map(r => (
+    <div key={r.id} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{r.customer_name || r.customer_phone}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{r.cadence} · next: {r.next_run}</div>
+      </div>
+      <button onClick={async () => { await supabase.from('recurring_orders').update({ active: !r.active }).eq('id', r.id); setRows(rows.map(x => x.id === r.id ? { ...x, active: !x.active } : x)) }} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: r.active ? pink : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{r.active ? 'Pause' : 'Resume'}</button>
+    </div>
+  ))
+}
+
+function GiftCardsList ({ vendorId, supabase, fmt, pink }) {
+  const [rows, setRows] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  React.useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!supabase || !vendorId) { setLoading(false); return }
+      const { data } = await supabase.from('gift_cards').select('*').eq('vendor_id', vendorId).order('issued_at', { ascending: false }).limit(50)
+      if (!cancelled) { setRows(data || []); setLoading(false) }
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, supabase])
+  if (loading) return <div style={{ padding: 16, color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>Loading…</div>
+  if (rows.length === 0) return <div style={{ padding: 16, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No gift cards issued yet.</div>
+  return rows.map(g => (
+    <div key={g.code} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', fontFamily: 'monospace', letterSpacing: 1 }}>{g.code}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Balance {fmt(Math.round(g.balance))} / {fmt(Math.round(g.initial_value))} · {g.purchaser_email || g.purchaser_phone || '—'}</div>
+      </div>
+      <span style={{ padding: '4px 8px', borderRadius: 6, background: g.active ? `${pink}33` : 'rgba(255,255,255,0.06)', color: g.active ? pink : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800 }}>{g.active ? 'ACTIVE' : 'INACTIVE'}</span>
+    </div>
+  ))
+}
+
+function CashRecon ({ vendorId, supabase, fmt, pink, labelStyle, inputStyle }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [stats, setStats] = React.useState({ cashOrders: 0, cashTotal: 0, allTotal: 0 })
+  const [drawerOpen, setDrawerOpen] = React.useState(0)
+  const [drawerClose, setDrawerClose] = React.useState(0)
+  const [cashCounted, setCashCounted] = React.useState(0)
+  const [notes, setNotes] = React.useState('')
+  const [saved, setSaved] = React.useState(false)
+  React.useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!supabase || !vendorId) return
+      const start = today + 'T00:00:00Z'
+      const end   = today + 'T23:59:59Z'
+      const { data } = await supabase.from('vendor_orders').select('payment_method, total').eq('vendor_id', vendorId).gte('created_at', start).lte('created_at', end)
+      if (cancelled || !data) return
+      const cashOrders = data.filter(o => /cash|cod/i.test(o.payment_method || ''))
+      setStats({
+        cashOrders: cashOrders.length,
+        cashTotal: cashOrders.reduce((s, o) => s + Number(o.total || 0), 0),
+        allTotal: data.reduce((s, o) => s + Number(o.total || 0), 0),
+      })
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, supabase, today])
+  const expected = (parseFloat(drawerOpen) || 0) + stats.cashTotal
+  const variance = (parseFloat(cashCounted) || 0) - expected
+  const save = async () => {
+    if (!supabase || !vendorId) return
+    const { error } = await supabase.from('cash_reconciliations').upsert({
+      vendor_id: vendorId, log_date: today,
+      drawer_open: parseFloat(drawerOpen) || 0,
+      drawer_close: parseFloat(drawerClose) || 0,
+      cash_counted: parseFloat(cashCounted) || 0,
+      cash_expected: expected,
+      total_orders: stats.cashOrders,
+      total_revenue: stats.cashTotal,
+      notes,
+    }, { onConflict: 'vendor_id,log_date' })
+    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000) }
+  }
+  return (
+    <div>
+      <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12 }}>Today ({today})</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div><div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Cash orders</div><div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>{stats.cashOrders}</div></div>
+          <div><div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Cash revenue</div><div style={{ fontSize: 22, fontWeight: 900, color: '#86EFAC' }}>{fmt(Math.round(stats.cashTotal))}</div></div>
+        </div>
+        <label style={labelStyle}>Drawer open (start of day)</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={0} step={0.01} value={drawerOpen} onChange={(e) => setDrawerOpen(e.target.value)} />
+        <label style={labelStyle}>Cash counted (end of day)</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={0} step={0.01} value={cashCounted} onChange={(e) => setCashCounted(e.target.value)} />
+        <label style={labelStyle}>Drawer close (kept for next morning)</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={0} step={0.01} value={drawerClose} onChange={(e) => setDrawerClose(e.target.value)} />
+        <div style={{ padding: 12, borderRadius: 8, background: variance === 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', border: `1px solid ${variance === 0 ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Expected: {fmt(Math.round(expected))}</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: variance === 0 ? '#86EFAC' : '#FCA5A5' }}>Variance: {variance >= 0 ? '+' : ''}{fmt(Math.round(variance))}</div>
+        </div>
+        <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical', marginBottom: 10 }} placeholder="Notes (optional — e.g. why the variance)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <button onClick={save} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: pink, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>{saved ? '✓ Saved' : 'Save Z-report'}</button>
+      </div>
+    </div>
+  )
+}
+
+function EmailCampaigns ({ vendorId, supabase, pink, labelStyle, inputStyle }) {
+  const [rows, setRows] = React.useState([])
+  const [name, setName] = React.useState('')
+  const [subject, setSubject] = React.useState('')
+  const [body, setBody] = React.useState('')
+  const [segLastDays, setSegLastDays] = React.useState(30)
+  const refresh = async () => {
+    if (!supabase || !vendorId) return
+    const { data } = await supabase.from('email_campaigns').select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false }).limit(20)
+    setRows(data || [])
+  }
+  React.useEffect(() => { refresh() }, [vendorId, supabase])
+  const create = async () => {
+    if (!supabase || !vendorId || !name || !subject || !body) return
+    await supabase.from('email_campaigns').insert({ vendor_id: vendorId, name, subject, body_html: body, segment_filter: { last_order_days_lte: segLastDays } })
+    setName(''); setSubject(''); setBody('')
+    refresh()
+  }
+  return (
+    <>
+      <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12 }}>New campaign</div>
+        <label style={labelStyle}>Campaign name (internal)</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Mother's Day promo" />
+        <label style={labelStyle}>Email subject (customers see this)</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Special boxes for Mom — 20% off this week" />
+        <label style={labelStyle}>HTML body</label>
+        <textarea style={{ ...inputStyle, minHeight: 120, resize: 'vertical', marginBottom: 10, fontFamily: 'monospace', fontSize: 13 }} value={body} onChange={(e) => setBody(e.target.value)} placeholder="<h1>Hi {{name}}</h1><p>...</p>" />
+        <label style={labelStyle}>Segment: customers who ordered in the last N days</label>
+        <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={1} value={segLastDays} onChange={(e) => setSegLastDays(parseInt(e.target.value, 10) || 30)} />
+        <button onClick={create} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: pink, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Save draft</button>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Send via the order-receipt-autosend Resend integration. We'll wire batch send in a follow-up.</div>
+      </div>
+      <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 }}>Drafts ({rows.length})</div>
+        {rows.length === 0 ? <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>No campaigns yet.</div> :
+          rows.map(c => <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 13 }}>
+            <div style={{ fontWeight: 700, color: '#fff' }}>{c.name}</div>
+            <div style={{ color: 'rgba(255,255,255,0.55)' }}>{c.subject} · {c.status}</div>
+          </div>)
+        }
+      </div>
+    </>
+  )
+}
+
+function AffiliatePayouts ({ supabase, pink, fmt }) {
+  const [rows, setRows] = React.useState([])
+  const refresh = async () => {
+    if (!supabase) return
+    const { data } = await supabase.from('affiliate_payouts').select('*').order('created_at', { ascending: false }).limit(100)
+    setRows(data || [])
+  }
+  React.useEffect(() => { refresh() }, [supabase])
+  const markPaid = async (id) => {
+    if (!supabase) return
+    await supabase.from('affiliate_payouts').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', id)
+    refresh()
+  }
+  if (rows.length === 0) return <div style={{ padding: 16, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No payouts pending. New referrals appear here after the referred vendor pays their first month.</div>
+  return rows.map(p => (
+    <div key={p.id} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{p.affiliate_code}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{fmt(p.amount)} {p.currency} · {p.period_start} → {p.period_end}</div>
+      </div>
+      {p.status === 'pending'
+        ? <button onClick={() => markPaid(p.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: pink, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Mark paid</button>
+        : <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', fontSize: 11, fontWeight: 800 }}>PAID</span>
+      }
+    </div>
+  ))
+}
+
+function GatewayHealth ({ vendorId, supabase, pink }) {
+  const [connections, setConnections] = React.useState([])
+  const [health, setHealth] = React.useState({})
+  const [checking, setChecking] = React.useState(false)
+  const load = async () => {
+    if (!supabase || !vendorId) return
+    const { data: conn } = await supabase.from('vendor_payment_connections').select('gateway_id, mode, server_key, client_key, additional_config').eq('vendor_id', vendorId)
+    const { data: hp } = await supabase.from('gateway_health').select('*').eq('vendor_id', vendorId)
+    setConnections(conn || [])
+    const map = {}; ;(hp || []).forEach(h => map[h.gateway_id] = h)
+    setHealth(map)
+  }
+  React.useEffect(() => { load() }, [vendorId, supabase])
+  const checkAll = async () => {
+    setChecking(true)
+    for (const c of connections) {
+      try {
+        const { data } = await supabase.functions.invoke('validate-payment-credentials', {
+          body: { gateway_id: c.gateway_id, mode: c.mode, server_key: c.server_key, client_key: c.client_key, additional_config: c.additional_config },
+        })
+        const healthy = !!(data?.ok)
+        await supabase.from('gateway_health').upsert({
+          vendor_id: vendorId, gateway_id: c.gateway_id,
+          healthy, last_checked_at: new Date().toISOString(), last_error: healthy ? null : (data?.error || 'check failed'),
+        }, { onConflict: 'vendor_id,gateway_id' })
+      } catch (e) {
+        await supabase.from('gateway_health').upsert({
+          vendor_id: vendorId, gateway_id: c.gateway_id,
+          healthy: false, last_checked_at: new Date().toISOString(), last_error: String(e?.message || e),
+        }, { onConflict: 'vendor_id,gateway_id' })
+      }
+    }
+    await load()
+    setChecking(false)
+  }
+  if (connections.length === 0) return <div style={{ padding: 16, color: 'rgba(255,255,255,0.55)', fontSize: 13, textAlign: 'center' }}>No gateways connected yet. Connect one in Settings → Payment Methods first.</div>
+  return (
+    <div>
+      <button onClick={checkAll} disabled={checking} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: pink, color: '#fff', fontWeight: 900, cursor: checking ? 'wait' : 'pointer', fontSize: 14, marginBottom: 14, opacity: checking ? 0.6 : 1 }}>{checking ? 'Checking…' : `Run health check (${connections.length} gateways)`}</button>
+      {connections.map(c => {
+        const h = health[c.gateway_id]
+        const dotColor = h == null ? 'rgba(255,255,255,0.3)' : h.healthy ? '#22c55e' : '#EF4444'
+        return (
+          <div key={c.gateway_id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+            <span style={{ width: 12, height: 12, borderRadius: 6, background: dotColor, flexShrink: 0, boxShadow: h?.healthy ? '0 0 8px #22c55e88' : 'none' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', textTransform: 'capitalize' }}>{c.gateway_id.replace(/-/g, ' ')} <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginLeft: 6 }}>{c.mode}</span></div>
+              {h?.last_checked_at && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Checked {new Date(h.last_checked_at).toLocaleString()}</div>}
+              {h?.last_error && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 2 }}>{h.last_error.slice(0, 100)}</div>}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function PreorderWindows ({ vendorId, supabase, pink, labelStyle, inputStyle }) {
+  const [rows, setRows] = React.useState([])
+  const [name, setName] = React.useState('')
+  const [openAt, setOpenAt] = React.useState('')
+  const [closeAt, setCloseAt] = React.useState('')
+  const [fulfillAt, setFulfillAt] = React.useState('')
+  const [bannerText, setBannerText] = React.useState('')
+  const refresh = async () => {
+    if (!supabase || !vendorId) return
+    const { data } = await supabase.from('preorder_windows').select('*').eq('vendor_id', vendorId).order('order_open_at', { ascending: false })
+    setRows(data || [])
+  }
+  React.useEffect(() => { refresh() }, [vendorId, supabase])
+  const create = async () => {
+    if (!supabase || !vendorId || !name || !openAt || !closeAt || !fulfillAt) return
+    await supabase.from('preorder_windows').insert({ vendor_id: vendorId, name, order_open_at: openAt, order_close_at: closeAt, fulfill_at: fulfillAt, banner_text: bannerText || null, banner_color: pink })
+    setName(''); setOpenAt(''); setCloseAt(''); setFulfillAt(''); setBannerText('')
+    refresh()
+  }
+  return (
+    <>
+      <label style={labelStyle}>Window name</label>
+      <input style={{ ...inputStyle, marginBottom: 8 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Mother's Day 2026" />
+      <label style={labelStyle}>Orders open from</label>
+      <input style={{ ...inputStyle, marginBottom: 8 }} type="datetime-local" value={openAt} onChange={(e) => setOpenAt(e.target.value)} />
+      <label style={labelStyle}>Orders close at</label>
+      <input style={{ ...inputStyle, marginBottom: 8 }} type="datetime-local" value={closeAt} onChange={(e) => setCloseAt(e.target.value)} />
+      <label style={labelStyle}>Fulfilment date</label>
+      <input style={{ ...inputStyle, marginBottom: 8 }} type="datetime-local" value={fulfillAt} onChange={(e) => setFulfillAt(e.target.value)} />
+      <label style={labelStyle}>Banner text (shown on storefront)</label>
+      <input style={{ ...inputStyle, marginBottom: 10 }} value={bannerText} onChange={(e) => setBannerText(e.target.value)} placeholder="Pre-order Mother's Day boxes — closes May 10" />
+      <button onClick={create} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: pink, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Create window</button>
+      <div style={{ marginTop: 16 }}>
+        {rows.map(w => (
+          <div key={w.id} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{w.name}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{new Date(w.order_open_at).toLocaleDateString()} → {new Date(w.order_close_at).toLocaleDateString()} · fulfil {new Date(w.fulfill_at).toLocaleDateString()}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
 function FitIframe({ src, sandbox = 'allow-scripts allow-same-origin', designW = 390, designH = 844, fit = 'cover' }) {
   const wrapRef = useRef(null)
   useEffect(() => {
@@ -1195,7 +1553,7 @@ const DONUT_LANDING_DEFAULTS = {
   stat2Num: '5★',  stat2Label: 'Rating',
   stat3Num: '12m', stat3Label: 'Delivery',
   heroImg: 'https://ik.imagekit.io/nepgaxllc/Untitleddasddasdfssdfsdfsdsdasdss-removebg-preview.png',
-  bouncingImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png',
+  bouncingImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129',
   bottomLeftImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png',
   flavourOrbImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png',
   bgImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png',
@@ -1726,6 +2084,10 @@ export default function App() {
   /* --- State --- */
   const isDemo = new URLSearchParams(window.location.search).get('demo') === 'true'
   const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true' // isolated preview — ignores localStorage
+  // Kiosk mode — in-store self-serve tablet. Locks the UI: hides
+  // vendor login + drawer, auto-resets to menu after each order.
+  // Activated by ?kiosk=1 on the URL.
+  const isKiosk = new URLSearchParams(window.location.search).get('kiosk') === '1'
   const demoPage = new URLSearchParams(window.location.search).get('page') || 'landing'
   // Vendor toggle: when off, the donut splash / branded landing is skipped
   // and customers land directly on the menu/home. Persisted in localStorage.
@@ -1956,6 +2318,15 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_frame_color', donutFrameColor) } catch {} }, [donutFrameColor])
   useEffect(() => { try { localStorage.setItem('foodlocalchat_donut_promo_color', donutPromoColor) } catch {} }, [donutPromoColor])
   const [landingThemePicker, setLandingThemePicker] = useState(false) // theme picker modal inside design studio
+  // Image picker — opens over any image slot. `picker.field` names the
+  // donutLanding key (or other slot id) to write back to; null means
+  // closed. `picker.kind` drives stock filtering. `picker.onPick` is
+  // an optional override for non-donutLanding slots (logo, menu, etc).
+  const [picker, setPicker] = useState({ open: false, kind: 'other', field: null, current: '', onPick: null })
+  const openPicker = useCallback((opts) => {
+    setPicker({ open: true, kind: 'other', field: null, current: '', onPick: null, ...(opts || {}) })
+  }, [])
+  const closePicker = useCallback(() => setPicker(p => ({ ...p, open: false })), [])
   const [landingThemeId, setLandingThemeId] = useState(() => {
     // When the customer arrives from landing's "Use This Theme" with ?theme=donut,
     // also auto-select the matching curated splash ('donuts') so the donut HTML
@@ -1984,6 +2355,19 @@ export default function App() {
       // Vendors who uploaded a custom bg keep their own URL untouched.
       const OLD_DEFAULT = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png'
       if (merged.bgImg === OLD_DEFAULT) merged.bgImg = DONUT_LANDING_DEFAULTS.bgImg
+      // Bouncing donut: the artwork was re-uploaded to ImageKit so any
+      // earlier saved variant (bare URL or older cache-buster query) is
+      // stale. Normalise any May-14 04_26_20 variant — and the brief
+      // May-15 02_57_14 variant we shipped before reverting — onto the
+      // current cache-busted default. Custom uploads (other paths) are
+      // untouched.
+      const STALE_BOUNCING_PREFIXES = [
+        'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png',
+        'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_57_14%20AM.png',
+      ]
+      if (typeof merged.bouncingImg === 'string' && STALE_BOUNCING_PREFIXES.some(p => merged.bouncingImg.startsWith(p)) && merged.bouncingImg !== DONUT_LANDING_DEFAULTS.bouncingImg) {
+        merged.bouncingImg = DONUT_LANDING_DEFAULTS.bouncingImg
+      }
       return merged
     } catch { return DONUT_LANDING_DEFAULTS }
   })
@@ -2010,18 +2394,30 @@ export default function App() {
     window.addEventListener('message', onMsg)
     return () => window.removeEventListener('message', onMsg)
   }, [])
-  // Curated landing themes — frozen snapshots, separate from Design Studio's customisable tokens.
-  const LANDING_THEMES = [
-    {
-      id: 'donuts',
-      name: 'Donuts — Sweet Glazed',
-      tagline: 'Hand-crafted donut shop landing with pink palette',
-      previewUrl: '/themes/donuts.html',
-    },
-  ]
+  // LANDING_THEMES is imported from ./LandingSplashes — single source of truth.
+  // Each entry carries id / label / name / tagline / source so the same array
+  // drives both the Hero-Editor row of buttons AND the full-screen "Choose
+  // Landing Theme" picker tiles.
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeLibraryOpen, setThemeLibraryOpen] = useState(false) // curated background picker
   const [settingsHubOpen, setSettingsHubOpen] = useState(false)   // grouped settings page
+  const [stockLibraryPageOpen, setStockLibraryPageOpen] = useState(false) // curated stock image browser
+  const [nativeAppPageOpen, setNativeAppPageOpen] = useState(false) // App-store / Play-store launch info page
+  // Stock images the vendor has hidden from their personal view. Stored
+  // per-browser in localStorage — the underlying STREETLOCAL_STOCK list
+  // is shared across all vendors so we can't hard-delete, but each
+  // vendor can curate which stock they see.
+  const [hiddenStockIds, setHiddenStockIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('foodlocalchat_hidden_stock_ids') || '[]')) }
+    catch { return new Set() }
+  })
+  // The image being viewed enlarged in the Stock Library lightbox.
+  // `{ item, kind }` when open, null when closed.
+  const [stockLightbox, setStockLightbox] = useState(null)
+  const persistHiddenStock = useCallback((nextSet) => {
+    setHiddenStockIds(nextSet)
+    try { localStorage.setItem('foodlocalchat_hidden_stock_ids', JSON.stringify([...nextSet])) } catch {}
+  }, [])
   // ── MARKETING ─────────────────────────────────────────────────
   // Banner-based promo builder: vendor picks a template OR uploads
   // their own background, types in a headline / discount / subtitle,
@@ -2117,17 +2513,206 @@ export default function App() {
     localStorage.setItem('foodlocalchat_loyalty_card_image', loyaltyCardImage || '')
   }, [loyaltyCardImage])
   const [loyaltyImageUploading, setLoyaltyImageUploading] = useState(false)
-  // Per-customer stamp count (local device — keyed by their phone).
-  // Production: this lives on the customer record server-side; for v1
-  // we use localStorage so the customer's own device tracks it.
+  // Per-customer stamp count, now server-backed via `loyalty_stamps`
+  // table + get_loyalty_state / add_loyalty_stamp RPCs (migration
+  // 20260609000000). Server is the source of truth; localStorage is a
+  // device-only mirror so the UI renders instantly on next visit
+  // before the server fetch lands. Falls back to local-only when
+  // Supabase is unreachable so the loyalty card still works offline.
   const [loyaltyStamps, setLoyaltyStamps] = useState(() => {
     try { return JSON.parse(localStorage.getItem('foodlocalchat_loyalty_stamps') || '0') || 0 } catch { return 0 }
   })
   useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_stamps', JSON.stringify(loyaltyStamps)) }, [loyaltyStamps])
+  // Unclaimed rewards = rewards_earned − rewards_redeemed. Used by the
+  // customer's loyalty card to show "🎁 1 reward ready — say 'redeem'
+  // in chat".
+  const [loyaltyRewardsUnclaimed, setLoyaltyRewardsUnclaimed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_loyalty_rewards') || '0') || 0 } catch { return 0 }
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_rewards', JSON.stringify(loyaltyRewardsUnclaimed)) }, [loyaltyRewardsUnclaimed])
+  // Loyalty server fetch + receipt/invoice/tax server write-back effects
+  // live BELOW the vendorId state declaration (search "VENDOR-DEPENDENT
+  // EFFECTS"). They reference vendorId in their dep arrays, which would
+  // TDZ here.
   // ── RECEIPT VIEWER ────────────────────────────────────────────
   // Holds the order being shown in the printable receipt modal.
   // Null = closed.
   const [receiptOrder, setReceiptOrder] = useState(null)
+  // Auto-send receipt to customer's chat / email after payment.
+  // Persisted to vendor_accounts so it survives device switches and
+  // the autosend Edge Function reads the same values server-side.
+  // localStorage mirror for instant render before server load.
+  const [receiptAutosendChat, setReceiptAutosendChat] = useState(() => localStorage.getItem('foodlocalchat_receipt_autosend_chat') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_receipt_autosend_chat', receiptAutosendChat ? 'true' : 'false') }, [receiptAutosendChat])
+  const [receiptAutosendEmail, setReceiptAutosendEmail] = useState(() => localStorage.getItem('foodlocalchat_receipt_autosend_email') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_receipt_autosend_email', receiptAutosendEmail ? 'true' : 'false') }, [receiptAutosendEmail])
+  // Receipt server write-back lives below the vendorId declaration —
+  // see VENDOR-DEPENDENT EFFECTS block.
+  // Manual fire of the Edge Function — used by the "Send to customer
+  // now" button in the receipt modal for orders that didn't go through
+  // a payment gateway (e.g. cash) where the webhook can't trigger.
+  const sendReceiptToCustomer = useCallback(async (orderId) => {
+    if (!supabase || !orderId) return false
+    try {
+      const { data, error } = await supabase.functions.invoke('order-receipt-autosend', { body: { order_id: orderId } })
+      if (error) { console.warn('receipt send failed', error); return false }
+      return !!(data?.ok)
+    } catch { return false }
+  }, [])
+
+  // ── INVOICES (legal-grade document, 4 templates, A4 print) ─────
+  // Vendor configures letterhead + business details once; every order
+  // can fire an invoice (manual or auto-send via the cron). Distinct
+  // from the receipt — receipt is a quick thanks slip, invoice is for
+  // B2B / catering / VAT compliance.
+  const [invoicePageOpen, setInvoicePageOpen] = useState(false)
+  const [invoiceOrder, setInvoiceOrder] = useState(null) // when set, renders the invoice modal for that order
+  const [invoiceTemplateId, setInvoiceTemplateId] = useState(() => localStorage.getItem('foodlocalchat_invoice_template') || 'classic')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_template', invoiceTemplateId) }, [invoiceTemplateId])
+  const [invoiceLetterheadUrl, setInvoiceLetterheadUrl] = useState(() => localStorage.getItem('foodlocalchat_invoice_letterhead') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_letterhead', invoiceLetterheadUrl) }, [invoiceLetterheadUrl])
+  const [invoiceLegalName, setInvoiceLegalName] = useState(() => localStorage.getItem('foodlocalchat_invoice_legal_name') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_legal_name', invoiceLegalName) }, [invoiceLegalName])
+  const [invoiceTaxId, setInvoiceTaxId] = useState(() => localStorage.getItem('foodlocalchat_invoice_tax_id') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_tax_id', invoiceTaxId) }, [invoiceTaxId])
+  const [invoiceRegNumber, setInvoiceRegNumber] = useState(() => localStorage.getItem('foodlocalchat_invoice_reg_number') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_reg_number', invoiceRegNumber) }, [invoiceRegNumber])
+  const [invoiceBankDetails, setInvoiceBankDetails] = useState(() => localStorage.getItem('foodlocalchat_invoice_bank_details') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_bank_details', invoiceBankDetails) }, [invoiceBankDetails])
+  const [invoiceSignatureUrl, setInvoiceSignatureUrl] = useState(() => localStorage.getItem('foodlocalchat_invoice_signature') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_signature', invoiceSignatureUrl) }, [invoiceSignatureUrl])
+  const [invoicePaymentTerms, setInvoicePaymentTerms] = useState(() => localStorage.getItem('foodlocalchat_invoice_payment_terms') || 'Due on receipt')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_payment_terms', invoicePaymentTerms) }, [invoicePaymentTerms])
+  const [invoiceFooterNote, setInvoiceFooterNote] = useState(() => localStorage.getItem('foodlocalchat_invoice_footer_note') || 'Thank you for your business.')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_footer_note', invoiceFooterNote) }, [invoiceFooterNote])
+  const [invoiceNumberPrefix, setInvoiceNumberPrefix] = useState(() => localStorage.getItem('foodlocalchat_invoice_number_prefix') || 'INV-')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_number_prefix', invoiceNumberPrefix) }, [invoiceNumberPrefix])
+  const [invoiceAutosendChat, setInvoiceAutosendChat] = useState(() => localStorage.getItem('foodlocalchat_invoice_autosend_chat') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_autosend_chat', invoiceAutosendChat ? 'true' : 'false') }, [invoiceAutosendChat])
+  const [invoiceAutosendEmail, setInvoiceAutosendEmail] = useState(() => localStorage.getItem('foodlocalchat_invoice_autosend_email') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_invoice_autosend_email', invoiceAutosendEmail ? 'true' : 'false') }, [invoiceAutosendEmail])
+  // Invoice server write-back lives below the vendorId declaration —
+  // see VENDOR-DEPENDENT EFFECTS block.
+  // Manual fire — bypasses the cron, useful for cash orders or
+  // testing. Assigns an invoice number first if not already set.
+  const sendInvoiceToCustomer = useCallback(async (orderId) => {
+    if (!supabase || !orderId) return false
+    try {
+      const { data, error } = await supabase.functions.invoke('order-invoice-autosend', { body: { order_id: orderId } })
+      if (error) { console.warn('invoice send failed', error); return false }
+      return !!(data?.ok)
+    } catch { return false }
+  }, [])
+
+  // ─── FEATURE-SWEEP STATE (mig 20260615) ─────────────────────────
+  // Each feature has: state vars (with localStorage mirror), a Settings
+  // page-open flag, and a server write-back useEffect in the
+  // VENDOR-DEPENDENT EFFECTS block. The migration also added
+  // vendor_orders columns so any per-order data (tip, mixbox, etc.)
+  // can be queried efficiently.
+
+  // 🥇 Mix-and-match box
+  const [mixboxPageOpen, setMixboxPageOpen] = useState(false)
+  const [mixboxEnabled, setMixboxEnabled] = useState(() => localStorage.getItem('foodlocalchat_mixbox_enabled') === 'true')
+  const [mixboxSize, setMixboxSize] = useState(() => parseInt(localStorage.getItem('foodlocalchat_mixbox_size') || '12', 10) || 12)
+  const [mixboxPrice, setMixboxPrice] = useState(() => parseFloat(localStorage.getItem('foodlocalchat_mixbox_price') || '0') || 0)
+  const [mixboxLabel, setMixboxLabel] = useState(() => localStorage.getItem('foodlocalchat_mixbox_label') || 'Build your own dozen')
+  useEffect(() => { localStorage.setItem('foodlocalchat_mixbox_enabled', mixboxEnabled ? 'true' : 'false') }, [mixboxEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_mixbox_size', String(mixboxSize)) }, [mixboxSize])
+  useEffect(() => { localStorage.setItem('foodlocalchat_mixbox_price', String(mixboxPrice)) }, [mixboxPrice])
+  useEffect(() => { localStorage.setItem('foodlocalchat_mixbox_label', mixboxLabel) }, [mixboxLabel])
+  // Customer-side mix-box picker state — open + selected items map
+  const [mixboxPickerOpen, setMixboxPickerOpen] = useState(false)
+  const [mixboxPicked, setMixboxPicked] = useState({}) // { menuItemId: qty }
+
+  // 🥇 Tipping
+  const [tipPageOpen, setTipPageOpen] = useState(false)
+  const [tipEnabled, setTipEnabled] = useState(() => localStorage.getItem('foodlocalchat_tip_enabled') === 'true')
+  const [tipPresets, setTipPresets] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_tip_presets') || '[10,15,20]') } catch { return [10,15,20] }
+  })
+  const [tipSplitEnabled, setTipSplitEnabled] = useState(() => localStorage.getItem('foodlocalchat_tip_split_enabled') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_tip_enabled', tipEnabled ? 'true' : 'false') }, [tipEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_tip_presets', JSON.stringify(tipPresets)) }, [tipPresets])
+  useEffect(() => { localStorage.setItem('foodlocalchat_tip_split_enabled', tipSplitEnabled ? 'true' : 'false') }, [tipSplitEnabled])
+  // Customer-side selected tip — percent or custom amount
+  const [tipPercent, setTipPercent] = useState(null) // 0 | 10 | 15 | 20 | 'custom'
+  const [tipCustomAmount, setTipCustomAmount] = useState(0)
+
+  // 🥇 Production planner
+  const [productionPageOpen, setProductionPageOpen] = useState(false)
+
+  // 🥇 KDS
+  const [kdsPageOpen, setKdsPageOpen] = useState(false)
+  const [kdsToken, setKdsToken] = useState('') // populated from server on load
+
+  // 🥈 Customer accounts
+  const [customersPageOpen, setCustomersPageOpen] = useState(false)
+
+  // 🥈 Catering
+  const [cateringPageOpen, setCateringPageOpen] = useState(false)
+  const [cateringEnabled, setCateringEnabled] = useState(() => localStorage.getItem('foodlocalchat_catering_enabled') === 'true')
+  const [cateringLeadHours, setCateringLeadHours] = useState(() => parseInt(localStorage.getItem('foodlocalchat_catering_lead_hours') || '24', 10))
+  const [cateringMinSize, setCateringMinSize] = useState(() => parseInt(localStorage.getItem('foodlocalchat_catering_min_size') || '24', 10))
+  const [cateringContactEmail, setCateringContactEmail] = useState(() => localStorage.getItem('foodlocalchat_catering_contact_email') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_catering_enabled', cateringEnabled ? 'true' : 'false') }, [cateringEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_catering_lead_hours', String(cateringLeadHours)) }, [cateringLeadHours])
+  useEffect(() => { localStorage.setItem('foodlocalchat_catering_min_size', String(cateringMinSize)) }, [cateringMinSize])
+  useEffect(() => { localStorage.setItem('foodlocalchat_catering_contact_email', cateringContactEmail) }, [cateringContactEmail])
+
+  // 🥈 Recurring orders
+  const [recurringPageOpen, setRecurringPageOpen] = useState(false)
+  const [recurringEnabled, setRecurringEnabled] = useState(() => localStorage.getItem('foodlocalchat_recurring_enabled') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_recurring_enabled', recurringEnabled ? 'true' : 'false') }, [recurringEnabled])
+
+  // 🥈 Gift cards
+  const [giftcardsPageOpen, setGiftcardsPageOpen] = useState(false)
+  const [giftcardsEnabled, setGiftcardsEnabled] = useState(() => localStorage.getItem('foodlocalchat_giftcards_enabled') === 'true')
+  const [giftcardDenominations, setGiftcardDenominations] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_giftcard_denominations') || '[50,100,200,500]') } catch { return [50,100,200,500] }
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_giftcards_enabled', giftcardsEnabled ? 'true' : 'false') }, [giftcardsEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_giftcard_denominations', JSON.stringify(giftcardDenominations)) }, [giftcardDenominations])
+
+  // 🥉 Cash reconciliation
+  const [cashReconPageOpen, setCashReconPageOpen] = useState(false)
+
+  // 🥉 Kiosk mode
+  const [kioskPageOpen, setKioskPageOpen] = useState(false)
+  const [kioskEnabled, setKioskEnabled] = useState(() => localStorage.getItem('foodlocalchat_kiosk_enabled') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_kiosk_enabled', kioskEnabled ? 'true' : 'false') }, [kioskEnabled])
+
+  // 🥉 Allergens — menu_item field (no separate page; appears in item editor)
+
+  // 🥉 CSV export — handled via button, no state needed
+
+  // 🥉 SMS notifications
+  const [smsPageOpen, setSmsPageOpen] = useState(false)
+  const [smsEnabled, setSmsEnabled] = useState(() => localStorage.getItem('foodlocalchat_sms_enabled') === 'true')
+  const [smsAccountSid, setSmsAccountSid] = useState(() => localStorage.getItem('foodlocalchat_sms_account_sid') || '')
+  const [smsAuthToken, setSmsAuthToken] = useState(() => localStorage.getItem('foodlocalchat_sms_auth_token') || '')
+  const [smsFromNumber, setSmsFromNumber] = useState(() => localStorage.getItem('foodlocalchat_sms_from_number') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_sms_enabled', smsEnabled ? 'true' : 'false') }, [smsEnabled])
+  useEffect(() => { localStorage.setItem('foodlocalchat_sms_account_sid', smsAccountSid) }, [smsAccountSid])
+  useEffect(() => { localStorage.setItem('foodlocalchat_sms_auth_token', smsAuthToken) }, [smsAuthToken])
+  useEffect(() => { localStorage.setItem('foodlocalchat_sms_from_number', smsFromNumber) }, [smsFromNumber])
+
+  // 🥉 Email campaigns
+  const [emailCampaignsPageOpen, setEmailCampaignsPageOpen] = useState(false)
+
+  // 🥉 Gateway live-ping monitoring
+  const [gatewayHealthPageOpen, setGatewayHealthPageOpen] = useState(false)
+
+  // 🥉 Recipe + cost analysis — menu_item cost field, no separate page
+
+  // 🥉 Affiliate payouts (admin view)
+  const [affiliatePayoutsPageOpen, setAffiliatePayoutsPageOpen] = useState(false)
+
+  // 🥉 Pre-order windows
+  const [preorderPageOpen, setPreorderPageOpen] = useState(false)
+  const [preorderEnabled, setPreorderEnabled] = useState(() => localStorage.getItem('foodlocalchat_preorder_enabled') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_preorder_enabled', preorderEnabled ? 'true' : 'false') }, [preorderEnabled])
+
   // ── PROMO CODES ────────────────────────────────────────────────
   // Vendor-scoped discount codes the customer enters at checkout.
   // List lives server-side (table: promo_codes). The customer types
@@ -2156,6 +2741,8 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_tax_label', taxLabel) }, [taxLabel])
   const [taxInclusive, setTaxInclusive] = useState(() => localStorage.getItem('foodlocalchat_tax_inclusive') === 'true')
   useEffect(() => { localStorage.setItem('foodlocalchat_tax_inclusive', taxInclusive ? 'true' : 'false') }, [taxInclusive])
+  // Tax server write-back lives below the vendorId declaration —
+  // see VENDOR-DEPENDENT EFFECTS block.
   // (Marketing-banners Supabase fetch lives further down, after the
   // vendorId state declaration — putting it here caused a TDZ.)
   // Vendor's own uploaded backgrounds — persisted so they survive
@@ -2496,6 +3083,23 @@ export default function App() {
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
   const [orderDone, setOrderDone] = useState(false)
+  // Kiosk auto-reset — after an order completes on a kiosk tablet, give
+  // the customer a moment to see the "thank you", then wipe back to a
+  // fresh menu for the next customer. Skips when not in kiosk mode.
+  useEffect(() => {
+    if (!isKiosk || !orderDone) return
+    const t = setTimeout(() => {
+      setOrderDone(false)
+      setCart([])
+      setCheckoutOpen(false)
+      setCustName('')
+      setCustPhone('')
+      setNote('')
+      setTipPercent(null)
+      setTipCustomAmount(0)
+    }, 6000)
+    return () => clearTimeout(t)
+  }, [orderDone, isKiosk])
   // Distinguishes the WhatsApp success state from the in-app chat success
   // state — both show inside the checkout (no force-close), but WhatsApp
   // shows a "Order sent to WhatsApp" panel instead of the chat thread.
@@ -3216,10 +3820,17 @@ export default function App() {
   // another useEffect (auto-open subscription picker) reads it in its
   // dependency array — declaring later would cause a TDZ error during render.
   const [vendorId, setVendorId] = useState(() => {
-    // Priority: explicit ?vendor= URL param → saved localStorage → demo.
-    // The demo (seeded migration 20260521000000_demo_donut_vendor.sql) is
-    // the always-on fallback so first-time visitors can try the full app
-    // without signup or backend errors.
+    // Priority for native wraps: VITE_FORCED_VENDOR_ID baked in at build
+    // time wins over everything else — the wrapped app is locked to one
+    // vendor's storefront and cannot be overridden by URL params or
+    // localStorage. Set by wrap/scripts/wrap-vendor.ps1 into .env.production
+    // when building a vendor's native app.
+    const forced = import.meta.env?.VITE_FORCED_VENDOR_ID
+    if (forced && isUuid(forced)) return forced
+    // Otherwise (PWA / preview / development): explicit ?vendor= URL
+    // param → saved localStorage → demo. The demo (seeded migration
+    // 20260521000000_demo_donut_vendor.sql) is the always-on fallback
+    // so first-time visitors can try the full app without signup.
     const urlVendor = new URLSearchParams(window.location.search).get('vendor')
     if (urlVendor && isUuid(urlVendor)) return urlVendor
     const saved = localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('indoo_vendor_id')
@@ -3229,6 +3840,120 @@ export default function App() {
     if (saved && isUuid(saved)) return saved
     return DEMO_VENDOR_UUID
   })
+  // When the app is loaded inside a native wrap (Capacitor), this flag is
+  // true. Drives small UX changes — e.g. hide the "Sign in to your shop"
+  // surface (customers don't need that), don't show vendor onboarding,
+  // skip PWA install prompts (already installed).
+  const isNativeWrap = import.meta.env?.VITE_IS_NATIVE_WRAP === 'true'
+
+  // ─── VENDOR-DEPENDENT EFFECTS ─────────────────────────────────────
+  // The four effects below all reference `vendorId` in their dep arrays.
+  // They live HERE (after vendorId is declared) rather than next to their
+  // matching state declarations earlier in the component, because dep
+  // arrays are evaluated during render — putting them above vendorId
+  // throws a TDZ ReferenceError on first mount.
+
+  // Loyalty server fetch — hydrate the punch-card state when phone or
+  // vendor changes. Customer-facing; skipped for the vendor-side preview.
+  useEffect(() => {
+    if (isVendor) return
+    if (!supabase || !vendorId || String(vendorId).startsWith('local')) return
+    const phone = String(custPhone || '').replace(/[^0-9+]/g, '')
+    if (!phone || phone.length < 6) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_loyalty_state', { p_vendor_id: vendorId, p_phone: phone })
+        if (cancelled || error || !Array.isArray(data) || data.length === 0) return
+        const row = data[0] || {}
+        setLoyaltyStamps(row.stamps_count || 0)
+        setLoyaltyRewardsUnclaimed(row.rewards_unclaimed || 0)
+      } catch { /* server unreachable — keep localStorage values */ }
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, custPhone, isVendor])
+
+  // Tax server write-back — debounced 600ms so typing into the rate
+  // input doesn't fire one request per keystroke.
+  useEffect(() => {
+    if (!supabase || !isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    const t = setTimeout(() => {
+      supabase.from('vendor_accounts').update({
+        shop_tax_rate: Math.max(0, Math.min(100, parseFloat(taxRate) || 0)),
+        shop_tax_label: (taxLabel || 'Tax').slice(0, 20),
+        shop_tax_inclusive: !!taxInclusive,
+      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+    }, 600)
+    return () => clearTimeout(t)
+  }, [taxRate, taxLabel, taxInclusive, isVendor, vendorId])
+
+  // Receipt autosend toggles write-back — debounced 600ms.
+  useEffect(() => {
+    if (!supabase || !isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    const t = setTimeout(() => {
+      supabase.from('vendor_accounts').update({
+        receipt_autosend_chat: !!receiptAutosendChat,
+        receipt_autosend_email: !!receiptAutosendEmail,
+      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+    }, 600)
+    return () => clearTimeout(t)
+  }, [receiptAutosendChat, receiptAutosendEmail, isVendor, vendorId])
+
+  // Invoice settings write-back — single debounced effect for all 12
+  // invoice fields. 700ms debounce since some fields are textareas.
+  useEffect(() => {
+    if (!supabase || !isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    const t = setTimeout(() => {
+      supabase.from('vendor_accounts').update({
+        invoice_template_id: invoiceTemplateId || 'classic',
+        invoice_letterhead_url: invoiceLetterheadUrl || null,
+        invoice_legal_name: invoiceLegalName || null,
+        invoice_tax_id: invoiceTaxId || null,
+        invoice_registration_number: invoiceRegNumber || null,
+        invoice_bank_details: invoiceBankDetails || null,
+        invoice_signature_url: invoiceSignatureUrl || null,
+        invoice_payment_terms: invoicePaymentTerms || null,
+        invoice_footer_note: invoiceFooterNote || null,
+        invoice_number_prefix: invoiceNumberPrefix || 'INV-',
+        invoice_autosend_chat: !!invoiceAutosendChat,
+        invoice_autosend_email: !!invoiceAutosendEmail,
+      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+    }, 700)
+    return () => clearTimeout(t)
+  }, [invoiceTemplateId, invoiceLetterheadUrl, invoiceLegalName, invoiceTaxId, invoiceRegNumber, invoiceBankDetails, invoiceSignatureUrl, invoicePaymentTerms, invoiceFooterNote, invoiceNumberPrefix, invoiceAutosendChat, invoiceAutosendEmail, isVendor, vendorId])
+
+  // Feature-sweep flags write-back — every toggle and config field
+  // from the 19-feature migration. 800ms debounce so rapid clicks
+  // collapse into one network round-trip.
+  useEffect(() => {
+    if (!supabase || !isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    const t = setTimeout(() => {
+      supabase.from('vendor_accounts').update({
+        mixbox_enabled: !!mixboxEnabled,
+        mixbox_size: Math.max(1, parseInt(mixboxSize, 10) || 12),
+        mixbox_price: Math.max(0, parseFloat(mixboxPrice) || 0),
+        mixbox_label: (mixboxLabel || '').slice(0, 60),
+        tip_enabled: !!tipEnabled,
+        tip_presets: Array.isArray(tipPresets) ? tipPresets.map(Number) : [10, 15, 20],
+        tip_split_enabled: !!tipSplitEnabled,
+        catering_enabled: !!cateringEnabled,
+        catering_lead_hours: Math.max(0, parseInt(cateringLeadHours, 10) || 24),
+        catering_min_size: Math.max(1, parseInt(cateringMinSize, 10) || 24),
+        catering_contact_email: cateringContactEmail || null,
+        kiosk_enabled: !!kioskEnabled,
+        sms_enabled: !!smsEnabled,
+        sms_account_sid: smsAccountSid || null,
+        sms_auth_token: smsAuthToken || null,
+        sms_from_number: smsFromNumber || null,
+        recurring_enabled: !!recurringEnabled,
+        gift_cards_enabled: !!giftcardsEnabled,
+        gift_card_denominations: Array.isArray(giftcardDenominations) ? giftcardDenominations.map(Number) : [50, 100, 200, 500],
+        preorder_enabled: !!preorderEnabled,
+      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+    }, 800)
+    return () => clearTimeout(t)
+  }, [mixboxEnabled, mixboxSize, mixboxPrice, mixboxLabel, tipEnabled, tipPresets, tipSplitEnabled, cateringEnabled, cateringLeadHours, cateringMinSize, cateringContactEmail, kioskEnabled, smsEnabled, smsAccountSid, smsAuthToken, smsFromNumber, recurringEnabled, giftcardsEnabled, giftcardDenominations, preorderEnabled, isVendor, vendorId])
+
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   // Auto-sign-in for the demo vendor. Runs once on mount. If a real
   // vendor session is already present (a logged-in shop owner), this
@@ -3645,6 +4370,11 @@ export default function App() {
   const [formPriceMode, setFormPriceMode] = useState('normal')
   const [formSpice, setFormSpice] = useState(0)
   const [formHalal, setFormHalal] = useState(false)
+  // Customer-side selected allergen filters. Multiple = OR. Empty = no filter.
+  // (formAllergens state is declared further down at line ~4392.)
+  const [allergenFilter, setAllergenFilter] = useState([])
+  // Recipe cost per unit — used to compute margin on the item form.
+  const [formCostPerUnit, setFormCostPerUnit] = useState('')
   const [formPopular, setFormPopular] = useState(false)
   const [formCategory, setFormCategory] = useState('Meal')
   // Global category picker modal state
@@ -4026,6 +4756,34 @@ export default function App() {
 
   /* --- Persist to localStorage + sync to Supabase --- */
   useEffect(() => { if (vendorId) localStorage.setItem('foodlocalchat_vendorId', vendorId) }, [vendorId])
+
+  // One-shot image library backfill — first time this vendor's app
+  // boots after the picker shipped, scoop every URL they're already
+  // using into vendor_image_library so the picker shows their
+  // existing artwork on day one. Guarded by a localStorage flag so
+  // it only runs once per browser. Custom uploads keep their own
+  // URL — only the StreetLocal-default URLs get added with
+  // kind='other' since the user actively chose them.
+  useEffect(() => {
+    if (!vendorId || String(vendorId).startsWith('local')) return
+    try {
+      const FLAG = 'foodlocalchat_image_library_backfilled_v1'
+      if (localStorage.getItem(FLAG) === '1') return
+      const urlsByKind = {
+        bg:          [donutLanding.bgImg].filter(Boolean),
+        hero:        [donutLanding.heroImg].filter(Boolean),
+        bouncing:    [donutLanding.bouncingImg].filter(Boolean),
+        bottom_left: [donutLanding.bottomLeftImg].filter(Boolean),
+        flavour_orb: [donutLanding.flavourOrbImg].filter(Boolean),
+        logo:        [shopLogo].filter(Boolean),
+        donut_card:  [donutCardImage].filter(Boolean),
+        menu_item:   menuItems.map(m => m?.image).filter(Boolean),
+      }
+      backfillVendorImages(vendorId, urlsByKind).finally(() => {
+        try { localStorage.setItem(FLAG, '1') } catch {}
+      })
+    } catch { /* analytics-grade — never block UI */ }
+  }, [vendorId]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { saveJSON('foodlocalchat_menu', menuItems) }, [menuItems])
   useEffect(() => { localStorage.setItem('foodlocalchat_shopName', shopName) }, [shopName])
   useEffect(() => { localStorage.setItem('foodlocalchat_shopLogo', shopLogo) }, [shopLogo])
@@ -4202,6 +4960,63 @@ export default function App() {
       if (data.loyalty_card_image !== undefined && data.loyalty_card_image !== null) {
         setLoyaltyCardImage(data.loyalty_card_image || '')
       }
+      // Tax settings — server is the authoritative source so the
+      // customer's storefront (on a different device than the vendor's)
+      // sees the right tax. localStorage stays as a fallback for the
+      // moment between page load and this server fetch.
+      if (data.shop_tax_rate !== undefined && data.shop_tax_rate !== null) {
+        setTaxRate(parseFloat(data.shop_tax_rate) || 0)
+      }
+      if (data.shop_tax_label) setTaxLabel(data.shop_tax_label)
+      if (data.shop_tax_inclusive !== undefined && data.shop_tax_inclusive !== null) {
+        setTaxInclusive(!!data.shop_tax_inclusive)
+      }
+      // Receipt auto-send toggles
+      if (data.receipt_autosend_chat !== undefined && data.receipt_autosend_chat !== null) {
+        setReceiptAutosendChat(!!data.receipt_autosend_chat)
+      }
+      if (data.receipt_autosend_email !== undefined && data.receipt_autosend_email !== null) {
+        setReceiptAutosendEmail(!!data.receipt_autosend_email)
+      }
+      // Invoice settings (full block — 12 fields)
+      if (data.invoice_template_id)          setInvoiceTemplateId(data.invoice_template_id)
+      if (data.invoice_letterhead_url != null) setInvoiceLetterheadUrl(data.invoice_letterhead_url || '')
+      if (data.invoice_legal_name != null)   setInvoiceLegalName(data.invoice_legal_name || '')
+      if (data.invoice_tax_id != null)       setInvoiceTaxId(data.invoice_tax_id || '')
+      if (data.invoice_registration_number != null) setInvoiceRegNumber(data.invoice_registration_number || '')
+      if (data.invoice_bank_details != null) setInvoiceBankDetails(data.invoice_bank_details || '')
+      if (data.invoice_signature_url != null) setInvoiceSignatureUrl(data.invoice_signature_url || '')
+      if (data.invoice_payment_terms != null) setInvoicePaymentTerms(data.invoice_payment_terms || '')
+      if (data.invoice_footer_note != null)  setInvoiceFooterNote(data.invoice_footer_note || '')
+      if (data.invoice_number_prefix)        setInvoiceNumberPrefix(data.invoice_number_prefix)
+      if (data.invoice_autosend_chat !== undefined && data.invoice_autosend_chat !== null) {
+        setInvoiceAutosendChat(!!data.invoice_autosend_chat)
+      }
+      if (data.invoice_autosend_email !== undefined && data.invoice_autosend_email !== null) {
+        setInvoiceAutosendEmail(!!data.invoice_autosend_email)
+      }
+      // Feature-sweep flags
+      if (data.mixbox_enabled !== undefined && data.mixbox_enabled !== null) setMixboxEnabled(!!data.mixbox_enabled)
+      if (data.mixbox_size) setMixboxSize(parseInt(data.mixbox_size, 10) || 12)
+      if (data.mixbox_price !== undefined && data.mixbox_price !== null) setMixboxPrice(parseFloat(data.mixbox_price) || 0)
+      if (data.mixbox_label) setMixboxLabel(data.mixbox_label)
+      if (data.tip_enabled !== undefined && data.tip_enabled !== null) setTipEnabled(!!data.tip_enabled)
+      if (Array.isArray(data.tip_presets) && data.tip_presets.length) setTipPresets(data.tip_presets.map(Number))
+      if (data.tip_split_enabled !== undefined && data.tip_split_enabled !== null) setTipSplitEnabled(!!data.tip_split_enabled)
+      if (data.kds_token) setKdsToken(data.kds_token)
+      if (data.catering_enabled !== undefined && data.catering_enabled !== null) setCateringEnabled(!!data.catering_enabled)
+      if (data.catering_lead_hours) setCateringLeadHours(parseInt(data.catering_lead_hours, 10) || 24)
+      if (data.catering_min_size) setCateringMinSize(parseInt(data.catering_min_size, 10) || 24)
+      if (data.catering_contact_email) setCateringContactEmail(data.catering_contact_email)
+      if (data.kiosk_enabled !== undefined && data.kiosk_enabled !== null) setKioskEnabled(!!data.kiosk_enabled)
+      if (data.sms_enabled !== undefined && data.sms_enabled !== null) setSmsEnabled(!!data.sms_enabled)
+      if (data.sms_account_sid) setSmsAccountSid(data.sms_account_sid)
+      if (data.sms_auth_token) setSmsAuthToken(data.sms_auth_token)
+      if (data.sms_from_number) setSmsFromNumber(data.sms_from_number)
+      if (data.recurring_enabled !== undefined && data.recurring_enabled !== null) setRecurringEnabled(!!data.recurring_enabled)
+      if (data.gift_cards_enabled !== undefined && data.gift_cards_enabled !== null) setGiftcardsEnabled(!!data.gift_cards_enabled)
+      if (Array.isArray(data.gift_card_denominations) && data.gift_card_denominations.length) setGiftcardDenominations(data.gift_card_denominations.map(Number))
+      if (data.preorder_enabled !== undefined && data.preorder_enabled !== null) setPreorderEnabled(!!data.preorder_enabled)
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
       if (data.landing_theme_id) {
@@ -4713,9 +5528,16 @@ export default function App() {
       ? (taxInclusive ? +(taxableBase - taxableBase / (1 + taxRatePct / 100)).toFixed(2)
                       : +(taxableBase * taxRatePct / 100).toFixed(2))
       : 0
-    const grandTotal = taxRatePct > 0 && !taxInclusive
+    const baseAfterTax = taxRatePct > 0 && !taxInclusive
       ? +(taxableBase + taxAmount).toFixed(2)
       : +taxableBase.toFixed(2)
+    // Compute tip (if vendor enabled it). Custom amount or percent of
+    // base-after-tax. Zero if tipping is disabled or no choice made.
+    const tipComputed = !tipEnabled ? 0
+      : (tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0)
+                                  : (baseAfterTax * (parseFloat(tipPercent) || 0) / 100))
+    const tipAmountFinal = Math.max(0, +tipComputed.toFixed(2))
+    const grandTotal = +(baseAfterTax + tipAmountFinal).toFixed(2)
 
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
@@ -4798,6 +5620,16 @@ export default function App() {
       // Tax breakdown: rate + label + computed amount + mode. Lets a
       // receipt or accountant reconstruct what was charged.
       tax: taxRatePct > 0 ? { rate: taxRatePct, label: taxLabel, amount: taxAmount, inclusive: !!taxInclusive } : null,
+      // Tip breakdown — present when vendor enabled tipping and customer
+      // selected a preset / custom amount. tipAmount is in the shop's
+      // currency. tipPercent is null for 'custom' amounts.
+      tip: (() => {
+        if (!tipEnabled) return null
+        const afterTax = taxRatePct > 0 && !taxInclusive ? grandTotal - (deliveryFee || 0) : (grandTotal - taxAmount - (deliveryFee || 0))
+        const computed = tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0) : (afterTax * (parseFloat(tipPercent) || 0) / 100)
+        if (computed <= 0) return null
+        return { amount: Math.round(computed * 100) / 100, percent: tipPercent === 'custom' ? null : (parseFloat(tipPercent) || 0) }
+      })(),
       note,
       total: grandTotal,
       prepMins: maxPrep,
@@ -4808,19 +5640,41 @@ export default function App() {
       scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
     }
 
-    // Loyalty stamp +1 per qualifying order (vendor opted in). When
-    // the goal is reached, increment a "rewards" counter the customer
-    // can redeem in chat; the stamp counter resets to 0.
+    // Loyalty stamp +1 per qualifying order. Server-side RPC
+    // (add_loyalty_stamp) handles the goal rollover atomically — when
+    // count hits goal, stamps_count resets to 0 and rewards_earned
+    // increments. We update local UI from the RPC response.
+    //
+    // Optimistic update FIRST so the card animates immediately; the
+    // server result either confirms or corrects it. If Supabase is
+    // unreachable, fall back to local-only math so the customer's
+    // experience isn't blocked by a flaky network.
     if (loyaltyEnabled && !isVendor) {
-      const nextStamps = (parseInt(loyaltyStamps, 10) || 0) + 1
-      if (nextStamps >= loyaltyGoal) {
+      const localPhone = String(custPhone || '').replace(/[^0-9+]/g, '')
+      const tentativeCount = (parseInt(loyaltyStamps, 10) || 0) + 1
+      if (tentativeCount >= loyaltyGoal) {
         setLoyaltyStamps(0)
-        try {
-          const earned = JSON.parse(localStorage.getItem('foodlocalchat_loyalty_rewards') || '0') || 0
-          localStorage.setItem('foodlocalchat_loyalty_rewards', JSON.stringify(earned + 1))
-        } catch {}
+        setLoyaltyRewardsUnclaimed(prev => prev + 1)
       } else {
-        setLoyaltyStamps(nextStamps)
+        setLoyaltyStamps(tentativeCount)
+      }
+      // Server reconciliation — only if we know the phone and supabase
+      // is wired. The fn returns the authoritative state; we overwrite
+      // local state with whatever the server says.
+      if (supabase && vendorId && !String(vendorId).startsWith('local') && localPhone && localPhone.length >= 6) {
+        ;(async () => {
+          try {
+            const { data, error } = await supabase.rpc('add_loyalty_stamp', {
+              p_vendor_id: vendorId,
+              p_phone: localPhone,
+              p_goal: Math.max(1, parseInt(loyaltyGoal, 10) || 10),
+            })
+            if (error || !Array.isArray(data) || data.length === 0) return
+            const row = data[0] || {}
+            setLoyaltyStamps(row.stamps_count || 0)
+            setLoyaltyRewardsUnclaimed(row.rewards_unclaimed || 0)
+          } catch { /* server unreachable — keep optimistic local values */ }
+        })()
       }
     }
 
@@ -5042,6 +5896,20 @@ export default function App() {
           items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
           subtotal: totalPrice, delivery_type: delEnabled ? 'delivery' : 'pickup', payment_method: payMethod || 'cod',
           note,
+          // Dedicated tax columns (added 20260610) so reporting queries
+          // like "tax collected this month" are O(1) per order. JSONB
+          // order_payload.tax still holds the full {rate, label, inclusive}
+          // for receipt rendering.
+          tax_amount: taxRatePct > 0 ? Math.round(taxAmount * 100) / 100 : 0,
+          tax_rate: taxRatePct > 0 ? taxRatePct : 0,
+          // Tip — server-side query support (e.g. "total tips this week").
+          tip_amount: tipAmountFinal,
+          tip_percent: tipEnabled && tipPercent !== 'custom' ? (parseInt(tipPercent, 10) || 0) : null,
+          // Scheduled order time — column existed but never populated.
+          // Customer's chosen pickup/delivery time goes here so the
+          // orders inbox can sort + filter "due soon" without parsing
+          // the order JSON payload.
+          scheduled_for: scheduledFor ? new Date(scheduledFor).toISOString() : null,
         }).then(() => {})
         // Promo redemption — bump the counter so max_redemptions caps work.
         // Done after the order is in flight; if this fails the order still
@@ -6900,6 +7768,34 @@ export default function App() {
         )}
 
         <div style={{ height: 12 }} />
+
+        {/* Build-your-own-dozen card — tap opens the picker overlay
+            below where the customer chooses N donuts. Only renders when
+            the vendor enabled mix-box AND we're on the customer side. */}
+        {mixboxEnabled && !isVendor && visibleMenu.length > 0 && (
+          <div style={{ margin: '0 12px 12px' }}>
+            <button
+              type="button"
+              onClick={() => { setMixboxPicked({}); setMixboxPickerOpen(true) }}
+              style={{
+                width: '100%', padding: '14px 18px', borderRadius: 16,
+                background: `linear-gradient(135deg, ${donutLanding.pink || accent}, ${donutLanding.pinkBright || donutLanding.pink || accent})`,
+                color: '#fff', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 14,
+                boxShadow: `0 8px 24px ${donutLanding.pink || accent}55`,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ fontSize: 36, lineHeight: 1 }}>🍩</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: -0.3 }}>{mixboxLabel}</div>
+                <div style={{ fontSize: 13, opacity: 0.92, marginTop: 2 }}>Pick {mixboxSize} donuts · {mixboxPrice > 0 ? fmt(Math.round(mixboxPrice)) : 'price = sum of picks'}</div>
+              </div>
+              <span style={{ fontSize: 22, opacity: 0.8 }}>›</span>
+            </button>
+          </div>
+        )}
+
         <div style={menuCardStyle === 'grid' ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 12px' } : {}}>
         {visibleMenu.map((item) => (
           menuCardStyle === 'grid' ? (
@@ -7881,6 +8777,17 @@ export default function App() {
                 const SectionHeading = ({ children }) => (
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 18, marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>{children}</div>
                 )
+                // Map each donutLanding image field to a picker `kind` so the
+                // Stock tab + library filter open on relevant suggestions
+                // instead of "All kinds". Keep the keys identical to
+                // DONUT_LANDING_DEFAULTS so the resolver stays one lookup.
+                const FIELD_TO_KIND = {
+                  bgImg:         'bg',
+                  heroImg:       'hero',
+                  bouncingImg:   'bouncing',
+                  bottomLeftImg: 'bottom_left',
+                  flavourOrbImg: 'flavour_orb',
+                }
                 const ImageRow = ({ label, valueKey }) => (
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ ...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -7889,14 +8796,21 @@ export default function App() {
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       {L[valueKey] ? (
-                        <img loading="lazy"src={L[valueKey]} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                        <img loading="lazy" src={L[valueKey]} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }} />
                       ) : (
                         <div style={{ width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📷</div>
                       )}
-                      <label style={{ flex: 1, padding: '10px 12px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {L[valueKey] ? 'Replace' : 'Upload'}
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; const url = await uploadMenuImage(vendorId, f); if (url) setDonutField(valueKey, url) }} />
-                      </label>
+                      <button
+                        type="button"
+                        onClick={() => openPicker({
+                          kind: FIELD_TO_KIND[valueKey] || 'other',
+                          current: L[valueKey] || '',
+                          onPick: (url) => setDonutField(valueKey, url),
+                        })}
+                        style={{ flex: 1, padding: '10px 12px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}
+                      >
+                        {L[valueKey] ? 'Change image' : 'Choose image'}
+                      </button>
                       {L[valueKey] && (
                         <button type="button" onClick={() => setDonutField(valueKey, '')} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.12)', color: '#fca5a5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
                       )}
@@ -8624,13 +9538,45 @@ export default function App() {
                           </div>
                         )
                       })()}
+                      {/* TIP SELECTOR — only when vendor enabled it. Customer
+                          picks a preset % or types a custom amount. The
+                          selected tip is added to the displayed Total and
+                          the order_payload below. */}
+                      {tipEnabled && !isVendor && cart.length > 0 && (() => {
+                        const r = parseFloat(taxRate) || 0
+                        const discounted = Math.max(0, totalPrice - promoDiscount)
+                        const base = discounted + (delEnabled ? (deliveryZone.fee || 0) : 0)
+                        const afterTax = r > 0 && !taxInclusive ? base + base * r / 100 : base
+                        return (
+                          <div style={{ padding: '10px 0 4px', borderTop: '1px dashed rgba(255,255,255,0.08)', marginTop: 6 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Add a tip?</div>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {tipPresets.map(p => (
+                                <button key={p} type="button" onClick={() => { setTipPercent(p); setTipCustomAmount(0) }} style={{ flex: '1 1 60px', padding: '8px 10px', borderRadius: 8, border: tipPercent === p ? `2px solid ${donutLanding.pink || accent}` : '1px solid rgba(255,255,255,0.12)', background: tipPercent === p ? `${donutLanding.pink || accent}22` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>{p}%</button>
+                              ))}
+                              <button type="button" onClick={() => setTipPercent('custom')} style={{ flex: '1 1 60px', padding: '8px 10px', borderRadius: 8, border: tipPercent === 'custom' ? `2px solid ${donutLanding.pink || accent}` : '1px solid rgba(255,255,255,0.12)', background: tipPercent === 'custom' ? `${donutLanding.pink || accent}22` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Custom</button>
+                              <button type="button" onClick={() => { setTipPercent(0); setTipCustomAmount(0) }} style={{ flex: '1 1 60px', padding: '8px 10px', borderRadius: 8, border: (tipPercent === 0 || tipPercent === null) ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>No tip</button>
+                            </div>
+                            {tipPercent === 'custom' && (
+                              <input type="number" min={0} step={0.01} value={tipCustomAmount} onChange={(e) => setTipCustomAmount(parseFloat(e.target.value) || 0)} placeholder="Enter amount" style={{ marginTop: 8, width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${donutLanding.pink || accent}`, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                            )}
+                            {(() => {
+                              const tip = tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0) : (afterTax * (parseFloat(tipPercent) || 0) / 100)
+                              if (tip > 0) return <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.7)' }}><span>Tip{tipPercent !== 'custom' ? ` (${tipPercent}%)` : ''}</span><span style={{ color: '#86EFAC', fontWeight: 700 }}>{fmt(Math.round(tip))}</span></div>
+                              return null
+                            })()}
+                          </div>
+                        )
+                      })()}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6 }}>
                         <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
                         <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{(() => {
                           const r = parseFloat(taxRate) || 0
                           const discounted = Math.max(0, totalPrice - promoDiscount)
                           const base = discounted + (delEnabled ? (deliveryZone.fee || 0) : 0)
-                          return fmt(Math.round(r > 0 && !taxInclusive ? base + base * r / 100 : base))
+                          const afterTax = r > 0 && !taxInclusive ? base + base * r / 100 : base
+                          const tip = !tipEnabled ? 0 : (tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0) : (afterTax * (parseFloat(tipPercent) || 0) / 100))
+                          return fmt(Math.round(afterTax + tip))
                         })()}</span>
                       </div>
                     </div>
@@ -8969,6 +9915,7 @@ export default function App() {
                     loyaltyGoal={loyaltyGoal}
                     loyaltyReward={loyaltyReward}
                     loyaltyStamps={loyaltyStamps}
+                    loyaltyRewardsUnclaimed={loyaltyRewardsUnclaimed}
                     loyaltyCardImage={loyaltyCardImage}
                     customerPhone={custPhone}
                     t={t}
@@ -9411,6 +10358,7 @@ export default function App() {
                             <button type="button" onClick={cancelOrder}   style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.15)', color: '#FCA5A5', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>✕ Cancel</button>
                             <button type="button" onClick={chatCustomer}  style={{ padding: '10px 8px', borderRadius: 10, border: `1px solid ${accent}55`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>💬 Chat</button>
                             <button type="button" onClick={(e) => { e.stopPropagation(); setReceiptOrder({ ...op, customer_name: conv.customer_name, customer_phone: conv.customer_phone }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(250,204,21,0.4)', background: 'rgba(250,204,21,0.12)', color: '#FCD34D', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>🧾 Receipt</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setInvoiceOrder({ ...op, customer_name: conv.customer_name, customer_phone: conv.customer_phone }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(236,72,153,0.4)', background: 'rgba(236,72,153,0.12)', color: '#F9A8D4', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>📄 Invoice</button>
                             <button type="button" onClick={(e) => { e.stopPropagation(); printOrder({ ...op, customer: { ...(op.customer || {}), name: op.customer?.name || conv.customer_name, phone: op.customer?.phone || conv.customer_phone } }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>🖨 Print</button>
                           </div>
                         )}
@@ -10745,8 +11693,10 @@ export default function App() {
               ].filter(Boolean)
 
               const design = [
+                { icon: '🎭', label: 'Landing Theme', desc: 'Pick your splash design — 6 styles to choose from', onClick: () => setLandingThemePicker(true) },
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
                 { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
+                { icon: '📚', label: 'Stock Image Library', desc: 'Browse curated donut artwork — donuts, boxes, backgrounds', onClick: () => setStockLibraryPageOpen(true) },
               ]
               // Theme Library lives in the drawer (frequent action) AS WELL
               // as the Settings hub, so it's always one tap away.
@@ -11115,10 +12065,18 @@ export default function App() {
             <div style={{ padding: '0 14px 12px' }}>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
               <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
-                <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => openPicker({
+                    kind: 'menu_item',
+                    current: formPhoto || '',
+                    onPick: (url) => setFormPhoto(url),
+                  })}
+                  style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: 0 }}
+                >
                   {formPhoto ? (
                     <>
-                      <img loading="lazy"src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
+                      <img loading="lazy" src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
                         <div style={{ width: 38, height: 38, borderRadius: 19, background: '#8B0000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ fontSize: 18, lineHeight: 1, display: 'block' }}>📷</span>
@@ -11131,30 +12089,7 @@ export default function App() {
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{t.addPhoto || 'Add Photo'}</span>
                     </div>
                   )}
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-                      const url = await uploadMenuImage(vendorId, file)
-                      if (url) { setFormPhoto(url); return }
-                    }
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      const img = new Image()
-                      img.onload = () => {
-                        const canvas = document.createElement('canvas')
-                        const max = 600
-                        let w = img.width, h = img.height
-                        if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                        canvas.width = w; canvas.height = h
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                        setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
-                      }
-                      img.src = reader.result
-                    }
-                    reader.readAsDataURL(file)
-                  }} />
-                </label>
+                </button>
                 {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
                 <div style={{ ...S.cardBody }}>
                   <div style={S.cardName}>{formName || 'Item Name'}{formSpice > 0 && shopTheme !== 'donut' &&<span style={{ marginLeft: 4 }}>{'🌶️'.repeat(formSpice)}</span>}</div>
@@ -11314,6 +12249,40 @@ export default function App() {
                 <button onClick={() => setFormPopular(!formPopular)} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: formPopular ? '2px solid #FACC15' : '1px solid rgba(255,255,255,0.1)', background: formPopular ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.04)', color: formPopular ? '#FACC15' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Popular</button>
               </div>
 
+              {/* Allergen / dietary tags — multi-select chips. Customers
+                  filter by these on the menu. Stored as text[] in
+                  vendor_menu_items.allergens. */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Dietary tags</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {[{ id: 'gluten_free', label: 'Gluten-free' }, { id: 'vegan', label: 'Vegan' }, { id: 'vegetarian', label: 'Vegetarian' }, { id: 'halal', label: 'Halal' }, { id: 'kosher', label: 'Kosher' }, { id: 'dairy_free', label: 'Dairy-free' }, { id: 'nut_free', label: 'Nut-free' }, { id: 'sugar_free', label: 'Sugar-free' }].map(tag => {
+                    const on = formAllergens.includes(tag.id)
+                    return (
+                      <button key={tag.id} type="button" onClick={() => setFormAllergens(on ? formAllergens.filter(a => a !== tag.id) : [...formAllergens, tag.id])} style={{ padding: '6px 12px', borderRadius: 999, border: on ? `1.5px solid ${accent}` : '1px solid rgba(255,255,255,0.12)', background: on ? `${accent}22` : 'rgba(255,255,255,0.04)', color: on ? '#fff' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{tag.label}</button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Recipe cost — vendor types in cost per donut to track margin.
+                  Shown next to the price input as live margin %. */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Cost per unit (for margin tracking)</div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input type="number" min={0} step={0.01} value={formCostPerUnit} onChange={(e) => setFormCostPerUnit(e.target.value)} placeholder="Optional — ingredient + labour cost" style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                  {(() => {
+                    const cost = parseFloat(formCostPerUnit) || 0
+                    const price = parseFloat(formPrice) || 0
+                    if (cost > 0 && price > 0) {
+                      const margin = ((price - cost) / price * 100)
+                      const color = margin > 50 ? '#86EFAC' : margin > 25 ? '#FACC15' : '#FCA5A5'
+                      return <div style={{ padding: '8px 12px', borderRadius: 8, background: `${color}22`, color, fontWeight: 800, fontSize: 13, minWidth: 90, textAlign: 'center' }}>{Math.round(margin)}% margin</div>
+                    }
+                    return null
+                  })()}
+                </div>
+              </div>
+
               <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 14 }} />
 
               {/* Price toggle */}
@@ -11385,39 +12354,24 @@ export default function App() {
             <div style={{ padding: '0 14px 12px' }}>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center', fontWeight: 600 }}>Preview — how customers will see it</div>
               <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
-                <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => openPicker({
+                    kind: 'menu_item',
+                    current: formPhoto || '',
+                    onPick: (url) => setFormPhoto(url),
+                  })}
+                  style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                >
                   {formPhoto ? (
-                    <img loading="lazy"src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
+                    <img loading="lazy" src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{t.addPhoto || 'Add Photo'}</span>
                     </div>
                   )}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  if (supabase && vendorId && !String(vendorId).startsWith('local')) {
-                    const url = await uploadMenuImage(vendorId, file)
-                    if (url) { setFormPhoto(url); return }
-                  }
-                  const reader = new FileReader()
-                  reader.onload = () => {
-                    const img = new Image()
-                    img.onload = () => {
-                      const canvas = document.createElement('canvas')
-                      const max = 600
-                      let w = img.width, h = img.height
-                      if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                      canvas.width = w; canvas.height = h
-                      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                      setFormPhoto(canvas.toDataURL('image/jpeg', 0.7))
-                    }
-                    img.src = reader.result
-                  }
-                  reader.readAsDataURL(file)
-                }} />
-                </label>
+                </button>
                 {/* Popular badge on image */}
                 {formPopular && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 13, background: 'rgba(250,204,21,0.9)', color: '#000', borderRadius: 4, padding: '1px 5px', fontWeight: 800, zIndex: 2 }}>{t.popularBadge || 'Popular'}</span>}
                 {/* Card body preview */}
@@ -11688,15 +12642,17 @@ export default function App() {
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '18px 16px', position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
             {isCustomAccent && <div style={{ position: 'absolute', top: 18, left: 0, width: 4, height: 40, background: accent, borderRadius: '0 4px 4px 0' }} />}
 
-            {/* Logo upload — shows exact landing page preview */}
+            {/* Logo — tap opens the image picker (library / stock / upload). */}
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <label style={{ cursor: 'pointer', display: 'inline-block' }}>
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                  const file = e.target.files[0]
-                  if (!file) return
-                  const url = await uploadMenuImage(vendorId, file)
-                  if (url) { setShopLogo(url); localStorage.setItem('foodlocalchat_shopLogo', url) }
-                }} />
+              <button
+                type="button"
+                onClick={() => openPicker({
+                  kind: 'logo',
+                  current: shopLogo || '',
+                  onPick: (url) => { setShopLogo(url); try { localStorage.setItem('foodlocalchat_shopLogo', url) } catch {} },
+                })}
+                style={{ cursor: 'pointer', display: 'inline-block', background: 'none', border: 'none', padding: 0 }}
+              >
                 {shopLogo ? (
                   // Honour the chosen logo style so the preview matches the
                   // landing page exactly. Bare = image only, no ring, no
@@ -11718,7 +12674,7 @@ export default function App() {
                     <span style={{ fontSize: 13, color: accent, fontWeight: 700 }}>Add Logo</span>
                   </div>
                 )}
-              </label>
+              </button>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{shopLogo ? 'Tap to change' : 'This is how it looks on your landing page'}</div>
               {shopLogo && <button onClick={() => { setShopLogo(''); localStorage.removeItem('foodlocalchat_shopLogo') }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>Remove</button>}
 
@@ -12133,17 +13089,27 @@ export default function App() {
                       </div>
                     )
                   })}
-                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
+                  <button
+                    type="button"
+                    onClick={() => openPicker({
+                      kind: 'bg',
+                      current: currentBg,
+                      onPick: (url) => {
+                        setUploadedBgs(prev => [url, ...prev.filter(u => u !== url)].slice(0, 8))
+                        applyBg(url)
+                      },
+                    })}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                  >
                     <div style={{ width: 140, height: 250, borderRadius: 22, background: 'rgba(255,255,255,0.06)', padding: 4, position: 'relative', border: `2px dashed ${accent}55`, boxShadow: '0 6px 16px rgba(0,0,0,0.3)' }}>
                       <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: `linear-gradient(180deg, ${accent}15 0%, rgba(0,0,0,0.4) 100%)`, color: '#fff' }}>
                         <div style={{ width: 52, height: 52, borderRadius: 26, background: `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>＋</div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '0 8px', lineHeight: 1.3 }}>Upload<br />your own</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '0 8px', lineHeight: 1.3 }}>Change<br />background</div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>From your photos</div>
-                  </label>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Library · Stock · Upload</div>
+                  </button>
                 </div>
               </div>
 
@@ -12185,7 +13151,9 @@ export default function App() {
         // Old "Themes" entry removed — Theme Library (in the drawer's
         // Quick Access) is the canonical way to swap backgrounds now.
         const design = [
+          { icon: '🎭', label: 'Landing Theme', desc: 'Pick your splash design — 6 styles to choose from', onClick: () => setLandingThemePicker(true) },
           { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
+          { icon: '📚', label: 'Stock Images', desc: 'Browse curated donut artwork — donuts, boxes, backgrounds', onClick: () => setStockLibraryPageOpen(true) },
         ]
         const menuRows = [
           isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
@@ -12195,10 +13163,45 @@ export default function App() {
           { icon: '👥', label: 'Staff Accounts', desc: `Invite team — manager / cashier / kitchen (cap ${tierFeatures.staffCap === Infinity ? '∞' : tierFeatures.staffCap})`, onClick: () => setStaffPageOpen(true) },
           { icon: '🏪', label: 'Locations', desc: 'Multiple shops under one account', requires: 'multiLocation', onClick: gate('multiLocation', () => setLocationsPageOpen(true)) },
           { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
+          { icon: '📄', label: 'Invoices', desc: 'Letterhead, templates (4), legal name, tax ID, auto-send', onClick: () => setInvoicePageOpen(true) },
+          // ── Feature-sweep entries (mig 20260615) ───────────────────
+          { icon: '🍩', label: 'Build-your-own Dozen', desc: 'Let customers pick a custom box of donuts', onClick: () => setMixboxPageOpen(true) },
+          { icon: '💸', label: 'Tipping', desc: 'Enable 10/15/20/custom tips at checkout', onClick: () => setTipPageOpen(true) },
+          { icon: '📋', label: 'Production Planner', desc: 'Daily bake plan from 7-day averages + wastage log', onClick: () => setProductionPageOpen(true) },
+          { icon: '🍳', label: 'Kitchen Display (KDS)', desc: 'Live orders on a tablet — QR-code install', onClick: () => setKdsPageOpen(true) },
+          { icon: '👥', label: 'Customer accounts', desc: 'Order history, 1-tap reorder, tax-exempt flag', onClick: () => setCustomersPageOpen(true) },
+          { icon: '🥡', label: 'Catering / Wholesale', desc: 'Lead-time orders, minimum size, separate inbox', onClick: () => setCateringPageOpen(true) },
+          { icon: '🔁', label: 'Recurring orders', desc: '"Every Tuesday" subscriptions', onClick: () => setRecurringPageOpen(true) },
+          { icon: '🎁', label: 'Gift cards', desc: 'Digital cards with unique codes', onClick: () => setGiftcardsPageOpen(true) },
+          { icon: '💰', label: 'End-of-day Z-report', desc: 'Cash counted vs expected, variance', onClick: () => setCashReconPageOpen(true) },
+          { icon: '📺', label: 'Self-serve kiosk', desc: 'Locked /kiosk URL for in-store tablet', onClick: () => setKioskPageOpen(true) },
+          { icon: '📱', label: 'SMS notifications', desc: 'Twilio — order ready / dispatch SMS', onClick: () => setSmsPageOpen(true) },
+          { icon: '📧', label: 'Email campaigns', desc: 'Resend — segment + send marketing emails', onClick: () => setEmailCampaignsPageOpen(true) },
+          { icon: '💳', label: 'Affiliate payouts', desc: 'Track + mark referral payouts paid', onClick: () => setAffiliatePayoutsPageOpen(true) },
+          { icon: '📡', label: 'Gateway health', desc: 'Check that each payment gateway is reachable + credentials valid', onClick: () => setGatewayHealthPageOpen(true) },
+          { icon: '🎉', label: 'Pre-order windows', desc: "Mother's Day / Valentine's lead-time orders", onClick: () => setPreorderPageOpen(true) },
+          { icon: '⬇️', label: 'Export sales CSV', desc: 'Download orders as CSV for your accountant', onClick: () => {
+            // Inline export — no separate page. Filters by past 90 days, dumps vendor_orders to CSV client-side.
+            if (!supabase || !vendorId) { alert('Sign in to export.'); return }
+            ;(async () => {
+              const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+              const { data, error } = await supabase.from('vendor_orders').select('id, customer_name, customer_phone, items, subtotal, tax_amount, tip_amount, delivery_fee, total, payment_method, payment_status, created_at').eq('vendor_id', vendorId).gte('created_at', since).order('created_at', { ascending: false })
+              if (error || !data) { alert('Export failed: ' + (error?.message || 'no data')); return }
+              const header = ['id','customer_name','customer_phone','items','subtotal','tax','tip','delivery','total','payment_method','payment_status','created_at']
+              const rows = data.map(r => [r.id, r.customer_name || '', r.customer_phone || '', JSON.stringify(r.items || []).replace(/"/g, '""'), r.subtotal || 0, r.tax_amount || 0, r.tip_amount || 0, r.delivery_fee || 0, r.total || 0, r.payment_method || '', r.payment_status || '', r.created_at])
+              const csv = [header.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n')
+              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = `sales-${new Date().toISOString().slice(0,10)}.csv`
+              document.body.appendChild(a); a.click(); document.body.removeChild(a)
+              URL.revokeObjectURL(url)
+            })()
+          } },
           { icon: '🖨️', label: 'Kitchen Printer', desc: 'Pair a Bluetooth thermal printer', requires: 'bluetoothPrinter', onClick: gate('bluetoothPrinter', () => setPrinterPageOpen(true)) },
           { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', requires: 'customDomain', onClick: gate('customDomain', () => setDomainPage(true)) },
           { icon: '💾', label: 'Backup & Restore', desc: 'Export / import your menu, banners, settings', requires: 'backupRestore', onClick: gate('backupRestore', () => setBackupPageOpen(true)) },
           { icon: '💎', label: 'Plan', desc: `Currently on ${tierFeatures.label} — see what each tier unlocks`, onClick: () => setPlanPageOpen(true) },
+          { icon: '📱', label: 'Native App (Apple + Google)', desc: 'Launch your branded app in the App Store + Play Store', onClick: () => setNativeAppPageOpen(true) },
           { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
           { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
         ]
@@ -12957,11 +13960,26 @@ export default function App() {
                         {/* Upload tile FIRST so it's the first thing the
                             vendor sees in the strip — no horizontal scroll
                             needed to find it. */}
-                        <label style={{ flexShrink: 0, width: 120, aspectRatio: fmt.aspect, borderRadius: 12, background: `linear-gradient(180deg, ${accent}28 0%, rgba(0,0,0,0.45) 100%)`, border: `2px dashed ${accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', color: '#fff', boxShadow: `0 4px 14px ${accent}33` }}>
+                        <button
+                          type="button"
+                          onClick={() => openPicker({
+                            kind: 'banner',
+                            current: '',
+                            onPick: (url) => {
+                              const id = 'b-' + Date.now()
+                              setMarketingBanners(prev => [{
+                                id, format: fmtKey, bgImage: url, tint: 'rgba(0,0,0,0.4)', textColor: '#fff',
+                                headline: 'Limited time offer', discount: '20% OFF', subtitle: 'Order today only',
+                                showLogo: true, showShopName: true, createdAt: Date.now(),
+                              }, ...prev])
+                              setMarketingEditingBannerId(id)
+                            },
+                          })}
+                          style={{ flexShrink: 0, width: 120, aspectRatio: fmt.aspect, borderRadius: 12, background: `linear-gradient(180deg, ${accent}28 0%, rgba(0,0,0,0.45) 100%)`, border: `2px dashed ${accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', color: '#fff', boxShadow: `0 4px 14px ${accent}33`, padding: 0 }}
+                        >
                           <span style={{ fontSize: 26, lineHeight: 1 }}>＋</span>
-                          <span style={{ fontSize: 12, fontWeight: 800 }}>Upload your own</span>
-                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadBanner(fmtKey, f) }} />
-                        </label>
+                          <span style={{ fontSize: 12, fontWeight: 800 }}>Choose image</span>
+                        </button>
                         {BANNER_TEMPLATES[fmtKey].map(tpl => (
                           <button key={tpl.id} type="button" onClick={() => createBanner(fmtKey, tpl)} style={{ flexShrink: 0, padding: 0, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', borderRadius: 12, cursor: 'pointer', overflow: 'hidden' }}>
                             <div style={{ width: 120, aspectRatio: fmt.aspect, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
@@ -13957,38 +14975,17 @@ export default function App() {
                     <button onClick={() => setLoyaltyCardImage('')} style={{ position: 'absolute', top: 6, right: 6, padding: '4px 10px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.9)', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Remove</button>
                   </div>
                 ) : null}
-                <label style={{ display: 'block', width: '100%' }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0]; e.target.value = ''
-                      if (!f) return
-                      setLoyaltyImageUploading(true)
-                      try {
-                        if (!vendorId || String(vendorId).startsWith('local')) {
-                          // Local-only fallback — convert to data URL.
-                          const reader = new FileReader()
-                          reader.onload = () => setLoyaltyCardImage(String(reader.result || ''))
-                          reader.readAsDataURL(f)
-                        } else {
-                          const url = await uploadMenuImage(vendorId, f)
-                          if (url) setLoyaltyCardImage(url)
-                          else alert('Upload failed — try a smaller image.')
-                        }
-                      } catch (err) {
-                        alert('Upload failed: ' + (err?.message || 'unknown'))
-                      } finally {
-                        setLoyaltyImageUploading(false)
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                    disabled={loyaltyImageUploading}
-                  />
-                  <span style={{ display: 'block', width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px dashed ${accent}`, background: `${accent}1a`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: loyaltyImageUploading ? 'wait' : 'pointer', textAlign: 'center', opacity: loyaltyImageUploading ? 0.5 : 1 }}>
-                    {loyaltyImageUploading ? 'Uploading…' : loyaltyCardImage ? 'Replace image' : '⬆ Upload card background'}
-                  </span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => openPicker({
+                    kind: 'loyalty',
+                    current: loyaltyCardImage || '',
+                    onPick: (url) => setLoyaltyCardImage(url),
+                  })}
+                  style={{ display: 'block', width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px dashed ${accent}`, background: `${accent}1a`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', textAlign: 'center', minHeight: 44 }}
+                >
+                  {loyaltyCardImage ? 'Change card background' : '✨ Choose card background'}
+                </button>
               </div>
 
               {/* Preview — what the customer's stamp card looks like */}
@@ -14046,6 +15043,385 @@ export default function App() {
           header, items table, tax breakdown, total, customer info,
           and a Print button that opens the browser's print dialog
           (which lets the user Save as PDF on any platform). */}
+      {/* ═══ INVOICE SETTINGS PAGE ═══
+            Vendor configures letterhead + business details once. Drives
+            every invoice rendered for any order. Saved to vendor_accounts
+            via the debounced server write-back effect above. */}
+      {invoicePageOpen && (() => {
+        const pinkAccent = donutLanding.pink || accent
+        const labelStyle = { fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 4, display: 'block' }
+        const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
+        const Section = ({ title, children }) => (
+          <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12 }}>{title}</div>
+            {children}
+          </div>
+        )
+        const TemplateTile = ({ id, name, blurb }) => (
+          <button
+            type="button"
+            onClick={() => setInvoiceTemplateId(id)}
+            style={{ flex: '1 1 0', minWidth: 120, padding: 12, borderRadius: 12, border: invoiceTemplateId === id ? `2px solid ${pinkAccent}` : '1px solid rgba(255,255,255,0.12)', background: invoiceTemplateId === id ? `${pinkAccent}1a` : 'rgba(255,255,255,0.04)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2 }}>{name}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>{blurb}</div>
+            {invoiceTemplateId === id && <div style={{ marginTop: 6, fontSize: 11, fontWeight: 800, color: pinkAccent }}>✓ ACTIVE</div>}
+          </button>
+        )
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img loading="lazy" src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => setInvoicePageOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: pinkAccent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>📄 Invoice settings</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Letterhead, template, business details. Auto-applies to every order.</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', maxWidth: 720, width: '100%', margin: '0 auto' }}>
+              <Section title="Template (4 layouts)">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <TemplateTile id="classic"  name="Classic"  blurb="Serif, traditional ledger layout. Universal." />
+                  <TemplateTile id="modern"   name="Modern"   blurb="Sans-serif, minimal, single accent." />
+                  <TemplateTile id="bold"     name="Bold"     blurb="Coloured header band with reverse-out logo." />
+                  <TemplateTile id="minimal"  name="Minimal"  blurb="Light, lots of whitespace. Premium feel." />
+                </div>
+              </Section>
+
+              <Section title="Letterhead / paper background">
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.45 }}>
+                  Upload your own A4 paper / letterhead image (PNG / JPG). Will render as the page background behind all invoice content. Or use a plain template by leaving this empty.
+                </div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 60, height: 84, borderRadius: 6, background: invoiceLetterheadUrl ? '#fff' : 'rgba(255,255,255,0.05)', border: invoiceLetterheadUrl ? 'none' : `2px dashed ${pinkAccent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {invoiceLetterheadUrl ? <img src={invoiceLetterheadUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 20 }}>📄</span>}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => openPicker({ kind: 'letterhead', current: invoiceLetterheadUrl || '', onPick: (url) => setInvoiceLetterheadUrl(url) })}
+                      style={{ padding: '10px 14px', borderRadius: 10, background: pinkAccent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', border: 'none', minHeight: 40 }}
+                    >
+                      {invoiceLetterheadUrl ? 'Change letterhead' : '+ Choose letterhead'}
+                    </button>
+                    {invoiceLetterheadUrl && (
+                      <button type="button" onClick={() => setInvoiceLetterheadUrl('')} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>Remove letterhead</button>
+                    )}
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Business details">
+                <label style={labelStyle}>Legal business name</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} value={invoiceLegalName} onChange={(e) => setInvoiceLegalName(e.target.value)} placeholder={shopName + ' Pte Ltd / CV / LLC'} maxLength={120} />
+                <label style={labelStyle}>Tax ID (NPWP / VAT / EIN / ABN)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} value={invoiceTaxId} onChange={(e) => setInvoiceTaxId(e.target.value)} placeholder="01.234.567.8-901.000" maxLength={40} />
+                <label style={labelStyle}>Registration / company number</label>
+                <input style={inputStyle} value={invoiceRegNumber} onChange={(e) => setInvoiceRegNumber(e.target.value)} placeholder="Optional" maxLength={40} />
+              </Section>
+
+              <Section title="Invoice numbering">
+                <label style={labelStyle}>Prefix (e.g. INV-, FK-, F-2026-)</label>
+                <input style={inputStyle} value={invoiceNumberPrefix} onChange={(e) => setInvoiceNumberPrefix(e.target.value.slice(0, 12))} maxLength={12} />
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 6 }}>Next invoice will be <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{invoiceNumberPrefix}000001</strong>. The counter auto-increments per order, stored server-side so multi-device staff never duplicate a number.</div>
+              </Section>
+
+              <Section title="Payment terms + bank details">
+                <label style={labelStyle}>Payment terms (single line)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} value={invoicePaymentTerms} onChange={(e) => setInvoicePaymentTerms(e.target.value)} placeholder="Due on receipt / Net 30 / Net 14" maxLength={60} />
+                <label style={labelStyle}>Bank account details (shown on invoice, multi-line)</label>
+                <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical', fontFamily: 'inherit' }} value={invoiceBankDetails} onChange={(e) => setInvoiceBankDetails(e.target.value)} placeholder={'Bank: BCA\nAccount: 1234567890\nName: Donut King Pte Ltd'} maxLength={300} />
+              </Section>
+
+              <Section title="Signature">
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 90, height: 50, borderRadius: 6, background: invoiceSignatureUrl ? '#fff' : 'rgba(255,255,255,0.05)', border: invoiceSignatureUrl ? 'none' : '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {invoiceSignatureUrl ? <img src={invoiceSignatureUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>No signature</span>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openPicker({ kind: 'logo', current: invoiceSignatureUrl || '', onPick: (url) => setInvoiceSignatureUrl(url) })}
+                    style={{ padding: '10px 14px', borderRadius: 10, background: pinkAccent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none', minHeight: 40 }}
+                  >
+                    {invoiceSignatureUrl ? 'Change signature' : '+ Choose signature image'}
+                  </button>
+                  {invoiceSignatureUrl && (
+                    <button type="button" onClick={() => setInvoiceSignatureUrl('')} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                  )}
+                </div>
+              </Section>
+
+              <Section title="Footer note">
+                <input style={inputStyle} value={invoiceFooterNote} onChange={(e) => setInvoiceFooterNote(e.target.value)} placeholder="Thank you for your business." maxLength={200} />
+              </Section>
+
+              <Section title="Auto-send on payment">
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 10, lineHeight: 1.45 }}>
+                  When ON, every paid order auto-fires the invoice within ~60s of payment confirmation. Idempotent — never double-sends. You can also send manually from any order.
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', cursor: 'pointer', marginBottom: 6 }}>
+                  <input type="checkbox" checked={invoiceAutosendChat} onChange={(e) => setInvoiceAutosendChat(e.target.checked)} style={{ accentColor: pinkAccent }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Post invoice in customer chat</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={invoiceAutosendEmail} onChange={(e) => setInvoiceAutosendEmail(e.target.checked)} style={{ accentColor: pinkAccent }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Email invoice to customer (if customer email is on the order)</span>
+                </label>
+              </Section>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ INVOICE MODAL — A4 print + 4 templates + send button ═══
+            Opened via setInvoiceOrder({...orderPayload, id: dbOrderId}).
+            Same data shape as the receipt modal but rendered through
+            one of 4 template layouts. Print uses @page { size: A4 } so
+            it always lands as A4 regardless of browser default. */}
+      {invoiceOrder && (() => {
+        const o = invoiceOrder
+        const fmtMoney = (n) => fmt(Math.round(n || 0))
+        const placed = o.placedAt ? new Date(o.placedAt) : new Date()
+        const items  = Array.isArray(o.items) ? o.items : []
+        const tplBg  = invoiceLetterheadUrl
+          ? { backgroundImage: `url(${invoiceLetterheadUrl})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }
+          : { background: '#fff' }
+        // ─── Template renderers — 4 variants, same data, different CSS.
+        // All sized to A4 portrait (210mm × 297mm) so the print CSS
+        // maps 1:1 without re-flow.
+        const TemplateClassic = (
+          <div style={{ ...tplBg, color: '#1a1a1a', fontFamily: 'Georgia, serif', padding: '40px 44px', minHeight: '297mm', width: '210mm', boxSizing: 'border-box', position: 'relative' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 24 }}>
+              <tbody><tr>
+                <td style={{ verticalAlign: 'top' }}>
+                  <h1 style={{ margin: 0, fontSize: 28, letterSpacing: -0.5 }}>{invoiceLegalName || shopName || 'Your business'}</h1>
+                  {invoiceTaxId   && <div style={{ fontSize: 13, color: '#555', marginTop: 4 }}>Tax ID: {invoiceTaxId}</div>}
+                  {invoiceRegNumber && <div style={{ fontSize: 13, color: '#555' }}>Reg: {invoiceRegNumber}</div>}
+                  {shopAddress    && <div style={{ fontSize: 13, color: '#555' }}>{shopAddress}</div>}
+                  {shopPhone      && <div style={{ fontSize: 13, color: '#555' }}>{shopPhone}</div>}
+                </td>
+                <td style={{ verticalAlign: 'top', textAlign: 'right' }}>
+                  <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: 2, color: '#111' }}>INVOICE</div>
+                  <div style={{ fontSize: 15, fontFamily: 'monospace', marginTop: 4, color: '#222' }}>{o.invoiceNumber || (invoiceNumberPrefix + 'PREVIEW')}</div>
+                  <div style={{ fontSize: 13, color: '#555', marginTop: 8 }}>{placed.toLocaleDateString()}</div>
+                  {o.dueDate && <div style={{ fontSize: 13, color: '#555' }}>Due: {o.dueDate}</div>}
+                </td>
+              </tr></tbody>
+            </table>
+            {(o.customerBusiness || o.customer_name || o.customerTaxId) && (
+              <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.04)', borderRadius: 6, marginBottom: 20, fontSize: 13 }}>
+                <div style={{ fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Bill to</div>
+                {o.customerBusiness && <div style={{ fontWeight: 700, color: '#111' }}>{o.customerBusiness}</div>}
+                {o.customer_name && !o.customerBusiness && <div style={{ fontWeight: 700, color: '#111' }}>{o.customer_name}</div>}
+                {o.customerTaxId   && <div>Tax ID: {o.customerTaxId}</div>}
+                {o.poReference     && <div>PO: {o.poReference}</div>}
+                {o.customer_phone  && <div>{o.customer_phone}</div>}
+              </div>
+            )}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, marginBottom: 18 }}>
+              <thead><tr style={{ borderBottom: '2px solid #111' }}>
+                <th style={{ textAlign: 'left', padding: '10px 6px', color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 12 }}>Description</th>
+                <th style={{ textAlign: 'center', padding: '10px 6px', color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 12, width: 50 }}>Qty</th>
+                <th style={{ textAlign: 'right', padding: '10px 6px', color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 12, width: 100 }}>Amount</th>
+              </tr></thead>
+              <tbody>
+                {items.map((it, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: '8px 6px', borderBottom: '1px solid #ddd', verticalAlign: 'top' }}>{it.name}</td>
+                    <td style={{ padding: '8px 6px', borderBottom: '1px solid #ddd', textAlign: 'center', verticalAlign: 'top' }}>{it.qty}</td>
+                    <td style={{ padding: '8px 6px', borderBottom: '1px solid #ddd', textAlign: 'right', verticalAlign: 'top', fontFamily: 'monospace' }}>{fmtMoney(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <table style={{ width: '100%', fontSize: 14 }}>
+              <tbody>
+                {o.subtotal != null && <tr><td style={{ padding: '4px 6px' }}>Subtotal</td><td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{fmtMoney(o.subtotal)}</td></tr>}
+                {o.delivery?.fee > 0 && <tr><td style={{ padding: '4px 6px' }}>Delivery</td><td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{fmtMoney(o.delivery.fee)}</td></tr>}
+                {o.tax?.amount > 0 && <tr><td style={{ padding: '4px 6px' }}>{o.tax.label} ({o.tax.rate}%){o.tax.inclusive ? ' · included' : ''}</td><td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{fmtMoney(o.tax.amount)}</td></tr>}
+                <tr style={{ fontSize: 18, fontWeight: 700 }}><td style={{ padding: '14px 6px', borderTop: '2px solid #111' }}>TOTAL</td><td style={{ padding: '14px 6px', borderTop: '2px solid #111', textAlign: 'right', fontFamily: 'monospace' }}>{fmtMoney(o.total)}</td></tr>
+              </tbody>
+            </table>
+            {invoicePaymentTerms && <div style={{ marginTop: 24, fontSize: 13 }}><strong>Payment terms:</strong> {invoicePaymentTerms}</div>}
+            {invoiceBankDetails && <div style={{ marginTop: 14, padding: 14, background: '#fafafa', borderLeft: '4px solid #111', fontSize: 13, whiteSpace: 'pre-line' }}>{invoiceBankDetails}</div>}
+            {invoiceSignatureUrl && <div style={{ marginTop: 30, textAlign: 'right' }}><img src={invoiceSignatureUrl} alt="signature" style={{ height: 60, objectFit: 'contain' }} /><div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>Authorised signature</div></div>}
+            {invoiceFooterNote && <div style={{ marginTop: 30, textAlign: 'center', color: '#666', fontSize: 12, borderTop: '1px solid #ddd', paddingTop: 16 }}>{invoiceFooterNote}</div>}
+          </div>
+        )
+        const TemplateModern = (
+          <div style={{ ...tplBg, color: '#1a1a1a', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', padding: '50px 50px', minHeight: '297mm', width: '210mm', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 50 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#888' }}>INVOICE</div>
+                <div style={{ fontSize: 28, fontWeight: 300, marginTop: 6 }}>{o.invoiceNumber || (invoiceNumberPrefix + 'PREVIEW')}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{invoiceLegalName || shopName}</div>
+                {invoiceTaxId && <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>Tax ID: {invoiceTaxId}</div>}
+                {shopAddress  && <div style={{ fontSize: 12, color: '#666' }}>{shopAddress}</div>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 40, fontSize: 12, color: '#888' }}>
+              <div>ISSUED <span style={{ color: '#111', fontWeight: 600 }}>{placed.toLocaleDateString()}</span></div>
+              {o.dueDate && <div>DUE <span style={{ color: '#111', fontWeight: 600 }}>{o.dueDate}</span></div>}
+              <div>{invoicePaymentTerms}</div>
+            </div>
+            {(o.customerBusiness || o.customer_name) && (
+              <div style={{ marginBottom: 30, fontSize: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: '#888', marginBottom: 4 }}>BILL TO</div>
+                <div style={{ fontWeight: 700 }}>{o.customerBusiness || o.customer_name}</div>
+                {o.customerTaxId && <div style={{ color: '#666', fontSize: 13 }}>Tax ID: {o.customerTaxId}</div>}
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid #111' }}>
+              {items.map((it, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid #eee', fontSize: 14 }}>
+                  <div>{it.qty}× {it.name}</div>
+                  <div style={{ fontFamily: 'monospace' }}>{fmtMoney(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 30, marginLeft: 'auto', width: '40%', fontSize: 14 }}>
+              {o.subtotal != null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}><span>Subtotal</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.subtotal)}</span></div>}
+              {o.tax?.amount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#666' }}><span>{o.tax.label} ({o.tax.rate}%)</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.tax.amount)}</span></div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0 0', borderTop: '2px solid #111', fontSize: 22, fontWeight: 700, marginTop: 6 }}><span>Total</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.total)}</span></div>
+            </div>
+            {invoiceBankDetails && <div style={{ marginTop: 40, padding: 16, background: '#f7f7f7', fontSize: 12, color: '#444', whiteSpace: 'pre-line', borderRadius: 4 }}>{invoiceBankDetails}</div>}
+            {invoiceFooterNote && <div style={{ marginTop: 40, textAlign: 'center', fontSize: 11, color: '#aaa', letterSpacing: 2, textTransform: 'uppercase' }}>{invoiceFooterNote}</div>}
+          </div>
+        )
+        const TemplateBold = (
+          <div style={{ ...tplBg, color: '#1a1a1a', fontFamily: '"Inter", system-ui, sans-serif', minHeight: '297mm', width: '210mm', boxSizing: 'border-box', position: 'relative' }}>
+            <div style={{ background: pinkAccent, color: '#fff', padding: '36px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                {shopLogo && shopLogoStyle !== 'off' && <img src={shopLogo} alt="" style={{ width: 56, height: 56, borderRadius: shopLogoStyle === 'circle' ? '50%' : 8, objectFit: 'cover', marginBottom: 10 }} />}
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900 }}>{invoiceLegalName || shopName}</h1>
+                {invoiceTaxId && <div style={{ fontSize: 12, opacity: 0.9, marginTop: 2 }}>Tax ID: {invoiceTaxId}</div>}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: -1 }}>INVOICE</div>
+                <div style={{ fontSize: 14, fontFamily: 'monospace', opacity: 0.9 }}>{o.invoiceNumber || (invoiceNumberPrefix + 'PREVIEW')}</div>
+              </div>
+            </div>
+            <div style={{ padding: '32px 40px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 26, fontSize: 13 }}>
+                <div><strong style={{ color: '#888', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }}>Issued</strong><br />{placed.toLocaleDateString()}</div>
+                {o.dueDate && <div><strong style={{ color: '#888', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }}>Due</strong><br />{o.dueDate}</div>}
+                <div><strong style={{ color: '#888', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }}>Terms</strong><br />{invoicePaymentTerms || '—'}</div>
+              </div>
+              {(o.customerBusiness || o.customer_name) && (
+                <div style={{ padding: 16, background: `${pinkAccent}10`, borderRadius: 10, marginBottom: 24, fontSize: 14 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: pinkAccent, fontWeight: 700, marginBottom: 4 }}>BILL TO</div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>{o.customerBusiness || o.customer_name}</div>
+                  {o.customerTaxId && <div style={{ color: '#666', fontSize: 13 }}>Tax ID: {o.customerTaxId}</div>}
+                </div>
+              )}
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, marginBottom: 18 }}>
+                <thead><tr style={{ background: '#111', color: '#fff' }}>
+                  <th style={{ textAlign: 'left', padding: '12px 10px', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}>Item</th>
+                  <th style={{ textAlign: 'center', padding: '12px 10px', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', width: 60 }}>Qty</th>
+                  <th style={{ textAlign: 'right', padding: '12px 10px', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', width: 110 }}>Amount</th>
+                </tr></thead>
+                <tbody>
+                  {items.map((it, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '10px' }}>{it.name}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{it.qty}</td>
+                      <td style={{ padding: '10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmtMoney(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ marginLeft: 'auto', width: '45%', fontSize: 14 }}>
+                {o.subtotal != null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}><span>Subtotal</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.subtotal)}</span></div>}
+                {o.tax?.amount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#666' }}><span>{o.tax.label} ({o.tax.rate}%)</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.tax.amount)}</span></div>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', marginTop: 8, background: pinkAccent, color: '#fff', borderRadius: 10, fontSize: 22, fontWeight: 900 }}><span>TOTAL</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.total)}</span></div>
+              </div>
+              {invoiceBankDetails && <div style={{ marginTop: 30, padding: 16, background: '#f7f7f7', borderLeft: `4px solid ${pinkAccent}`, fontSize: 13, whiteSpace: 'pre-line', borderRadius: 4 }}>{invoiceBankDetails}</div>}
+              {invoiceFooterNote && <div style={{ marginTop: 30, textAlign: 'center', fontSize: 12, color: '#666' }}>{invoiceFooterNote}</div>}
+            </div>
+          </div>
+        )
+        const TemplateMinimal = (
+          <div style={{ ...tplBg, color: '#1a1a1a', fontFamily: '"Inter", system-ui, sans-serif', padding: '60px 60px', minHeight: '297mm', width: '210mm', boxSizing: 'border-box' }}>
+            <div style={{ textAlign: 'center', marginBottom: 50 }}>
+              <div style={{ fontSize: 11, letterSpacing: 6, color: '#999', textTransform: 'uppercase', marginBottom: 14 }}>Invoice</div>
+              <div style={{ fontSize: 24, fontWeight: 300, fontFamily: 'monospace', color: '#111' }}>{o.invoiceNumber || (invoiceNumberPrefix + 'PREVIEW')}</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 50 }}>
+              <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7 }}>
+                <div style={{ fontWeight: 700, color: '#111', fontSize: 15 }}>{invoiceLegalName || shopName}</div>
+                {invoiceTaxId && <div>Tax ID: {invoiceTaxId}</div>}
+                {shopAddress  && <div>{shopAddress}</div>}
+                {shopPhone    && <div>{shopPhone}</div>}
+              </div>
+              <div style={{ textAlign: 'right', fontSize: 13, color: '#555', lineHeight: 1.7 }}>
+                <div>Issued <strong style={{ color: '#111' }}>{placed.toLocaleDateString()}</strong></div>
+                {o.dueDate && <div>Due <strong style={{ color: '#111' }}>{o.dueDate}</strong></div>}
+                {(o.customerBusiness || o.customer_name) && <div>To <strong style={{ color: '#111' }}>{o.customerBusiness || o.customer_name}</strong></div>}
+              </div>
+            </div>
+            <div>
+              {items.map((it, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 0', borderBottom: '1px solid #eee', fontSize: 14 }}>
+                  <div>{it.qty} × {it.name}</div>
+                  <div style={{ fontFamily: 'monospace', color: '#111' }}>{fmtMoney(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 40, paddingTop: 24, borderTop: '2px solid #111', display: 'flex', justifyContent: 'space-between', fontSize: 24, fontWeight: 300 }}>
+              <span>Total</span><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{fmtMoney(o.total)}</span>
+            </div>
+            {invoiceBankDetails && <div style={{ marginTop: 50, fontSize: 12, color: '#666', whiteSpace: 'pre-line', textAlign: 'center', lineHeight: 1.7 }}>{invoiceBankDetails}</div>}
+            {invoiceFooterNote && <div style={{ marginTop: 40, fontSize: 11, color: '#bbb', textAlign: 'center', letterSpacing: 3, textTransform: 'uppercase' }}>{invoiceFooterNote}</div>}
+          </div>
+        )
+        const TemplateMap = { classic: TemplateClassic, modern: TemplateModern, bold: TemplateBold, minimal: TemplateMinimal }
+        const ActiveTemplate = TemplateMap[invoiceTemplateId] || TemplateClassic
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} className="no-print" />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} className="no-print" />
+
+            <style>{`
+              @media print {
+                @page { size: A4; margin: 0; }
+                body * { visibility: hidden !important; }
+                #ds-invoice, #ds-invoice * { visibility: visible !important; }
+                #ds-invoice { position: absolute !important; left: 0; top: 0; width: 100%; }
+                .no-print { display: none !important; }
+              }
+            `}</style>
+
+            <div className="no-print" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px', flexShrink: 0 }}>
+              <button onClick={() => setInvoiceOrder(null)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>📄 Invoice</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>{o.invoiceNumber || 'Preview'} · {invoiceTemplateId}</div>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!o.id) { alert('This order is local-only. Save / print the A4 PDF instead.'); return }
+                  const ok = await sendInvoiceToCustomer(o.id)
+                  alert(ok ? 'Invoice sent to customer.' : 'Send failed — check autosend toggles + customer email.')
+                }}
+                style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}
+              >✉ Send to customer</button>
+              <button onClick={() => window.print()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: pinkAccent, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>🖨 Print A4 / Save PDF</button>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', justifyContent: 'center' }}>
+              <div id="ds-invoice" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                {ActiveTemplate}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {receiptOrder && (() => {
         const o = receiptOrder
         const fmtMoney = (n) => fmt(Math.round(n || 0))
@@ -14072,7 +15448,35 @@ export default function App() {
                 <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🧾 Receipt</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>#{o.orderNumber || '—'}</div>
               </div>
+              {/* Send to customer — calls order-receipt-autosend Edge Fn.
+                  Disabled until we have an order id (live orders only).
+                  For locally-stored orders (pre-DB-flow), the print
+                  fallback is the only path. */}
+              <button
+                onClick={async () => {
+                  if (!o.id) { alert('This order was placed locally. Print or save as PDF instead.'); return }
+                  const ok = await sendReceiptToCustomer(o.id)
+                  alert(ok ? 'Receipt sent to customer.' : 'Send failed — check autosend toggles are on, and customer email is filled if email is enabled.')
+                }}
+                style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}
+              >
+                ✉ Send to customer
+              </button>
               <button onClick={() => window.print()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>🖨 Print / Save PDF</button>
+            </div>
+
+            {/* Vendor auto-send settings — toggles persist to vendor_accounts.
+                When ON, every paid order auto-fires the Edge Function. */}
+            <div className="no-print" style={{ position: 'relative', zIndex: 1, margin: '0 14px 12px', padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Auto-send on paid</div>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#fff', cursor: 'pointer' }}>
+                <input type="checkbox" checked={receiptAutosendChat} onChange={(e) => setReceiptAutosendChat(e.target.checked)} style={{ accentColor: accent }} />
+                Chat
+              </label>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#fff', cursor: 'pointer' }}>
+                <input type="checkbox" checked={receiptAutosendEmail} onChange={(e) => setReceiptAutosendEmail(e.target.checked)} style={{ accentColor: accent }} />
+                Email
+              </label>
             </div>
 
             {/* The actual receipt — visible on screen + on print */}
@@ -14412,28 +15816,35 @@ export default function App() {
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'grid', gridTemplateColumns: '1fr', gap: 16, maxWidth: 480, width: '100%', margin: '0 auto' }}>
             {LANDING_THEMES.map(t => {
-              const isSelected = landingThemeId === t.id
+              const isSelected = (landingThemeId || 'donuts') === t.id
+              // Each tile renders a LIVE preview of the theme using the
+              // vendor's CURRENT donutLanding state (so the donut tile
+              // shows their custom bg/hero image, not a frozen snapshot).
+              // - source 'inline' (donuts) → <DonutSplash> auto-fits via
+              //   its internal wrapperRef + scale state.
+              // - source 'react' → bg image + scaled renderLandingSplash,
+              //   same pattern used by the Hero-Editor live preview at
+              //   line ~7820, so what the vendor sees here is exactly
+              //   what they get on the public landing.
               return (
                 <div key={t.id} style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? accent : 'rgba(255,255,255,0.08)'}`, overflow: 'visible' }}>
-                  {/* Phone-shaped preview frame. 220×440 body — sized so the
-                      chassis + side-button protrusion + pink card border all
-                      coexist with breathing room (no edge-clipping). Internal
-                      horizontal padding 20px keeps the side button off the
-                      card border on narrow viewports. previewUrl is a
-                      root-absolute path served by the LANDING app — build the
-                      URL with the explicit origin to bypass Vite's /food/chat/
-                      base rewriting. cover so the donut fills the screen
-                      edge-to-edge (aspect already matches the donut design). */}
                   <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 20px 14px' }}>
                     <div style={{ width: 220, height: 440, borderRadius: 32, background: '#1a1a1a', padding: 4, position: 'relative', boxShadow: `0 16px 50px rgba(0,0,0,0.5), 0 0 16px ${accent}25`, border: '2px solid #333', flexShrink: 0 }}>
                       <div style={{ position: 'absolute', right: -3, top: 92, width: 3, height: 28, borderRadius: '0 2px 2px 0', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 28, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 52, height: 14, background: '#000', borderRadius: 10, zIndex: 10 }} />
-                        <FitIframe
-                          src={window.location.hostname === 'localhost'
-                            ? 'http://localhost:5173' + t.previewUrl
-                            : window.location.origin + t.previewUrl}
-                        />
+                        {t.source === 'inline' && (
+                          <DonutSplash landing={donutLanding} onEnter={() => {}} fit="cover" />
+                        )}
+                        {t.source === 'react' && (
+                          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                            <img loading="lazy" src={donutLanding.bgImg || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.42)', zIndex: 0 }} />
+                            <div style={{ position: 'absolute', inset: 0, zIndex: 1, transform: 'scale(0.55)', transformOrigin: 'top left', width: 390, height: 800 }}>
+                              {renderLandingSplash(t.id, { landing: donutLanding, accent: donutLanding.pink || accent, onEnter: () => {} })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -14458,7 +15869,7 @@ export default function App() {
               )
             })}
             <div style={{ padding: 12, borderRadius: 12, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.3)', fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
-              More themes coming soon. Each one comes with its own colour palette, hero image, and decorative elements — pick the vibe that matches your shop.
+              Each tile is a live preview of YOUR current customisations. Change the background image, hero text, or colours in Landing Page Edit and every theme tile updates instantly.
             </div>
           </div>
         </div>
@@ -14643,36 +16054,18 @@ export default function App() {
                       </div>
                     ))}
                     {images.length < 8 && (
-                      <label style={{ aspectRatio: '4 / 3', borderRadius: 12, background: `${accent}15`, border: `2px dashed ${accent}55`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#fff' }}>
+                      <button
+                        type="button"
+                        onClick={() => openPicker({
+                          kind: 'menu_item',
+                          current: '',
+                          onPick: (url) => addImageUrl(url),
+                        })}
+                        style={{ aspectRatio: '4 / 3', borderRadius: 12, background: `${accent}15`, border: `2px dashed ${accent}55`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#fff', padding: 0 }}
+                      >
                         <span style={{ fontSize: 28 }}>＋</span>
                         <span style={{ fontSize: 12, fontWeight: 700 }}>Add photo</span>
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          e.target.value = ''
-                          let url = null
-                          try { url = await uploadMenuImage(vendorId, file) } catch {}
-                          if (!url) {
-                            const reader = new FileReader()
-                            reader.onload = () => {
-                              const img = new Image()
-                              img.onload = () => {
-                                const canvas = document.createElement('canvas')
-                                const max = 900
-                                let w = img.width, h = img.height
-                                if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                                canvas.width = w; canvas.height = h
-                                canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                                addImageUrl(canvas.toDataURL('image/jpeg', 0.82))
-                              }
-                              img.src = reader.result
-                            }
-                            reader.readAsDataURL(file)
-                            return
-                          }
-                          addImageUrl(url)
-                        }} />
-                      </label>
+                      </button>
                     )}
                   </div>
                   {/* Linked review rating — shown read-only so vendor knows
@@ -14873,7 +16266,7 @@ export default function App() {
                     <input key={donutCardColor} defaultValue={donutCardColor} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) } }} />
                     <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Set</button>
                   </div>
-                  <button type="button" onClick={() => setColorPalette({ title: donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour', current: donutCardColor, onPick: setDonutCardColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+                  <button type="button" onClick={() => setColorPalette({ title: donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour', current: donutCardColor, onPick: setDonutCardColor })} style={{ width: '100%', background: '#EC4899', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}>🎨 More colours →</button>
                 </>
               )}
               {/* Image upload — drives the Image card style */}
@@ -14883,16 +16276,17 @@ export default function App() {
                     {donutCardImage ? <img loading="lazy"src={donutCardImage} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22 }}>🖼️</span>}
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {donutCardImage ? 'Change image' : '+ Upload image'}
-                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                        const file = e.target.files[0]
-                        if (!file) return
-                        e.target.value = ''
-                        const url = await uploadMenuImage(vendorId, file)
-                        if (url) setDonutCardImage(url)
-                      }} />
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => openPicker({
+                        kind: 'donut_card',
+                        current: donutCardImage || '',
+                        onPick: (url) => setDonutCardImage(url),
+                      })}
+                      style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}
+                    >
+                      {donutCardImage ? 'Change image' : '+ Choose image'}
+                    </button>
                     {donutCardImage && (
                       <button onClick={() => setDonutCardImage('')} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>Remove image</button>
                     )}
@@ -14922,7 +16316,7 @@ export default function App() {
                   </div>
                 )
               })()}
-              <button type="button" onClick={() => setColorPalette({ title: 'Frame Side Colour', current: donutFrameColor || accent, onPick: setDonutFrameColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Frame Side Colour', current: donutFrameColor || accent, onPick: setDonutFrameColor })} style={{ width: '100%', background: '#EC4899', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}>🎨 More colours →</button>
             </div>
 
             {/* Add-to-Cart button — shape / colour / text colour / label */}
@@ -14967,7 +16361,7 @@ export default function App() {
                   </div>
                 )
               })()}
-              <button type="button" onClick={() => setColorPalette({ title: 'Button colour', current: donutAddBtnColor || donutPromoBarColor, onPick: setDonutAddBtnColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, marginBottom: 12 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Button colour', current: donutAddBtnColor || donutPromoBarColor, onPick: setDonutAddBtnColor })} style={{ width: '100%', background: '#EC4899', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, boxShadow: '0 4px 12px rgba(236,72,153,0.35)', marginBottom: 12 }}>🎨 More colours →</button>
               {/* Button text/icon color */}
               <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>{donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
@@ -14975,7 +16369,7 @@ export default function App() {
                   <button key={c} type="button" onClick={() => setDonutAddBtnTextColor(c)} style={{ width: 36, height: 36, borderRadius: 18, border: donutAddBtnTextColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0 }} />
                 ))}
               </div>
-              <button type="button" onClick={() => setColorPalette({ title: donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour', current: donutAddBtnTextColor, onPick: setDonutAddBtnTextColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour', current: donutAddBtnTextColor, onPick: setDonutAddBtnTextColor })} style={{ width: '100%', background: '#EC4899', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}>🎨 More colours →</button>
             </div>
 
             {/* Promo bar color */}
@@ -14988,7 +16382,7 @@ export default function App() {
                 ))}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>"T" = theme accent (pink). Tap to reset.</div>
-              <button type="button" onClick={() => setColorPalette({ title: 'Promo Bar Colour', current: donutPromoColor || accent, onPick: setDonutPromoColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Promo Bar Colour', current: donutPromoColor || accent, onPick: setDonutPromoColor })} style={{ width: '100%', background: '#EC4899', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, boxShadow: '0 4px 12px rgba(236,72,153,0.35)' }}>🎨 More colours →</button>
             </div>
           </div>
 
@@ -15080,21 +16474,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Choose Landing Theme — first step. Opens a curated theme picker; vendor's pick saves to landing_theme_id. */}
-            <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 4 }}>Step 1</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Choose Landing Theme</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 12, lineHeight: 1.45 }}>
-                Pick the look of your storefront. The colours from your theme apply across your whole shop — landing, menu, buttons.
-              </div>
-              <button
-                onClick={() => { setLandingThemePicker(true) }}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: `1px solid ${accent}`, background: `${accent}22`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>Browse themes</span>
-                <span style={{ fontSize: 18, color: accent }}>›</span>
-              </button>
-            </div>
+            {/* Landing Theme picker moved to the dashboard (BRAND/DESIGN row).
+                Design Studio is now scoped to logo + layout + effects + splash. */}
 
             {/* Logo Style */}
             <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
@@ -15125,16 +16506,17 @@ export default function App() {
                   </div>
                 )}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {shopLogo ? 'Change logo' : '+ Upload logo'}
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                      const file = e.target.files[0]
-                      if (!file) return
-                      e.target.value = ''
-                      const url = await uploadMenuImage(vendorId, file)
-                      if (url) { setShopLogo(url); try { localStorage.setItem('foodlocalchat_shopLogo', url) } catch {} }
-                    }} />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => openPicker({
+                      kind: 'logo',
+                      current: shopLogo || '',
+                      onPick: (url) => { setShopLogo(url); try { localStorage.setItem('foodlocalchat_shopLogo', url) } catch {} },
+                    })}
+                    style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}
+                  >
+                    {shopLogo ? 'Change logo' : '+ Choose logo'}
+                  </button>
                   {shopLogo && (
                     <button onClick={() => { setShopLogo(''); try { localStorage.removeItem('foodlocalchat_shopLogo') } catch {} }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
                       Remove
@@ -15428,9 +16810,15 @@ export default function App() {
                             {/* Action row — Add Banner left, Clear All as small dark-red on the right. */}
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
                               {menuBanners.length < 5 && (
-                                <label style={{ padding: '10px 16px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>+ Add Banner
-                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => { const file = e.target.files[0]; if (!file) return; e.target.value = ''; const blobUrl = URL.createObjectURL(file); setMenuBanners(prev => [...prev, blobUrl].slice(0, 5)); const url = await uploadMenuImage(vendorId, file); if (url) { setMenuBanners(prev => prev.map(u => u === blobUrl ? url : u)); URL.revokeObjectURL(blobUrl) } }} />
-                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => openPicker({
+                                    kind: 'banner',
+                                    current: '',
+                                    onPick: (url) => setMenuBanners(prev => [...prev, url].slice(0, 5)),
+                                  })}
+                                  style={{ padding: '10px 16px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center', border: 'none' }}
+                                >+ Add Banner</button>
                               )}
                               {menuBanners.length > 0 && (
                                 <button onClick={() => setMenuBanners([])} style={{ marginLeft: 'auto', fontSize: 13, color: '#fff', background: '#8B0000', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '6px 12px', borderRadius: 8, lineHeight: 1, minHeight: 28 }}>Clear All</button>
@@ -15802,6 +17190,711 @@ export default function App() {
           bottom={150}
         />
       )}
+
+      {/* ── Stock Image Library — browse the curated StreetLocal stock
+            grouped by kind. Read-only browser; tapping an image opens
+            the picker for that kind so the vendor can route it to a
+            specific slot. Same dark-glass aesthetic as the picker. ── */}
+      {stockLibraryPageOpen && (() => {
+        // Order kinds. DONUT_PHOTOS is shared across bouncing /
+        // flavour_orb / menu_item / bottom_left / hero — show that
+        // pool ONCE under 'bouncing' (renamed "Donuts" via override
+        // below), then jump to the kinds with their own unique
+        // images so the vendor can reach donut boxes without
+        // scrolling past 4 duplicate donut sections.
+        const KIND_ORDER = ['bouncing','box','packet','letterhead','bg','hero','flavour_orb','menu_item','bottom_left','logo','banner','donut_card','loyalty']
+        // Dedupe across sections by URL — first occurrence wins. So
+        // a donut close-up that lives in bouncing + menu_item only
+        // shows up under bouncing (the first kind in the order).
+        const seenUrls = new Set()
+        const sections = KIND_ORDER.map(k => {
+          const raw = STREETLOCAL_STOCK[k] || []
+          const items = raw.filter(item => {
+            if (hiddenStockIds.has(item.id)) return false
+            if (seenUrls.has(item.url)) return false
+            seenUrls.add(item.url)
+            return true
+          })
+          return { kind: k, items }
+        }).filter(s => s.items.length > 0)
+        const totalVisible = sections.reduce((s, x) => s + x.items.length, 0)
+        const pinkAccent = donutLanding.pink || accent
+        // Friendlier headings for the Stock Library — "Donuts" reads
+        // better than "Bouncing donut" when this section is the full
+        // donut pool, not a slot-specific filter.
+        const SECTION_HEADING = {
+          bouncing: 'Donuts',
+          box: 'Donut boxes',
+          packet: 'Donut packets',
+          letterhead: 'Invoice letterheads',
+          bg: 'Backgrounds',
+          hero: 'Hero artwork',
+          flavour_orb: 'Flavour orbs',
+          menu_item: 'Menu item photos',
+          bottom_left: 'Bottom-left donut',
+          logo: 'Logos',
+          banner: 'Banners',
+          donut_card: 'Menu card backgrounds',
+          loyalty: 'Loyalty cards',
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+            {/* Same donut-app background as Settings hub / Design Studio
+                — undimmed image + light 0.7 scrim so the page reads as
+                an extension of the app, not a separate dark sheet. */}
+            <img loading="lazy" src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', maxWidth: 720, width: '100%', margin: '0 auto', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+              {/* Header */}
+              <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button onClick={() => setStockLibraryPageOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: pinkAccent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38 }}>←</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', lineHeight: 1.2 }}>Stock Image Library</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+                    {totalVisible} curated images
+                    {hiddenStockIds.size > 0 && <> · {hiddenStockIds.size} hidden</>}
+                  </div>
+                </div>
+                {hiddenStockIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => persistHiddenStock(new Set())}
+                    style={{ padding: '8px 12px', borderRadius: 999, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}
+                  >
+                    Restore all
+                  </button>
+                )}
+              </div>
+
+              {/* Tip card — clarifies how to interact with each tile */}
+              <div style={{ margin: '4px 16px 14px', padding: '12px 14px', borderRadius: 14, background: 'rgba(255,215,0,0.08)', border: '1px dashed rgba(255,215,0,0.3)', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                Tap an image to enlarge it. From there you can use it on a slot, or hide it from your library.
+              </div>
+
+              {/* Sections — one heading per kind, 3-column grid below */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
+                {sections.map(({ kind, items }) => (
+                  <div key={kind} style={{ marginBottom: 22 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2 }}>{SECTION_HEADING[kind] || KIND_LABEL[kind] || kind}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>{items.length}</div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                      {items.map(item => (
+                        <button
+                          key={`${kind}-${item.id}`}
+                          type="button"
+                          onClick={() => setStockLightbox({ item, kind })}
+                          style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.35) 100%)', border: '1.5px solid rgba(255,255,255,0.08)', cursor: 'pointer', padding: 8 }}
+                          aria-label={item.label || item.id}
+                        >
+                          {/* `contain` so the whole image fits inside the tile
+                              (no edge cropping). Padded background gives the
+                              transparent donut PNGs a soft surface to sit on. */}
+                          <img loading="lazy" src={item.url} alt={item.label || ''} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                          {item.label && (
+                            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '6px 8px', background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%)', color: '#fff', fontSize: 13, fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{item.label}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {sections.length === 0 && (
+                  <div style={{ margin: '40px 0', padding: '32px 20px', borderRadius: 16, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(14px)', border: '1px dashed rgba(255,255,255,0.12)', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.55 }}>
+                    {hiddenStockIds.size > 0 ? (
+                      <>All visible stock has been hidden. Tap <strong style={{ color: pinkAccent }}>Restore all</strong> above to bring it back.</>
+                    ) : (
+                      <>No stock images available yet. Check back soon.</>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── Lightbox — full-image view with Delete / Select.
+                  Backdrop is the same donut-app bg image so the
+                  enlarged view feels like an extension of the
+                  Stock page, not a separate dark sheet. ── */}
+            {stockLightbox && (
+              <div
+                role="dialog" aria-modal="true"
+                onClick={() => setStockLightbox(null)}
+                style={{ position: 'fixed', inset: 0, zIndex: 260, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}
+              >
+                <img loading="lazy" src={donutLanding.bgImg} alt="" aria-hidden onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+                {/* Top bar with close (X). */}
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)', maxWidth: 'calc(100% - 60px)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {stockLightbox.item.label || stockLightbox.item.id}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStockLightbox(null)}
+                    aria-label="Close"
+                    style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', fontSize: 22, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                  >×</button>
+                </div>
+
+                {/* Centered enlarged image. Click outside closes. */}
+                <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', minHeight: 0 }}>
+                  <img
+                    src={stockLightbox.item.url}
+                    alt={stockLightbox.item.label || ''}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 14, boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}
+                  />
+                </div>
+
+                {/* Action bar — Delete (dark red) / Select (pink). */}
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10, padding: '14px 16px calc(14px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!window.confirm(`Delete "${stockLightbox.item.label || stockLightbox.item.id}" from your stock library?`)) return
+                      const next = new Set(hiddenStockIds)
+                      next.add(stockLightbox.item.id)
+                      persistHiddenStock(next)
+                      setStockLightbox(null)
+                    }}
+                    style={{ flex: 1, padding: '14px', borderRadius: 12, border: 'none', background: '#7F1D1D', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', minHeight: 44, boxShadow: '0 6px 18px rgba(127,29,29,0.55)' }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const { item, kind } = stockLightbox
+                      setStockLightbox(null)
+                      setStockLibraryPageOpen(false)
+                      openPicker({ kind, current: item.url, onPick: () => {} })
+                    }}
+                    style={{ flex: 1, padding: '14px', borderRadius: 12, border: 'none', background: pinkAccent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', minHeight: 44, boxShadow: `0 6px 18px ${pinkAccent}66` }}
+                  >
+                    Select
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ═══ MIX-BOX CUSTOMER PICKER ═══════════════════════════════
+            Triggered from the "Build your own" card on the customer
+            menu. Customer picks N items (mixboxSize). Adding to cart
+            inserts a single line with the bundled price + a builtBox
+            sub-list so the vendor / receipt show what was inside. */}
+      {mixboxPickerOpen && (() => {
+        const pink = donutLanding.pink || accent
+        const totalPicked = Object.values(mixboxPicked).reduce((s, n) => s + n, 0)
+        const remaining = Math.max(0, mixboxSize - totalPicked)
+        const itemsSubtotal = visibleMenu.reduce((s, item) => s + (item.price || 0) * (mixboxPicked[item.id] || 0), 0)
+        // If vendor set a flat box price, use it; else sum of picks.
+        const finalBoxPrice = mixboxPrice > 0 ? mixboxPrice : itemsSubtotal
+        const bump = (id, delta) => {
+          setMixboxPicked(prev => {
+            const next = { ...prev }
+            const cur = next[id] || 0
+            const proposed = cur + delta
+            if (proposed < 0) return prev
+            const others = Object.entries(next).reduce((s, [k, v]) => k === id ? s : s + v, 0)
+            if (others + proposed > mixboxSize) return prev // cap at box size
+            if (proposed === 0) delete next[id]
+            else next[id] = proposed
+            return next
+          })
+        }
+        const addToCart = () => {
+          if (totalPicked !== mixboxSize) { alert(`Pick exactly ${mixboxSize} donuts.`); return }
+          const builtBox = Object.entries(mixboxPicked).map(([id, qty]) => {
+            const it = visibleMenu.find(m => m.id === id)
+            return { id, name: it?.name || 'Donut', qty }
+          })
+          const cartLine = {
+            id: 'mixbox-' + Date.now(),
+            name: mixboxLabel,
+            price: finalBoxPrice,
+            qty: 1,
+            lineTotal: finalBoxPrice,
+            builtBox,
+          }
+          setCart([...cart, cartLine])
+          setMixboxPickerOpen(false)
+          setMixboxPicked({})
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 800, background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+            <img loading="lazy" src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px' }}>
+              <button onClick={() => setMixboxPickerOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: pink, border: 'none', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{mixboxLabel}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>
+                  {totalPicked === mixboxSize ? `✓ ${mixboxSize}/${mixboxSize} picked — ready` : `${totalPicked}/${mixboxSize} picked · ${remaining} to go`}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 100px' }}>
+              {visibleMenu.map(item => {
+                const qty = mixboxPicked[item.id] || 0
+                return (
+                  <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+                    {item.photo && <img src={item.photo} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                      {mixboxPrice <= 0 && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{fmt(item.price)}</div>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button onClick={() => bump(item.id, -1)} disabled={qty === 0} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: qty === 0 ? 'rgba(255,255,255,0.05)' : pink, color: '#fff', fontSize: 18, fontWeight: 900, cursor: qty === 0 ? 'default' : 'pointer', opacity: qty === 0 ? 0.4 : 1 }}>−</button>
+                      <div style={{ minWidth: 24, textAlign: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>{qty}</div>
+                      <button onClick={() => bump(item.id, 1)} disabled={totalPicked >= mixboxSize} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: totalPicked >= mixboxSize ? 'rgba(255,255,255,0.05)' : pink, color: '#fff', fontSize: 18, fontWeight: 900, cursor: totalPicked >= mixboxSize ? 'default' : 'pointer', opacity: totalPicked >= mixboxSize ? 0.4 : 1 }}>+</button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, padding: '12px 14px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(0,0,0,0.9)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Box price</span>
+                <span style={{ fontSize: 20, fontWeight: 900, color: '#FACC15' }}>{fmt(Math.round(finalBoxPrice))}</span>
+              </div>
+              <button onClick={addToCart} disabled={totalPicked !== mixboxSize} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: totalPicked === mixboxSize ? pink : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 15, fontWeight: 900, cursor: totalPicked === mixboxSize ? 'pointer' : 'default', opacity: totalPicked === mixboxSize ? 1 : 0.5, minHeight: 50 }}>
+                {totalPicked === mixboxSize ? `Add to cart — ${fmt(Math.round(finalBoxPrice))}` : `Pick ${remaining} more`}
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ FEATURE-SWEEP PAGES (mig 20260615) ═══════════════════════
+            14 new vendor settings pages. Each gets a Settings hub entry
+            and follows the same dark-glass theme as the rest of the
+            donut app. Pages with toggle-only config use the compact
+            FeatureScaffold pattern; data-view pages render lists. */}
+
+      {/* Shared style helpers for these pages — defined inline so each
+          page can stay self-contained. */}
+      {(mixboxPageOpen || tipPageOpen || productionPageOpen || kdsPageOpen || customersPageOpen || cateringPageOpen || recurringPageOpen || giftcardsPageOpen || cashReconPageOpen || kioskPageOpen || smsPageOpen || emailCampaignsPageOpen || affiliatePayoutsPageOpen || preorderPageOpen || gatewayHealthPageOpen) && (() => {
+        const pink = donutLanding.pink || accent
+        const labelStyle = { fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 4, display: 'block' }
+        const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
+        const PageShell = ({ open, onClose, title, subtitle, children }) => !open ? null : (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img loading="lazy" src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 18, background: pink, border: 'none', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{title}</div>
+                {subtitle && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{subtitle}</div>}
+              </div>
+            </div>
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', maxWidth: 720, width: '100%', margin: '0 auto' }}>{children}</div>
+          </div>
+        )
+        const Card = ({ title, children }) => (
+          <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 14 }}>
+            {title && <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 }}>{title}</div>}
+            {children}
+          </div>
+        )
+        const Toggle = ({ checked, onChange, label, sub }) => (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', cursor: 'pointer', marginBottom: 8 }}>
+            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ accentColor: pink, width: 18, height: 18 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{label}</div>
+              {sub && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{sub}</div>}
+            </div>
+          </label>
+        )
+        return (
+          <>
+            {/* 🥇 MIX-AND-MATCH BOX */}
+            <PageShell open={mixboxPageOpen} onClose={() => setMixboxPageOpen(false)} title="🍩 Build-your-own Dozen" subtitle="Let customers pick their own mix">
+              <Card>
+                <Toggle checked={mixboxEnabled} onChange={setMixboxEnabled} label="Enable mix-and-match box" sub="Adds a 'Build your own' card at the top of the customer menu" />
+              </Card>
+              {mixboxEnabled && <Card title="Box config">
+                <label style={labelStyle}>Box label (shown to customer)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} value={mixboxLabel} maxLength={60} onChange={(e) => setMixboxLabel(e.target.value)} />
+                <label style={labelStyle}>How many donuts per box?</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={1} max={50} value={mixboxSize} onChange={(e) => setMixboxSize(parseInt(e.target.value, 10) || 12)} />
+                <label style={labelStyle}>Box price (overrides per-donut total)</label>
+                <input style={inputStyle} type="number" min={0} step={0.01} value={mixboxPrice} onChange={(e) => setMixboxPrice(parseFloat(e.target.value) || 0)} placeholder="0 = sum of selected donuts" />
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 6 }}>Tip: set a bundled price (e.g. {fmt(120000)}) lower than 12× individual price to encourage bigger orders.</div>
+              </Card>}
+            </PageShell>
+
+            {/* 🥇 TIPPING */}
+            <PageShell open={tipPageOpen} onClose={() => setTipPageOpen(false)} title="💸 Tipping" subtitle="Counter tips at checkout">
+              <Card>
+                <Toggle checked={tipEnabled} onChange={setTipEnabled} label="Allow tips at checkout" sub="Customers see 10/15/20%/custom buttons before paying" />
+                <Toggle checked={tipSplitEnabled} onChange={setTipSplitEnabled} label="Track tips for staff split" sub="Logs tips per order so you can divide between cashiers + bakers at end of day" />
+              </Card>
+              {tipEnabled && <Card title="Suggested percentages">
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {tipPresets.map((p, i) => (
+                    <input key={i} type="number" min={0} max={100} value={p} onChange={(e) => {
+                      const next = [...tipPresets]; next[i] = parseInt(e.target.value, 10) || 0; setTipPresets(next)
+                    }} style={{ ...inputStyle, textAlign: 'center', flex: 1 }} />
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 8 }}>3 quick-tap buttons shown to the customer. They can also type a custom amount.</div>
+              </Card>}
+            </PageShell>
+
+            {/* 🥇 PRODUCTION PLANNER */}
+            <PageShell open={productionPageOpen} onClose={() => setProductionPageOpen(false)} title="📋 Production Planner" subtitle="What to bake today + wastage tracker">
+              <Card title="Today's bake plan">
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55, marginBottom: 10 }}>
+                  For each menu item, we average how many sold on this day-of-week over the last 7 weeks → that's your suggested bake count. Tap "Baked" to log what you actually made, "Wasted" at end of day for leftovers. Builds your historical data for sharper suggestions over time.
+                </div>
+                {menuItems.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Add menu items first.</div>}
+                {menuItems.map(item => {
+                  const dow = new Date().getDay()
+                  const today = new Date().toISOString().slice(0, 10)
+                  return (
+                    <div key={item.id} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+                      {item.photo && <img src={item.photo} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Suggest ~24 today</div>
+                      </div>
+                      <input type="number" placeholder="Baked" min={0} style={{ ...inputStyle, width: 80, padding: '6px 8px', fontSize: 13 }} onBlur={async (e) => {
+                        const baked = parseInt(e.target.value, 10) || 0
+                        if (baked > 0 && supabase) {
+                          await supabase.from('production_logs').upsert({ vendor_id: vendorId, log_date: today, item_id: item.id, item_name: item.name, baked, updated_at: new Date().toISOString() }, { onConflict: 'vendor_id,log_date,item_id' })
+                        }
+                      }} />
+                      <input type="number" placeholder="Waste" min={0} style={{ ...inputStyle, width: 80, padding: '6px 8px', fontSize: 13 }} onBlur={async (e) => {
+                        const wasted = parseInt(e.target.value, 10) || 0
+                        if (wasted >= 0 && supabase) {
+                          await supabase.from('production_logs').upsert({ vendor_id: vendorId, log_date: today, item_id: item.id, item_name: item.name, wasted, updated_at: new Date().toISOString() }, { onConflict: 'vendor_id,log_date,item_id' })
+                        }
+                      }} />
+                    </div>
+                  )
+                })}
+              </Card>
+            </PageShell>
+
+            {/* 🥇 KDS — shows QR code + URL to install on a tablet */}
+            <PageShell open={kdsPageOpen} onClose={() => setKdsPageOpen(false)} title="🍳 Kitchen Display (KDS)" subtitle="Live orders on a separate tablet — counter POS stays clean">
+              <Card title="How to install on a tablet">
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.55, marginBottom: 12 }}>
+                  Open a Chrome tab on your kitchen tablet. Paste the URL below. The page shows live confirmed orders with big buttons. Leave it open — it auto-updates as orders come in. No login needed; the URL contains a secret token unique to your shop.
+                </div>
+                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'monospace', fontSize: 12, color: '#86EFAC', wordBreak: 'break-all', marginBottom: 10 }}>
+                  {window.location.origin}/food/chat/?kds={kdsToken || 'loading…'}
+                </div>
+                <button onClick={() => {
+                  const url = `${window.location.origin}/food/chat/?kds=${kdsToken}`
+                  navigator.clipboard?.writeText(url)
+                  alert('Copied. Paste into the tablet browser.')
+                }} style={{ padding: '10px 16px', borderRadius: 10, background: pink, color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Copy URL</button>
+              </Card>
+              <Card title="Security note">
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
+                  The token in the URL is the only auth. Treat it like a password — don't share it. If a tablet is lost or stolen, rotate the token below (anyone with the old URL stops seeing orders).
+                </div>
+                <button onClick={async () => {
+                  if (!supabase || !vendorId) return
+                  if (!window.confirm('Rotate the KDS token? All open tablets stop working until they get the new URL.')) return
+                  const newToken = crypto.randomUUID()
+                  await supabase.from('vendor_accounts').update({ kds_token: newToken }).eq('id', vendorId)
+                  setKdsToken(newToken)
+                  alert('Token rotated. Re-share the new URL.')
+                }} style={{ marginTop: 10, padding: '10px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.18)', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.4)', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Rotate token</button>
+              </Card>
+            </PageShell>
+
+            {/* 🥈 CUSTOMER ACCOUNTS — list view from customer_accounts table */}
+            <PageShell open={customersPageOpen} onClose={() => setCustomersPageOpen(false)} title="👥 Customers" subtitle="Order history + tax-exempt flag per customer">
+              <Card title="Your customers">
+                <CustomerList vendorId={vendorId} supabase={supabase} pink={pink} fmt={fmt} />
+              </Card>
+            </PageShell>
+
+            {/* 🥈 CATERING */}
+            <PageShell open={cateringPageOpen} onClose={() => setCateringPageOpen(false)} title="🥡 Catering / Wholesale" subtitle="Large lead-time orders for offices, weddings, schools">
+              <Card>
+                <Toggle checked={cateringEnabled} onChange={setCateringEnabled} label="Accept catering orders" sub="Customer sees a 'Catering inquiry' card on your storefront" />
+              </Card>
+              {cateringEnabled && <Card title="Catering rules">
+                <label style={labelStyle}>Minimum lead time (hours)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={0} value={cateringLeadHours} onChange={(e) => setCateringLeadHours(parseInt(e.target.value, 10) || 24)} />
+                <label style={labelStyle}>Minimum order quantity (donuts)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={1} value={cateringMinSize} onChange={(e) => setCateringMinSize(parseInt(e.target.value, 10) || 24)} />
+                <label style={labelStyle}>Notification email (separate from main inbox)</label>
+                <input style={inputStyle} type="email" value={cateringContactEmail} onChange={(e) => setCateringContactEmail(e.target.value)} placeholder="catering@yourshop.com" />
+              </Card>}
+            </PageShell>
+
+            {/* 🥈 RECURRING ORDERS */}
+            <PageShell open={recurringPageOpen} onClose={() => setRecurringPageOpen(false)} title="🔁 Recurring orders" subtitle="Weekly / biweekly / monthly subscriptions">
+              <Card>
+                <Toggle checked={recurringEnabled} onChange={setRecurringEnabled} label="Accept recurring orders" sub="Customers can opt-in 'repeat weekly' after any order. A cron creates the new order on the schedule day; customer confirms via chat." />
+              </Card>
+              {recurringEnabled && <Card title="Active subscriptions"><RecurringList vendorId={vendorId} supabase={supabase} pink={pink} /></Card>}
+            </PageShell>
+
+            {/* 🥈 GIFT CARDS */}
+            <PageShell open={giftcardsPageOpen} onClose={() => setGiftcardsPageOpen(false)} title="🎁 Gift cards" subtitle="Digital gift cards with unique codes">
+              <Card>
+                <Toggle checked={giftcardsEnabled} onChange={setGiftcardsEnabled} label="Sell gift cards" sub="Customer enters denomination + recipient email. Unique code emailed automatically." />
+              </Card>
+              {giftcardsEnabled && <Card title="Denominations (in your currency)">
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {giftcardDenominations.map((d, i) => (
+                    <input key={i} type="number" min={1} value={d} onChange={(e) => {
+                      const next = [...giftcardDenominations]; next[i] = parseFloat(e.target.value) || 0; setGiftcardDenominations(next)
+                    }} style={{ ...inputStyle, width: 90, textAlign: 'center' }} />
+                  ))}
+                  <button onClick={() => setGiftcardDenominations([...giftcardDenominations, 0])} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', cursor: 'pointer' }}>+ Add</button>
+                </div>
+              </Card>}
+              <Card title="Cards issued">
+                <GiftCardsList vendorId={vendorId} supabase={supabase} fmt={fmt} pink={pink} />
+              </Card>
+            </PageShell>
+
+            {/* 🥉 CASH RECONCILIATION (Z-report) */}
+            <PageShell open={cashReconPageOpen} onClose={() => setCashReconPageOpen(false)} title="💰 End-of-day Z-report" subtitle="Cash counted vs expected from cash orders">
+              <CashRecon vendorId={vendorId} supabase={supabase} fmt={fmt} pink={pink} labelStyle={labelStyle} inputStyle={inputStyle} />
+            </PageShell>
+
+            {/* 🥉 KIOSK MODE */}
+            <PageShell open={kioskPageOpen} onClose={() => setKioskPageOpen(false)} title="📺 Self-serve kiosk" subtitle="Locked URL for in-store tablets">
+              <Card>
+                <Toggle checked={kioskEnabled} onChange={setKioskEnabled} label="Enable kiosk mode" sub="Opens a customer-only view that auto-resets after each order and hides navigation. Mount a tablet on your counter and customers can self-order." />
+              </Card>
+              {kioskEnabled && <Card title="Kiosk URL">
+                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'monospace', fontSize: 12, color: '#86EFAC', wordBreak: 'break-all', marginBottom: 10 }}>
+                  {window.location.origin}/food/chat/?vendor={vendorId}&kiosk=1
+                </div>
+                <button onClick={() => {
+                  navigator.clipboard?.writeText(`${window.location.origin}/food/chat/?vendor=${vendorId}&kiosk=1`)
+                  alert('Copied. Open on the kiosk tablet.')
+                }} style={{ padding: '10px 16px', borderRadius: 10, background: pink, color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Copy kiosk URL</button>
+              </Card>}
+            </PageShell>
+
+            {/* 🥉 SMS notifications (Twilio) */}
+            <PageShell open={smsPageOpen} onClose={() => setSmsPageOpen(false)} title="📱 SMS notifications" subtitle="Send order ready / dispatch via Twilio">
+              <Card>
+                <Toggle checked={smsEnabled} onChange={setSmsEnabled} label="Enable SMS notifications" sub="Customers get an SMS when their order is ready or out for delivery. You pay Twilio directly — typically ~$0.0075 per SMS in US, varies by country." />
+              </Card>
+              {smsEnabled && <Card title="Twilio credentials">
+                <label style={labelStyle}>Account SID (starts with AC…)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} value={smsAccountSid} onChange={(e) => setSmsAccountSid(e.target.value)} placeholder="ACxxxxxxxxxxxxxxxxxxxxx" />
+                <label style={labelStyle}>Auth Token (keep secret)</label>
+                <input style={{ ...inputStyle, marginBottom: 10 }} type="password" value={smsAuthToken} onChange={(e) => setSmsAuthToken(e.target.value)} />
+                <label style={labelStyle}>From number (E.164 format)</label>
+                <input style={inputStyle} value={smsFromNumber} onChange={(e) => setSmsFromNumber(e.target.value)} placeholder="+14155551234" />
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10, lineHeight: 1.5 }}>Get credentials from console.twilio.com. Free trial credit ~$15. Sandbox numbers work for testing; for production buy a real number (~$1/mo).</div>
+              </Card>}
+            </PageShell>
+
+            {/* 🥉 Email campaigns (Resend) */}
+            <PageShell open={emailCampaignsPageOpen} onClose={() => setEmailCampaignsPageOpen(false)} title="📧 Email campaigns" subtitle="Segment your customers + send promo emails">
+              <EmailCampaigns vendorId={vendorId} supabase={supabase} pink={pink} labelStyle={labelStyle} inputStyle={inputStyle} />
+            </PageShell>
+
+            {/* 🥉 Affiliate payouts (admin tool) */}
+            <PageShell open={affiliatePayoutsPageOpen} onClose={() => setAffiliatePayoutsPageOpen(false)} title="💳 Affiliate payouts" subtitle="Mark referral commissions paid">
+              <AffiliatePayouts supabase={supabase} pink={pink} fmt={fmt} />
+            </PageShell>
+
+            {/* 🥉 Gateway health monitoring */}
+            <PageShell open={gatewayHealthPageOpen} onClose={() => setGatewayHealthPageOpen(false)} title="📡 Gateway health" subtitle="Live status of each connected payment gateway">
+              <GatewayHealth vendorId={vendorId} supabase={supabase} pink={pink} />
+            </PageShell>
+
+            {/* 🥉 Pre-order windows */}
+            <PageShell open={preorderPageOpen} onClose={() => setPreorderPageOpen(false)} title="🎉 Pre-order windows" subtitle="Mother's Day, Valentine's, holiday lead-time orders">
+              <Card>
+                <Toggle checked={preorderEnabled} onChange={setPreorderEnabled} label="Enable pre-order windows" sub="Customer sees a banner at the top of your menu when a window is active. Orders queue for fulfilment on the chosen day." />
+              </Card>
+              {preorderEnabled && <Card title="Active windows">
+                <PreorderWindows vendorId={vendorId} supabase={supabase} pink={pink} labelStyle={labelStyle} inputStyle={inputStyle} />
+              </Card>}
+            </PageShell>
+          </>
+        )
+      })()}
+
+      {/* ── Native App info page — upsell + IP-protection terms ──
+            Vendors land here from Settings to learn about getting their
+            branded app into Apple App Store + Google Play. Mirrors the
+            landing site's #native-apps section so the message is
+            consistent across surfaces. ── */}
+      {nativeAppPageOpen && (() => {
+        const pinkAccent = donutLanding.pink || accent
+        // Asia / Western pricing split mirrors planPricing.ts. Vendor's
+        // tier label drives the price shown — Indonesia / Asia get the
+        // PPP rate, US / UK / EU / AU get the international rate.
+        // Shop country is captured at signup; falls back to IDR pricing
+        // when known to be an Asia market, otherwise USD. Country codes
+        // are stored as 2-letter ISO from the country-detect Edge Fn.
+        const isAsia = ['ID','PH','VN','TH','IN','MY','INDONESIA','PHILIPPINES','VIETNAM','THAILAND','INDIA','MALAYSIA'].includes((shopCountry || '').toUpperCase())
+        const PRICES = isAsia
+          ? { std: 'Rp 2,500,000', stdMo: 'Rp 350,000', prm: 'Rp 5,000,000', prmMo: 'Rp 750,000', ent: 'Rp 12,500,000', entMo: 'Rp 1,500,000' }
+          : { std: '$499',         stdMo: '$29',         prm: '$999',         prmMo: '$49',         ent: '$2,499',         entMo: '$99' }
+        const Tier = ({ name, blurb, price, priceSub, bullets, featured }) => (
+          <div style={{ borderRadius: 18, border: featured ? `1.5px solid ${pinkAccent}` : '1px solid rgba(255,255,255,0.1)', background: featured ? `linear-gradient(180deg, ${pinkAccent}1a 0%, rgba(0,0,0,0.45) 100%)` : 'rgba(0,0,0,0.55)', backdropFilter: 'blur(14px)', padding: 18, position: 'relative' }}>
+            {featured && <div style={{ position: 'absolute', top: -10, left: 18, padding: '3px 10px', borderRadius: 999, background: pinkAccent, color: '#fff', fontSize: 11, fontWeight: 900, letterSpacing: 0.5, textTransform: 'uppercase' }}>Most popular</div>}
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{name}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4, lineHeight: 1.4 }}>{blurb}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#fff', marginTop: 14, letterSpacing: -0.5 }}>{price} <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>one-time</span></div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginTop: 2 }}>+ {priceSub}/month maintenance</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {bullets.map((b, i) => (
+                <li key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, paddingLeft: 22, position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent, fontWeight: 900 }}>✓</span>
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+            <img loading="lazy" src={donutLanding.bgImg} alt="" aria-hidden onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', maxWidth: 720, width: '100%', margin: '0 auto', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+              <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button onClick={() => setNativeAppPageOpen(false)} style={{ width: 38, height: 38, borderRadius: 19, background: pinkAccent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38 }}>←</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', lineHeight: 1.2 }}>Launch in the App Store</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Apple + Google · your bakery, your branding</div>
+                </div>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 16px' }}>
+                {/* Hero */}
+                <div style={{ borderRadius: 18, padding: 18, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 }}>Add-on service</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.15, letterSpacing: -0.5 }}>Your bakery in Apple App Store + Google Play.</div>
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 8, lineHeight: 1.5 }}>We build your branded native app — your name, your logo, your colours — and submit it to both stores under your bakery's developer account. You own the listing. We handle the build, submission, and updates.</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 700, color: '#fff' }}> Apple App Store</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 700, color: '#fff' }}> Google Play</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: 'rgba(250,204,21,0.18)', border: '1px solid rgba(250,204,21,0.4)', fontSize: 12, fontWeight: 800, color: '#FDE68A' }}>PWA included free</span>
+                  </div>
+                </div>
+
+                {/* Tier cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14, marginBottom: 18 }}>
+                  <Tier
+                    name="Standard wrap"
+                    blurb="Your branded app live in both stores within 2 weeks."
+                    price={PRICES.std}
+                    priceSub={PRICES.stdMo}
+                    bullets={[
+                      'Capacitor build — your logo, name, colours, splash screen',
+                      'App icons + 5 screenshots + store listing copy',
+                      'Submission to Apple App Store + Google Play',
+                      'Review-response handling on your behalf',
+                      'Push notifications setup',
+                      'Over-the-air JS updates (no store re-review)',
+                    ]}
+                  />
+                  <Tier
+                    featured
+                    name="Premium wrap"
+                    blurb="Everything in Standard plus campaigns, ASO, and store-listing optimisation."
+                    price={PRICES.prm}
+                    priceSub={PRICES.prmMo}
+                    bullets={[
+                      'Everything in Standard',
+                      'Custom animated splash + launch screen',
+                      'Segmented push-notification campaigns',
+                      'App Store Optimisation — keywords tuned to your city',
+                      'Apple Pay + Google Pay deep integration',
+                      'Quarterly store-listing refresh',
+                    ]}
+                  />
+                  <Tier
+                    name="Enterprise wrap"
+                    blurb="Multi-app chains, custom plugins, priority store-review escalation."
+                    price={PRICES.ent}
+                    priceSub={PRICES.entMo}
+                    bullets={[
+                      'Everything in Premium',
+                      'Custom Capacitor plugins (NFC loyalty taps, beacons)',
+                      'Priority Apple expedited review (24-hour, when available)',
+                      'Multi-app management — chains with 5+ locations',
+                      'Dedicated review-escalation handler',
+                    ]}
+                  />
+                </div>
+
+                {/* IP / protection terms */}
+                <div style={{ borderRadius: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.08)', padding: 18 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 10 }}>What's protected, what's yours</div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <li style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent }}>•</span>
+                      <strong style={{ color: '#fff' }}>Source code stays with StreetLocal.</strong> We build the binary on our servers — your app cannot be extracted, decompiled, or transferred. You're licensing a finished product, not buying our codebase.
+                    </li>
+                    <li style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent }}>•</span>
+                      <strong style={{ color: '#fff' }}>Your developer accounts are yours.</strong> Apple Developer ($99/year) and Google Play ($25 one-time) go in your bakery's legal name. You own the store listing, the reviews, the payouts.
+                    </li>
+                    <li style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent }}>•</span>
+                      <strong style={{ color: '#fff' }}>Apple + Google fees are separate.</strong> $99/year to Apple, $25 once to Google — paid directly to them, not us. We list our prices above without those fees.
+                    </li>
+                    <li style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent }}>•</span>
+                      <strong style={{ color: '#fff' }}>If you cancel:</strong> the live app keeps working but stops receiving updates. Your store listing and reviews stay with you. The source code license terminates.
+                    </li>
+                    <li style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, top: 0, color: pinkAccent }}>•</span>
+                      <strong style={{ color: '#fff' }}>Donuts are physical goods.</strong> Apple/Google take 0% commission on donut sales — you keep using your existing payment gateway. The 30% in-app purchase tax only applies to digital goods.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* CTA */}
+                <div style={{ textAlign: 'center', marginTop: 18 }}>
+                  <a href="mailto:streetlocallive@gmail.com?subject=Native%20app%20request" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '14px 24px', borderRadius: 14, background: pinkAccent, color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none', boxShadow: `0 6px 18px ${pinkAccent}66`, minHeight: 44 }}>
+                    Request a native app quote
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Vendor image library picker — opens over any image slot.
+            Lives at the root so it floats above every drawer / modal
+            in the app. Selecting an image fires picker.onPick with
+            the URL, then closes. Parent passes the donut theme bg so
+            the picker visually inherits the shop's look. ── */}
+      <ImagePickerModal
+        open={picker.open}
+        kind={picker.kind}
+        vendorId={vendorId}
+        current={picker.current}
+        bgImg={donutLanding.bgImg}
+        accent={donutLanding.pink || accent}
+        cap={tierFeatures.imageLibraryCap}
+        tierLabel={tierFeatures.label}
+        onClose={closePicker}
+        onPick={(url) => { if (typeof picker.onPick === 'function') picker.onPick(url) }}
+        onUpload={async (file, kind) => uploadMenuImage(vendorId, file, kind)}
+      />
     </div>
   )
 }

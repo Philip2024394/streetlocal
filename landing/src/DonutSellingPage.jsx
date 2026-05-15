@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react'
 
 const IMAGES = {
   heroDonut:    'https://ik.imagekit.io/nepgaxllc/Untitleddasddasdfssdfsdfsdsdasdss-removebg-preview.png',
-  bouncing:     'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png',
+  bouncing:     'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129',
   bottomLeft:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png',
   bostonCream:  'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2008_45_54%20PM.png',
   strawberry:   'https://ik.imagekit.io/nepgaxllc/Untitledasdaaaavdddddd-removebg-preview%20(1).png',
@@ -84,11 +84,19 @@ const FAQS = [
   ['Is my data secure?',
    'Yes. Daily encrypted backups, HTTPS everywhere, and we never share customer data with third parties. You own everything.'],
   ['Can I use my own domain (like mydonuts.com)?',
-   'Yes — included at no extra cost. We help you point it. Or use the free streetlocal.live/yourshop subdomain.'],
+   'Yes — included on Professional and Enterprise plans. We help you point it. Or use the free streetlocal.live/yourshop subdomain.'],
   ['What languages are supported?',
    'English + Indonesian, fully translated. Vietnamese, Malay, and Filipino are on the roadmap for Q3 2026.'],
   ['Can I run promotions or deals?',
    'Yes — BUY1GET1, percentage-off, time-limited, free-delivery-above thresholds, scrolling promo banners. All built in.'],
+  ['Can my donut shop be in the Apple App Store and Google Play?',
+   "Yes — as a paid add-on. We build your branded native app (your name, your logo, your colours) and submit to both stores under your bakery's own developer account. From Rp 2.5M / $499 one-time + Rp 350k / $29 per month. You own the listing, the reviews, and the payouts. See the “Beyond the monthly plan” section above for details."],
+  ['Who owns the app if I get a native build?',
+   'You own the store listing, your customer data, and your developer accounts. We retain ownership of the source code — your build is a licensed binary, not a code transfer. If you cancel, the live app keeps working but stops receiving updates.'],
+  ['Do Apple or Google take a cut when customers buy donuts?',
+   "No. Donuts are physical goods — Apple's 30% and Google's 30% only apply to digital goods. You keep using your existing payment gateway and 100% of the donut sale (minus your gateway's normal processing fee)."],
+  ['Can I request a custom feature?',
+   'Yes. Common requests like NFC loyalty taps, beacon-based store offers, custom delivery integrations, and accounting-software bridges are quoted per project. Email us with what you need.'],
   ['Who do I contact if I need help?',
    'WhatsApp support 9 AM – 9 PM WIB. Average response time: 12 minutes. Most issues solved in the first reply.'],
 ]
@@ -375,7 +383,7 @@ export default function DonutSellingPage() {
                 base and fall past the phone for a continuous shower. */}
             <img
               className="ds-dance-donut"
-              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png"
+              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129"
               alt=""
               aria-hidden
             />
@@ -592,6 +600,84 @@ export default function DonutSellingPage() {
                 <span key={i} className="ds-trust-marquee__item">{t}</span>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ BEYOND THE MONTHLY PLAN — native apps + custom features ═══
+            Positions us as both a PWA platform AND a paid app-builder
+            service so visitors leave knowing we cover requests outside
+            the standard subscription. Pricing mirrors the StreetLocal
+            site's #native-apps section so the offer is consistent
+            across surfaces. */}
+      <section className="ds-section ds-section--beyond" id="extras">
+        <div className="ds-container">
+          <div className="ds-section__head">
+            <span className="ds-kicker">Beyond the monthly plan</span>
+            <h2 className="ds-h2">Need more? We build it.<br /><span className="ds-pink">Apple App Store. Google Play. Custom features.</span></h2>
+            <p className="ds-section__sub">
+              The Rp 38,000 monthly plan gets your PWA live in minutes. When you're ready to grow — branded native app, custom integrations, NFC loyalty — we handle those as paid add-ons. Same StreetLocal team, beyond-the-subscription delivery.
+            </p>
+          </div>
+
+          <div className="ds-beyond-grid">
+            {/* Native app card */}
+            <div className="ds-beyond-card ds-beyond-card--featured">
+              <div className="ds-beyond-card__pill">App Store + Play Store</div>
+              <h3 className="ds-beyond-card__title">Your bakery in the App Store</h3>
+              <p className="ds-beyond-card__desc">
+                We build your branded native app — your name, your logo, your colours — and submit it to Apple App Store and Google Play under your bakery's own developer account. You own the listing, reviews, and payouts. Customers find you in their phone's store.
+              </p>
+              <div className="ds-beyond-card__price">
+                <span className="ds-beyond-card__price-from">From</span>
+                <span className="ds-beyond-card__price-amount">Rp 2,500,000</span>
+                <span className="ds-beyond-card__price-sub">one-time + Rp 350k/month maintenance</span>
+              </div>
+              <ul className="ds-beyond-card__list">
+                <li>Branded build with your logo + splash screen</li>
+                <li>App icons, screenshots, store listing copy</li>
+                <li>Submission to Apple + Google on your behalf</li>
+                <li>Push notifications + over-the-air updates</li>
+                <li>Apple Developer ($99/yr) + Google Play ($25 one-time) paid directly to them, in your name</li>
+              </ul>
+            </div>
+
+            {/* Custom features card */}
+            <div className="ds-beyond-card">
+              <div className="ds-beyond-card__pill">Custom work · quote per project</div>
+              <h3 className="ds-beyond-card__title">Build what you need</h3>
+              <p className="ds-beyond-card__desc">
+                If your shop has a specific workflow — wholesale catering portal, accounting export, NFC tap-to-stamp loyalty, beacon promos near your door — we build it as a custom engagement. Same StreetLocal codebase under the hood, your specific business logic on top.
+              </p>
+              <ul className="ds-beyond-card__list">
+                <li>NFC loyalty taps (no app open needed for stamps)</li>
+                <li>Beacon-triggered offers when customers walk past</li>
+                <li>Accounting / inventory software bridges</li>
+                <li>Custom delivery integrations</li>
+                <li>Multi-app management for chains with 5+ locations</li>
+              </ul>
+              <a href="mailto:streetlocallive@gmail.com?subject=Custom%20feature%20request" className="ds-btn ds-btn--ghost ds-beyond-card__cta">Email us with your idea →</a>
+            </div>
+          </div>
+
+          {/* Protection / ownership card */}
+          <div className="ds-beyond-protect">
+            <div className="ds-beyond-protect__title">What's protected, what's yours</div>
+            <div className="ds-beyond-protect__list">
+              <div className="ds-beyond-protect__item">
+                <strong>Source code stays with StreetLocal.</strong> We build the binary on our servers — your app cannot be extracted or transferred. You're licensing a finished product, not buying our codebase.
+              </div>
+              <div className="ds-beyond-protect__item">
+                <strong>Your developer accounts are yours.</strong> Apple ($99/yr) + Google ($25 one-time) registered in your bakery's legal name. You own the listing, reviews, and payouts.
+              </div>
+              <div className="ds-beyond-protect__item">
+                <strong>Donut sales = 0% Apple/Google cut.</strong> Physical goods are exempt from the 30% in-app purchase tax. You keep using your own payment gateway.
+              </div>
+              <div className="ds-beyond-protect__item">
+                <strong>If you cancel:</strong> the live app keeps working, store listing stays yours, but the app stops receiving updates and the source-code license terminates.
+              </div>
+            </div>
+            <a href="mailto:streetlocallive@gmail.com?subject=Native%20app%20request" className="ds-btn ds-btn--primary ds-beyond-protect__cta">Request a native app quote</a>
           </div>
         </div>
       </section>
@@ -921,6 +1007,33 @@ function PageStyles() {
       .ds-trust-marquee__track { display: inline-flex; gap: 36px; animation: dsMarquee 40s linear infinite; white-space: nowrap; }
       .ds-trust-marquee__item { font-size: 14px; color: #6B5555; font-weight: 600; }
       @keyframes dsMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+      /* ── BEYOND THE MONTHLY PLAN — native apps + custom features ── */
+      .ds-section--beyond { background: linear-gradient(180deg, #FFF5F8 0%, #FFE4ED 100%); }
+      .ds-beyond-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 30px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+      @media (min-width: 760px) { .ds-beyond-grid { grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; } }
+      .ds-beyond-card { padding: 26px 22px; border-radius: 22px; border: 1px solid rgba(236,72,153,0.18); background: #fff; box-shadow: 0 6px 20px rgba(236,72,153,0.08); display: flex; flex-direction: column; gap: 12px; }
+      .ds-beyond-card--featured { border-color: #EC4899; box-shadow: 0 10px 32px rgba(236,72,153,0.18); }
+      .ds-beyond-card__pill { display: inline-block; align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #EC4899; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+      .ds-beyond-card__title { font-size: 22px; font-weight: 900; color: #2D1B1B; letter-spacing: -0.5px; margin: 4px 0; line-height: 1.2; }
+      .ds-beyond-card__desc { font-size: 14px; color: #6B5555; line-height: 1.55; margin: 0; }
+      .ds-beyond-card__price { padding: 14px 16px; border-radius: 14px; background: rgba(236,72,153,0.06); border: 1px solid rgba(236,72,153,0.15); margin: 4px 0; }
+      .ds-beyond-card__price-from { display: block; font-size: 12px; font-weight: 700; color: #EC4899; letter-spacing: 0.4px; text-transform: uppercase; }
+      .ds-beyond-card__price-amount { display: block; font-size: 28px; font-weight: 900; color: #2D1B1B; letter-spacing: -0.5px; line-height: 1.1; margin-top: 2px; }
+      .ds-beyond-card__price-sub { display: block; font-size: 13px; color: #6B5555; margin-top: 4px; font-weight: 600; }
+      .ds-beyond-card__list { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 8px; }
+      .ds-beyond-card__list li { padding-left: 22px; position: relative; font-size: 14px; color: #2D1B1B; line-height: 1.5; }
+      .ds-beyond-card__list li::before { content: '✓'; position: absolute; left: 0; top: 0; color: #EC4899; font-weight: 900; }
+      .ds-beyond-card__cta { margin-top: 8px; align-self: flex-start; }
+
+      .ds-beyond-protect { margin-top: 30px; padding: 24px 22px; border-radius: 18px; background: #2D1B1B; color: #fff; max-width: 1100px; margin-left: auto; margin-right: auto; }
+      .ds-beyond-protect__title { font-size: 15px; font-weight: 900; color: #FACC15; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 14px; }
+      .ds-beyond-protect__list { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 18px; }
+      @media (min-width: 700px) { .ds-beyond-protect__list { grid-template-columns: 1fr 1fr; gap: 16px; } }
+      .ds-beyond-protect__item { font-size: 13px; color: rgba(255,255,255,0.78); line-height: 1.55; padding-left: 18px; position: relative; }
+      .ds-beyond-protect__item::before { content: '•'; position: absolute; left: 0; top: 0; color: #EC4899; font-weight: 900; }
+      .ds-beyond-protect__item strong { color: #fff; font-weight: 800; }
+      .ds-beyond-protect__cta { margin-top: 6px; }
 
       /* ── FAQ ───────────────────────────────────────────────────── */
       .ds-faq-container { max-width: 760px; }

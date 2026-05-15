@@ -1,0 +1,204 @@
+<#
+  .SYNOPSIS
+  Build a vendor-branded native wrap of the StreetLocal donut PWA.
+
+  .DESCRIPTION
+  Takes vendor parameters, clones food-basic/ into wrap/builds/{slug}/,
+  patches Capacitor config with vendor branding, builds the PWA with
+  VITE_FORCED_VENDOR_ID, and prepares the project for native sync.
+
+  After this script finishes, you still need to:
+    1.  cd wrap/builds/{slug}
+    2.  npx cap add android (first time only)
+    3.  npx cap sync
+    4.  cd android && ./gradlew bundleRelease
+    5.  Upload .aab to vendor's Google Play Console
+    6.  Push branch to GitHub for iOS Actions build
+    7.  Download .ipa, upload to vendor's App Store Connect
+
+  .EXAMPLE
+  .\wrap-vendor.ps1 `
+    -VendorSlug donut-king `
+    -VendorId 12345678-1234-1234-1234-123456789012 `
+    -AppName "Donut King" `
+    -BundleId "com.donutking.app" `
+    -PrimaryColor "#EC4899" `
+    -LogoPath "C:\path\to\logo.png"
+#>
+
+param(
+  [Parameter(Mandatory=$true)][string]$VendorSlug,
+  [Parameter(Mandatory=$true)][string]$VendorId,
+  [Parameter(Mandatory=$true)][string]$AppName,
+  [Parameter(Mandatory=$true)][string]$BundleId,
+  [Parameter(Mandatory=$true)][string]$PrimaryColor,
+  [Parameter(Mandatory=$true)][string]$LogoPath,
+  [string]$SupportEmail = "",
+  [string]$DefaultCountry = "US"
+)
+
+$ErrorActionPreference = "Stop"
+
+# ─── Validate inputs ──────────────────────────────────────────────────
+if ($VendorSlug -notmatch '^[a-z0-9][a-z0-9-]{1,40}$') {
+  throw "VendorSlug must be lowercase alphanumeric + hyphens, 2-41 chars. Got: $VendorSlug"
+}
+if ($VendorId -notmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+  throw "VendorId must be a UUID. Got: $VendorId"
+}
+if ($BundleId -notmatch '^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$') {
+  throw "BundleId must be reverse-DNS format, e.g. com.donutking.app. Got: $BundleId"
+}
+if ($PrimaryColor -notmatch '^#[0-9a-fA-F]{6}$') {
+  throw "PrimaryColor must be a 6-digit hex with leading '#'. Got: $PrimaryColor"
+}
+if (-not (Test-Path $LogoPath)) {
+  throw "LogoPath not found: $LogoPath"
+}
+
+# ─── Paths ────────────────────────────────────────────────────────────
+$RepoRoot     = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$FoodBasicDir = Join-Path $RepoRoot "food-basic"
+$WrapDir      = Join-Path $RepoRoot "wrap"
+$TemplateDir  = Join-Path $WrapDir "template"
+$BuildDir     = Join-Path $WrapDir "builds\$VendorSlug"
+
+Write-Host ""
+Write-Host "═══════════════════════════════════════════════════════════════"
+Write-Host "  StreetLocal Native Wrap — $AppName"
+Write-Host "═══════════════════════════════════════════════════════════════"
+Write-Host ""
+Write-Host "  Slug:         $VendorSlug"
+Write-Host "  Vendor ID:    $VendorId"
+Write-Host "  Bundle ID:    $BundleId"
+Write-Host "  Color:        $PrimaryColor"
+Write-Host "  Logo:         $LogoPath"
+Write-Host "  Output:       $BuildDir"
+Write-Host ""
+
+# ─── 1. Fresh build directory ─────────────────────────────────────────
+if (Test-Path $BuildDir) {
+  Write-Host "[1/8] Removing existing build directory..."
+  Remove-Item -Path $BuildDir -Recurse -Force
+}
+Write-Host "[1/8] Creating fresh build directory..."
+New-Item -Path $BuildDir -ItemType Directory -Force | Out-Null
+
+# ─── 2. Copy food-basic source ────────────────────────────────────────
+Write-Host "[2/8] Copying food-basic source (excluding node_modules / dist)..."
+$exclude = @('node_modules', 'dist', '.git', 'wrap-builds')
+Get-ChildItem -Path $FoodBasicDir -Force | Where-Object {
+  $exclude -notcontains $_.Name
+} | ForEach-Object {
+  Copy-Item -Path $_.FullName -Destination $BuildDir -Recurse -Force
+}
+
+# ─── 3. Patch package.json (rename + add Capacitor deps) ──────────────
+Write-Host "[3/8] Patching package.json with Capacitor dependencies..."
+$pkgTemplatePath = Join-Path $TemplateDir "package.json.template"
+$pkgTemplate     = Get-Content $pkgTemplatePath -Raw
+$pkgRendered     = $pkgTemplate `
+  -replace '\{\{VENDOR_SLUG\}\}', $VendorSlug `
+  -replace '\{\{APP_NAME\}\}', $AppName
+Set-Content -Path (Join-Path $BuildDir "package.json") -Value $pkgRendered -Encoding UTF8
+
+# ─── 4. Write Capacitor config ────────────────────────────────────────
+Write-Host "[4/8] Writing capacitor.config.json with vendor branding..."
+$capTemplatePath = Join-Path $TemplateDir "capacitor.config.template.json"
+$capTemplate     = Get-Content $capTemplatePath -Raw
+$appNameSafe     = $AppName -replace '[^a-zA-Z0-9]', ''
+$capRendered     = $capTemplate `
+  -replace '\{\{BUNDLE_ID\}\}', $BundleId `
+  -replace '\{\{APP_NAME\}\}', ($AppName -replace '"', '\"') `
+  -replace '\{\{APP_NAME_SAFE\}\}', $appNameSafe `
+  -replace '\{\{PRIMARY_COLOR\}\}', $PrimaryColor
+Set-Content -Path (Join-Path $BuildDir "capacitor.config.json") -Value $capRendered -Encoding UTF8
+
+# ─── 5. Write .env so the web build knows which vendor it is ──────────
+Write-Host "[5/8] Writing .env.production with forced vendor id..."
+$envContent = @"
+# Auto-generated by wrap-vendor.ps1 — do not commit
+VITE_FORCED_VENDOR_ID=$VendorId
+VITE_FORCED_APP_NAME=$AppName
+VITE_FORCED_PRIMARY_COLOR=$PrimaryColor
+VITE_FORCED_COUNTRY=$DefaultCountry
+VITE_FORCED_SUPPORT_EMAIL=$SupportEmail
+VITE_IS_NATIVE_WRAP=true
+"@
+Set-Content -Path (Join-Path $BuildDir ".env.production") -Value $envContent -Encoding UTF8
+
+# ─── 6. Copy vendor logo into a known location ─────────────────────────
+Write-Host "[6/8] Copying vendor logo..."
+$logoDest = Join-Path $BuildDir "wrap-assets"
+New-Item -Path $logoDest -ItemType Directory -Force | Out-Null
+Copy-Item -Path $LogoPath -Destination (Join-Path $logoDest "logo.png") -Force
+
+# ─── 7. Write a per-build README ──────────────────────────────────────
+Write-Host "[7/8] Writing per-build README..."
+$readme = @"
+# $AppName — Native Wrap Build
+
+Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+
+Vendor slug: $VendorSlug
+Vendor ID:   $VendorId
+Bundle ID:   $BundleId
+Color:       $PrimaryColor
+
+## Next steps
+
+```powershell
+cd $BuildDir
+npm install
+npm run build:web
+npx cap add android        # first time only
+npx cap sync android
+cd android
+.\gradlew bundleRelease    # output: android/app/build/outputs/bundle/release/app-release.aab
+```
+
+For iOS (requires macOS or GitHub Actions):
+
+```powershell
+# Commit this directory to a branch and push to GitHub.
+# The .github/workflows/ios-build.yml workflow will produce .ipa as artifact.
+git checkout -b wrap/$VendorSlug
+git add wrap/builds/$VendorSlug
+git commit -m "wrap: $AppName initial build"
+git push -u origin wrap/$VendorSlug
+```
+
+Then in the GitHub Actions tab, the iOS workflow runs automatically.
+
+## Files in this directory
+
+- ``capacitor.config.json`` — branded Capacitor config (auto-generated)
+- ``.env.production`` — VITE_FORCED_VENDOR_ID and other build-time vars (auto-generated)
+- ``wrap-assets/logo.png`` — vendor logo (copy of the source PNG provided)
+- ``src/`` — copied from ``food-basic/src/`` — DO NOT EDIT, regenerate via wrap-vendor.ps1
+- ``android/`` — generated by ``npx cap add android`` (do not edit by hand)
+- ``ios/`` — generated by ``npx cap add ios`` (do not edit by hand)
+
+If you need to update the vendor's branding (color, name, logo), re-run wrap-vendor.ps1 with new parameters. The script wipes and rebuilds this directory.
+"@
+Set-Content -Path (Join-Path $BuildDir "WRAP_README.md") -Value $readme -Encoding UTF8
+
+# ─── 8. Done ──────────────────────────────────────────────────────────
+Write-Host "[8/8] Done."
+Write-Host ""
+Write-Host "═══════════════════════════════════════════════════════════════"
+Write-Host "  Wrap scaffold ready at: $BuildDir"
+Write-Host "═══════════════════════════════════════════════════════════════"
+Write-Host ""
+Write-Host "Next steps (run these one at a time):"
+Write-Host ""
+Write-Host "  cd $BuildDir"
+Write-Host "  npm install"
+Write-Host "  npm run build:web"
+Write-Host "  npx cap add android       # first time only"
+Write-Host "  npx cap sync"
+Write-Host "  cd android"
+Write-Host "  .\gradlew bundleRelease"
+Write-Host ""
+Write-Host "For iOS, follow instructions in WRAP_README.md inside the build directory."
+Write-Host ""

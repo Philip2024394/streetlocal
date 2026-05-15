@@ -133,38 +133,74 @@ export default function AdminMessageThread({
     setSending(false)
   }
 
-  const header = vendorName || (role === 'admin' ? 'Vendor' : 'StreetLocal Admin')
+  // Vendor side sees the StreetLocal brand mark ("streetlocal.live" with
+  // ".live" in yellow). Admin side keeps the vendor's name in the header
+  // so they can tell which thread they're in. The brand mark is rendered
+  // inline below so we can colour the ".live" segment independently.
+  const header = role === 'admin' ? (vendorName || 'Vendor') : null
   const subline = role === 'admin'
     ? 'Two-way chat with the vendor (replaces WhatsApp)'
     : 'Chat with StreetLocal support'
+  // Vendor-side chat background — painted donut-shop counter so the
+  // support chat feels in-brand rather than a plain black sheet.
+  const BG_IMG = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_27_05%20PM.png?updatedAt=1778848043830'
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10020,
-      background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)',
       display: 'flex', flexDirection: 'column',
+      background: '#0a0a0a',
     }}>
+      {/* Background image — painted shop scene. Dark scrim on top
+          keeps message text readable on every theme. */}
+      <img src={BG_IMG} alt="" aria-hidden style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        objectFit: 'cover', zIndex: 0, pointerEvents: 'none',
+      }} />
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%)',
+        backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)',
+        zIndex: 0,
+      }} />
+
+      {/* Header — pill-shaped, floats inside top margin so the
+          rounded left + right edges are visible (no edge clipping). */}
       <div style={{
+        position: 'relative', zIndex: 1,
+        margin: 'calc(10px + env(safe-area-inset-top, 0px)) 12px 8px',
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '14px 16px calc(14px + env(safe-area-inset-top, 0px)) 16px',
-        background: '#111', borderBottom: `1px solid ${accent}33`,
+        padding: '12px 16px',
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 999,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
       }}>
         <button onClick={onClose} style={{
-          width: 34, height: 34, borderRadius: 10,
-          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
+          width: 36, height: 36, borderRadius: 18,
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
           color: '#fff', fontSize: 18, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>←</button>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>{header}</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{subline}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {header ? (
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{header}</div>
+          ) : (
+            <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', letterSpacing: -0.3, lineHeight: 1.1 }}>
+              streetlocal<span style={{ color: '#FACC15' }}>.live</span>
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{subline}</div>
         </div>
         <div style={{
-          width: 8, height: 8, borderRadius: 4,
+          width: 8, height: 8, borderRadius: 4, flexShrink: 0,
           background: accent, boxShadow: `0 0 8px ${accent}`,
         }} title="Live" />
       </div>
 
       <div ref={scrollRef} style={{
+        position: 'relative', zIndex: 1,
         flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         {loading && <div style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', fontSize: 13, marginTop: 30 }}>Loading…</div>}
@@ -202,8 +238,10 @@ export default function AdminMessageThread({
       </div>
 
       <div style={{
+        position: 'relative', zIndex: 1,
         display: 'flex', gap: 8, padding: '10px 12px calc(10px + env(safe-area-inset-bottom, 0px))',
-        background: '#111', borderTop: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
       }}>
         <input
           value={text}

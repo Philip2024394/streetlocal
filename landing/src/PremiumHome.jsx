@@ -159,14 +159,17 @@ function FitIframe ({ src, designW = 390, designH = 844 }) {
 }
 
 const FAQS = [
-  ['What does StreetLocal cost?', 'One price per shop, per month. Localised to your country — for example Rp 38,000 in Indonesia, $4.99 in the US, £4.99 in the UK. No setup fee, no commission on orders, cancel any time.'],
+  ['What does StreetLocal cost?', 'Three tiers — Starter, Professional, Enterprise — localised to your country. For example Starter is Rp 38,000 in Indonesia, $19 in the US, £15 in the UK. No setup fee, no commission on orders, cancel any time.'],
   ['Do you take a commission on my orders?', 'No. Zero. Your customers pay you directly through your own payment gateway. We never see or hold your money.'],
-  ['How long does it take to set up?', 'About 5 minutes. Sign up with your WhatsApp number, add your items, pick a theme, share your link. Real shops have gone live in under 10 minutes from the home page.'],
-  ['Do my customers need to install an app?', 'No. StreetLocal apps are PWAs that open instantly in any browser. Customers tap your link, see your shop, place orders. No App Store delays.'],
-  ['Can I bring my own payment gateway?', 'Yes — connect Stripe, Midtrans, Xendit, PayPal, Razorpay, HitPay, Adyen and 9 more. Funds settle to YOUR account; we never touch them.'],
-  ['What about printing kitchen tickets?', 'Pair any Bluetooth ESC/POS thermal printer in a few taps. Every order can fire to the kitchen automatically.'],
-  ['Multi-location? Multi-staff?', 'Both supported. One account, multiple shop locations, separate staff with manager / cashier / kitchen roles.'],
-  ['Can I cancel any time?', 'Yes. No long-term commitment. The day you cancel, your shop stays live until the end of the paid period.'],
+  ['How long does it take to set up?', 'About 5 minutes for the PWA. Sign up, add your items, pick a theme, share your link. If you also want a native app in Apple / Google stores, that takes 2–3 weeks for review.'],
+  ['Do my customers need to install an app?', "No — the PWA opens instantly in any browser, no App Store delay. If you'd like a branded native app too, we build that as a paid add-on (see Native Apps section above)."],
+  ['Can I bring my own payment gateway?', 'Yes — 16 gateways supported including Stripe, Midtrans, Xendit, PayPal, Razorpay, HitPay, Adyen, CyberSource, Worldpay and more. Funds settle to YOUR account; we never touch them.'],
+  ['Multi-location? Multi-staff?', 'Multi-staff (manager / cashier / kitchen) is on Professional & Enterprise. Multi-location (one account, multiple shops, separate inventory and orders) is Enterprise-tier.'],
+  ['Can I also get my app in the Apple App Store and Google Play?', "Yes. We build your branded native app — your name, your logo, your colours — and submit to both stores under your bakery's own developer account. One-time setup from $499 + $29/month maintenance. See the Native Apps section above for full pricing and IP-protection terms."],
+  ['Who owns the app code if I get a native build?', 'You own your store listing, your reviews, your customer data, your developer accounts. StreetLocal owns the underlying source code — your build is a licensed binary, not a transfer of code. If you cancel, your live app keeps working but stops receiving updates. This is the same model Glide, Adalo, and other SaaS app-builders use.'],
+  ['Do Apple or Google take a cut of my donut sales?', "No. Donuts are physical goods — Apple's 30% and Google's 30% only apply to digital goods (in-app purchases). You keep using your existing payment gateway and 100% of the sale (minus your gateway's processing fee)."],
+  ['What if I want a custom feature?', "We do custom work as a separate engagement — quote per project. Common requests: NFC loyalty taps, beacon-based promotions, integrations with accounting software, custom delivery integrations. Email streetlocallive@gmail.com with what you need."],
+  ['Can I cancel any time?', 'Yes for the monthly subscription. The day you cancel, your shop stays live until the end of the paid period. Native app maintenance has a 6-month minimum.'],
 ]
 
 // Supabase Edge Function URL — the server-side authority on pricing.
@@ -346,6 +349,31 @@ export default function PremiumHome () {
         .sl-country-list { margin-top: 8px; max-height: 200px; overflow-y: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.10); background: rgba(0,0,0,0.42); position: relative; }
         .sl-country-list button { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 10px 14px; border: none; background: transparent; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .sl-country-list button:hover { background: rgba(250,204,21,0.15); }
+
+        /* Native app add-on — Apple App Store + Google Play */
+        .sl-native { background: #0A0A0A; color: #fff; border-top: 1px solid rgba(255,255,255,0.05); }
+        .sl-native__head { text-align: center; padding-top: 14px; }
+        .sl-native__head .sl-kicker { background: var(--sl-yellow); color: var(--sl-black); }
+        .sl-native__head .sl-h2 { color: #fff; }
+        .sl-native__head .sl-section__lede { color: rgba(255,255,255,0.65); }
+        .sl-native__badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 22px 0 32px; }
+        .sl-native__badge { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); font-size: 14px; font-weight: 700; }
+        .sl-native-grid { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 1100px; margin: 0 auto; }
+        @media (min-width: 760px) { .sl-native-grid { grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; } }
+        .sl-native-tier { padding: 26px 22px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 14px; min-height: 100%; }
+        .sl-native-tier--featured { border-color: var(--sl-yellow); background: linear-gradient(180deg, rgba(250,204,21,0.10) 0%, rgba(255,255,255,0.03) 100%); position: relative; }
+        .sl-native-tier__ribbon { position: absolute; top: -12px; left: 22px; padding: 4px 12px; border-radius: 999px; background: var(--sl-yellow); color: var(--sl-black); font-size: 11px; font-weight: 900; letter-spacing: 0.6px; text-transform: uppercase; }
+        .sl-native-tier__label { font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
+        .sl-native-tier__blurb { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.5; min-height: 38px; }
+        .sl-native-tier__price { font-size: 32px; font-weight: 900; line-height: 1; letter-spacing: -1px; margin-top: 6px; }
+        .sl-native-tier__price-sub { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 600; margin-top: 4px; }
+        .sl-native-tier__list { list-style: none; padding: 0; margin: 8px 0 6px; display: flex; flex-direction: column; gap: 8px; }
+        .sl-native-tier__list li { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; padding-left: 22px; position: relative; }
+        .sl-native-tier__list li::before { content: '✓'; position: absolute; left: 0; top: 0; color: var(--sl-yellow); font-weight: 900; }
+        .sl-native__notes { max-width: 920px; margin: 32px auto 0; padding: 18px 20px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.75); }
+        .sl-native__notes strong { color: #fff; }
+        .sl-native__notes ul { padding-left: 20px; margin: 8px 0 0; }
+        .sl-native__notes li { margin-bottom: 6px; }
 
         /* FAQ */
         .sl-faq-list { margin-top: 40px; max-width: 760px; margin-left: auto; margin-right: auto; }
@@ -542,6 +570,92 @@ export default function PremiumHome () {
           </div>
           <div style={{ fontSize: 12, color: 'var(--sl-gray-500)', textAlign: 'center', marginTop: 18 }}>
             Pricing for <strong style={{ color: 'var(--sl-black)', fontWeight: 800 }}>{plan.code}</strong>{!marketLoaded && ' …'} · auto-detected from your location · no commission on orders, ever
+          </div>
+        </div>
+      </section>
+
+      {/* ─── NATIVE APP ADD-ON — Apple App Store + Google Play ─── */}
+      {/* Positions us as both a PWA platform AND an app-builder service.
+          Pricing mirrors the Asia / Western pattern used by PLAN_PRICING:
+          Western markets pay full rate, Asian markets ~40% less. */}
+      <section className="sl-section sl-native" id="native-apps">
+        <div className="sl-container">
+          <div className="sl-native__head">
+            <span className="sl-kicker">Add-on · Apple + Google</span>
+            <h2 className="sl-h2">Want your bakery in the <span style={{ color: 'var(--sl-yellow)' }}>App Store?</span></h2>
+            <p className="sl-section__lede">We build your branded native app — your name, your logo, your colours — and submit it to both Apple App Store and Google Play under your bakery's developer account. You own the listing. Customers find you by searching their phone's store.</p>
+            <div className="sl-native__badges">
+              <span className="sl-native__badge"><span aria-hidden></span>Apple App Store</span>
+              <span className="sl-native__badge"><span aria-hidden></span>Google Play Store</span>
+              <span className="sl-native__badge">PWA included free</span>
+            </div>
+          </div>
+
+          <div className="sl-native-grid">
+            {/* STANDARD */}
+            <div className="sl-native-tier">
+              <div className="sl-native-tier__label">Standard wrap</div>
+              <div className="sl-native-tier__blurb">Your branded app live in both stores within 2 weeks.</div>
+              <div className="sl-native-tier__price">{plan.gateway === 'midtrans' ? `${plan.symbol} 2,500,000` : `${plan.symbol}499`}<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginLeft: 6 }}>one-time</span></div>
+              <div className="sl-native-tier__price-sub">+ {plan.gateway === 'midtrans' ? `${plan.symbol} 350,000` : `${plan.symbol}29`}/month maintenance</div>
+              <ul className="sl-native-tier__list">
+                <li>Capacitor build — your logo, name, colours, splash screen</li>
+                <li>App icons + 5 screenshots + store listing copy</li>
+                <li>Submission to Apple App Store + Google Play</li>
+                <li>Review-response handling on your behalf</li>
+                <li>Push notifications setup</li>
+                <li>Over-the-air JS updates (no store re-review)</li>
+              </ul>
+            </div>
+
+            {/* PREMIUM — featured */}
+            <div className="sl-native-tier sl-native-tier--featured">
+              <div className="sl-native-tier__ribbon">Most popular</div>
+              <div className="sl-native-tier__label">Premium wrap</div>
+              <div className="sl-native-tier__blurb">Everything in Standard plus campaigns, ASO, and store-listing optimisation.</div>
+              <div className="sl-native-tier__price">{plan.gateway === 'midtrans' ? `${plan.symbol} 5,000,000` : `${plan.symbol}999`}<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginLeft: 6 }}>one-time</span></div>
+              <div className="sl-native-tier__price-sub">+ {plan.gateway === 'midtrans' ? `${plan.symbol} 750,000` : `${plan.symbol}49`}/month maintenance</div>
+              <ul className="sl-native-tier__list">
+                <li>Everything in Standard</li>
+                <li>Custom animated splash + launch screen</li>
+                <li>Segmented push-notification campaigns</li>
+                <li>App Store Optimisation — keywords tuned to your city</li>
+                <li>Apple Pay + Google Pay deep integration</li>
+                <li>Quarterly store-listing refresh</li>
+              </ul>
+            </div>
+
+            {/* ENTERPRISE */}
+            <div className="sl-native-tier">
+              <div className="sl-native-tier__label">Enterprise wrap</div>
+              <div className="sl-native-tier__blurb">Multi-app chains, custom plugins, priority store-review escalation.</div>
+              <div className="sl-native-tier__price">{plan.gateway === 'midtrans' ? `${plan.symbol} 12,500,000` : `${plan.symbol}2,499`}<span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginLeft: 6 }}>one-time</span></div>
+              <div className="sl-native-tier__price-sub">+ {plan.gateway === 'midtrans' ? `${plan.symbol} 1,500,000` : `${plan.symbol}99`}/month maintenance</div>
+              <ul className="sl-native-tier__list">
+                <li>Everything in Premium</li>
+                <li>Custom Capacitor plugins (NFC loyalty taps, beacons)</li>
+                <li>Priority Apple expedited review (24-hour, when available)</li>
+                <li>Multi-app management — chains with 5+ locations</li>
+                <li>Dedicated review-escalation handler</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="sl-native__notes">
+            <strong>What's protected, what's yours, what's separate:</strong>
+            <ul>
+              <li><strong>Source code stays with StreetLocal.</strong> We build the binary on our servers — your app cannot be extracted, decompiled, or transferred to another platform. You're licensing a finished product, not buying our codebase.</li>
+              <li><strong>Your developer accounts are yours.</strong> Apple Developer ($99/year) and Google Play ($25 one-time) go in your bakery's legal name. You own the store listing, the reviews, the payouts. We just hold delegate access to upload + manage.</li>
+              <li><strong>Both fees pass through to Apple/Google directly.</strong> $99/year Apple + $25 Google are not included above — they go to them, not us.</li>
+              <li><strong>If you cancel:</strong> the live app keeps working but stops receiving updates. Your store listing + reviews stay with you. The source code license terminates.</li>
+              <li><strong>Donuts are physical goods.</strong> Apple/Google take 0% commission on donut sales — you keep using your normal payment gateways. The 30% in-app purchase tax only applies to digital goods (which you don't sell).</li>
+            </ul>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <a href="mailto:streetlocallive@gmail.com?subject=Native%20app%20request" className="sl-btn sl-btn--primary sl-btn--lg">
+              Request a native app quote
+            </a>
           </div>
         </div>
       </section>

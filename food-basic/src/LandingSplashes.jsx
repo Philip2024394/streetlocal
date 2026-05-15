@@ -96,7 +96,9 @@ export function SplashClassic ({ landing = {}, accent = '#DC2626', onEnter }) {
 }
 
 /* ── THEME #2 — Glass Card ──────────────────────────────────── */
-export function SplashGlassCard ({ landing = {}, accent = '#EF4444', onEnter }) {
+/* All decorative colours derive from `accent` so the theme stays
+   in the donut shop palette when the vendor switches to it. */
+export function SplashGlassCard ({ landing = {}, accent = '#F472B6', onEnter }) {
   const head1 = field(landing, 'heroLine1', 'Delicious')
   const head2 = field(landing, 'heroLine2', 'Food Delivered')
   const head3 = field(landing, 'heroLine3', 'In Minutes')
@@ -111,10 +113,7 @@ export function SplashGlassCard ({ landing = {}, accent = '#EF4444', onEnter }) 
   return clickable(onEnter, (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ position: 'absolute', top: -120, right: -120, width: 260, height: 260, background: accent + '4D', filter: 'blur(64px)', borderRadius: '50%' }} />
-      <div style={{ position: 'absolute', bottom: -100, left: -100, width: 240, height: 240, background: 'rgba(249,115,22,0.2)', filter: 'blur(64px)', borderRadius: '50%' }} />
-      {heroImg && (
-        <img src={heroImg} alt="" style={{ position: 'absolute', top: 20, right: -40, width: 180, height: 180, objectFit: 'cover', borderRadius: '50%', zIndex: 1, animation: 'bounce 1s infinite' }} />
-      )}
+      <div style={{ position: 'absolute', bottom: -100, left: -100, width: 240, height: 240, background: accent + '33', filter: 'blur(64px)', borderRadius: '50%' }} />
       <div style={{ position: 'relative', width: '100%', maxWidth: 390, borderRadius: 40, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', padding: 24, boxShadow: `0 25px 50px -12px ${accent}33`, overflow: 'hidden', zIndex: 2 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 28 }}>
           <div style={{ width: 8, height: 8, borderRadius: 4, background: '#4ADE80', animation: 'pulse 2s ease-in-out infinite' }} />
@@ -131,7 +130,7 @@ export function SplashGlassCard ({ landing = {}, accent = '#EF4444', onEnter }) 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 14 }}>
           {[stat1, stat2, stat3].map((s, i) => (
             <div key={i} style={{ borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: 12, backdropFilter: 'blur(12px)' }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: i === 0 ? accent : (i === 1 ? '#FB923C' : '#FACC15') }}>{s.n}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: accent }}>{s.n}</div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
             </div>
           ))}
@@ -142,7 +141,12 @@ export function SplashGlassCard ({ landing = {}, accent = '#EF4444', onEnter }) 
 }
 
 /* ── THEME #3 — Discover ────────────────────────────────────── */
-export function SplashDiscover ({ landing = {}, accent = '#06B6D4', onEnter }) {
+/* Root is transparent so the donut bg image behind the splash
+   shows through (matches Classic + Glass Card). Blur orbs and
+   the hero gradient derive from `accent` so the theme stays in
+   the pink palette — no hardcoded cyan/purple/blue that fights
+   the donut shop look. */
+export function SplashDiscover ({ landing = {}, accent = '#F472B6', onEnter }) {
   const greeting = field(landing, 'kicker', 'Welcome Back')
   const dock = field(landing, 'openNow', 'Discover Food')
   const head1 = field(landing, 'heroLine1', 'Modern')
@@ -153,15 +157,15 @@ export function SplashDiscover ({ landing = {}, accent = '#06B6D4', onEnter }) {
   const heroImg = field(landing, 'heroImg', '')
   const headStyle = headlineStyle(landing, 1.2)
   return clickable(onEnter, (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#070707', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, padding: '16px 20px' }}>
-      <div style={{ position: 'absolute', top: -150, left: -120, width: 320, height: 320, background: 'rgba(168,85,247,0.2)', filter: 'blur(64px)', borderRadius: '50%' }} />
-      <div style={{ position: 'absolute', bottom: -180, right: -100, width: 300, height: 300, background: 'rgba(34,211,238,0.2)', filter: 'blur(64px)', borderRadius: '50%' }} />
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: 'transparent', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, padding: '16px 20px' }}>
+      <div style={{ position: 'absolute', top: -150, left: -120, width: 320, height: 320, background: `${accent}33`, filter: 'blur(64px)', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', bottom: -180, right: -100, width: 300, height: 300, background: `${accent}33`, filter: 'blur(64px)', borderRadius: '50%' }} />
       <div style={{ position: 'relative', zIndex: 1, paddingTop: 8 }}>
         <div style={{ marginBottom: 32 }}>
           <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 4 }}>{greeting}</div>
           <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, margin: 0 }}>{dock}</h2>
         </div>
-        <div style={{ position: 'relative', borderRadius: 36, padding: '28px 24px 40px', background: `linear-gradient(135deg, ${accent} 0%, #3B82F6 50%, #9333EA 100%)`, boxShadow: '0 20px 80px rgba(34,211,238,0.35)', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', borderRadius: 36, padding: '28px 24px 40px', background: `linear-gradient(135deg, ${accent} 0%, ${accent} 60%, ${accent}dd 100%)`, boxShadow: `0 20px 80px ${accent}59`, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 16, right: 16, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)' }} />
           <div style={{ position: 'absolute', bottom: -30, left: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)' }} />
           {heroImg
@@ -187,42 +191,41 @@ export function SplashDiscover ({ landing = {}, accent = '#06B6D4', onEnter }) {
 }
 
 /* ── THEME #4 — Float ───────────────────────────────────────── */
-export function SplashFloat ({ landing = {}, accent = '#F97316', onEnter }) {
+/* Root transparent so donut bg image shows through. Decorative
+   blur orbs + CTA gradient derived from the pink accent. */
+export function SplashFloat ({ landing = {}, accent = '#F472B6', onEnter }) {
   const head1 = field(landing, 'heroLine1', 'View')
   const head2 = field(landing, 'heroLine2', 'The')
   const head3 = field(landing, 'heroLine3', 'Menu')
   const sub = field(landing, 'subtitle', 'Discover premium meals, immersive food experiences and ultra modern ordering.')
   const cta = field(landing, 'cta', 'View Menu')
-  const pill = field(landing, 'openNow', 'LIVE NOW')
   const heroImg = field(landing, 'heroImg', '')
   const headStyle = headlineStyle(landing, 1.4)
   return clickable(onEnter, (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#050505', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: 'transparent', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ position: 'absolute', top: -200, left: -120, width: 420, height: 420, borderRadius: '50%', background: `${accent}33`, filter: 'blur(80px)' }} />
-      <div style={{ position: 'absolute', bottom: -240, right: -100, width: 420, height: 420, borderRadius: '50%', background: 'rgba(239,68,68,0.2)', filter: 'blur(80px)' }} />
+      <div style={{ position: 'absolute', bottom: -240, right: -100, width: 420, height: 420, borderRadius: '50%', background: `${accent}33`, filter: 'blur(80px)' }} />
       {heroImg
         ? <img src={heroImg} alt="" style={{ position: 'absolute', top: 60, right: -20, width: 160, height: 160, borderRadius: '50%', objectFit: 'cover', boxShadow: `0 30px 120px ${accent}66`, animation: 'bounce 1s infinite' }} />
-        : <div style={{ position: 'absolute', top: 80, right: -20, width: 140, height: 140, borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, #EF4444)`, boxShadow: `0 30px 120px ${accent}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, animation: 'bounce 1s infinite' }}>🍔</div>
+        : <div style={{ position: 'absolute', top: 80, right: -20, width: 140, height: 140, borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, boxShadow: `0 30px 120px ${accent}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, animation: 'bounce 1s infinite' }}>🍩</div>
       }
-      <div style={{ position: 'absolute', bottom: 60, left: -30, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🍕</div>
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 360, textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 32 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 5, background: '#4ADE80', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500, letterSpacing: 0.5 }}>{pill}</span>
-        </div>
         <h1 style={{ ...headStyle, lineHeight: 0.88, fontWeight: 900, letterSpacing: -2.5, margin: '0 0 24px' }}>
           {head1}<br />{head2}
           <span style={{ display: 'block', color: accent }}>{head3}</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, lineHeight: 1.55, maxWidth: 300, margin: '0 auto 24px' }}>{sub}</p>
-        <button onClick={onEnter} style={{ width: '100%', height: 60, borderRadius: 28, background: `linear-gradient(90deg, ${accent}, #EF4444)`, color: '#fff', fontSize: 18, fontWeight: 900, border: 'none', boxShadow: `0 25px 100px ${accent}73`, cursor: 'pointer' }}>{cta}</button>
+        <button onClick={onEnter} style={{ width: '100%', height: 60, borderRadius: 28, background: `linear-gradient(90deg, ${accent}, ${accent}cc)`, color: '#fff', fontSize: 18, fontWeight: 900, border: 'none', boxShadow: `0 25px 100px ${accent}73`, cursor: 'pointer' }}>{cta}</button>
       </div>
     </div>
   ))
 }
 
 /* ── THEME #5 — Warm Card ───────────────────────────────────── */
-export function SplashWarmCard ({ landing = {}, accent = '#FACC15', onEnter }) {
+/* Root transparent so donut bg image shows through. Decorative
+   blur orbs + emoji bubbles + CTA gradient derived from the pink
+   accent — no hardcoded orange/red palette. */
+export function SplashWarmCard ({ landing = {}, accent = '#F472B6', onEnter }) {
   const head1 = field(landing, 'heroLine1', 'Food')
   const head2 = field(landing, 'heroLine2', 'Worth')
   const head3 = field(landing, 'heroLine3', 'Sharing')
@@ -234,14 +237,14 @@ export function SplashWarmCard ({ landing = {}, accent = '#FACC15', onEnter }) {
   const stat2 = { n: field(landing, 'stat2Num', '15m'), l: field(landing, 'stat2Label', 'Fast Delivery') }
   const headStyle = headlineStyle(landing, 1.3)
   return clickable(onEnter, (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#060606', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: 'transparent', overflow: 'hidden', color: '#fff', fontFamily: FONT_MAP.system, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ position: 'absolute', top: -200, right: -120, width: 500, height: 500, borderRadius: '50%', background: `${accent}1A`, filter: 'blur(80px)' }} />
-      <div style={{ position: 'absolute', bottom: -220, left: -120, width: 420, height: 420, borderRadius: '50%', background: 'rgba(249,115,22,0.1)', filter: 'blur(80px)' }} />
+      <div style={{ position: 'absolute', bottom: -220, left: -120, width: 420, height: 420, borderRadius: '50%', background: `${accent}26`, filter: 'blur(80px)' }} />
       {heroImg
         ? <img src={heroImg} alt="" style={{ position: 'absolute', top: 60, left: -20, width: 160, height: 160, borderRadius: '50%', objectFit: 'cover', boxShadow: `0 30px 120px ${accent}59`, animation: 'bounce 1s infinite' }} />
-        : <div style={{ position: 'absolute', top: 80, left: -20, width: 140, height: 140, borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, #F97316)`, boxShadow: `0 30px 120px ${accent}59`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, animation: 'bounce 1s infinite' }}>🍜</div>
+        : <div style={{ position: 'absolute', top: 80, left: -20, width: 140, height: 140, borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, boxShadow: `0 30px 120px ${accent}59`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, animation: 'bounce 1s infinite' }}>🍩</div>
       }
-      <div style={{ position: 'absolute', bottom: 80, right: -30, width: 130, height: 130, borderRadius: '50%', background: 'linear-gradient(135deg, #EF4444, #F97316)', boxShadow: '0 30px 120px rgba(239,68,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>🌮</div>
+      <div style={{ position: 'absolute', bottom: 80, right: -30, width: 130, height: 130, borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, boxShadow: `0 30px 120px ${accent}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>🍩</div>
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 360, borderRadius: 36, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px)', padding: 28, overflow: 'hidden', boxShadow: '0 30px 120px rgba(0,0,0,0.4)' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 999, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', marginBottom: 28 }}>
           <div style={{ width: 10, height: 10, borderRadius: 5, background: '#4ADE80', animation: 'pulse 2s infinite' }} />
@@ -252,7 +255,7 @@ export function SplashWarmCard ({ landing = {}, accent = '#FACC15', onEnter }) {
           <span style={{ display: 'block', color: accent }}>{head3}</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.55, maxWidth: 320, margin: '0 0 18px' }}>{sub}</p>
-        <button onClick={onEnter} style={{ width: '100%', height: 58, borderRadius: 28, background: `linear-gradient(90deg, ${accent}, #F97316)`, color: '#000', fontSize: 17, fontWeight: 900, border: 'none', boxShadow: `0 30px 100px ${accent}66`, cursor: 'pointer' }}>{cta}</button>
+        <button onClick={onEnter} style={{ width: '100%', height: 58, borderRadius: 28, background: `linear-gradient(90deg, ${accent}, ${accent}cc)`, color: '#fff', fontSize: 17, fontWeight: 900, border: 'none', boxShadow: `0 30px 100px ${accent}66`, cursor: 'pointer' }}>{cta}</button>
         <div style={{ marginTop: 16, borderRadius: 24, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 900, color: accent }}>{stat1.n}</div>
@@ -260,7 +263,7 @@ export function SplashWarmCard ({ landing = {}, accent = '#FACC15', onEnter }) {
           </div>
           <div style={{ width: 1, height: 44, background: 'rgba(255,255,255,0.1)' }} />
           <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#FB923C' }}>{stat2.n}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: accent }}>{stat2.n}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{stat2.l}</div>
           </div>
         </div>
@@ -269,14 +272,22 @@ export function SplashWarmCard ({ landing = {}, accent = '#FACC15', onEnter }) {
   ))
 }
 
-/* ── Dispatch helper — pick a splash by theme id ─────────────── */
+/* ── Dispatch helper — pick a splash by theme id ───────────────
+   Each entry carries:
+     - id      stable key persisted to vendor_accounts.landing_theme_id
+     - label   short text used by compact button rows
+     - name    long display name used by the picker tile heading
+     - tagline one-line teaser shown under the tile name
+     - source  'inline' → rendered by DonutSplash in App.jsx
+               'react'  → rendered via renderLandingSplash()
+   ─────────────────────────────────────────────────────────── */
 export const LANDING_THEMES = [
-  { id: 'donuts',   label: 'Beyond (donuts)', source: 'inline' },  // rendered by DonutSplash in App.jsx
-  { id: 'classic',  label: 'Classic',        source: 'react' },
-  { id: 'glass',    label: 'Glass Card',     source: 'react' },
-  { id: 'discover', label: 'Discover',       source: 'react' },
-  { id: 'float',    label: 'Float',          source: 'react' },
-  { id: 'warm',     label: 'Warm Card',      source: 'react' },
+  { id: 'donuts',   label: 'Beyond (donuts)', name: 'Donuts — Sweet Glazed',  tagline: 'Hand-crafted donut shop landing with pink palette and dancing donut hero.',     source: 'inline' },
+  { id: 'classic',  label: 'Classic',        name: 'Classic — Centered Hero', tagline: 'Bold centered hero over your background image. The safe, evergreen pick.',    source: 'react'  },
+  { id: 'glass',    label: 'Glass Card',     name: 'Glass Card — Editorial',  tagline: 'Frosted glass card floats over your photo. Premium editorial feel.',           source: 'react'  },
+  { id: 'discover', label: 'Discover',       name: 'Discover — Magazine',     tagline: 'Magazine cover layout with a corner kicker and confident type.',               source: 'react'  },
+  { id: 'float',    label: 'Float',          name: 'Float — Minimal',         tagline: 'Light, airy splash with a floating CTA. Best for product-led shops.',          source: 'react'  },
+  { id: 'warm',     label: 'Warm Card',      name: 'Warm Card — Cosy',        tagline: 'Warm card on a backdrop photo. Best for bakeries, cafés, comfort food.',     source: 'react'  },
 ]
 
 export function renderLandingSplash (themeId, props) {

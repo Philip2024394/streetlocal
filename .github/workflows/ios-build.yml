@@ -1,0 +1,160 @@
+# iOS Build Workflow — produces a .ipa artifact on macOS runner.
+#
+# Triggers on push to branches matching `wrap/*` so each per-vendor build
+# branch gets its own .ipa output. Free tier: 2000 minutes/month total
+# across all repos on the same GitHub account; each iOS build takes ~10-15
+# minutes. After free tier: $0.08/minute (~$1.20 per build).
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   IOS_DIST_CERT_BASE64       — your iOS distribution certificate (.p12), base64-encoded
+#   IOS_DIST_CERT_PASSWORD     — password for the .p12
+#   IOS_PROVISIONING_PROFILE_BASE64 — base64-encoded provisioning profile (.mobileprovision)
+#   IOS_KEYCHAIN_PASSWORD      — any random string used to unlock the temp keychain on the runner
+#   APP_STORE_CONNECT_API_KEY  — base64-encoded App Store Connect API key (.p8 contents)
+#   APP_STORE_CONNECT_API_KEY_ID — the key ID
+#   APP_STORE_CONNECT_ISSUER_ID — the issuer ID
+#
+# To encode a file to base64 on Windows PowerShell:
+#   [Convert]::ToBase64String([IO.File]::ReadAllBytes("path\to\file"))
+
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - 'wrap/**'
+  workflow_dispatch:
+    inputs:
+      vendor_slug:
+        description: 'Vendor slug (e.g. donut-king)'
+        required: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Determine vendor slug
+        id: vendor
+        run: |
+          if [ -n "${{ github.event.inputs.vendor_slug }}" ]; then
+            echo "slug=${{ github.event.inputs.vendor_slug }}" >> $GITHUB_OUTPUT
+          else
+            # Extract from branch name wrap/<slug>
+            SLUG="${GITHUB_REF#refs/heads/wrap/}"
+            echo "slug=$SLUG" >> $GITHUB_OUTPUT
+          fi
+          echo "Building vendor: $(grep -oP '(?<=slug=).*' $GITHUB_OUTPUT)"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: wrap/builds/${{ steps.vendor.outputs.slug }}/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}
+        run: npm install
+
+      - name: Build web bundle
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}
+        run: npm run build:web
+
+      - name: Add iOS platform (if not present)
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}
+        run: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor to iOS
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}
+        run: npx cap sync ios
+
+      - name: Set up signing certificate + provisioning profile
+        env:
+          IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH=$RUNNER_TEMP/dist.p12
+          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+
+          # Decode cert + profile
+          echo -n "$IOS_DIST_CERT_BASE64" | base64 --decode -o "$CERT_PATH"
+          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+          # Create + unlock keychain
+          security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import cert into keychain
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$IOS_DIST_CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Archive iOS app
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -allowProvisioningUpdates \
+            archive
+
+      - name: Export .ipa
+        working-directory: wrap/builds/${{ steps.vendor.outputs.slug }}/ios/App
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
+
+      - name: Upload .ipa as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vendor.outputs.slug }}-ios
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
+
+      # OPTIONAL — Upload directly to App Store Connect (auto-submission).
+      # Uncomment when you're confident in the build pipeline. Until then,
+      # download the .ipa artifact and submit manually via Transporter on a Mac.
+      #
+      # - name: Upload to App Store Connect
+      #   env:
+      #     APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      #     APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #   run: |
+      #     mkdir -p ~/private_keys
+      #     echo -n "$APP_STORE_CONNECT_API_KEY" | base64 --decode -o ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+      #     xcrun altool --upload-app \
+      #       -f $RUNNER_TEMP/export/*.ipa \
+      #       -t ios \
+      #       --apiKey $APP_STORE_CONNECT_API_KEY_ID \
+      #       --apiIssuer $APP_STORE_CONNECT_ISSUER_ID
