@@ -110,7 +110,7 @@ const TIER_BULLETS = {
   enterprise: {
     label: 'Enterprise',
     blurb: 'For multi-location chains & premium brands',
-    image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_07_43%20PM.png',
+    image: 'https://ik.imagekit.io/nepgaxllc/Untitledasda-removebg-preview.png',
     bullets: [
       'Everything in Professional',
       'Full domain management (we register, renew + SSL — annual)',
