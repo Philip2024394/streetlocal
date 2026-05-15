@@ -75,6 +75,7 @@ const TIER_BULLETS = {
   starter: {
     label: 'Starter',
     blurb: 'For small shops & single-owner businesses',
+    image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_06_01%20PM.png',
     bullets: [
       'Premium PWA app + mobile install',
       'Unlimited menu items',
@@ -90,6 +91,7 @@ const TIER_BULLETS = {
     label: 'Professional',
     blurb: 'For busy cafes & growing brands · most popular',
     featured: true,
+    image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_07_02%20PM.png',
     bullets: [
       'Everything in Starter',
       '15 payment gateways (Stripe, Midtrans, …)',
@@ -108,6 +110,7 @@ const TIER_BULLETS = {
   enterprise: {
     label: 'Enterprise',
     blurb: 'For multi-location chains & premium brands',
+    image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_07_43%20PM.png',
     bullets: [
       'Everything in Professional',
       'Full domain management (we register, renew + SSL — annual)',
@@ -305,10 +308,13 @@ export default function PremiumHome () {
         .sl-pricing-bg { background: var(--sl-gray-50); border-top: 1px solid var(--sl-gray-200); border-bottom: 1px solid var(--sl-gray-200); }
         .sl-tier-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 50px auto 0; max-width: 1100px; }
         @media (min-width: 760px) { .sl-tier-grid { grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; } }
-        .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 28px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 0 22px 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
+        .sl-tier__banner { margin: 0 -22px 22px; height: 150px; overflow: hidden; position: relative; background: var(--sl-gray-100); border-bottom: 1px solid var(--sl-gray-200); }
+        .sl-tier__banner img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+        .sl-tier--featured .sl-tier__banner { border-bottom-color: rgba(255,255,255,0.08); background: #111; }
         .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); transform: none; }
         @media (min-width: 760px) { .sl-tier--featured { transform: translateY(-8px); } }
-        .sl-tier__ribbon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.4); }
+        .sl-tier__ribbon { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.5); z-index: 2; }
         .sl-tier__label { font-size: 14px; font-weight: 800; color: var(--sl-yellow-deep); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 6px; }
         .sl-tier--featured .sl-tier__label { color: var(--sl-yellow); }
         .sl-tier__blurb { font-size: 13px; color: var(--sl-gray-500); line-height: 1.45; margin-bottom: 20px; min-height: 38px; }
@@ -502,6 +508,11 @@ export default function PremiumHome () {
               const price = plan[tierKey]
               return (
                 <div key={tierKey} className={`sl-tier${tier.featured ? ' sl-tier--featured' : ''}`}>
+                  {tier.image && (
+                    <div className="sl-tier__banner">
+                      <img src={tier.image} alt={`${tier.label} plan`} loading="lazy" />
+                    </div>
+                  )}
                   {tier.featured && <div className="sl-tier__ribbon">Most popular</div>}
                   <div className="sl-tier__label">{tier.label}</div>
                   <div className="sl-tier__blurb">{tier.blurb}</div>
