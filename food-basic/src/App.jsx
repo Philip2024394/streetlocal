@@ -11040,7 +11040,7 @@ export default function App() {
             ctx.globalAlpha = 1
           }
           ctx.shadowBlur = 0
-          // 7b. Countdown chip — top-right corner of the banner.
+          // 7b. Countdown chip — BOTTOM-RIGHT corner of the banner.
           // Shows "23h 42m left" relative to render time. Baked into
           // the PNG so the customer sees the countdown at the moment
           // they receive the message.
@@ -11055,7 +11055,7 @@ export default function App() {
             const chipW = tw + chipPadX * 2
             const chipH = chipFont * 1.6
             const chipX = W - margin - chipW
-            const chipY = margin
+            const chipY = H - margin - chipH
             ctx.fillStyle = cd === 'EXPIRED' ? 'rgba(139,0,0,0.95)' : 'rgba(0,0,0,0.7)'
             // Rounded rect
             const r = chipH / 2
@@ -11173,6 +11173,30 @@ export default function App() {
               {b.subtitle && (
                 <div style={{ position: 'absolute', left: w * 0.04, bottom: isStory ? h * 0.1 : h * 0.06, fontSize: Math.max(11, w * 0.035), fontWeight: 600, color: b.textColor, opacity: 0.92, textShadow: '0 1px 4px rgba(0,0,0,0.45)', maxWidth: w * 0.92 }}>{b.subtitle}</div>
               )}
+              {/* Countdown chip — LOWER-RIGHT corner. Same position the
+                  canvas-baked PNG uses so the editor preview matches the
+                  shared image exactly. */}
+              {(() => {
+                const cd = fmtCountdown(b.countdownEndsAt)
+                if (!cd) return null
+                const expired = cd === 'EXPIRED'
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    right: w * 0.04,
+                    bottom: w * 0.04,
+                    padding: `${Math.max(4, w * 0.012)}px ${Math.max(8, w * 0.025)}px`,
+                    borderRadius: 9999,
+                    background: expired ? 'rgba(139,0,0,0.95)' : 'rgba(0,0,0,0.72)',
+                    color: '#fff',
+                    fontSize: Math.max(10, w * 0.034),
+                    fontWeight: 800,
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                  }}>⏰ {cd}</div>
+                )
+              })()}
             </div>
           )
         }
