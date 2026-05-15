@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase'
 import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
 import { useAppLocale, LANGUAGES } from './i18n'
@@ -457,12 +457,58 @@ async function vendorSignup(phone, password, name) {
 
 async function vendorLogin(phone, password) {
   if (!supabase) return null
-  const { data } = await supabase.from('vendor_accounts')
-    .select('*')
-    .eq('phone', phone.replace(/[^0-9]/g, ''))
-    .eq('password_hash', password)
-    .single()
-  return data || null
+  // Step 1: vendor-login Edge Function verifies the credentials and
+  // provisions a matching auth.users record carrying vendor_id in
+  // app_metadata. Returns the synthesized email we then use to
+  // signInWithPassword.
+  let bridge
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/vendor-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ phone: phone.replace(/[^0-9]/g, ''), password }),
+    })
+    bridge = await resp.json()
+    if (!resp.ok || !bridge?.email) return null
+  } catch { return null }
+  // Step 2: real Supabase Auth sign-in — the JWT we get back is what
+  // PostgREST verifies and what our RLS policies read for vendor_id.
+  const { data: session, error } = await supabase.auth.signInWithPassword({
+    email: bridge.email,
+    password,
+  })
+  if (error || !session?.session) return null
+  return bridge.vendor || null
+}
+
+// Auto-sign in as the seeded demo vendor. Used by:
+//   1. Public visitors landing on the donut app without a real
+//      ?vendor= param (they get promoted to DEMO_VENDOR_UUID, and
+//      need a JWT to write to the demo data — chats, orders, etc.)
+//   2. The /donut landing iframe preview.
+// Idempotent: returns immediately if a Supabase session is already
+// active. The demo email + password are PUBLIC by design — RLS
+// sandboxes the demo JWT to demo-vendor rows only.
+async function ensureDemoSession() {
+  if (!supabase) return false
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) return true // already signed in (could be a real vendor — leave alone)
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/vendor-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ vendor_id: 'demo' }),
+    })
+    const bridge = await resp.json()
+    if (!resp.ok || !bridge?.email || !bridge?.password) return false
+    const { error } = await supabase.auth.signInWithPassword({ email: bridge.email, password: bridge.password })
+    return !error
+  } catch { return false }
+}
+
+async function vendorSignOut() {
+  if (!supabase) return
+  try { await supabase.auth.signOut() } catch {}
 }
 
 async function updateVendorConfig(vendorId, config) {
@@ -3146,6 +3192,16 @@ export default function App() {
     return DEMO_VENDOR_UUID
   })
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
+  // Auto-sign-in for the demo vendor. Runs once on mount. If a real
+  // vendor session is already present (a logged-in shop owner), this
+  // is a no-op — `ensureDemoSession` returns immediately when getSession()
+  // already finds a token. Without this, demo writes (chat messages,
+  // orders) would fail under the new RLS policies because the request
+  // would arrive unauthenticated.
+  useEffect(() => {
+    if (vendorId !== DEMO_VENDOR_UUID) return
+    ensureDemoSession()
+  }, [vendorId])
   // loyalty_card_image vendor write-back — runs ONLY when the vendor
   // changes the image (skipped on customer side). Lives here (after
   // vendorId declaration) so the dep array doesn't TDZ.
@@ -10679,7 +10735,7 @@ export default function App() {
 
             {/* Logout */}
             <div style={{ padding: '16px' }}>
-              <button onClick={() => { setIsVendor(false); setVendorDrawer(false) }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={async () => { await vendorSignOut(); setIsVendor(false); setVendorDrawer(false) }} style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 Logout
               </button>
               <div style={{ textAlign: 'center', marginTop: 12 }}>
