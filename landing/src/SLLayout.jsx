@@ -140,7 +140,8 @@ export default function SLLayout ({ title, kicker, lede, children }) {
               <a href="/#apps">Restaurants (soon)</a>
               <a href="/#apps">Retail &amp; products (soon)</a>
               <a href="/#apps">Salons &amp; services (soon)</a>
-              <a href="/themes">Theme catalogue (21)</a>
+              <a href="/themes">Phone-splash themes (21)</a>
+              <a href="/landing-themes.html" target="_blank" rel="noopener">Landing-page designs (12 ↗)</a>
             </div>
             <div className="sl-footer__col">
               <div className="sl-footer__col-title">Company</div>
