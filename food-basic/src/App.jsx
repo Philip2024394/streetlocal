@@ -2045,15 +2045,13 @@ export default function App() {
   // card. Persisted in localStorage AND vendor_accounts.loyalty_card_image
   // so the customer's device picks it up too.
   const [loyaltyCardImage, setLoyaltyCardImage] = useState(() => localStorage.getItem('foodlocalchat_loyalty_card_image') || '')
+  // Local persistence — safe to run before vendorId is declared.
+  // The DB write-back lives in its own effect AFTER the vendorId
+  // declaration (search for "loyalty_card_image vendor write-back")
+  // so we don't hit a TDZ on vendorId in this dependency array.
   useEffect(() => {
     localStorage.setItem('foodlocalchat_loyalty_card_image', loyaltyCardImage || '')
-    // Persist to vendor_accounts so other devices (and customers
-    // landing here from a fresh browser) see the same branded card.
-    // Vendor-only write — customer reads via the loader effect above.
-    if (isVendor && supabase && vendorId && isUuid(vendorId)) {
-      supabase.from('vendor_accounts').update({ loyalty_card_image: loyaltyCardImage || null }).eq('id', vendorId).then(() => {})
-    }
-  }, [loyaltyCardImage, isVendor, vendorId])
+  }, [loyaltyCardImage])
   const [loyaltyImageUploading, setLoyaltyImageUploading] = useState(false)
   // Per-customer stamp count (local device — keyed by their phone).
   // Production: this lives on the customer record server-side; for v1
@@ -3131,6 +3129,13 @@ export default function App() {
     return DEMO_VENDOR_UUID
   })
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
+  // loyalty_card_image vendor write-back — runs ONLY when the vendor
+  // changes the image (skipped on customer side). Lives here (after
+  // vendorId declaration) so the dep array doesn't TDZ.
+  useEffect(() => {
+    if (!isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
+    supabase.from('vendor_accounts').update({ loyalty_card_image: loyaltyCardImage || null }).eq('id', vendorId).then(() => {})
+  }, [loyaltyCardImage, isVendor, vendorId])
   // Vendor: fetch all conversations for the shop when the chat-list panel
   // is opened. Each row carries `unread_vendor_count` which drives the
   // red badge. Re-fetches whenever the panel re-opens so counts stay
