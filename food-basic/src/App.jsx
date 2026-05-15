@@ -14523,7 +14523,7 @@ export default function App() {
                     <input key={donutCardColor} defaultValue={donutCardColor} placeholder="#ffffff" maxLength={7} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 13, fontFamily: 'monospace', outline: 'none' }} onKeyDown={e => { if (e.key === 'Enter') { const v = e.target.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) } }} />
                     <button onClick={(e) => { const v = e.currentTarget.previousSibling.value.trim(); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setDonutCardColor(v) }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Set</button>
                   </div>
-                  <button type="button" onClick={() => setColorPalette({ title: donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour', current: donutCardColor, onPick: setDonutCardColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+                  <button type="button" onClick={() => setColorPalette({ title: donutCardStyle === 'solid' ? 'Card colour' : 'Tint colour', current: donutCardColor, onPick: setDonutCardColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
                 </>
               )}
               {/* Image upload — drives the Image card style */}
@@ -14572,7 +14572,7 @@ export default function App() {
                   </div>
                 )
               })()}
-              <button type="button" onClick={() => setColorPalette({ title: 'Frame Side Colour', current: donutFrameColor || accent, onPick: setDonutFrameColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Frame Side Colour', current: donutFrameColor || accent, onPick: setDonutFrameColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
             </div>
 
             {/* Add-to-Cart button — shape / colour / text colour / label */}
@@ -14617,7 +14617,7 @@ export default function App() {
                   </div>
                 )
               })()}
-              <button type="button" onClick={() => setColorPalette({ title: 'Button colour', current: donutAddBtnColor || donutPromoBarColor, onPick: setDonutAddBtnColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, marginBottom: 12 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Button colour', current: donutAddBtnColor || donutPromoBarColor, onPick: setDonutAddBtnColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44, marginBottom: 12 }}>🎨 More colours →</button>
               {/* Button text/icon color */}
               <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>{donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
@@ -14625,7 +14625,7 @@ export default function App() {
                   <button key={c} type="button" onClick={() => setDonutAddBtnTextColor(c)} style={{ width: 36, height: 36, borderRadius: 18, border: donutAddBtnTextColor === c ? '3px solid #fff' : '2px solid rgba(255,255,255,0.12)', background: c, cursor: 'pointer', padding: 0 }} />
                 ))}
               </div>
-              <button type="button" onClick={() => setColorPalette({ title: donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour', current: donutAddBtnTextColor, onPick: setDonutAddBtnTextColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: donutAddBtnShape === 'pill' ? 'Text colour' : '+ icon colour', current: donutAddBtnTextColor, onPick: setDonutAddBtnTextColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
             </div>
 
             {/* Promo bar color */}
@@ -14638,7 +14638,7 @@ export default function App() {
                 ))}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>"T" = theme accent (pink). Tap to reset.</div>
-              <button type="button" onClick={() => setColorPalette({ title: 'Promo Bar Colour', current: donutPromoColor || accent, onPick: setDonutPromoColor })} style={{ width: '100%', background: 'none', border: `1px solid ${accent}`, color: accent, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
+              <button type="button" onClick={() => setColorPalette({ title: 'Promo Bar Colour', current: donutPromoColor || accent, onPick: setDonutPromoColor })} style={{ width: '100%', background: 'none', border: '1px solid #EC4899', color: '#EC4899', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, minHeight: 44 }}>🎨 More colours →</button>
             </div>
           </div>
 
