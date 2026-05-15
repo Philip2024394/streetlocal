@@ -67,36 +67,17 @@ export default function Themes () {
   return (
     <SLLayout
       kicker="Theme catalogue"
-      title="Phone-splash themes · 21 designs."
-      lede="Every StreetLocal shop launches with one of these phone-splash themes — distinct illustration, colour palette, and motion. Pick one at signup; swap any time. The Donuts theme (SL-018) is live now — tap it to see the full customer experience."
+      title="21 landing-page designs · pick one per shop."
+      lede="Every StreetLocal shop launches with one of these themes — distinct illustration, colour palette, and motion. Pick one at signup; swap any time. The Donuts theme (SL-018) is live now — tap it to see the full customer experience."
     >
       <style>{STYLE}</style>
       <section className="sl-container" style={{ paddingBottom: 80 }}>
-
-        {/* Cross-link: the 12 saved landing-page design templates
-            (Classic / Glass Card / Discover / Float / Warm Card /
-            Beyond / Showcase / Hyper / Chrome / Diamond / Solutions /
-            Neo Grid) live in /landing-themes.html — the original
-            HTML gallery. The donut app's current splash is based on
-            Theme #6 "Beyond" from that gallery. */}
-        <a href="/landing-themes.html" target="_blank" rel="noopener" style={{ display: 'block', textDecoration: 'none', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', borderRadius: 18, background: 'linear-gradient(135deg, rgba(250,204,21,0.10), rgba(234,179,8,0.04))', border: '1px solid rgba(250,204,21,0.35)', transition: 'transform 180ms ease' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, var(--sl-yellow), var(--sl-yellow-deep))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: '0 6px 18px rgba(250,204,21,0.45)' }}>🎨</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--sl-yellow-deep)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Looking for the 12 landing-page design templates?</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--sl-black)', marginBottom: 2 }}>Open the saved gallery → Classic, Glass Card, Discover, Float, Warm Card, <strong style={{ color: 'var(--sl-yellow-deep)' }}>Beyond (#6)</strong>, Showcase, Hyper, Chrome, Diamond, Solutions, Neo Grid</div>
-              <div style={{ fontSize: 13, color: 'var(--sl-gray-600)', marginTop: 4 }}>The donut app currently uses <strong>Theme #6 Beyond</strong> — pink/cyan luxury gradient. Opens in a new tab.</div>
-            </div>
-            <div style={{ flexShrink: 0, fontSize: 22, color: 'var(--sl-yellow-deep)', fontWeight: 900 }}>↗</div>
-          </div>
-        </a>
-
         <div className="th-search">
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search phone-splash themes by name or reference (e.g. donuts, SL-006)…"
+            placeholder="Search themes by name or reference (e.g. donuts, SL-006)…"
             autoComplete="off"
           />
         </div>

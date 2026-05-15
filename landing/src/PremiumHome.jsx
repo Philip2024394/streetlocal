@@ -603,8 +603,7 @@ export default function PremiumHome () {
               <a href="/food/chat">Restaurants (soon)</a>
               <a href="/products/local">Retail &amp; products (soon)</a>
               <a href="/services">Salons &amp; services (soon)</a>
-              <a href="/themes">Phone-splash themes (21)</a>
-              <a href="/landing-themes.html" target="_blank" rel="noopener">Landing-page designs (12 ↗)</a>
+              <a href="/themes">Theme catalogue (21)</a>
             </div>
             <div className="sl-footer__col">
               <div className="sl-footer__col-title">Company</div>
