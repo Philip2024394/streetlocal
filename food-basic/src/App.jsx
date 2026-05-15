@@ -5782,33 +5782,31 @@ export default function App() {
   }
 
   // ── VENDOR LOGIN PAGE ─────────────────────────────────────────
-  // Dedicated /food/chat/login (or ?login=true) route. Renders BEFORE
-  // any of the customer-facing UI so vendors get a clean sign-in
-  // surface they can bookmark and share. Uses the existing
-  // handleVendorLogin / handleVendorSignup handlers — only the JSX
-  // is new (the handlers were already wired but never rendered into
-  // the page after a prior refactor).
+  // Moved to its own component at src/VendorLoginPage.jsx and routed
+  // from main.jsx — keeps App.jsx's hook order consistent. The
+  // previous in-App early-return was triggering React's rules-of-hooks
+  // check on the next render after a state change.
+  //
+  // Kept this dead branch as a fallback ONLY for in-app navigation
+  // that bypasses main.jsx (e.g. SPA history.push to /login without
+  // a hard reload). In that case the new VendorLoginPage component
+  // isn't mounted, so we fall back to rendering nothing + redirecting.
   const isLoginPage = (() => {
     if (typeof window === 'undefined') return false
     const p = window.location.pathname || ''
     const q = new URLSearchParams(window.location.search)
     return p.endsWith('/login') || p.endsWith('/login/') || q.get('login') === 'true'
   })()
-  // ?signup=true defaults the form to the Sign up tab on first
-  // render. Drives the landing footer's "Start a new shop" link.
-  useEffect(() => {
-    if (!isLoginPage || typeof window === 'undefined') return
-    const q = new URLSearchParams(window.location.search)
-    if (q.get('signup') === 'true') setLoginMode('signup')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoginPage])
-  // If a vendor is already signed in and lands on /login, bounce them
-  // out so they don't re-auth. Show the dashboard immediately.
-  if (isLoginPage && isVendor) {
+  if (isLoginPage) {
     if (typeof window !== 'undefined') {
-      try { window.history.replaceState({}, '', '/food/chat/') } catch {}
+      // Force a hard reload so main.jsx routes to VendorLoginPage cleanly.
+      window.location.href = '/food/chat/login' + window.location.search
     }
-  } else if (isLoginPage) {
+    return null
+  }
+  // Dead branch — code below preserved for git history of the old
+  // form. Do not re-enable; will violate hook order again.
+  if (false) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0a', position: 'relative' }}>
         <img loading="eager" fetchpriority="high" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png" alt="" onError={imgError('theme')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
