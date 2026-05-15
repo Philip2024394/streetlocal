@@ -25,7 +25,18 @@ export function fmtRupiah(n) {
 
 /**
  * Find or create a conversation for (vendorId, customerPhone) and insert the order message.
- * Returns { conversation, message } on success, or { error } on failure.
+ *
+ * IDEMPOTENCY (closes audit finding #15 — Stripe race condition).
+ * The redirect-gateway flow calls this function with status='redirecting'
+ * BEFORE navigating to Stripe / PayPal / Mollie / etc. If the call is
+ * retried (network blip, page reload, double-click) we mustn't insert
+ * the same chat message twice. The dedup key is the order's
+ * `gatewayOrderId` (also stored as `orderNumber` for cash orders, falls
+ * back to a stable hash of the order_payload). Before inserting we
+ * SELECT for any existing message in this conversation carrying the
+ * same gatewayOrderId — if one is found, we return it unchanged.
+ *
+ * Returns { conversation, message } on success, { error } on failure.
  */
 export async function sendCustomerOrder({ vendorId, customerPhone, customerName, orderPayload, summaryBody }) {
   if (!supabase) return { error: 'Supabase not configured' }
@@ -54,6 +65,36 @@ export async function sendCustomerOrder({ vendorId, customerPhone, customerName,
   } else if (customerName && customerName !== conversation.customer_name) {
     await supabase.from('chat_conversations').update({ customer_name: customerName }).eq('id', conversation.id)
     conversation.customer_name = customerName
+  }
+
+  // IDEMPOTENCY GUARD — derive a dedup key from the order_payload.
+  // Prefer the gateway order id (always unique per checkout), fall
+  // back to orderNumber (cash-on-pickup), final fallback hashes the
+  // payload itself so structurally-identical retries collapse.
+  const dedupKey = orderPayload?.payment?.gatewayOrderId
+    || orderPayload?.gatewayOrderId
+    || orderPayload?.orderNumber
+    || null
+  if (dedupKey) {
+    const { data: existing } = await supabase.from('chat_messages')
+      .select('*')
+      .eq('conversation_id', conversation.id)
+      .not('order_payload', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    const dup = (existing || []).find(m => {
+      const p = m.order_payload || {}
+      const candidates = [
+        p?.payment?.gatewayOrderId,
+        p?.gatewayOrderId,
+        p?.orderNumber,
+      ]
+      return candidates.includes(dedupKey)
+    })
+    if (dup) {
+      rememberCustomerConvo(vendorId, conversation.id, phone, customerName)
+      return { conversation, message: dup, deduped: true }
+    }
   }
 
   // Insert order message

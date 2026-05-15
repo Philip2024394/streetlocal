@@ -4854,6 +4854,30 @@ export default function App() {
         customerName: custName || 'Customer',
         customerPhone: cleanPhone,
       }
+      // Idempotency-safe "persist order BEFORE redirecting away" helper.
+      // Closes audit finding #15. Previously each redirect-gateway block
+      // called `await sendCustomerOrder(...).catch(() => {})` — a silent
+      // swallow that would let the customer's browser navigate to the
+      // gateway, get charged, and have NO order record on our side if
+      // the chat insert failed. Now: if persistence fails, ABORT the
+      // redirect with a clear error to the customer. The
+      // sendCustomerOrder function is idempotent (dedups on
+      // gatewayOrderId) so a retry produces the same row.
+      const persistBeforeRedirect = async (gatewayLabel) => {
+        const res = await sendCustomerOrder({
+          vendorId,
+          customerPhone: cleanPhone,
+          customerName: custName || null,
+          orderPayload,
+          summaryBody: summaryBody + ` · Pending ${gatewayLabel} payment`,
+        })
+        if (res?.error) {
+          setChatError(`Couldn't save your order before redirect — your card was NOT charged. (${res.error})`)
+          setChatSending(false)
+          return false
+        }
+        return true
+      }
       try {
         if (activeGateway === 'midtrans') {
           const payRes = await payWithMidtrans(payArgs)
@@ -4866,49 +4890,25 @@ export default function App() {
         } else if (activeGateway === 'stripe') {
           // Stripe is hosted-redirect: we navigate away. Webhook flips status to paid.
           orderPayload.payment = { method: 'stripe', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Stripe payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Stripe'))) return
           await payWithStripe({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to Stripe
         } else if (activeGateway === 'xendit') {
           // Xendit is also hosted-redirect (Invoice page). Same pattern as Stripe.
           orderPayload.payment = { method: 'xendit', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Xendit payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Xendit'))) return
           await payWithXendit({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Xendit
         } else if (activeGateway === 'paypal') {
           // PayPal is hosted-redirect (Smart Checkout). Same pattern as Stripe/Xendit.
           orderPayload.payment = { method: 'paypal', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending PayPal payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('PayPal'))) return
           await payWithPayPal({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to PayPal
         } else if (activeGateway === 'razorpay') {
           // Razorpay hosted Payment Link (UPI / cards / NetBanking / wallets).
           orderPayload.payment = { method: 'razorpay', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Razorpay payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Razorpay'))) return
           await payWithRazorpay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Razorpay
         } else if (activeGateway === 'braintree') {
@@ -4923,109 +4923,55 @@ export default function App() {
         } else if (activeGateway === 'mollie') {
           // Mollie hosted checkout redirect (iDEAL / Bancontact / SEPA / cards / PayPal / Klarna).
           orderPayload.payment = { method: 'mollie', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Mollie payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Mollie'))) return
           await payWithMollie({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Mollie
         } else if (activeGateway === 'hitpay') {
           // HitPay hosted checkout (cards / PayNow QR / Shopee Pay / GrabPay / Alipay / WeChat Pay).
           orderPayload.payment = { method: 'hitpay', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending HitPay payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('HitPay'))) return
           await payWithHitPay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to HitPay
         } else if (activeGateway === 'adyen') {
           // Adyen Pay-by-Link hosted redirect (250+ payment methods).
           orderPayload.payment = { method: 'adyen', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Adyen payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Adyen'))) return
           await payWithAdyen({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Adyen
         } else if (activeGateway === 'rapyd') {
           // Rapyd hosted Checkout (900+ local methods across 100+ countries).
           orderPayload.payment = { method: 'rapyd', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Rapyd payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Rapyd'))) return
           await payWithRapyd({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to Rapyd
         } else if (activeGateway === 'checkout-com') {
           // Checkout.com Payment Link hosted redirect.
           orderPayload.payment = { method: 'checkout-com', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Checkout.com payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Checkout.com'))) return
           await payWithCheckoutCom({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to Checkout.com
         } else if (activeGateway === 'fomo-pay') {
           // FOMO Pay hosted cashier (Asian e-wallets, WeChat/Alipay/GrabPay).
           orderPayload.payment = { method: 'fomo-pay', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending FOMO Pay payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('FOMO Pay'))) return
           await payWithFomoPay({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to FOMO Pay
         } else if (activeGateway === 'authorize-net') {
           // Authorize.net Accept Hosted (POST-form handoff, not GET redirect).
           orderPayload.payment = { method: 'authorize-net', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending Authorize.net payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('Authorize.net'))) return
           await payWithAuthorizeNet({ ...payArgs, customerEmail: '' })
           return // form has been submitted; browser is navigating
         } else if (activeGateway === '2checkout') {
           // 2Checkout (Verifone) Buy Link hosted checkout.
           orderPayload.payment = { method: '2checkout', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending 2Checkout payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('2Checkout'))) return
           await payWithTwoCheckout({ ...payArgs, customerEmail: '', description: summaryItems })
           return // browser is now navigating to 2Checkout
         } else if (activeGateway === 'cybersource') {
           // CyberSource Secure Acceptance hosted checkout (signed form POST).
           orderPayload.payment = { method: 'cybersource', status: 'redirecting', gatewayOrderId }
-          await sendCustomerOrder({
-            vendorId,
-            customerPhone: cleanPhone,
-            customerName: custName || null,
-            orderPayload,
-            summaryBody: summaryBody + ' · Pending CyberSource payment',
-          }).catch(() => {})
+          if (!(await persistBeforeRedirect('CyberSource'))) return
           await payWithCyberSource({ ...payArgs, customerEmail: '' })
           return // browser is now navigating to CyberSource Secure Acceptance
         } else if (activeGateway === 'worldpay') {
