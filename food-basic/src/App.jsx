@@ -1555,6 +1555,16 @@ export default function App() {
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeLibraryOpen, setThemeLibraryOpen] = useState(false) // curated background picker
   const [settingsHubOpen, setSettingsHubOpen] = useState(false)   // grouped settings page
+  // Vendor's own uploaded backgrounds — persisted so they survive
+  // reloads and can be re-selected later. Capped at 8 to avoid
+  // unbounded growth.
+  const [uploadedBgs, setUploadedBgs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_uploaded_bgs') || '[]') } catch { return [] }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_uploaded_bgs', JSON.stringify(uploadedBgs)) } catch {}
+  }, [uploadedBgs])
+  const [themeUploadError, setThemeUploadError] = useState('')
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
@@ -10149,8 +10159,23 @@ export default function App() {
           const f = e.target.files?.[0]
           e.target.value = ''
           if (!f) return
-          const url = await uploadMenuImage(vendorId, f)
-          if (url) applyBg(url)
+          setThemeUploadError('')
+          try {
+            const url = await uploadMenuImage(vendorId, f)
+            if (!url) {
+              setThemeUploadError('Upload failed — try again, or use a smaller image.')
+              return
+            }
+            // Add to the persistent list (dedupe, newest first, cap 8)
+            // BEFORE applying so the tile shows up immediately as Active.
+            setUploadedBgs(prev => [url, ...prev.filter(u => u !== url)].slice(0, 8))
+            applyBg(url)
+          } catch (err) {
+            setThemeUploadError(err?.message || 'Upload failed — please try again.')
+          }
+        }
+        const removeUploadedBg = (url) => {
+          setUploadedBgs(prev => prev.filter(u => u !== url))
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
@@ -10200,13 +10225,48 @@ export default function App() {
                 </div>
               ))}
 
-              {/* Upload-your-own — its own group at the bottom */}
+              {/* Upload-your-own — its own group at the bottom. Uploaded
+                  images persist and appear as additional tiles here so
+                  the vendor can swap back to a previous upload. */}
               <div style={{ marginTop: 22 }}>
                 <div style={{ margin: '0 4px 10px', padding: '6px 0 6px 12px', borderLeft: `3px solid ${accent}`, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Custom</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Use your own photo</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Your own photos</span>
                 </div>
+                {themeUploadError && (
+                  <div style={{ margin: '0 4px 10px', padding: '10px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                    ⚠ {themeUploadError}
+                  </div>
+                )}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  {uploadedBgs.map((url, idx) => {
+                    const isActive = currentBg === url
+                    return (
+                      <div key={url} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative' }}>
+                        <button type="button" onClick={() => applyBg(url)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                          <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
+                            <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
+                            <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                              <img src={url} alt={`Your upload ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
+                            </div>
+                            {isActive && (
+                              <div style={{ position: 'absolute', top: -8, right: -8, padding: '3px 8px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 900, boxShadow: '0 2px 6px rgba(34,197,94,0.5)', zIndex: 4 }}>Active</div>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Your upload {idx + 1}</div>
+                        </button>
+                        {/* Remove × — small, top-left corner so it doesn't
+                            collide with the Active chip on top-right. */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); removeUploadedBg(url) }}
+                          aria-label="Remove this upload"
+                          style={{ position: 'absolute', top: -8, left: -8, width: 26, height: 26, borderRadius: 13, background: '#8B0000', border: '2px solid #fff', color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,0.4)', zIndex: 5 }}
+                        >×</button>
+                      </div>
+                    )
+                  })}
                   <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
                     <div style={{ width: 140, height: 250, borderRadius: 22, background: 'rgba(255,255,255,0.06)', padding: 4, position: 'relative', border: `2px dashed ${accent}55`, boxShadow: '0 6px 16px rgba(0,0,0,0.3)' }}>
