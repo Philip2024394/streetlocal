@@ -312,7 +312,10 @@ export default function PremiumHome () {
            clear gap, package card below. They never share a border. */
         .sl-tier-col { display: flex; flex-direction: column; gap: 22px; }
         .sl-tier-banner-card { background: var(--sl-gray-100); border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .sl-tier-banner-card img { width: 100%; height: auto; display: block; }
+        /* Bleed the image 2px past the card on all sides — the card's
+           overflow:hidden clips it, covering the thin black edge line
+           that some of the source PNGs have around their outer pixels. */
+        .sl-tier-banner-card img { width: calc(100% + 4px); height: auto; display: block; margin: -2px; }
         .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 28px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); }
         .sl-tier__ribbon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.5); z-index: 2; white-space: nowrap; }
