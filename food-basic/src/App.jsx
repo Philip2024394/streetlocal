@@ -8163,24 +8163,62 @@ export default function App() {
                 })}
               </div>
 
-              {/* Recent activity */}
+              {/* Recent activity — each row is tappable. Closes the
+                  dashboard, jumps to the Orders page, and flashes the
+                  matching card so the vendor instantly sees the order.
+                  Mock dashboard rows map to MOCK_DONUT_CONVS by order
+                  number; real rows already carry conv_id. */}
               <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>{t.recentOrders || 'Recent orders'}</div>
                 {recentSorted.length === 0 && (
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>No orders yet.</div>
                 )}
-                {recentSorted.map((o, i) => (
-                  <div key={o.orderNumber || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 0', borderBottom: i === recentSorted.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>{o.sender || 'Customer'}</span>
-                        {o.isMock && <span style={{ fontSize: 13, fontWeight: 700, color: accent, background: `${accent}22`, border: `1px solid ${accent}55`, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>SAMPLE</span>}
-                      </div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, fontFamily: 'monospace' }}>{o.orderNumber || '—'} · {o.placedAt ? new Date(o.placedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</div>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: '#FACC15', flexShrink: 0 }}>{fmt(o.total || 0)}</div>
-                  </div>
-                ))}
+                {(() => {
+                  // Demo orderNumber → conv-id map. Mirrors the IDs used in
+                  // MOCK_DONUT_CONVS so a tap on a sample order in the
+                  // dashboard highlights the matching card in the inbox.
+                  const MOCK_NO_TO_CONV = {
+                    'DD-487193': 'mock-1',
+                    'DD-958432': 'mock-2',
+                    'DD-301847': 'mock-3',
+                    'DD-624518': 'mock-4',
+                    'DD-840291': 'mock-5',
+                    'DD-117462': 'mock-6',
+                  }
+                  return recentSorted.map((o, i) => {
+                    const targetConvId = o.conv_id || MOCK_NO_TO_CONV[o.orderNumber] || null
+                    const openInOrders = () => {
+                      setSalesDashboardOpen(false)
+                      setVendorTab('orders')
+                      if (targetConvId) {
+                        setFlashConvId(targetConvId)
+                        // Auto-clear so the yellow flash is just a brief
+                        // attention pull, not permanent.
+                        setTimeout(() => setFlashConvId(null), 2400)
+                      }
+                    }
+                    return (
+                      <button
+                        key={o.orderNumber || i}
+                        type="button"
+                        onClick={openInOrders}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 4px', width: '100%', border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', textAlign: 'left', borderBottom: i === recentSorted.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)', borderRadius: 8 }}
+                      >
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>{o.sender || 'Customer'}</span>
+                            {o.isMock && <span style={{ fontSize: 13, fontWeight: 700, color: accent, background: `${accent}22`, border: `1px solid ${accent}55`, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>SAMPLE</span>}
+                          </div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, fontFamily: 'monospace' }}>{o.orderNumber || '—'} · {o.placedAt ? new Date(o.placedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <span style={{ fontSize: 15, fontWeight: 900, color: '#FACC15' }}>{fmt(o.total || 0)}</span>
+                          <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.35)' }}>›</span>
+                        </div>
+                      </button>
+                    )
+                  })
+                })()}
               </div>
             </div>
           </div>
