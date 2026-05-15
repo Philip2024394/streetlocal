@@ -363,6 +363,7 @@ async function saveMenuItem(vendorId, item) {
       category: item.category, photo_url: item.photo, available: item.available,
       promo_price: item.promoPrice, prep_time: item.prepTime,
       spice: item.spice, halal: item.halal, popular: item.popular,
+      stock: item.stock != null ? Number(item.stock) : null,
     }).eq('id', item.supabaseId)
     return item
   }
@@ -372,6 +373,7 @@ async function saveMenuItem(vendorId, item) {
     available: item.available !== false,
     promo_price: item.promoPrice, prep_time: item.prepTime,
     spice: item.spice, halal: item.halal, popular: item.popular,
+    stock: item.stock != null ? Number(item.stock) : null,
   }).select().single()
   return { ...item, supabaseId: data?.id }
 }
@@ -1857,6 +1859,21 @@ export default function App() {
   // Holds the order being shown in the printable receipt modal.
   // Null = closed.
   const [receiptOrder, setReceiptOrder] = useState(null)
+  // ── PROMO CODES ────────────────────────────────────────────────
+  // Vendor-scoped discount codes the customer enters at checkout.
+  // List lives server-side (table: promo_codes). The customer types
+  // a code in the cart panel; validatePromo() checks expiry, min
+  // order, redemption cap, then we discount the total + record
+  // the code on the order_payload + increment redemptions_used.
+  const [promoPageOpen, setPromoPageOpen] = useState(false)
+  const [promoList, setPromoList] = useState([])
+  const [promoForm, setPromoForm] = useState({ code: '', kind: 'percent', value: '', minOrder: '', firstOrderOnly: false, maxRedemptions: '', expiresAt: '' })
+  const [promoEditingId, setPromoEditingId] = useState(null)
+  // Customer-side: the code they typed + the validated record (or null)
+  const [promoInput, setPromoInput] = useState('')
+  const [promoApplied, setPromoApplied] = useState(null) // { id, code, kind, value, discount }
+  const [promoError, setPromoError] = useState('')
+  const [promoChecking, setPromoChecking] = useState(false)
   // ── TAX / VAT ─────────────────────────────────────────────────
   // Vendor-configurable tax. Stored client-side per shop; baked into
   // every order_payload so the breakdown survives in chat history.
@@ -2970,6 +2987,25 @@ export default function App() {
     })()
     return () => { cancelled = true }
   }, [isVendor, vendorId, staffPageOpen])
+  // Promo codes: fetch this vendor's codes (both sides need them — the
+  // vendor admin to manage them, the customer to validate input against
+  // them). Refreshes on promoPageOpen so admin sees fresh counts after
+  // edits / customer redemptions.
+  useEffect(() => {
+    if (!supabase || !vendorId || !isUuid(vendorId)) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('promo_codes')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('created_at', { ascending: false })
+        if (!cancelled && data) setPromoList(data)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, promoPageOpen, promoApplied?.id])
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     // Demo vendor IDs (e.g. local-demo-*) aren't UUIDs — Supabase rejects
@@ -3261,6 +3297,11 @@ export default function App() {
   const [formModifiers, setFormModifiers] = useState([])   // [{id, name, priceDelta}]
   const [formPerks, setFormPerks] = useState([])           // array of perk ids — renders as ribbon on menu card
   const [formPerkText, setFormPerkText] = useState('')     // custom override text — wins over preset
+  // AI suggest state — drives the "✨ Suggest" button next to the
+  // description field. Calls the ai-menu-suggest Edge Function which
+  // sends the item name to Claude and returns description + perk ribbon.
+  const [aiSuggesting, setAiSuggesting] = useState(false)
+  const [aiSuggestError, setAiSuggestError] = useState('')
   const [formPerkLimitType, setFormPerkLimitType] = useState('none') // 'none' | 'time' | 'stock'
   const [formPerkLimitEndAt, setFormPerkLimitEndAt] = useState('')   // ISO timestamp
   const [formPerkLimitStock, setFormPerkLimitStock] = useState('')   // string of integer
@@ -3908,7 +3949,7 @@ export default function App() {
       // Load menu from Supabase
       const items = await getVendorMenuItems(vendor.id)
       if (items.length > 0) {
-        setMenuItems(items.map(i => ({ id: i.id, supabaseId: i.id, name: i.name, price: i.price, photo: i.photo_url, desc: i.description, category: i.category, available: i.available, promoPrice: i.promo_price, prepTime: i.prep_time, spice: i.spice, halal: i.halal, popular: i.popular })))
+        setMenuItems(items.map(i => ({ id: i.id, supabaseId: i.id, name: i.name, price: i.price, photo: i.photo_url, desc: i.description, category: i.category, available: i.available, promoPrice: i.promo_price, prepTime: i.prep_time, spice: i.spice, halal: i.halal, popular: i.popular, stock: i.stock != null ? Number(i.stock) : null })))
       }
       localStorage.setItem('indoo_vendor_phone', loginPhone.replace(/[^0-9]/g, ''))
       localStorage.setItem('indoo_vendor_pass', loginPass)
@@ -4012,6 +4053,30 @@ export default function App() {
     if (formPerkLimitType === 'time' && formPerkLimitEndAt) return { type: 'time', endAt: formPerkLimitEndAt }
     if (formPerkLimitType === 'stock' && formPerkLimitStock !== '') return { type: 'stock', remaining: Number(formPerkLimitStock) }
     return null
+  }
+
+  // Calls the ai-menu-suggest Edge Function with the current item
+  // name and fills description + perk ribbon. Bails out clearly if
+  // ANTHROPIC_API_KEY is not configured on the project.
+  const suggestFromAI = async () => {
+    setAiSuggestError('')
+    const name = String(formName || '').trim()
+    if (!name) { setAiSuggestError('Type the item name first'); return }
+    if (!supabase) { setAiSuggestError('Sign in to a real shop to use AI suggest'); return }
+    setAiSuggesting(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-menu-suggest', {
+        body: { name, category: formCategory || '', language: locale === 'id' ? 'Indonesian' : 'English' },
+      })
+      if (error) { setAiSuggestError(error.message || 'AI request failed'); return }
+      if (data?.error) { setAiSuggestError(String(data.error)); return }
+      if (data?.description) setFormDesc(String(data.description).slice(0, 350))
+      if (data?.perk) setFormPerkText(String(data.perk).slice(0, 24))
+    } catch (e) {
+      setAiSuggestError(e?.message || 'AI request failed')
+    } finally {
+      setAiSuggesting(false)
+    }
   }
 
   const saveEdit = () => {
@@ -4178,6 +4243,71 @@ export default function App() {
     setOrderModeRemember(false)
     setOrderModePickerOpen(true)
   }
+  // Validate a promo code against this vendor's list. Returns
+  // { ok, discount, promo } or { ok:false, reason }. Discount is
+  // computed against the current subtotal (cart) — not the post-tax
+  // total — to match how every other PoS in the food industry handles
+  // promo math.
+  const validatePromo = async () => {
+    const codeRaw = String(promoInput || '').trim().toUpperCase()
+    if (!codeRaw) { setPromoError('Enter a code'); return }
+    if (!supabase || !vendorId || !isUuid(vendorId)) {
+      setPromoError("Promo codes can't be validated in demo mode"); return
+    }
+    setPromoChecking(true); setPromoError('')
+    try {
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('vendor_id', vendorId)
+        .eq('code', codeRaw)
+        .maybeSingle()
+      if (error || !data) { setPromoError("That code doesn't exist"); setPromoApplied(null); return }
+      if (!data.active) { setPromoError('This code is no longer active'); setPromoApplied(null); return }
+      if (data.expires_at && new Date(data.expires_at) < new Date()) { setPromoError('This code has expired'); setPromoApplied(null); return }
+      if (data.max_redemptions != null && data.redemptions_used >= data.max_redemptions) { setPromoError('This code has been fully redeemed'); setPromoApplied(null); return }
+      const subtotal = totalPrice
+      if ((data.min_order || 0) > subtotal) {
+        setPromoError(`Minimum order ${fmt(data.min_order)} — add ${fmt(data.min_order - subtotal)} more to use this code`)
+        setPromoApplied(null); return
+      }
+      // First-order-only: check whether this phone has prior orders.
+      if (data.first_order_only) {
+        const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
+        if (cleanPhone) {
+          try {
+            const { count } = await supabase
+              .from('chat_messages')
+              .select('id', { count: 'exact', head: true })
+              .eq('vendor_id', vendorId)
+              .not('order_payload', 'is', null)
+              .ilike('order_payload->customer->>phone', `%${cleanPhone}%`)
+            if ((count || 0) > 0) { setPromoError('This code is for first-time customers only'); setPromoApplied(null); return }
+          } catch {}
+        }
+      }
+      const discount = data.kind === 'percent'
+        ? Math.round((subtotal * Math.min(100, Number(data.value))) / 100)
+        : Math.min(subtotal, Math.round(Number(data.value)))
+      setPromoApplied({ id: data.id, code: data.code, kind: data.kind, value: Number(data.value), discount })
+      setPromoError('')
+    } catch (e) {
+      setPromoError("Couldn't check that code — try again")
+    } finally {
+      setPromoChecking(false)
+    }
+  }
+  // Compute the discount in shop-currency units for the currently-applied
+  // promo, against the live subtotal. Promo applies BEFORE tax + delivery,
+  // matching standard PoS behaviour.
+  const promoDiscount = (() => {
+    if (!promoApplied) return 0
+    const subtotal = totalPrice
+    return promoApplied.kind === 'percent'
+      ? Math.round((subtotal * Math.min(100, Number(promoApplied.value))) / 100)
+      : Math.min(subtotal, Math.round(Number(promoApplied.value)))
+  })()
+
   const sendOrder = async () => {
     if (chatSending) return
     setChatError('')
@@ -4188,11 +4318,20 @@ export default function App() {
     const maxPrep = Math.max(0, ...cart.map(c => c.prepTime || 0))
     const subtotal = totalPrice
     const deliveryFee = delEnabled && deliveryZone ? (deliveryZone.fee || 0) : 0
+    // Promo discount — applied to subtotal BEFORE tax + delivery, which
+    // is the industry-standard order (you don't tax the discounted
+    // portion, and delivery isn't discounted by a menu promo code).
+    const discount = promoApplied
+      ? (promoApplied.kind === 'percent'
+          ? Math.round((subtotal * Math.min(100, Number(promoApplied.value))) / 100)
+          : Math.min(subtotal, Math.round(Number(promoApplied.value))))
+      : 0
+    const discountedSubtotal = Math.max(0, subtotal - discount)
     // Tax math. INCLUSIVE: subtotal already contains the tax — we
     // back-calculate the embedded portion for the receipt. EXCLUSIVE:
     // tax is added on top of subtotal + delivery.
     const taxRatePct = Math.max(0, Math.min(100, parseFloat(taxRate) || 0))
-    const taxableBase = subtotal + deliveryFee
+    const taxableBase = discountedSubtotal + deliveryFee
     const taxAmount = taxRatePct > 0
       ? (taxInclusive ? +(taxableBase - taxableBase / (1 + taxRatePct / 100)).toFixed(2)
                       : +(taxableBase * taxRatePct / 100).toFixed(2))
@@ -4241,6 +4380,16 @@ export default function App() {
       if (!c || m.stock == null) return m
       return { ...m, stock: Math.max(0, m.stock - c.qty) }
     }))
+    // Server-side atomic decrement via dec_menu_item_stock RPC — keeps
+    // stock honest across devices. Fires for every tracked item in the
+    // cart; failures are non-fatal (the order still goes through).
+    if (supabase && vendorId && isUuid(vendorId)) {
+      cart.forEach(c => {
+        const item = menuItems.find(m => m.id === c.id)
+        if (!item || item.stock == null || !item.supabaseId) return
+        supabase.rpc('dec_menu_item_stock', { item_id: item.supabaseId, qty: c.qty }).catch(() => {})
+      })
+    }
 
     const orderPayload = {
       orderNumber: `${initials}-${orderNum}`,
@@ -4257,6 +4406,10 @@ export default function App() {
         modifiers: (c.modifiers || []).map(m => m.name).filter(Boolean),
       })),
       subtotal,
+      // Promo code breakdown — keeps a record of what code was used
+      // and how much was knocked off, so the vendor (and an accountant)
+      // can reconstruct the original price.
+      promo: promoApplied ? { id: promoApplied.id, code: promoApplied.code, kind: promoApplied.kind, value: promoApplied.value, discount } : null,
       delivery: {
         enabled: !!delEnabled,
         type: delEnabled ? 'delivery' : 'pickup',
@@ -4567,9 +4720,25 @@ export default function App() {
           subtotal: totalPrice, delivery_type: delEnabled ? 'delivery' : 'pickup', payment_method: payMethod || 'cod',
           note,
         }).then(() => {})
+        // Promo redemption — bump the counter so max_redemptions caps work.
+        // Done after the order is in flight; if this fails the order still
+        // stands. Read-modify-write because Supabase JS lacks atomic increment.
+        if (promoApplied?.id) {
+          supabase.from('promo_codes').select('redemptions_used').eq('id', promoApplied.id).maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                return supabase.from('promo_codes').update({ redemptions_used: (data.redemptions_used || 0) + 1 }).eq('id', promoApplied.id)
+              }
+            })
+            .then(() => {})
+            .catch(() => {})
+        }
       } catch {}
     }
     setOrderDone(true)
+    // Promo input clears so a second order doesn't accidentally re-use
+    // a one-shot code. The applied state stays in the order_payload above.
+    setPromoApplied(null); setPromoInput(''); setPromoError('')
   }
 
   /* --- Vendor chime: prime audio after first user click + WebAudio fallback --- */
@@ -7934,13 +8103,21 @@ export default function App() {
                           <span style={{ fontSize: 13, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>{t.collectionOnly || 'Collection Only'}</span>
                         </div>
                       )}
+                      {/* Promo discount line — only when a code is applied. */}
+                      {promoApplied && promoDiscount > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#86EFAC' }}>
+                          <span>Promo · {promoApplied.code}{promoApplied.kind === 'percent' ? ` (${Math.min(100, Number(promoApplied.value))}% off)` : ''}</span>
+                          <span>−{fmt(promoDiscount)}</span>
+                        </div>
+                      )}
                       {/* Tax line — only when a rate is configured.
                           INCLUSIVE: shown as informational ("of which Tax 11%").
                           EXCLUSIVE: shown as an added line above the total. */}
                       {(() => {
                         const r = parseFloat(taxRate) || 0
                         if (r <= 0) return null
-                        const base = totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0)
+                        const discounted = Math.max(0, totalPrice - promoDiscount)
+                        const base = discounted + (delEnabled ? (deliveryZone.fee || 0) : 0)
                         const tax = taxInclusive ? base - base / (1 + r / 100) : base * r / 100
                         return (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
@@ -7953,10 +8130,55 @@ export default function App() {
                         <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
                         <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{(() => {
                           const r = parseFloat(taxRate) || 0
-                          const base = totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0)
+                          const discounted = Math.max(0, totalPrice - promoDiscount)
+                          const base = discounted + (delEnabled ? (deliveryZone.fee || 0) : 0)
                           return fmt(Math.round(r > 0 && !taxInclusive ? base + base * r / 100 : base))
                         })()}</span>
                       </div>
+                    </div>
+                  )}
+
+                  {/* PROMO CODE input — collapsed by default, shows
+                      success/error state inline once the customer
+                      hits "Apply". A successful apply locks the input
+                      and shows a "Remove" pill. */}
+                  {cart.length > 0 && !isVendor && (
+                    <div style={{ marginBottom: 14 }}>
+                      {!promoApplied ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError('') }}
+                            placeholder="Promo code"
+                            maxLength={32}
+                            style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: `1px solid ${promoError ? '#EF4444' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', letterSpacing: 1, textTransform: 'uppercase' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={validatePromo}
+                            disabled={promoChecking || !promoInput.trim()}
+                            style={{ padding: '12px 18px', borderRadius: 12, border: 'none', background: promoInput.trim() ? accent : 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: promoInput.trim() ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', opacity: promoChecking ? 0.5 : 1 }}
+                          >{promoChecking ? '…' : 'Apply'}</button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 18 }}>🎁</span>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{promoApplied.code}</div>
+                              <div style={{ fontSize: 12, color: '#86EFAC', fontWeight: 600 }}>−{fmt(promoDiscount)} off your order</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setPromoApplied(null); setPromoInput(''); setPromoError('') }}
+                            style={{ padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                          >Remove</button>
+                        </div>
+                      )}
+                      {promoError && !promoApplied && (
+                        <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 6, fontWeight: 600 }}>{promoError}</div>
+                      )}
                     </div>
                   )}
 
@@ -10560,8 +10782,12 @@ export default function App() {
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
+                <button type="button" onClick={suggestFromAI} disabled={aiSuggesting || !formName.trim()} style={{ padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(250,204,21,0.5)', background: 'rgba(250,204,21,0.15)', color: '#FACC15', fontSize: 11, fontWeight: 800, cursor: aiSuggesting || !formName.trim() ? 'not-allowed' : 'pointer', opacity: aiSuggesting || !formName.trim() ? 0.5 : 1, fontFamily: 'inherit' }}>{aiSuggesting ? '✨ …' : '✨ AI Suggest'}</button>
+              </div>
               <textarea style={{ ...S.input, width: '100%', boxSizing: 'border-box', minHeight: 110, resize: 'vertical', fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5, fontFamily: 'inherit' }} placeholder="Describe the dish — ingredients, flavour, what makes it special..." value={formDesc} maxLength={350} onChange={(e) => setFormDesc(e.target.value)} />
+              {aiSuggestError && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4, fontWeight: 600 }}>{aiSuggestError}</div>}
 
               {/* Prep Time */}
               <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Prep Time (minutes)</label>
@@ -10818,7 +11044,10 @@ export default function App() {
               </div>
 
               {/* Description */}
-              <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Description <span style={{ color: formDesc.length >= 350 ? '#EF4444' : 'rgba(255,255,255,0.3)' }}>({formDesc.length}/350)</span></label>
+                <button type="button" onClick={suggestFromAI} disabled={aiSuggesting || !formName.trim()} style={{ padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(250,204,21,0.5)', background: 'rgba(250,204,21,0.15)', color: '#FACC15', fontSize: 11, fontWeight: 800, cursor: aiSuggesting || !formName.trim() ? 'not-allowed' : 'pointer', opacity: aiSuggesting || !formName.trim() ? 0.5 : 1, fontFamily: 'inherit' }}>{aiSuggesting ? '✨ …' : '✨ AI Suggest'}</button>
+              </div>
               <textarea
                 style={{ ...S.input, width: '100%', boxSizing: 'border-box', minHeight: 110, resize: 'vertical', marginBottom: 0, fontSize: 13, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', lineHeight: 1.5, fontFamily: 'inherit' }}
                 placeholder="Describe the dish — ingredients, flavour, what makes it special..."
@@ -10826,6 +11055,7 @@ export default function App() {
                 maxLength={350}
                 onChange={(e) => setFormDesc(e.target.value)}
               />
+              {aiSuggestError && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4, fontWeight: 600 }}>{aiSuggestError}</div>}
             </div>
 
             {/* Progressive-disclosure optional details */}
@@ -11383,6 +11613,7 @@ export default function App() {
           { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
           { icon: '📣', label: 'Marketing', desc: 'Promo banners + auto-post to chat', onClick: () => setMarketingPageOpen(true) },
           { icon: '🎟️', label: 'Loyalty Stamps', desc: 'Reward returning customers — buy N get one free', onClick: () => setLoyaltyPageOpen(true) },
+          { icon: '🎁', label: 'Promo Codes', desc: 'Discount codes — % off, flat off, first-order, expiry', onClick: () => setPromoPageOpen(true) },
           isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
         ].filter(Boolean)
         // Old "Themes" entry removed — Theme Library (in the drawer's
@@ -12524,6 +12755,162 @@ export default function App() {
                   <div style={{ color: 'rgba(255,255,255,0.75)' }}>Append <code style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace' }}>?loc=jakarta</code> to your shop URL — customers land directly on that shop's menu.</div>
                 </div>
               )}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ PROMO CODES ═══
+          Vendor manages discount codes here. Codes are stored in
+          public.promo_codes (vendor-scoped). Customer types one at
+          checkout; validatePromo() above does the heavy lifting.
+          Re-uses the same dark background pattern as Tax / Staff
+          / Locations / Loyalty for visual consistency. */}
+      {promoPageOpen && (() => {
+        const resetForm = () => { setPromoForm({ code: '', kind: 'percent', value: '', minOrder: '', firstOrderOnly: false, maxRedemptions: '', expiresAt: '' }); setPromoEditingId(null) }
+        const startEdit = (p) => {
+          setPromoEditingId(p.id)
+          setPromoForm({
+            code: p.code || '',
+            kind: p.kind || 'percent',
+            value: String(p.value ?? ''),
+            minOrder: p.min_order ? String(p.min_order) : '',
+            firstOrderOnly: !!p.first_order_only,
+            maxRedemptions: p.max_redemptions != null ? String(p.max_redemptions) : '',
+            expiresAt: p.expires_at ? p.expires_at.slice(0, 16) : '',
+          })
+        }
+        const savePromo = async () => {
+          const code = String(promoForm.code || '').trim().toUpperCase()
+          if (!code) { alert('Enter a code'); return }
+          const value = Number(promoForm.value)
+          if (!(value > 0)) { alert('Value must be greater than 0'); return }
+          if (promoForm.kind === 'percent' && value > 100) { alert('Percent must be 1–100'); return }
+          const payload = {
+            vendor_id: vendorId,
+            code,
+            kind: promoForm.kind,
+            value,
+            min_order: promoForm.minOrder === '' ? 0 : Number(promoForm.minOrder),
+            first_order_only: !!promoForm.firstOrderOnly,
+            max_redemptions: promoForm.maxRedemptions === '' ? null : parseInt(promoForm.maxRedemptions, 10),
+            expires_at: promoForm.expiresAt ? new Date(promoForm.expiresAt).toISOString() : null,
+          }
+          try {
+            if (promoEditingId) {
+              const { data } = await supabase.from('promo_codes').update(payload).eq('id', promoEditingId).select().single()
+              if (data) setPromoList(prev => prev.map(p => p.id === data.id ? data : p))
+            } else {
+              const { data } = await supabase.from('promo_codes').insert(payload).select().single()
+              if (data) setPromoList(prev => [data, ...prev])
+            }
+            resetForm()
+          } catch (e) {
+            alert(e?.message?.includes('duplicate') ? 'That code already exists for this shop.' : ('Failed to save: ' + (e?.message || 'unknown')))
+          }
+        }
+        const togglePromo = async (p) => {
+          const { data } = await supabase.from('promo_codes').update({ active: !p.active }).eq('id', p.id).select().single()
+          if (data) setPromoList(prev => prev.map(x => x.id === data.id ? data : x))
+        }
+        const deletePromo = async (p) => {
+          if (!window.confirm(`Delete code "${p.code}"? Customers using it will see "doesn't exist".`)) return
+          await supabase.from('promo_codes').delete().eq('id', p.id)
+          setPromoList(prev => prev.filter(x => x.id !== p.id))
+          if (promoEditingId === p.id) resetForm()
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => { setPromoPageOpen(false); resetForm() }} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🎁 Promo Codes</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Discount codes customers enter at checkout</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {/* Existing codes */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Your codes ({promoList.length})</div>
+                {promoList.length === 0 ? (
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', padding: '14px 4px' }}>No codes yet — create one below.</div>
+                ) : promoList.map(p => {
+                  const expired = p.expires_at && new Date(p.expires_at) < new Date()
+                  const capped = p.max_redemptions != null && p.redemptions_used >= p.max_redemptions
+                  const dead = !p.active || expired || capped
+                  return (
+                    <div key={p.id} style={{ padding: 12, borderRadius: 12, background: dead ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)', border: `1px solid ${dead ? 'rgba(255,255,255,0.08)' : `${accent}40`}`, marginBottom: 8, opacity: dead ? 0.6 : 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div>
+                          <span style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: 0.5, fontFamily: 'monospace' }}>{p.code}</span>
+                          <span style={{ marginLeft: 8, fontSize: 12, padding: '2px 8px', borderRadius: 6, background: `${accent}33`, color: '#fff', fontWeight: 800 }}>
+                            {p.kind === 'percent' ? `${p.value}% off` : `${fmt(p.value)} off`}
+                          </span>
+                          {!p.active && <span style={{ marginLeft: 6, fontSize: 11, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.2)', color: '#FCA5A5', fontWeight: 700 }}>OFF</span>}
+                          {expired && <span style={{ marginLeft: 6, fontSize: 11, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.2)', color: '#FCA5A5', fontWeight: 700 }}>EXPIRED</span>}
+                          {capped && <span style={{ marginLeft: 6, fontSize: 11, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.2)', color: '#FCA5A5', fontWeight: 700 }}>CAPPED</span>}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => startEdit(p)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => togglePromo(p)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: p.active ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.active ? 'Disable' : 'Enable'}</button>
+                          <button onClick={() => deletePromo(p)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#FCA5A5', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Delete</button>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+                        Used {p.redemptions_used}{p.max_redemptions != null ? ` / ${p.max_redemptions}` : ''}
+                        {p.min_order > 0 ? ` · min ${fmt(p.min_order)}` : ''}
+                        {p.first_order_only ? ' · first-order only' : ''}
+                        {p.expires_at ? ` · expires ${new Date(p.expires_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Editor */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33` }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{promoEditingId ? 'Edit code' : 'New code'}</div>
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Code</label>
+                <input value={promoForm.code} onChange={(e) => setPromoForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="e.g. WELCOME10" maxLength={32} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box', letterSpacing: 1, marginBottom: 12 }} />
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Discount type</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <button type="button" onClick={() => setPromoForm(p => ({ ...p, kind: 'percent' }))} style={{ flex: 1, padding: 12, borderRadius: 10, border: promoForm.kind === 'percent' ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: promoForm.kind === 'percent' ? `${accent}1a` : 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>% off</button>
+                  <button type="button" onClick={() => setPromoForm(p => ({ ...p, kind: 'flat' }))} style={{ flex: 1, padding: 12, borderRadius: 10, border: promoForm.kind === 'flat' ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: promoForm.kind === 'flat' ? `${accent}1a` : 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Flat amount off</button>
+                </div>
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>{promoForm.kind === 'percent' ? 'Percent (1–100)' : `Amount (${shopCurrency || 'IDR'})`}</label>
+                <input type="number" min={0} step={promoForm.kind === 'percent' ? 1 : 100} value={promoForm.value} onChange={(e) => setPromoForm(p => ({ ...p, value: e.target.value }))} placeholder={promoForm.kind === 'percent' ? '10' : '5000'} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Minimum order (optional)</label>
+                <input type="number" min={0} step={1000} value={promoForm.minOrder} onChange={(e) => setPromoForm(p => ({ ...p, minOrder: e.target.value }))} placeholder="0 = no minimum" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Max redemptions (optional)</label>
+                <input type="number" min={1} step={1} value={promoForm.maxRedemptions} onChange={(e) => setPromoForm(p => ({ ...p, maxRedemptions: e.target.value }))} placeholder="Leave blank for unlimited" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Expires at (optional)</label>
+                <input type="datetime-local" value={promoForm.expiresAt} onChange={(e) => setPromoForm(p => ({ ...p, expiresAt: e.target.value }))} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', marginBottom: 14 }}>
+                  <input type="checkbox" checked={promoForm.firstOrderOnly} onChange={(e) => setPromoForm(p => ({ ...p, firstOrderOnly: e.target.checked }))} style={{ width: 18, height: 18, accentColor: accent }} />
+                  <span style={{ flex: 1 }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', display: 'block' }}>First order only</span>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Customer's phone must have zero prior orders</span>
+                  </span>
+                </label>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={savePromo} style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>{promoEditingId ? 'Save changes' : 'Create code'}</button>
+                  {promoEditingId && (
+                    <button onClick={resetForm} style={{ padding: '12px 18px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )
