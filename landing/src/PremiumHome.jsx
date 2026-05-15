@@ -590,30 +590,31 @@ export default function PremiumHome () {
               <p className="sl-footer__about">A family of apps for street vendors, bakeries, restaurants, salons and small businesses across Southeast Asia and beyond.</p>
             </div>
             <div className="sl-footer__col">
-              <div className="sl-footer__col-title">Apps</div>
-              <a href="/donut">Donut shops</a>
-              <a href="/food/chat">Food &amp; restaurants</a>
-              <a href="/food/pro">Restaurant Pro</a>
-              <a href="/products/local">Products</a>
-              <a href="/services">Services</a>
-            </div>
-            <div className="sl-footer__col">
               <div className="sl-footer__col-title">Vendors</div>
-              <a href="/food/chat/login"><strong>Sign in to your dashboard →</strong></a>
+              <a href="/food/chat/login"><strong>Sign in to dashboard →</strong></a>
               <a href="/food/chat/login?signup=true">Start a new shop</a>
-              <a href="#pricing">Pricing</a>
-              <a href="mailto:streetlocallive@gmail.com">Email support</a>
+              <a href="#pricing">Pricing &amp; plans</a>
+              <a href="/faq">FAQ</a>
               <a href="/affiliate">Affiliate program</a>
             </div>
             <div className="sl-footer__col">
+              <div className="sl-footer__col-title">Apps</div>
+              <a href="/donut">Bakery &amp; donut shops</a>
+              <a href="/food/chat">Restaurants (soon)</a>
+              <a href="/products/local">Retail &amp; products (soon)</a>
+              <a href="/services">Salons &amp; services (soon)</a>
+              <a href="/theme">Theme preview</a>
+            </div>
+            <div className="sl-footer__col">
               <div className="sl-footer__col-title">Company</div>
-              <a href="#features">Features</a>
-              <a href="#faq">FAQ</a>
               <a href="/about">About</a>
-              <a href="/terms">Terms</a>
+              <a href="/security">Security</a>
+              <a href="/terms">Terms of service</a>
+              <a href="/privacy">Privacy policy</a>
+              <a href="/contact">Contact</a>
             </div>
           </div>
-          <div className="sl-footer__copy">© {new Date().getFullYear()} StreetLocal · streetlocal.live · Built in Yogyakarta, Indonesia</div>
+          <div className="sl-footer__copy">© {new Date().getFullYear()} StreetLocal · streetlocal.live · Built in Yogyakarta, Indonesia · 0% commission, ever</div>
         </div>
       </footer>
     </div>
