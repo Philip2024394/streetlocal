@@ -140,7 +140,7 @@ export default function SLLayout ({ title, kicker, lede, children }) {
               <a href="/#apps">Restaurants (soon)</a>
               <a href="/#apps">Retail &amp; products (soon)</a>
               <a href="/#apps">Salons &amp; services (soon)</a>
-              <a href="/theme">Theme preview</a>
+              <a href="/themes">Theme catalogue (21)</a>
             </div>
             <div className="sl-footer__col">
               <div className="sl-footer__col-title">Company</div>

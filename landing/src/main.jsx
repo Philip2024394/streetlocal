@@ -13,6 +13,7 @@ import Terms from './pages/Terms.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Security from './pages/Security.jsx'
 import Contact from './pages/Contact.jsx'
+import Themes from './pages/Themes.jsx'
 
 // Standalone tools kept from the legacy stack — they have their own
 // chrome and don't fit the public marketing pages. Mounted directly
@@ -53,6 +54,7 @@ const ROUTES = {
   '/privacy':  <Privacy />,
   '/security': <Security />,
   '/contact':  <Contact />,
+  '/themes':   <Themes />,
   '/admin':    <Admin onClose={() => { window.location.href = '/' }} />,
   '/affiliate': <Affiliate onClose={() => { window.location.href = '/' }} />,
   // Legacy URL redirects — map old App.jsx pages to the closest
@@ -70,7 +72,7 @@ const ROUTES = {
 // than 404. The OLD App.jsx had a tangle of themes/no-commission/
 // warung-app/etc. pages — none of which fit our new positioning.
 const LEGACY_REDIRECTS = new Set([
-  '/themes', '/pro-themes', '/product-themes', '/service-themes',
+  '/pro-themes', '/product-themes', '/service-themes',
   '/no-commission', '/warung-app', '/online-store', '/whatsapp-booking',
   '/domains', '/checkoutchooser-food', '/checkoutchooser-products', '/checkoutchooser-services',
 ])
