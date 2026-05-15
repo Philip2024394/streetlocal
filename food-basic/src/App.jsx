@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { renderLandingSplash, LANDING_THEMES } from './LandingSplashes'
 import AdminDashboard from './AdminDashboard'
 import ActivatePage from './ActivatePage'
 import { useAppLocale, LANGUAGES } from './i18n'
@@ -5607,10 +5608,25 @@ export default function App() {
             <img loading="lazy"src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
           </button>
-          {/* DonutSplash — React port of the frozen donuts.html design.
-              Reads from `donutLanding` state so every text / image / colour
-              is editable from the Landing Page Edit. */}
-          <DonutSplash landing={donutLanding} onEnter={() => setShowLanding(false)} />
+          {/* Splash dispatch by landingThemeId.
+              - 'donuts' (default) → React DonutSplash port of Theme #6 Beyond
+              - 'classic' / 'glass' / 'discover' / 'float' / 'warm' →
+                React ports of saved gallery themes #1-#5 (in LandingSplashes.jsx)
+              All themes read from the SAME `donutLanding` state so the
+              existing Landing Page Edit (Hero Editor) drives every theme
+              with the same text / colour / size controls. */}
+          {landingThemeId && landingThemeId !== 'donuts'
+            ? (
+              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                <img loading="eager" src={donutLanding.bgImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.42)', zIndex: 0 }} />
+                <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+                  {renderLandingSplash(landingThemeId, { landing: donutLanding, accent: donutLanding.pink || accent, onEnter: () => setShowLanding(false) })}
+                </div>
+              </div>
+            )
+            : <DonutSplash landing={donutLanding} onEnter={() => setShowLanding(false)} />
+          }
         </div>
       )
     }
@@ -7789,7 +7805,7 @@ export default function App() {
                   <div style={{ width: '100%', height: '100%', borderRadius: 27, overflow: 'hidden', position: 'relative', background: '#000' }}>
                     {/* Dynamic island */}
                     <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 14, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                    {/* Donut theme: render the curated frozen HTML so the editor's
+                    {/* Donut theme: render the curated frozen design so the editor's
                         phone preview matches what the customer actually sees on
                         the landing. The custom hero-text/logo controls below are
                         a no-op for the donut theme but stay reachable for other
@@ -7797,8 +7813,20 @@ export default function App() {
                     {landingThemeId === 'donuts' && (
                       <DonutSplash landing={donutLanding} onEnter={() => {}} fit="cover" />
                     )}
-                    {/* Background image */}
-                    {landingThemeId !== 'donuts' && (<>
+                    {/* React ports of gallery themes #1-#5 — same `donutLanding`
+                        state drives them, so the editor controls below update
+                        the preview in real-time. */}
+                    {landingThemeId && landingThemeId !== 'donuts' && LANDING_THEMES.some(t => t.id === landingThemeId && t.source === 'react') && (
+                      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                        <img loading="lazy" src={donutLanding.bgImg || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.42)', zIndex: 0 }} />
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 1, transform: 'scale(0.5)', transformOrigin: 'top left', width: 390, height: 800 }}>
+                          {renderLandingSplash(landingThemeId, { landing: donutLanding, accent: donutLanding.pink || accent, onEnter: () => {} })}
+                        </div>
+                      </div>
+                    )}
+                    {/* Generic preview (legacy themes without a React port) */}
+                    {!landingThemeId && (<>
                     <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
@@ -7877,6 +7905,38 @@ export default function App() {
                 )
                 return (
                   <>
+                    {/* THEME PICKER — switches which design renders.
+                        All themes read from the SAME donutLanding state,
+                        so editing text / colour / size below propagates
+                        live to whichever theme is selected. */}
+                    <SectionHeading>Landing theme</SectionHeading>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+                      {LANDING_THEMES.map(t => {
+                        const active = (landingThemeId || 'donuts') === t.id
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => { setLandingThemeId(t.id); try { localStorage.setItem('foodlocalchat_landing_theme_id', t.id) } catch {} }}
+                            style={{
+                              padding: '10px 8px',
+                              borderRadius: 10,
+                              border: active ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.12)',
+                              background: active ? `${accent}26` : 'rgba(0,0,0,0.45)',
+                              color: '#fff',
+                              fontSize: 12,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              minHeight: 44,
+                              textAlign: 'center',
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {t.label}
+                          </button>
+                        )
+                      })}
+                    </div>
                     <SectionHeading>Hero</SectionHeading>
                     <label style={labelStyle}>Line 1</label>
                     <input style={{ ...inputStyle, marginBottom: 8 }} maxLength={30} value={L.heroLine1} onChange={(e) => setDonutField('heroLine1', e.target.value)} />
