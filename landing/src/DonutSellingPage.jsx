@@ -671,7 +671,10 @@ function PageStyles() {
       .ds-gear { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(236,72,153,0.25); background: linear-gradient(180deg, #fff 0%, #FFF5F8 100%); color: #EC4899; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(236,72,153,0.12); transition: all 0.2s ease; line-height: 1; }
       .ds-gear:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(236,72,153,0.22); }
       .ds-gear--open span { transform: rotate(90deg); }
-      .ds-menu-backdrop { position: fixed; inset: 0; background: rgba(45,27,27,0.35); z-index: 90; backdrop-filter: blur(2px); }
+      /* Backdrop sits BELOW the header (z-index 50) so the menu drop —
+         which lives inside the header — stays crisp on top while the
+         page content underneath dims. */
+      .ds-menu-backdrop { position: fixed; inset: 0; background: rgba(45,27,27,0.35); z-index: 40; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
       .ds-menu-drop { position: absolute; top: 100%; right: 12px; left: 12px; margin-top: 8px; padding: 8px; background: #fff; border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.18), 0 4px 14px rgba(236,72,153,0.15); z-index: 95; animation: dsMenuDrop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; gap: 4px; max-width: 480px; margin-left: auto; }
       @keyframes dsMenuDrop { 0% { transform: translateY(-12px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
       .ds-menu-row { display: flex; align-items: center; gap: 14px; padding: 14px 14px; border-radius: 14px; border: none; background: transparent; cursor: pointer; text-align: left; font-family: inherit; transition: background 0.15s ease; min-height: 64px; }
