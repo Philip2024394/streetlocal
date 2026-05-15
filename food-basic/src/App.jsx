@@ -1669,6 +1669,27 @@ export default function App() {
   const [staffList, setStaffList] = useState([])
   const [staffEditingId, setStaffEditingId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
+  // ── LOYALTY STAMPS ────────────────────────────────────────────
+  // "Buy N donuts, get the (N+1)th free" mechanic. State here drives
+  // both the customer card (visible on the home screen when a phone
+  // is known) and the vendor settings page.
+  const [loyaltyPageOpen, setLoyaltyPageOpen] = useState(false)
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(() => localStorage.getItem('foodlocalchat_loyalty_enabled') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_enabled', loyaltyEnabled ? 'true' : 'false') }, [loyaltyEnabled])
+  const [loyaltyGoal, setLoyaltyGoal] = useState(() => {
+    const n = parseInt(localStorage.getItem('foodlocalchat_loyalty_goal') || '10', 10)
+    return isNaN(n) || n < 3 ? 10 : Math.min(20, n)
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_goal', String(loyaltyGoal)) }, [loyaltyGoal])
+  const [loyaltyReward, setLoyaltyReward] = useState(() => localStorage.getItem('foodlocalchat_loyalty_reward') || '1 free donut')
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_reward', loyaltyReward) }, [loyaltyReward])
+  // Per-customer stamp count (local device — keyed by their phone).
+  // Production: this lives on the customer record server-side; for v1
+  // we use localStorage so the customer's own device tracks it.
+  const [loyaltyStamps, setLoyaltyStamps] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_loyalty_stamps') || '0') || 0 } catch { return 0 }
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_stamps', JSON.stringify(loyaltyStamps)) }, [loyaltyStamps])
   // ── RECEIPT VIEWER ────────────────────────────────────────────
   // Holds the order being shown in the printable receipt modal.
   // Null = closed.
@@ -4030,6 +4051,22 @@ export default function App() {
       // "active" at submit; the vendor sees it tagged with a 📅
       // badge and can schedule prep against the requested time.
       scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
+    }
+
+    // Loyalty stamp +1 per qualifying order (vendor opted in). When
+    // the goal is reached, increment a "rewards" counter the customer
+    // can redeem in chat; the stamp counter resets to 0.
+    if (loyaltyEnabled && !isVendor) {
+      const nextStamps = (parseInt(loyaltyStamps, 10) || 0) + 1
+      if (nextStamps >= loyaltyGoal) {
+        setLoyaltyStamps(0)
+        try {
+          const earned = JSON.parse(localStorage.getItem('foodlocalchat_loyalty_rewards') || '0') || 0
+          localStorage.setItem('foodlocalchat_loyalty_rewards', JSON.stringify(earned + 1))
+        } catch {}
+      } else {
+        setLoyaltyStamps(nextStamps)
+      }
     }
 
     // Persist this device's order numbers so the customer can earn the
@@ -10924,6 +10961,7 @@ export default function App() {
         const brand = [
           { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
           { icon: '📣', label: 'Marketing', desc: 'Promo banners + auto-post to chat', onClick: () => setMarketingPageOpen(true) },
+          { icon: '🎟️', label: 'Loyalty Stamps', desc: 'Reward returning customers — buy N get one free', onClick: () => setLoyaltyPageOpen(true) },
           isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
         ].filter(Boolean)
         // Old "Themes" entry removed — Theme Library (in the drawer's
@@ -11922,6 +11960,72 @@ export default function App() {
                     </div>
                   )
                 })()}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ LOYALTY STAMPS — vendor settings ═══ */}
+      {loyaltyPageOpen && (() => {
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => setLoyaltyPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🎟️ Loyalty Stamps</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Reward returning customers</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Enable loyalty stamps</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Customers earn a stamp on every order. After {loyaltyGoal} stamps they get the reward.</div>
+                  </div>
+                  <input type="checkbox" checked={loyaltyEnabled} onChange={(e) => setLoyaltyEnabled(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                </label>
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Stamps to reward</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  {[5, 8, 10, 12, 15].map(n => (
+                    <button key={n} onClick={() => setLoyaltyGoal(n)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: loyaltyGoal === n ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.15)', background: loyaltyGoal === n ? `${accent}1a` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>{n}</button>
+                  ))}
+                </div>
+                <input type="number" min={3} max={20} value={loyaltyGoal} onChange={(e) => setLoyaltyGoal(Math.max(3, Math.min(20, parseInt(e.target.value, 10) || 10)))} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', textAlign: 'center', boxSizing: 'border-box' }} />
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Reward</label>
+                <input value={loyaltyReward} onChange={(e) => setLoyaltyReward(e.target.value.slice(0, 60))} placeholder="e.g. 1 free donut" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+
+              {/* Preview — what the customer's stamp card looks like */}
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Customer's view</div>
+              <div style={{ padding: 18, borderRadius: 16, background: `linear-gradient(135deg, ${accent}, #BE185D)`, color: '#fff', boxShadow: `0 8px 24px ${accent}55` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.3, textTransform: 'uppercase' }}>{shopName}</div>
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>Loyalty card</div>
+                  </div>
+                  <div style={{ fontSize: 22 }}>🎟️</div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(loyaltyGoal, 10)}, 1fr)`, gap: 6, marginBottom: 10 }}>
+                  {Array.from({ length: loyaltyGoal }).map((_, i) => {
+                    const filled = i < 3 // preview shows 3 stamps as example
+                    return (
+                      <div key={i} style={{ aspectRatio: '1', borderRadius: '50%', background: filled ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.2)', border: '2px dashed rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: filled ? 16 : 12, color: filled ? accent : 'rgba(255,255,255,0.5)' }}>{filled ? '🍩' : i + 1}</div>
+                    )
+                  })}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.9 }}>Earn <strong>{loyaltyGoal}</strong> stamps · Get <strong>{loyaltyReward}</strong></div>
               </div>
             </div>
           </div>
