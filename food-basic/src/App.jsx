@@ -1886,6 +1886,16 @@ export default function App() {
   // without leaving the chat view.
   const [vendorChatListOpen, setVendorChatListOpen] = useState(false)
   const [vendorAllChats, setVendorAllChats] = useState([])
+  // Per-conversation action state — tracks which orders the vendor has
+  // dispatched or cancelled from the inbox. Persisted so the chips
+  // survive reloads. Real orders also get a system message into the
+  // conversation; mocks just update the chip locally.
+  const [orderActionStatuses, setOrderActionStatuses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('foodlocalchat_order_actions') || '{}') } catch { return {} }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('foodlocalchat_order_actions', JSON.stringify(orderActionStatuses)) } catch {}
+  }, [orderActionStatuses])
   // Unread badge on the header 💬 icon — increments when a vendor reply
   // arrives via the pre-order conversation while the modal is closed.
   // Resets to 0 when the customer opens the modal.
@@ -7804,12 +7814,34 @@ export default function App() {
                     const timeStr = placedAt ? new Date(placedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''
                     const itemsLine = (op.items || []).map(it => `${it.qty}× ${it.name}`).join(' · ')
                     const cleanWa = String(conv.customer_phone || '').replace(/[^0-9]/g, '')
+                    const actionStatus = orderActionStatuses[conv.id] || null // null | 'dispatched' | 'cancelled'
+                    const isCancelled = actionStatus === 'cancelled'
+                    const dispatchOrder = async (e) => {
+                      e.stopPropagation()
+                      setOrderActionStatuses(p => ({ ...p, [conv.id]: 'dispatched' }))
+                      if (!conv.isMock) {
+                        try { await sendSystemStatus({ conversationId: conv.id, body: 'Your order is on the way! 🛵' }) } catch {}
+                      }
+                    }
+                    const cancelOrder = async (e) => {
+                      e.stopPropagation()
+                      if (!window.confirm('Cancel this order? The customer will be notified.')) return
+                      setOrderActionStatuses(p => ({ ...p, [conv.id]: 'cancelled' }))
+                      if (!conv.isMock) {
+                        try { await sendSystemStatus({ conversationId: conv.id, body: 'Order cancelled by the vendor.' }) } catch {}
+                      }
+                    }
+                    const chatCustomer = (e) => {
+                      e.stopPropagation()
+                      if (!conv.isMock) openVendorConv(conv)
+                    }
                     return (
                       <div
                         key={conv.id}
-                        onClick={() => { if (!conv.isMock) openVendorConv(conv) }}
-                        style={{ position: 'relative', display: 'flex', gap: 12, padding: 14, margin: '0 12px 10px', borderRadius: 14, border: `1px solid ${isFlash ? 'rgba(250,204,21,0.4)' : 'rgba(255,255,255,0.08)'}`, background: isFlash ? 'rgba(250,204,21,0.12)' : 'rgba(0,0,0,0.55)', cursor: conv.isMock ? 'default' : 'pointer', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 10px rgba(0,0,0,0.25)' }}
+                        onClick={() => { if (!conv.isMock && !isCancelled) openVendorConv(conv) }}
+                        style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 0, padding: 14, margin: '0 12px 10px', borderRadius: 14, border: `1px solid ${isFlash ? 'rgba(250,204,21,0.4)' : 'rgba(255,255,255,0.08)'}`, background: isFlash ? 'rgba(250,204,21,0.12)' : isCancelled ? 'rgba(60,15,15,0.5)' : 'rgba(0,0,0,0.55)', cursor: conv.isMock || isCancelled ? 'default' : 'pointer', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 10px rgba(0,0,0,0.25)', opacity: isCancelled ? 0.6 : 1 }}
                       >
+                      <div style={{ display: 'flex', gap: 12 }}>
                         {/* Item photo + extra count chip */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           {firstImg ? (
@@ -7859,6 +7891,29 @@ export default function App() {
                           <span style={{ position: 'absolute', top: 10, right: 10, minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0,0,0,0.55)' }}>{unread}</span>
                         )}
                       </div>
+                      {/* Action row — Dispatched / Cancel / Chat. After
+                          either Dispatched or Cancel, the row collapses
+                          to a status chip so the vendor sees what they
+                          already did and avoids double-actions. */}
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                        {actionStatus === 'dispatched' && (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.5)', color: '#86EFAC', fontSize: 13, fontWeight: 800 }}>🛵 Dispatched · customer notified</span>
+                            <button type="button" onClick={chatCustomer} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${accent}55`, background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 36 }}>💬 Chat</button>
+                          </div>
+                        )}
+                        {actionStatus === 'cancelled' && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)', color: '#FCA5A5', fontSize: 13, fontWeight: 800 }}>✕ Cancelled · moved to completed</span>
+                        )}
+                        {!actionStatus && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                            <button type="button" onClick={dispatchOrder} style={{ padding: '10px 8px', borderRadius: 10, border: 'none', background: 'linear-gradient(180deg, #22c55e 0%, #15803d 100%)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40, boxShadow: '0 2px 8px rgba(34,197,94,0.35)' }}>🛵 Dispatched</button>
+                            <button type="button" onClick={cancelOrder}   style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.15)', color: '#FCA5A5', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>✕ Cancel</button>
+                            <button type="button" onClick={chatCustomer}  style={{ padding: '10px 8px', borderRadius: 10, border: `1px solid ${accent}55`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>💬 Chat</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     )
                   }
                   // FALLBACK — simple row when no orderPayload is available
