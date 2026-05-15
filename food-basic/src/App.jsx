@@ -1669,6 +1669,19 @@ export default function App() {
   const [staffList, setStaffList] = useState([])
   const [staffEditingId, setStaffEditingId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
+  // ── TAX / VAT ─────────────────────────────────────────────────
+  // Vendor-configurable tax. Stored client-side per shop; baked into
+  // every order_payload so the breakdown survives in chat history.
+  const [taxPageOpen, setTaxPageOpen] = useState(false)
+  const [taxRate, setTaxRate] = useState(() => {
+    const n = parseFloat(localStorage.getItem('foodlocalchat_tax_rate') || '0')
+    return isNaN(n) ? 0 : n
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_tax_rate', String(taxRate)) }, [taxRate])
+  const [taxLabel, setTaxLabel] = useState(() => localStorage.getItem('foodlocalchat_tax_label') || 'Tax')
+  useEffect(() => { localStorage.setItem('foodlocalchat_tax_label', taxLabel) }, [taxLabel])
+  const [taxInclusive, setTaxInclusive] = useState(() => localStorage.getItem('foodlocalchat_tax_inclusive') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_tax_inclusive', taxInclusive ? 'true' : 'false') }, [taxInclusive])
   // (Marketing-banners Supabase fetch lives further down, after the
   // vendorId state declaration — putting it here caused a TDZ.)
   // Vendor's own uploaded backgrounds — persisted so they survive
@@ -3925,7 +3938,18 @@ export default function App() {
     const maxPrep = Math.max(0, ...cart.map(c => c.prepTime || 0))
     const subtotal = totalPrice
     const deliveryFee = delEnabled && deliveryZone ? (deliveryZone.fee || 0) : 0
-    const grandTotal = subtotal + deliveryFee
+    // Tax math. INCLUSIVE: subtotal already contains the tax — we
+    // back-calculate the embedded portion for the receipt. EXCLUSIVE:
+    // tax is added on top of subtotal + delivery.
+    const taxRatePct = Math.max(0, Math.min(100, parseFloat(taxRate) || 0))
+    const taxableBase = subtotal + deliveryFee
+    const taxAmount = taxRatePct > 0
+      ? (taxInclusive ? +(taxableBase - taxableBase / (1 + taxRatePct / 100)).toFixed(2)
+                      : +(taxableBase * taxRatePct / 100).toFixed(2))
+      : 0
+    const grandTotal = taxRatePct > 0 && !taxInclusive
+      ? +(taxableBase + taxAmount).toFixed(2)
+      : +taxableBase.toFixed(2)
 
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
@@ -3991,6 +4015,9 @@ export default function App() {
         distanceKm: userDistance || null,
       },
       payment: { method: payMethod || 'cod' },
+      // Tax breakdown: rate + label + computed amount + mode. Lets a
+      // receipt or accountant reconstruct what was charged.
+      tax: taxRatePct > 0 ? { rate: taxRatePct, label: taxLabel, amount: taxAmount, inclusive: !!taxInclusive } : null,
       note,
       total: grandTotal,
       prepMins: maxPrep,
@@ -7539,9 +7566,28 @@ export default function App() {
                           <span style={{ fontSize: 13, fontWeight: 700, color: isCustomAccent ? accent : '#F59E0B', background: isCustomAccent ? `${accent}25` : 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6 }}>{t.collectionOnly || 'Collection Only'}</span>
                         </div>
                       )}
+                      {/* Tax line — only when a rate is configured.
+                          INCLUSIVE: shown as informational ("of which Tax 11%").
+                          EXCLUSIVE: shown as an added line above the total. */}
+                      {(() => {
+                        const r = parseFloat(taxRate) || 0
+                        if (r <= 0) return null
+                        const base = totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0)
+                        const tax = taxInclusive ? base - base / (1 + r / 100) : base * r / 100
+                        return (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+                            <span>{taxLabel} ({r}%){taxInclusive ? ' · included' : ''}</span>
+                            <span>{fmt(Math.round(tax))}</span>
+                          </div>
+                        )
+                      })()}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6 }}>
                         <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{t.total || 'Total'}</span>
-                        <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</span>
+                        <span style={{ fontSize: 18, fontWeight: 900, color: '#FACC15' }}>{(() => {
+                          const r = parseFloat(taxRate) || 0
+                          const base = totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0)
+                          return fmt(Math.round(r > 0 && !taxInclusive ? base + base * r / 100 : base))
+                        })()}</span>
                       </div>
                     </div>
                   )}
@@ -10887,6 +10933,7 @@ export default function App() {
         const account = [
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
           { icon: '👥', label: 'Staff Accounts', desc: 'Invite team — manager / cashier / kitchen', onClick: () => setStaffPageOpen(true) },
+          { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
           { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
           { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
           { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
@@ -11790,6 +11837,86 @@ export default function App() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ TAX / VAT SETTINGS ═══
+          Vendor sets a rate + label + inclusive/exclusive mode. Math
+          is applied at checkout and baked into every order_payload. */}
+      {taxPageOpen && (() => {
+        const PRESETS = [
+          { label: 'PPN (Indonesia)',  rate: 11, taxLabel: 'PPN' },
+          { label: 'GST (Singapore)',  rate: 8,  taxLabel: 'GST' },
+          { label: 'GST (Malaysia)',   rate: 6,  taxLabel: 'GST' },
+          { label: 'GST (Australia)',  rate: 10, taxLabel: 'GST' },
+          { label: 'VAT (UK)',         rate: 20, taxLabel: 'VAT' },
+          { label: 'VAT (EU std)',     rate: 21, taxLabel: 'VAT' },
+          { label: 'Sales tax (US avg)', rate: 7, taxLabel: 'Tax' },
+          { label: 'No tax',           rate: 0,  taxLabel: 'Tax' },
+        ]
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => setTaxPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>📊 Tax / VAT</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Configure once — every order applies it</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Quick preset</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {PRESETS.map(p => (
+                    <button key={p.label} onClick={() => { setTaxRate(p.rate); setTaxLabel(p.taxLabel) }} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: (taxRate === p.rate && taxLabel === p.taxLabel) ? `${accent}33` : 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Rate (%)</label>
+                <input type="number" min={0} max={100} step={0.1} value={taxRate} onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 18, fontWeight: 800, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', textAlign: 'center' }} />
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Label shown to customer</label>
+                <input value={taxLabel} maxLength={20} onChange={(e) => setTaxLabel(e.target.value)} placeholder="VAT / GST / PPN / Tax" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Pricing mode</div>
+                <button onClick={() => setTaxInclusive(false)} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: !taxInclusive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: !taxInclusive ? `${accent}1a` : 'rgba(255,255,255,0.04)', color: '#fff', textAlign: 'left', cursor: 'pointer', marginBottom: 6 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>Tax added at checkout (exclusive)</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Menu prices DON'T include tax. Tax line added above the total.</div>
+                </button>
+                <button onClick={() => setTaxInclusive(true)} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: taxInclusive ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)', background: taxInclusive ? `${accent}1a` : 'rgba(255,255,255,0.04)', color: '#fff', textAlign: 'left', cursor: 'pointer' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>Tax included in menu prices (inclusive)</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Menu prices ALREADY contain tax. Receipt shows the embedded portion for accounting.</div>
+                </button>
+              </div>
+
+              {/* Live example */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#86EFAC', marginBottom: 8 }}>How a 100,000 order will look</div>
+                {(() => {
+                  const base = 100000
+                  const tax = taxRate > 0 ? (taxInclusive ? base - base / (1 + taxRate / 100) : base * taxRate / 100) : 0
+                  const total = taxRate > 0 && !taxInclusive ? base + tax : base
+                  return (
+                    <div style={{ fontSize: 13, color: '#fff' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}><span>Subtotal</span><span>{fmt(base)}</span></div>
+                      {taxRate > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', color: 'rgba(255,255,255,0.75)' }}><span>{taxLabel} ({taxRate}%){taxInclusive ? ' · included' : ''}</span><span>{fmt(Math.round(tax))}</span></div>}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 0', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.1)', fontWeight: 900, color: '#FACC15' }}><span>Total</span><span>{fmt(Math.round(total))}</span></div>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>
