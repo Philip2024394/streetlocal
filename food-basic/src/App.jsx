@@ -2670,6 +2670,7 @@ export default function App() {
           bakedImageUrl: r.baked_image_url,
           bakedAt: r.baked_at ? new Date(r.baked_at).getTime() : null,
           countdownEndsAt: r.countdown_ends_at ? new Date(r.countdown_ends_at).getTime() : null,
+          logoScale: typeof r.logo_scale === 'number' ? r.logo_scale : 1,
           createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
         }))
         if (remoteBanners.length > 0) setMarketingBanners(remoteBanners)
@@ -10967,11 +10968,13 @@ export default function App() {
           ctx.fillStyle = b.tint || 'rgba(0,0,0,0.4)'
           ctx.fillRect(0, 0, W, H)
           // 3. Logo (top-left). Render honours shopLogoStyle from
-          // Design Studio: 'off' hides logo entirely, 'bare' draws
-          // the raw image with object-fit:contain semantics, 'circle'
-          // applies a rounded clip. No ring — matches main site.
+          // Design Studio AND b.logoScale (0.5–2.0). Shop name scales
+          // with the logo so the two stay visually balanced.
           const margin = W * 0.04
+          const scale = Math.max(0.5, Math.min(2, b.logoScale || 1))
+          const logoSize = W * 0.10 * scale
           let headerCursorX = margin
+          let headerCenterY = margin + logoSize / 2
           if (b.showLogo && shopLogo && shopLogoStyle !== 'off') {
             const logoImg = await new Promise((resolve) => {
               const i = new Image()
@@ -10981,34 +10984,33 @@ export default function App() {
               i.src = shopLogo
             })
             if (logoImg) {
-              const ls = W * 0.10
               if (shopLogoStyle === 'circle') {
                 ctx.save()
                 ctx.beginPath()
-                ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
+                ctx.arc(margin + logoSize / 2, margin + logoSize / 2, logoSize / 2, 0, Math.PI * 2)
                 ctx.closePath()
                 ctx.clip()
-                ctx.drawImage(logoImg, margin, margin, ls, ls)
+                ctx.drawImage(logoImg, margin, margin, logoSize, logoSize)
                 ctx.restore()
               } else {
                 // 'bare' (and default): draw the image natively. Use
                 // contain-fit math so non-square logos don't stretch.
-                const ratio = Math.min(ls / logoImg.width, ls / logoImg.height)
+                const ratio = Math.min(logoSize / logoImg.width, logoSize / logoImg.height)
                 const dw = logoImg.width * ratio, dh = logoImg.height * ratio
-                ctx.drawImage(logoImg, margin + (ls - dw) / 2, margin + (ls - dh) / 2, dw, dh)
+                ctx.drawImage(logoImg, margin + (logoSize - dw) / 2, margin + (logoSize - dh) / 2, dw, dh)
               }
-              headerCursorX = margin + ls + W * 0.025
+              headerCursorX = margin + logoSize + W * 0.025
             }
           }
-          // 4. Shop name (right of logo, top)
+          // 4. Shop name (right of logo, top) — scales with logo
           if (b.showShopName && shopName) {
-            const nameSize = W * 0.04
+            const nameSize = W * 0.04 * scale
             ctx.font = `800 ${nameSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
             ctx.fillStyle = b.textColor
             ctx.textBaseline = 'middle'
             ctx.shadowColor = 'rgba(0,0,0,0.6)'
             ctx.shadowBlur = W * 0.012
-            ctx.fillText(shopName, headerCursorX, margin + (W * 0.10) / 2)
+            ctx.fillText(shopName, headerCursorX, headerCenterY)
             ctx.shadowBlur = 0
           }
           // 5. Discount (huge, bottom-left)
@@ -11113,6 +11115,7 @@ export default function App() {
                 baked_image_url: url,
                 baked_at: new Date().toISOString(),
                 countdown_ends_at: b.countdownEndsAt ? new Date(b.countdownEndsAt).toISOString() : null,
+                logo_scale: typeof b.logoScale === 'number' ? b.logoScale : 1,
               })
             } catch {}
           }
@@ -11133,30 +11136,35 @@ export default function App() {
               {b.bgImage && <img src={b.bgImage} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${b.tint} 0%, ${b.tint} 100%)` }} />
               {/* Header row: logo + shop name (top-left). Logo render
-                  honours shopLogoStyle from Design Studio — 'off'
-                  hides it entirely, 'bare' shows the raw image with no
-                  ring/circle, 'circle' uses the rounded clip without
-                  a ring (clean, matches the rest of the app). */}
-              <div style={{ position: 'absolute', top: w * 0.04, left: w * 0.04, display: 'flex', alignItems: 'center', gap: w * 0.025 }}>
-                {b.showLogo && shopLogo && shopLogoStyle !== 'off' && (
-                  <img
-                    src={shopLogo}
-                    alt=""
-                    onError={imgError('logo')}
-                    style={{
-                      width: w * 0.11,
-                      height: w * 0.11,
-                      objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover',
-                      borderRadius: shopLogoStyle === 'circle' ? '50%' : 0,
-                      // No ring — matches the main site logo treatment.
-                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))',
-                    }}
-                  />
-                )}
-                {b.showShopName && (
-                  <div style={{ fontSize: Math.max(11, w * 0.04), fontWeight: 800, color: b.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.55)', maxWidth: w * 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
-                )}
-              </div>
+                  honours shopLogoStyle from Design Studio. Logo + name
+                  scale together via b.logoScale (default 1.0, range
+                  0.5–2.0) — visual weight stays consistent. */}
+              {(() => {
+                const ls = Math.max(0.5, Math.min(2, b.logoScale || 1))
+                const logoSize = w * 0.11 * ls
+                const nameSize = Math.max(11, w * 0.04 * ls)
+                return (
+                  <div style={{ position: 'absolute', top: w * 0.04, left: w * 0.04, display: 'flex', alignItems: 'center', gap: w * 0.025 }}>
+                    {b.showLogo && shopLogo && shopLogoStyle !== 'off' && (
+                      <img
+                        src={shopLogo}
+                        alt=""
+                        onError={imgError('logo')}
+                        style={{
+                          width: logoSize,
+                          height: logoSize,
+                          objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover',
+                          borderRadius: shopLogoStyle === 'circle' ? '50%' : 0,
+                          filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))',
+                        }}
+                      />
+                    )}
+                    {b.showShopName && (
+                      <div style={{ fontSize: nameSize, fontWeight: 800, color: b.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.55)', maxWidth: w * 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
+                    )}
+                  </div>
+                )
+              })()}
               {/* Discount — huge, anchored bottom-left */}
               <div style={{ position: 'absolute', left: w * 0.04, bottom: isStory ? h * 0.28 : h * 0.32, fontSize: Math.max(28, w * (isStory ? 0.18 : 0.14)), fontWeight: 900, color: b.textColor, lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.55)', letterSpacing: -0.5 }}>{b.discount}</div>
               {/* Headline */}
@@ -11286,8 +11294,16 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Toggles */}
-                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Toggles + logo-scale slider. Gray-white track,
+                      pink scale thumb. Drag to scale the logo (and the
+                      shop name proportionally) from 0.5× to 2.0×. */}
+                  <style>{`
+                    .ds-mkt-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #6b7280 0%, #e5e7eb 100%); outline: none; cursor: pointer; }
+                    .ds-mkt-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 13px; background: #EC4899; cursor: pointer; box-shadow: 0 2px 8px rgba(236,72,153,0.55), inset 0 -2px 4px rgba(0,0,0,0.15); border: 2px solid #fff; transition: transform 0.12s ease; }
+                    .ds-mkt-slider::-webkit-slider-thumb:active { transform: scale(1.15); }
+                    .ds-mkt-slider::-moz-range-thumb { width: 26px; height: 26px; border-radius: 13px; background: #EC4899; cursor: pointer; box-shadow: 0 2px 8px rgba(236,72,153,0.55); border: 2px solid #fff; }
+                  `}</style>
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {[
                       { k: 'showLogo', label: 'Show shop logo' },
                       { k: 'showShopName', label: 'Show shop name' },
@@ -11297,6 +11313,25 @@ export default function App() {
                         <input type="checkbox" checked={!!editing[k]} onChange={(e) => updateBanner({ [k]: e.target.checked })} style={{ width: 20, height: 20, accentColor: accent, cursor: 'pointer' }} />
                       </label>
                     ))}
+                    {/* Logo size slider */}
+                    <div style={{ paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>Logo + name size</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: accent, padding: '3px 10px', borderRadius: 8, background: `${accent}22`, border: `1px solid ${accent}55` }}>{((editing.logoScale || 1) * 100).toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        className="ds-mkt-slider"
+                        min={50}
+                        max={200}
+                        step={5}
+                        value={Math.round((editing.logoScale || 1) * 100)}
+                        onChange={(e) => updateBanner({ logoScale: parseInt(e.target.value, 10) / 100 })}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>
+                        <span>50%</span><span>100%</span><span>200%</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Countdown timer — adds an "Ends in Xh Ym" chip to
