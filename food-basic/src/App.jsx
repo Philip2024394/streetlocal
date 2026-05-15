@@ -1595,8 +1595,12 @@ export default function App() {
       }
     })
 
-    // Report health
-    const menuCount = JSON.parse(localStorage.getItem('foodlocalchat_menu') || '[]').length
+    // Report health. Bare JSON.parse here would crash the vendor app at
+    // startup if localStorage gets corrupted (e.g. by a partial sync or
+    // an aborted prior write). Try/catch makes the menuCount default to
+    // 0 in that case — the rest of the health log still goes through.
+    let menuCount = 0
+    try { menuCount = JSON.parse(localStorage.getItem('foodlocalchat_menu') || '[]').length } catch {}
     const status = errors.length > 0 ? 'warning' : 'healthy'
     supabase.from('vendor_health_logs').insert({
       vendor_id: vid, status, app_version: APP_VERSION,
