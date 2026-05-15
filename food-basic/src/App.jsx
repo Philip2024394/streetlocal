@@ -1554,6 +1554,7 @@ export default function App() {
   ]
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
   const [themeLibraryOpen, setThemeLibraryOpen] = useState(false) // curated background picker
+  const [settingsHubOpen, setSettingsHubOpen] = useState(false)   // grouped settings page
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
@@ -8908,9 +8909,11 @@ export default function App() {
 
               const design = [
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
-                { icon: '🌅', label: 'Theme Library', desc: 'Pick a background — or upload your own', onClick: () => setThemeLibraryOpen(true) },
                 { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
               ]
+              // Theme Library lives in the drawer (frequent action) AS WELL
+              // as the Settings hub, so it's always one tap away.
+              const themeLibraryItem = { icon: '🌅', label: 'Theme Library', desc: 'Pick a background — or upload your own', onClick: () => setThemeLibraryOpen(true) }
 
               const menu = [
                 isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
@@ -8941,24 +8944,20 @@ export default function App() {
                 }}
               ] : []
 
+              // Hybrid drawer: only the frequent / one-tap actions live
+              // here (Orders + Theme Library). Brand / Design / Menu /
+              // Account / Advanced moved to the dedicated Settings hub
+              // — one extra tap, but the drawer stays scannable.
+              const settingsBtn = {
+                icon: '⚙', label: 'Settings', desc: 'Brand · design · menu · account · advanced',
+                onClick: () => setSettingsHubOpen(true),
+              }
               return (
                 <div style={{ paddingBottom: 20 }}>
                   {sectionHeader('Orders')}
                   <div style={{ padding: '0 16px' }}>{orders.map(drawerBtn)}</div>
-                  {sectionHeader('Brand')}
-                  <div style={{ padding: '0 16px' }}>{brand.map(drawerBtn)}</div>
-                  {sectionHeader('Design')}
-                  <div style={{ padding: '0 16px' }}>{design.map(drawerBtn)}</div>
-                  {menu.length > 0 && (<>
-                    {sectionHeader('Menu')}
-                    <div style={{ padding: '0 16px' }}>{menu.map(drawerBtn)}</div>
-                  </>)}
-                  {sectionHeader('Account')}
-                  <div style={{ padding: '0 16px' }}>{account.map(drawerBtn)}</div>
-                  {advanced.length > 0 && (<>
-                    {sectionHeader('Advanced')}
-                    <div style={{ padding: '0 16px' }}>{advanced.map(drawerBtn)}</div>
-                  </>)}
+                  {sectionHeader('Quick Access')}
+                  <div style={{ padding: '0 16px' }}>{[themeLibraryItem, settingsBtn].map(drawerBtn)}</div>
                 </div>
               )
             })()}
@@ -10176,6 +10175,119 @@ export default function App() {
                 <div style={{ fontWeight: 800, color: '#fff', marginBottom: 4 }}>Tip</div>
                 Pick portrait images (3:4 or taller) for the cleanest fit on phone screens. The background applies to both the splash and the menu — keep it bold but uncluttered so menu text stays readable.
               </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ SETTINGS HUB ═══
+          Cold-path settings live here: Brand, Design, Menu, Account,
+          Advanced. Hot-path actions (Orders, Theme Library) stay in
+          the drawer so they're always one tap. */}
+      {settingsHubOpen && (() => {
+        const isDonut = shopTheme === 'donut'
+        // Re-build the same arrays from the drawer block — local scope
+        // because most onClick handlers close over component state.
+        const brand = [
+          { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
+          isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
+        ].filter(Boolean)
+        const design = [
+          { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
+          { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
+        ]
+        const menuRows = [
+          isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
+          isDonut && { icon: '🍩', label: 'Meet the Donuts', desc: 'Open the customer swipe gallery', onClick: () => { setDonutTypesIdx(0); setDonutTypesGallery(true) } },
+        ].filter(Boolean)
+        const account = [
+          { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
+          { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
+          { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
+          { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
+        ]
+        const advanced = isDonut ? [
+          { icon: '↺', label: 'Reset Theme', desc: 'Restore the original donut design', danger: true, onClick: () => {
+            if (!window.confirm('Reset all donut theme customisations back to the original Theme #6 design? This wipes your card style, colours, button settings, hero image, and landing page edits.')) return
+            const keys = [
+              'foodlocalchat_donut_card_style', 'foodlocalchat_donut_card_color', 'foodlocalchat_donut_card_image',
+              'foodlocalchat_donut_frame_color', 'foodlocalchat_donut_promo_color',
+              'foodlocalchat_donut_addbtn_shape', 'foodlocalchat_donut_addbtn_color', 'foodlocalchat_donut_addbtn_text_color', 'foodlocalchat_donut_addbtn_text',
+              'foodlocalchat_donut_hero', 'foodlocalchat_donut_landing',
+            ]
+            keys.forEach(k => { try { localStorage.removeItem(k) } catch {} })
+            setDonutCardStyle('solid'); setDonutCardColor('#1a1a1a'); setDonutCardImage('')
+            setDonutFrameColor(''); setDonutPromoColor('')
+            setDonutAddBtnShape('circle'); setDonutAddBtnColor(''); setDonutAddBtnTextColor('#ffffff'); setDonutAddBtnText('Add to Cart')
+            resetDonutLanding()
+          }},
+        ] : []
+
+        const sectionHeader = (label) => (
+          <div key={`hub-sh-${label}`} style={{ margin: '20px 4px 8px', padding: '6px 0 6px 12px', borderLeft: `3px solid ${accent}`, fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{label}</div>
+        )
+        const hubBtn = (item) => (
+          <button
+            key={item.label}
+            onClick={() => { item.onClick && item.onClick(); setSettingsHubOpen(false) }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+              padding: '14px 16px', borderRadius: 16,
+              border: `1.5px solid ${item.danger ? '#8B0000' : 'rgba(255,255,255,0.08)'}`,
+              background: item.danger ? 'rgba(139,0,0,0.18)' : 'rgba(0,0,0,0.55)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              cursor: 'pointer', textAlign: 'left', minHeight: 64, marginBottom: 10,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: item.danger ? '#8B0000' : accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22, lineHeight: 1 }}>
+              <span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{item.label}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{item.desc}</div>
+            </div>
+            <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.35)' }}>›</span>
+          </button>
+        )
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            {/* Same donut bg as the app — visual continuity */}
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            {/* Header */}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => setSettingsHubOpen(false)} aria-label="Back" style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>←</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', lineHeight: 1.1 }}>Settings</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Configure your shop</div>
+              </div>
+            </div>
+
+            {/* Scrollable groups */}
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 40px', WebkitOverflowScrolling: 'touch' }}>
+              {brand.length > 0 && (<>
+                {sectionHeader('Brand')}
+                {brand.map(hubBtn)}
+              </>)}
+              {design.length > 0 && (<>
+                {sectionHeader('Design')}
+                {design.map(hubBtn)}
+              </>)}
+              {menuRows.length > 0 && (<>
+                {sectionHeader('Menu')}
+                {menuRows.map(hubBtn)}
+              </>)}
+              {account.length > 0 && (<>
+                {sectionHeader('Account')}
+                {account.map(hubBtn)}
+              </>)}
+              {advanced.length > 0 && (<>
+                {sectionHeader('Advanced')}
+                {advanced.map(hubBtn)}
+              </>)}
             </div>
           </div>
         )
