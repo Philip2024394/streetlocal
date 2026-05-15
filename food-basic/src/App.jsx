@@ -1669,6 +1669,10 @@ export default function App() {
   const [staffList, setStaffList] = useState([])
   const [staffEditingId, setStaffEditingId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
+  // ── RECEIPT VIEWER ────────────────────────────────────────────
+  // Holds the order being shown in the printable receipt modal.
+  // Null = closed.
+  const [receiptOrder, setReceiptOrder] = useState(null)
   // ── TAX / VAT ─────────────────────────────────────────────────
   // Vendor-configurable tax. Stored client-side per shop; baked into
   // every order_payload so the breakdown survives in chat history.
@@ -8311,10 +8315,11 @@ export default function App() {
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)', color: '#FCA5A5', fontSize: 13, fontWeight: 800 }}>✕ Cancelled · moved to completed</span>
                         )}
                         {!actionStatus && (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             <button type="button" onClick={dispatchOrder} style={{ padding: '10px 8px', borderRadius: 10, border: 'none', background: 'linear-gradient(180deg, #22c55e 0%, #15803d 100%)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40, boxShadow: '0 2px 8px rgba(34,197,94,0.35)' }}>🛵 Dispatched</button>
                             <button type="button" onClick={cancelOrder}   style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.15)', color: '#FCA5A5', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>✕ Cancel</button>
                             <button type="button" onClick={chatCustomer}  style={{ padding: '10px 8px', borderRadius: 10, border: `1px solid ${accent}55`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>💬 Chat</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setReceiptOrder({ ...op, customer_name: conv.customer_name, customer_phone: conv.customer_phone }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(250,204,21,0.4)', background: 'rgba(250,204,21,0.12)', color: '#FCD34D', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>🧾 Receipt</button>
                           </div>
                         )}
                       </div>
@@ -11917,6 +11922,110 @@ export default function App() {
                     </div>
                   )
                 })()}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ ORDER RECEIPT (printable) ═══
+          Renders any order_payload as a clean receipt with shop
+          header, items table, tax breakdown, total, customer info,
+          and a Print button that opens the browser's print dialog
+          (which lets the user Save as PDF on any platform). */}
+      {receiptOrder && (() => {
+        const o = receiptOrder
+        const fmtMoney = (n) => fmt(Math.round(n || 0))
+        const placed = o.placedAt ? new Date(o.placedAt) : new Date()
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} className="no-print" />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} className="no-print" />
+
+            {/* Print-specific CSS: white paper, dark text. Hides chrome. */}
+            <style>{`
+              @media print {
+                body * { visibility: hidden !important; }
+                #ds-receipt, #ds-receipt * { visibility: visible !important; }
+                #ds-receipt { position: absolute !important; left: 0; top: 0; width: 100%; }
+                .no-print { display: none !important; }
+              }
+            `}</style>
+
+            {/* Header bar (hidden on print) */}
+            <div className="no-print" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => setReceiptOrder(null)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🧾 Receipt</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>#{o.orderNumber || '—'}</div>
+              </div>
+              <button onClick={() => window.print()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 36 }}>🖨 Print / Save PDF</button>
+            </div>
+
+            {/* The actual receipt — visible on screen + on print */}
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '0 14px 28px' }}>
+              <div id="ds-receipt" style={{ maxWidth: 480, margin: '0 auto', background: '#fff', color: '#111', borderRadius: 12, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                {/* Shop header */}
+                <div style={{ textAlign: 'center', borderBottom: '2px dashed #ccc', paddingBottom: 14, marginBottom: 14 }}>
+                  {shopLogo && shopLogoStyle !== 'off' && (
+                    <img src={shopLogo} alt="" style={{ width: 60, height: 60, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', borderRadius: shopLogoStyle === 'circle' ? '50%' : 0, marginBottom: 8 }} />
+                  )}
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#111', marginBottom: 2 }}>{shopName}</div>
+                  {shopAddress && <div style={{ fontSize: 12, color: '#555', marginBottom: 2 }}>{shopAddress}</div>}
+                  {shopPhone && <div style={{ fontSize: 12, color: '#555' }}>{shopPhone}</div>}
+                </div>
+
+                {/* Order meta */}
+                <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Order</span><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#111' }}>#{o.orderNumber || '—'}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Date</span><span>{placed.toLocaleString()}</span></div>
+                  {o.scheduledFor && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Scheduled</span><span style={{ fontWeight: 700, color: '#111' }}>{new Date(o.scheduledFor).toLocaleString()}</span></div>}
+                  {(o.customer_name || o.customer_phone || o.customer?.name || o.customer?.phone) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Customer</span><span>{o.customer_name || o.customer?.name || o.customer_phone || o.customer?.phone}</span></div>
+                  )}
+                  {o.customer?.address && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>Address</span><span style={{ maxWidth: '60%', textAlign: 'right' }}>{o.customer.address}</span></div>}
+                </div>
+
+                {/* Items table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left', borderBottom: '1px solid #ccc', padding: '6px 4px', fontSize: 12, color: '#555', fontWeight: 700 }}>Item</th>
+                      <th style={{ textAlign: 'center', borderBottom: '1px solid #ccc', padding: '6px 4px', fontSize: 12, color: '#555', fontWeight: 700, width: 40 }}>Qty</th>
+                      <th style={{ textAlign: 'right', borderBottom: '1px solid #ccc', padding: '6px 4px', fontSize: 12, color: '#555', fontWeight: 700, width: 90 }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(o.items || []).map((it, i) => (
+                      <tr key={i}>
+                        <td style={{ padding: '8px 4px', fontSize: 13, color: '#111', verticalAlign: 'top' }}>
+                          <div style={{ fontWeight: 600 }}>{it.name}</div>
+                          {it.modifiers && it.modifiers.length > 0 && <div style={{ fontSize: 11, color: '#777', marginTop: 2 }}>{it.modifiers.join(', ')}</div>}
+                          {it.note && <div style={{ fontSize: 11, color: '#777', fontStyle: 'italic', marginTop: 2 }}>{it.note}</div>}
+                        </td>
+                        <td style={{ padding: '8px 4px', fontSize: 13, color: '#111', textAlign: 'center', verticalAlign: 'top' }}>{it.qty}</td>
+                        <td style={{ padding: '8px 4px', fontSize: 13, color: '#111', textAlign: 'right', verticalAlign: 'top', fontFamily: 'monospace' }}>{fmtMoney(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Totals block */}
+                <div style={{ borderTop: '2px dashed #ccc', paddingTop: 10, fontSize: 13, color: '#222' }}>
+                  {(o.subtotal != null) && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}><span>Subtotal</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.subtotal)}</span></div>}
+                  {o.delivery?.enabled && o.delivery.fee > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}><span>Delivery{o.delivery.zone ? ` (${o.delivery.zone})` : ''}</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.delivery.fee)}</span></div>}
+                  {o.tax && o.tax.amount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', color: '#555' }}><span>{o.tax.label} ({o.tax.rate}%){o.tax.inclusive ? ' · included' : ''}</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.tax.amount)}</span></div>}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', marginTop: 6, borderTop: '2px solid #111', fontSize: 16, fontWeight: 900, color: '#111' }}><span>TOTAL</span><span style={{ fontFamily: 'monospace' }}>{fmtMoney(o.total)}</span></div>
+                </div>
+
+                {/* Payment + note */}
+                {o.payment?.method && <div style={{ marginTop: 12, fontSize: 12, color: '#555' }}>Payment: <strong style={{ color: '#111', textTransform: 'capitalize' }}>{o.payment.method.replace('-', ' ')}</strong></div>}
+                {o.note && <div style={{ marginTop: 8, fontSize: 12, color: '#555', padding: 8, background: '#f5f5f5', borderRadius: 6 }}>Note: {o.note}</div>}
+
+                <div style={{ textAlign: 'center', marginTop: 18, fontSize: 11, color: '#888', borderTop: '2px dashed #ccc', paddingTop: 12 }}>
+                  Thank you for your order!<br />
+                  Generated {new Date().toLocaleString()}
+                </div>
               </div>
             </div>
           </div>
