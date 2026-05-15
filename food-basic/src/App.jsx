@@ -89,6 +89,61 @@ const PLAN_PRICING = {
   AE:   { code: 'AE', currency: 'AED', symbol: 'AED',label: 'AED 18',     display: '18',      amountLocal: 18,     amountIDR: 76000 },
   SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',label: 'SAR 18',     display: '18',      amountLocal: 18,     amountIDR: 75000 },
 }
+// ─── MULTI-CURRENCY ──────────────────────────────────────────
+// 18 currencies covering the markets PLAN_PRICING serves + a few
+// more for completeness. Each row carries:
+//   code     ISO 4217 (for Intl.NumberFormat)
+//   symbol   short display fallback
+//   locale   Intl locale for separator rules
+//   decimals digits after the decimal point (0 for IDR/JPY/VND/KRW)
+const CURRENCIES = {
+  IDR: { code: 'IDR', symbol: 'Rp',  locale: 'id-ID', decimals: 0 },
+  USD: { code: 'USD', symbol: '$',   locale: 'en-US', decimals: 2 },
+  EUR: { code: 'EUR', symbol: '€',   locale: 'en-IE', decimals: 2 },
+  GBP: { code: 'GBP', symbol: '£',   locale: 'en-GB', decimals: 2 },
+  AUD: { code: 'AUD', symbol: 'A$',  locale: 'en-AU', decimals: 2 },
+  NZD: { code: 'NZD', symbol: 'NZ$', locale: 'en-NZ', decimals: 2 },
+  CAD: { code: 'CAD', symbol: 'C$',  locale: 'en-CA', decimals: 2 },
+  SGD: { code: 'SGD', symbol: 'S$',  locale: 'en-SG', decimals: 2 },
+  MYR: { code: 'MYR', symbol: 'RM',  locale: 'ms-MY', decimals: 2 },
+  PHP: { code: 'PHP', symbol: '₱',   locale: 'en-PH', decimals: 2 },
+  VND: { code: 'VND', symbol: '₫',   locale: 'vi-VN', decimals: 0 },
+  THB: { code: 'THB', symbol: '฿',   locale: 'th-TH', decimals: 2 },
+  INR: { code: 'INR', symbol: '₹',   locale: 'en-IN', decimals: 2 },
+  AED: { code: 'AED', symbol: 'AED', locale: 'en-AE', decimals: 2 },
+  SAR: { code: 'SAR', symbol: 'SAR', locale: 'en-SA', decimals: 2 },
+  JPY: { code: 'JPY', symbol: '¥',   locale: 'ja-JP', decimals: 0 },
+  KRW: { code: 'KRW', symbol: '₩',   locale: 'ko-KR', decimals: 0 },
+  CNY: { code: 'CNY', symbol: '¥',   locale: 'zh-CN', decimals: 2 },
+}
+// ISO country code → default currency for that country. Used to
+// smart-default a new vendor's currency from their IP-detected
+// country. Eurozone members all map to EUR.
+const COUNTRY_TO_CURRENCY = {
+  ID: 'IDR', US: 'USD', GB: 'GBP', AU: 'AUD', NZ: 'NZD', CA: 'CAD',
+  SG: 'SGD', MY: 'MYR', PH: 'PHP', VN: 'VND', TH: 'THB', IN: 'INR',
+  AE: 'AED', SA: 'SAR', JP: 'JPY', KR: 'KRW', CN: 'CNY',
+  FR: 'EUR', DE: 'EUR', ES: 'EUR', IT: 'EUR', NL: 'EUR', BE: 'EUR',
+  IE: 'EUR', PT: 'EUR', AT: 'EUR', FI: 'EUR', GR: 'EUR', LU: 'EUR',
+  CY: 'EUR', MT: 'EUR', SK: 'EUR', SI: 'EUR', EE: 'EUR', LV: 'EUR',
+  LT: 'EUR',
+}
+// Format a number using Intl.NumberFormat with the right currency.
+// Falls back to "<symbol> <integer>" if Intl is unavailable.
+function formatMoney (n, currencyCode = 'IDR') {
+  const c = CURRENCIES[currencyCode] || CURRENCIES.IDR
+  try {
+    return new Intl.NumberFormat(c.locale, {
+      style: 'currency',
+      currency: c.code,
+      minimumFractionDigits: c.decimals,
+      maximumFractionDigits: c.decimals,
+    }).format(Number(n) || 0)
+  } catch {
+    return `${c.symbol} ${Math.round(Number(n) || 0)}`
+  }
+}
+
 // ─── ESC/POS THERMAL PRINTER ──────────────────────────────────
 // Minimal ESC/POS encoder. Used by the Kitchen Printer integration
 // to send formatted receipts to a Bluetooth thermal printer over
@@ -2027,6 +2082,21 @@ export default function App() {
   const [shopLineId,  setShopLineId]  = useState(() => localStorage.getItem('foodlocalchat_shopLINE') || '')
   useEffect(() => { localStorage.setItem('foodlocalchat_shopTG',   shopTelegram) }, [shopTelegram])
   useEffect(() => { localStorage.setItem('foodlocalchat_shopLINE', shopLineId)  }, [shopLineId])
+  // Shop currency — drives every money display in the app. New
+  // vendors default to the currency of their IP-detected country
+  // (sl_app_country from the i18n auto-detect); fallback IDR.
+  const [shopCurrency, setShopCurrency] = useState(() => {
+    const saved = localStorage.getItem('foodlocalchat_shop_currency')
+    if (saved && CURRENCIES[saved]) return saved
+    const cc = (localStorage.getItem('sl_app_country') || '').toUpperCase()
+    return COUNTRY_TO_CURRENCY[cc] || 'IDR'
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_shop_currency', shopCurrency) }, [shopCurrency])
+  // LOCAL FMT — shadows the imported `fmt` so every money call site
+  // inside App.jsx renders in the vendor's chosen currency. Helpers
+  // outside this scope (VendorThreadView, buildOrderTicket) already
+  // accept fmt as a parameter, so passing this one through Just Works.
+  const fmt = useCallback((n) => formatMoney(n, shopCurrency), [shopCurrency])
   const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('foodlocalchat_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('foodlocalchat_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('foodlocalchat_shopCity') || '')
@@ -3686,6 +3756,7 @@ export default function App() {
         shop_tiktok: shopTiktok, shop_facebook: shopFacebook,
         shop_youtube: shopYoutube, shop_website: shopWebsite,
         shop_telegram: shopTelegram, shop_line_id: shopLineId,
+        shop_currency: shopCurrency,
         shop_food_type: shopFoodType,
         delivery_base_fee: delBaseFee, delivery_per_km: delPerKm,
         delivery_min_charge: delMinCharge, delivery_max_km: delMaxKm,
@@ -3693,7 +3764,7 @@ export default function App() {
         delivery_enabled: delEnabled,
       })
     }, 2000)
-  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopTelegram, shopLineId, shopFoodType, delBaseFee, delPerKm, delMinCharge, delMaxKm, delFreeAbove, delCurrency, delEnabled])
+  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopTelegram, shopLineId, shopCurrency, shopFoodType, delBaseFee, delPerKm, delMinCharge, delMaxKm, delFreeAbove, delCurrency, delEnabled])
 
   // Load shop config from Supabase on vendor login
   useEffect(() => {
@@ -3714,6 +3785,7 @@ export default function App() {
       if (data.shop_website) setShopWebsite(data.shop_website)
       if (data.shop_telegram !== undefined) setShopTelegram(data.shop_telegram || '')
       if (data.shop_line_id !== undefined) setShopLineId(data.shop_line_id || '')
+      if (data.shop_currency && CURRENCIES[data.shop_currency]) setShopCurrency(data.shop_currency)
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
       if (data.landing_theme_id) {
@@ -11031,6 +11103,22 @@ export default function App() {
             ))}
           </div>
 
+          {/* Currency card */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>💱 Currency</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>Every price in the app shows in this currency</div>
+              </div>
+              <div style={{ padding: '6px 10px', borderRadius: 8, background: `${accent}22`, border: `1px solid ${accent}55`, color: accent, fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap' }}>{(CURRENCIES[shopCurrency] || CURRENCIES.IDR).symbol} {shopCurrency}</div>
+            </div>
+            <select value={shopCurrency} onChange={(e) => setShopCurrency(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+              {Object.values(CURRENCIES).map(c => (
+                <option key={c.code} value={c.code} style={{ background: '#1a1a1a' }}>{c.symbol}  {c.code} — {formatMoney(12345, c.code)}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Social Media card */}
           <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Social Media</div>
@@ -11089,7 +11177,7 @@ export default function App() {
           {/* Save button */}
           <div style={{ padding: '8px 14px 28px' }}>
             <button onClick={() => {
-              if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_telegram: shopTelegram, shop_line_id: shopLineId, shop_open: shopOpen }).catch(() => {})
+              if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_telegram: shopTelegram, shop_line_id: shopLineId, shop_currency: shopCurrency, shop_open: shopOpen }).catch(() => {})
               setShopConfig(false)
             }} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Save Settings</button>
           </div>
