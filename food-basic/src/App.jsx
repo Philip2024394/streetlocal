@@ -10966,10 +10966,13 @@ export default function App() {
           // 2. Tint overlay (full-canvas)
           ctx.fillStyle = b.tint || 'rgba(0,0,0,0.4)'
           ctx.fillRect(0, 0, W, H)
-          // 3. Logo (top-left, circle-clipped)
+          // 3. Logo (top-left). Render honours shopLogoStyle from
+          // Design Studio: 'off' hides logo entirely, 'bare' draws
+          // the raw image with object-fit:contain semantics, 'circle'
+          // applies a rounded clip. No ring — matches main site.
           const margin = W * 0.04
           let headerCursorX = margin
-          if (b.showLogo && shopLogo) {
+          if (b.showLogo && shopLogo && shopLogoStyle !== 'off') {
             const logoImg = await new Promise((resolve) => {
               const i = new Image()
               i.crossOrigin = 'anonymous'
@@ -10979,18 +10982,21 @@ export default function App() {
             })
             if (logoImg) {
               const ls = W * 0.10
-              ctx.save()
-              ctx.beginPath()
-              ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
-              ctx.closePath()
-              ctx.clip()
-              ctx.drawImage(logoImg, margin, margin, ls, ls)
-              ctx.restore()
-              ctx.strokeStyle = 'rgba(255,255,255,0.8)'
-              ctx.lineWidth = W * 0.005
-              ctx.beginPath()
-              ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
-              ctx.stroke()
+              if (shopLogoStyle === 'circle') {
+                ctx.save()
+                ctx.beginPath()
+                ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
+                ctx.closePath()
+                ctx.clip()
+                ctx.drawImage(logoImg, margin, margin, ls, ls)
+                ctx.restore()
+              } else {
+                // 'bare' (and default): draw the image natively. Use
+                // contain-fit math so non-square logos don't stretch.
+                const ratio = Math.min(ls / logoImg.width, ls / logoImg.height)
+                const dw = logoImg.width * ratio, dh = logoImg.height * ratio
+                ctx.drawImage(logoImg, margin + (ls - dw) / 2, margin + (ls - dh) / 2, dw, dh)
+              }
               headerCursorX = margin + ls + W * 0.025
             }
           }
@@ -11126,10 +11132,26 @@ export default function App() {
             <div style={{ position: 'relative', width: w, height: h, borderRadius: 12, overflow: 'hidden', background: '#1a1a1a', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
               {b.bgImage && <img src={b.bgImage} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${b.tint} 0%, ${b.tint} 100%)` }} />
-              {/* Header row: logo + shop name (top-left) */}
+              {/* Header row: logo + shop name (top-left). Logo render
+                  honours shopLogoStyle from Design Studio — 'off'
+                  hides it entirely, 'bare' shows the raw image with no
+                  ring/circle, 'circle' uses the rounded clip without
+                  a ring (clean, matches the rest of the app). */}
               <div style={{ position: 'absolute', top: w * 0.04, left: w * 0.04, display: 'flex', alignItems: 'center', gap: w * 0.025 }}>
-                {b.showLogo && shopLogo && (
-                  <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: w * 0.11, height: w * 0.11, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.8)' }} />
+                {b.showLogo && shopLogo && shopLogoStyle !== 'off' && (
+                  <img
+                    src={shopLogo}
+                    alt=""
+                    onError={imgError('logo')}
+                    style={{
+                      width: w * 0.11,
+                      height: w * 0.11,
+                      objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover',
+                      borderRadius: shopLogoStyle === 'circle' ? '50%' : 0,
+                      // No ring — matches the main site logo treatment.
+                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))',
+                    }}
+                  />
                 )}
                 {b.showShopName && (
                   <div style={{ fontSize: Math.max(11, w * 0.04), fontWeight: 800, color: b.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.55)', maxWidth: w * 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
@@ -11407,10 +11429,46 @@ export default function App() {
                     })()}
                   </div>
 
-                  {/* Saved banners list */}
+                  {/* CREATE NEW first — vendor lands on the upload + template
+                      tiles immediately, no scroll past saved banners to find
+                      them. The upload tile is the FIRST cell in each strip so
+                      it's visible without scrolling the strip horizontally. */}
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Create new</div>
+                  {Object.entries(BANNER_FORMATS).map(([fmtKey, fmt]) => (
+                    <div key={fmtKey} style={{ marginBottom: 18 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{fmt.label}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{fmt.subtitle}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                        {/* Upload tile FIRST so it's the first thing the
+                            vendor sees in the strip — no horizontal scroll
+                            needed to find it. */}
+                        <label style={{ flexShrink: 0, width: 120, aspectRatio: fmt.aspect, borderRadius: 12, background: `linear-gradient(180deg, ${accent}28 0%, rgba(0,0,0,0.45) 100%)`, border: `2px dashed ${accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', color: '#fff', boxShadow: `0 4px 14px ${accent}33` }}>
+                          <span style={{ fontSize: 26, lineHeight: 1 }}>＋</span>
+                          <span style={{ fontSize: 12, fontWeight: 800 }}>Upload your own</span>
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadBanner(fmtKey, f) }} />
+                        </label>
+                        {BANNER_TEMPLATES[fmtKey].map(tpl => (
+                          <button key={tpl.id} type="button" onClick={() => createBanner(fmtKey, tpl)} style={{ flexShrink: 0, padding: 0, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', borderRadius: 12, cursor: 'pointer', overflow: 'hidden' }}>
+                            <div style={{ width: 120, aspectRatio: fmt.aspect, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
+                              <img src={tpl.bg} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', inset: 0, background: tpl.tint }} />
+                              <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 13, fontWeight: 900, color: tpl.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>20% OFF</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Saved banners list — moved BELOW Create New per the
+                      "upload container must be visible" requirement. */}
                   {marketingBanners.length > 0 && (
                     <>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Your banners</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '12px 4px 10px' }}>Your banners</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
                         {marketingBanners.map(b => (
                           <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: 14, background: 'rgba(0,0,0,0.5)', border: marketingActiveBannerId === b.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }} onClick={() => setMarketingEditingBannerId(b.id)}>
@@ -11427,35 +11485,6 @@ export default function App() {
                       </div>
                     </>
                   )}
-
-                  {/* Create-new section: pick a format, then a template or upload */}
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '8px 4px 10px' }}>Create new</div>
-                  {Object.entries(BANNER_FORMATS).map(([fmtKey, fmt]) => (
-                    <div key={fmtKey} style={{ marginBottom: 18 }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{fmt.label}</div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{fmt.subtitle}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-                        {BANNER_TEMPLATES[fmtKey].map(tpl => (
-                          <button key={tpl.id} type="button" onClick={() => createBanner(fmtKey, tpl)} style={{ flexShrink: 0, padding: 0, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', borderRadius: 12, cursor: 'pointer', overflow: 'hidden' }}>
-                            <div style={{ width: 120, aspectRatio: fmt.aspect, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
-                              <img src={tpl.bg} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              <div style={{ position: 'absolute', inset: 0, background: tpl.tint }} />
-                              <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 13, fontWeight: 900, color: tpl.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>20% OFF</div>
-                            </div>
-                          </button>
-                        ))}
-                        <label style={{ flexShrink: 0, width: 120, aspectRatio: fmt.aspect, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `2px dashed ${accent}55`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', color: '#fff' }}>
-                          <span style={{ fontSize: 22 }}>＋</span>
-                          <span style={{ fontSize: 11, fontWeight: 700 }}>Upload</span>
-                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadBanner(fmtKey, f) }} />
-                        </label>
-                      </div>
-                    </div>
-                  ))}
                 </>
               )}
             </div>
