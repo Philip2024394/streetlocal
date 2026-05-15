@@ -807,7 +807,7 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
     // path. Right-side weighted (45–100%) so the shower visually
     // emanates from the dancing donut's side.
     <div style={{ position: 'absolute', inset: 0, zIndex: 11, pointerEvents: 'none', overflow: 'hidden' }}>
-      {Array.from({ length: 48 }, (_, i) => {
+      {Array.from({ length: 18 }, (_, i) => {
         const colors = ['#2C1810', '#3D1F0F', '#5C3317', '#7B4B2A', '#8B5A2B', '#A0522D', '#4A2511', '#6B3A1A']
         // Five independent pseudo-random values per crumb using
         // different multipliers + offsets — kills the visible
@@ -817,11 +817,12 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
         const r3 = (((i + 1) * 73856093 + 31) >>> 0) % 1000 / 1000
         const r4 = (((i + 1) * 19349663 + 53) >>> 0) % 1000 / 1000
         const r5 = (((i + 1) * 83492791 + 71) >>> 0) % 1000 / 1000
-        // 45% → 100% horizontal, weighted right via r1^0.7 power curve
-        const leftPct = 45 + Math.pow(r1, 0.7) * 55
-        // Start above the viewport so each crumb enters mid-fall — no
-        // visible "spawn" pop at the top.
-        const topPx = -60 + r2 * 120
+        // Crumbs spawn from AROUND the dancing donut (top: 64, right:
+        // -40, 208×208) — roughly horizontal 55–92% / vertical 90–230px
+        // so they appear to spill from behind the donut, not from the
+        // top of the header.
+        const leftPct = 55 + r1 * 37
+        const topPx = 90 + r2 * 140
         const delay = r3 * 9          // 0–9s — fully de-syncs the start
         const duration = 3.2 + r4 * 6.5  // 3.2–9.7s — wider speed band
         const size = 3 + r5 * 9       // 3–12px — wider visual variation
