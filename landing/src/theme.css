@@ -1,0 +1,4 @@
+/* Tailwind utilities for PremiumSoftwareHomepage.jsx only.
+   Preflight disabled in tailwind.config.js to avoid resetting the
+   rest of the landing app. */
+@tailwind utilities;

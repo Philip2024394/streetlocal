@@ -142,7 +142,8 @@ export default function PremiumHome () {
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
         .sl-home { min-height: 100vh; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(250,204,21,0.18) 0%, transparent 60%), #FFFFFF; color: var(--sl-black); overflow-x: hidden; }
-        .sl-container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+        .sl-container { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+        @media (min-width: 480px) { .sl-container { padding: 0 24px; } }
         .sl-nav { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.85); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--sl-gray-200); }
         .sl-nav__inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
         .sl-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--sl-black); }
@@ -167,7 +168,8 @@ export default function PremiumHome () {
         @media (min-width: 900px) { .sl-hero__grid { grid-template-columns: 1.05fr 1fr; gap: 64px; } }
         .sl-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(250,204,21,0.15); border: 1px solid rgba(234,179,8,0.5); color: #854D0E; font-size: 13px; font-weight: 700; margin-bottom: 22px; }
         .sl-eyebrow__dot { width: 7px; height: 7px; border-radius: 4px; background: var(--sl-yellow-deep); box-shadow: 0 0 10px rgba(250,204,21,0.9); }
-        .sl-h1 { font-size: 44px; font-weight: 900; line-height: 1.04; letter-spacing: -1.5px; margin: 0 0 24px; color: var(--sl-black); }
+        .sl-h1 { font-size: 38px; font-weight: 900; line-height: 1.04; letter-spacing: -1.2px; margin: 0 0 24px; color: var(--sl-black); }
+        @media (min-width: 380px) { .sl-h1 { font-size: 44px; letter-spacing: -1.5px; } }
         @media (min-width: 768px) { .sl-h1 { font-size: 64px; } }
         @media (min-width: 1100px) { .sl-h1 { font-size: 76px; } }
         .sl-h1__accent { background: linear-gradient(120deg, var(--sl-yellow-deep) 0%, var(--sl-yellow) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
@@ -182,7 +184,8 @@ export default function PremiumHome () {
         .sl-phone-wrap { display: flex; justify-content: center; align-items: center; min-height: 540px; position: relative; }
         .sl-phone-glow { position: absolute; inset: 0; background: radial-gradient(closest-side, rgba(250,204,21,0.4), transparent 70%); filter: blur(40px); pointer-events: none; animation: slPulse 5s ease-in-out infinite; }
         @keyframes slPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.9; } }
-        .sl-phone { position: relative; width: 290px; height: 600px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 44px; padding: 7px; box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 12px 28px rgba(250,204,21,0.18); border: 2.5px solid #2a2a2a; overflow: hidden; animation: slFloat 6s ease-in-out infinite; }
+        .sl-phone { position: relative; width: min(290px, 78vw); height: min(600px, 165vw); max-height: 620px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 44px; padding: 7px; box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 12px 28px rgba(250,204,21,0.18); border: 2.5px solid #2a2a2a; overflow: hidden; animation: slFloat 6s ease-in-out infinite; }
+        @media (min-width: 480px) { .sl-phone { width: 290px; height: 600px; } }
         @keyframes slFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .sl-phone__notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 110px; height: 22px; background: #000; border-radius: 14px; z-index: 3; }
         .sl-phone__screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; background: #000; }
@@ -193,7 +196,8 @@ export default function PremiumHome () {
         .sl-section { padding: 70px 0; }
         @media (min-width: 768px) { .sl-section { padding: 100px 0; } }
         .sl-kicker { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--sl-black); color: var(--sl-yellow); font-size: 12px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 14px; }
-        .sl-h2 { font-size: 32px; font-weight: 900; line-height: 1.1; margin: 0 0 16px; letter-spacing: -0.8px; color: var(--sl-black); }
+        .sl-h2 { font-size: 28px; font-weight: 900; line-height: 1.12; margin: 0 0 16px; letter-spacing: -0.6px; color: var(--sl-black); }
+        @media (min-width: 480px) { .sl-h2 { font-size: 32px; letter-spacing: -0.8px; } }
         @media (min-width: 768px) { .sl-h2 { font-size: 46px; } }
         .sl-h2__accent { background: linear-gradient(120deg, var(--sl-yellow-deep) 0%, var(--sl-yellow) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .sl-section__lede { font-size: 16px; line-height: 1.55; color: var(--sl-gray-600); max-width: 600px; margin: 0 auto; }
@@ -226,10 +230,12 @@ export default function PremiumHome () {
 
         /* PRICING */
         .sl-pricing-bg { background: var(--sl-gray-50); border-top: 1px solid var(--sl-gray-200); border-bottom: 1px solid var(--sl-gray-200); }
-        .sl-price-card { max-width: 480px; margin: 50px auto 0; background: var(--sl-black); color: #fff; border-radius: 28px; padding: 36px 28px; box-shadow: 0 22px 60px rgba(0,0,0,0.18); position: relative; overflow: hidden; }
+        .sl-price-card { max-width: 480px; margin: 50px auto 0; background: var(--sl-black); color: #fff; border-radius: 24px; padding: 28px 20px; box-shadow: 0 22px 60px rgba(0,0,0,0.18); position: relative; overflow: hidden; }
+        @media (min-width: 480px) { .sl-price-card { border-radius: 28px; padding: 36px 28px; } }
         .sl-price-card::before { content: ''; position: absolute; top: -50%; right: -30%; width: 80%; height: 200%; background: radial-gradient(closest-side, rgba(250,204,21,0.25) 0%, transparent 70%); pointer-events: none; }
         .sl-price-card__label { font-size: 12px; font-weight: 800; color: var(--sl-yellow); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 10px; position: relative; }
-        .sl-price-card__amount { font-size: 60px; font-weight: 900; line-height: 1; letter-spacing: -2px; display: flex; align-items: baseline; gap: 6px; position: relative; }
+        .sl-price-card__amount { font-size: 48px; font-weight: 900; line-height: 1; letter-spacing: -1.4px; display: flex; align-items: baseline; gap: 6px; position: relative; }
+        @media (min-width: 480px) { .sl-price-card__amount { font-size: 60px; letter-spacing: -2px; } }
         .sl-price-card__amount-symbol { font-size: 32px; font-weight: 800; opacity: 0.7; }
         .sl-price-card__per { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 600; margin: 6px 0 20px; position: relative; }
         .sl-price-card__inc { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 22px; position: relative; }
@@ -252,7 +258,8 @@ export default function PremiumHome () {
         .sl-final-cta { text-align: center; padding: 70px 28px; background: var(--sl-black); color: #fff; border-radius: 32px; position: relative; overflow: hidden; }
         @media (min-width: 768px) { .sl-final-cta { padding: 90px 40px; } }
         .sl-final-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(250,204,21,0.2) 0%, transparent 60%); pointer-events: none; }
-        .sl-final-cta h2 { font-size: 36px; font-weight: 900; margin: 0 0 18px; letter-spacing: -1px; color: #fff; position: relative; }
+        .sl-final-cta h2 { font-size: 30px; font-weight: 900; margin: 0 0 18px; letter-spacing: -0.7px; color: #fff; position: relative; }
+        @media (min-width: 480px) { .sl-final-cta h2 { font-size: 36px; letter-spacing: -1px; } }
         @media (min-width: 768px) { .sl-final-cta h2 { font-size: 56px; } }
         .sl-final-cta p { color: rgba(255,255,255,0.7); font-size: 17px; max-width: 560px; margin: 0 auto 30px; line-height: 1.55; position: relative; }
         .sl-final-cta__row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; position: relative; }
@@ -411,7 +418,7 @@ export default function PremiumHome () {
             </div>
             <a href="/food/chat" className="sl-btn sl-btn--primary sl-btn--lg" style={{ width: '100%', marginBottom: 12 }}>Start your shop for {plan.symbol}{plan.display}</a>
             <button type="button" className="sl-price-card__country" onClick={() => setCountryPickerOpen(o => !o)}>
-              <span><span style={{ opacity: 0.55 }}>Pricing for </span><strong style={{ color: 'var(--sl-pink)' }}>{plan.code}</strong></span>
+              <span><span style={{ opacity: 0.55 }}>Pricing for </span><strong style={{ color: 'var(--sl-yellow)' }}>{plan.code}</strong></span>
               <span style={{ opacity: 0.5 }}>{countryPickerOpen ? '▲' : '▼'} Wrong country?</span>
             </button>
             {countryPickerOpen && (
@@ -419,7 +426,7 @@ export default function PremiumHome () {
                 {allCountries.map(p => (
                   <button key={p.code} onClick={() => { setOverrideCountry(p.code); setCountryPickerOpen(false) }}>
                     <span>{p.code} · {p.currency}</span>
-                    <span style={{ fontWeight: 800, color: 'var(--sl-pink)' }}>{p.label}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--sl-yellow)' }}>{p.label}</span>
                   </button>
                 ))}
               </div>
@@ -450,7 +457,7 @@ export default function PremiumHome () {
       <section className="sl-section">
         <div className="sl-container">
           <div className="sl-final-cta">
-            <h2>Ready to launch your<br /><span style={{ color: 'var(--sl-pink)' }}>premium app?</span></h2>
+            <h2>Ready to launch your<br /><span style={{ color: 'var(--sl-yellow)' }}>premium app?</span></h2>
             <p>Five minutes from now your customers could be tapping your link, scrolling your menu, and placing their first order.</p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
               <a href="#pricing" className="sl-btn sl-btn--primary sl-btn--lg">Start your app for {plan.symbol}{plan.display}</a>

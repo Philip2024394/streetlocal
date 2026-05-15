@@ -29,6 +29,13 @@
           box-shadow: 0 0 40px rgba(0,0,0,0.08);
         }
       }
+      /* Landing routes (/, /theme, /donut) escape the 480px phone-frame
+         shell — they're full-bleed marketing pages, not the admin app. */
+      body.is-landing { display: block; overflow: visible; background: #fff; }
+      body.is-landing #app-shell { max-width: none; height: auto; overflow: visible; border: none; box-shadow: none; }
+      @media (min-width: 481px) {
+        body.is-landing #app-shell { border: none; box-shadow: none; }
+      }
     </style>
   </head>
   <body>
