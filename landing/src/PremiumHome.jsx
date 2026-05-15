@@ -309,8 +309,8 @@ export default function PremiumHome () {
         .sl-tier-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 50px auto 0; max-width: 1100px; }
         @media (min-width: 760px) { .sl-tier-grid { grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; } }
         .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 0 22px 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
-        .sl-tier__banner { margin: 0 -22px 22px; height: 150px; overflow: hidden; position: relative; background: var(--sl-gray-100); border-bottom: 1px solid var(--sl-gray-200); }
-        .sl-tier__banner img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+        .sl-tier__banner { margin: 0 -22px 22px; overflow: hidden; position: relative; background: var(--sl-gray-100); border-bottom: 1px solid var(--sl-gray-200); }
+        .sl-tier__banner img { width: 100%; height: auto; display: block; }
         .sl-tier--featured .sl-tier__banner { border-bottom-color: rgba(255,255,255,0.08); background: #111; }
         .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); transform: none; }
         @media (min-width: 760px) { .sl-tier--featured { transform: translateY(-8px); } }
