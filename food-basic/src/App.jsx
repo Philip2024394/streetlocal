@@ -824,7 +824,10 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
     L.bgImg ? <img src={L.bgImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} /> : null
   ), [L.bgImg])
   const bouncingImgEl = React.useMemo(() => (
-    L.bouncingImg ? <img src={L.bouncingImg} alt="" style={{ position: 'absolute', top: 64, right: -40, width: 208, height: 208, borderRadius: '50%', objectFit: 'cover', animation: 'donutBounce 1s infinite', zIndex: 2, willChange: 'transform' }} /> : null
+    // zIndex: 10 — above the main content card (zIndex: 3) so the
+    // dancing donut bounces in front of the splash UI. pointerEvents:
+    // none keeps it from blocking taps on the button it overlaps.
+    L.bouncingImg ? <img src={L.bouncingImg} alt="" style={{ position: 'absolute', top: 64, right: -40, width: 208, height: 208, borderRadius: '50%', objectFit: 'cover', animation: 'donutBounce 1s infinite', zIndex: 10, willChange: 'transform', pointerEvents: 'none' }} /> : null
   ), [L.bouncingImg])
   const bottomLeftImgEl = React.useMemo(() => (
     L.bottomLeftImg ? <img src={L.bottomLeftImg} alt="" style={{ position: 'absolute', bottom: 0, left: -40, width: 176, height: 176, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 40px 140px rgba(34,211,238,0.4)', zIndex: 1 }} /> : null
