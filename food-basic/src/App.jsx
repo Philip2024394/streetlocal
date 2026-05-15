@@ -5781,6 +5781,124 @@ export default function App() {
     )
   }
 
+  // ── VENDOR LOGIN PAGE ─────────────────────────────────────────
+  // Dedicated /food/chat/login (or ?login=true) route. Renders BEFORE
+  // any of the customer-facing UI so vendors get a clean sign-in
+  // surface they can bookmark and share. Uses the existing
+  // handleVendorLogin / handleVendorSignup handlers — only the JSX
+  // is new (the handlers were already wired but never rendered into
+  // the page after a prior refactor).
+  const isLoginPage = (() => {
+    if (typeof window === 'undefined') return false
+    const p = window.location.pathname || ''
+    const q = new URLSearchParams(window.location.search)
+    return p.endsWith('/login') || p.endsWith('/login/') || q.get('login') === 'true'
+  })()
+  // ?signup=true defaults the form to the Sign up tab on first
+  // render. Drives the landing footer's "Start a new shop" link.
+  useEffect(() => {
+    if (!isLoginPage || typeof window === 'undefined') return
+    const q = new URLSearchParams(window.location.search)
+    if (q.get('signup') === 'true') setLoginMode('signup')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoginPage])
+  // If a vendor is already signed in and lands on /login, bounce them
+  // out so they don't re-auth. Show the dashboard immediately.
+  if (isLoginPage && isVendor) {
+    if (typeof window !== 'undefined') {
+      try { window.history.replaceState({}, '', '/food/chat/') } catch {}
+    }
+  } else if (isLoginPage) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0a', position: 'relative' }}>
+        <img loading="eager" fetchpriority="high" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png" alt="" onError={imgError('theme')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 0 }} />
+        <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 16px', overflowY: 'auto' }}>
+          <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ textAlign: 'center', marginBottom: 4 }}>
+              <img loading="eager" fetchpriority="high" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="StreetLocal" style={{ width: 64, height: 64, borderRadius: 16, objectFit: 'cover', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', marginBottom: 14 }} />
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.4, marginBottom: 4 }}>StreetLocal Dashboard</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{loginMode === 'signup' ? 'Create your shop in under 5 minutes' : 'Sign in to manage your shop'}</div>
+            </div>
+
+            {/* Tab toggle */}
+            <div style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(0,0,0,0.55)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <button onClick={() => { setLoginMode('login'); setLoginError('') }} style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none', background: loginMode === 'login' ? '#FACC15' : 'transparent', color: loginMode === 'login' ? '#000' : 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Sign in</button>
+              <button onClick={() => { setLoginMode('signup'); setLoginError('') }} style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none', background: loginMode === 'signup' ? '#FACC15' : 'transparent', color: loginMode === 'signup' ? '#000' : 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Sign up</button>
+            </div>
+
+            {/* Signup-only fields */}
+            {loginMode === 'signup' && (
+              <>
+                <input
+                  type="text"
+                  value={signupName}
+                  onChange={(e) => { setSignupName(e.target.value); setLoginError('') }}
+                  placeholder="Shop name (e.g. Sweet Donut Shop)"
+                  maxLength={60}
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }}
+                />
+                <select
+                  value={signupCategory}
+                  onChange={(e) => { setSignupCategory(e.target.value); setLoginError('') }}
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50, appearance: 'none' }}
+                >
+                  <option value="" style={{ color: '#000' }}>Pick your category…</option>
+                  {FOOD_CATEGORIES.map(c => <option key={c} value={c} style={{ color: '#000' }}>{c}</option>)}
+                </select>
+              </>
+            )}
+
+            {/* Shared fields */}
+            <input
+              type="tel"
+              inputMode="numeric"
+              autoComplete={loginMode === 'login' ? 'username' : 'tel'}
+              value={loginPhone}
+              onChange={(e) => { setLoginPhone(e.target.value); setLoginError('') }}
+              placeholder="WhatsApp number (with country code)"
+              maxLength={20}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50, letterSpacing: 0.5 }}
+            />
+            <input
+              type="password"
+              autoComplete={loginMode === 'login' ? 'current-password' : 'new-password'}
+              value={loginPass}
+              onChange={(e) => { setLoginPass(e.target.value); setLoginError('') }}
+              placeholder={loginMode === 'signup' ? 'Create password (min 4 chars)' : 'Password'}
+              maxLength={120}
+              onKeyDown={(e) => { if (e.key === 'Enter') { loginMode === 'login' ? handleVendorLogin() : handleVendorSignup() } }}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }}
+            />
+
+            {loginError && (
+              <div role="alert" style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.45)', fontSize: 13, color: '#FCA5A5', fontWeight: 600 }}>{loginError}</div>
+            )}
+
+            <button
+              onClick={() => loginMode === 'login' ? handleVendorLogin() : handleVendorSignup()}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#000', fontSize: 15, fontWeight: 900, cursor: 'pointer', minHeight: 52, boxShadow: '0 6px 18px rgba(250,204,21,0.45)', letterSpacing: 0.3 }}
+            >
+              {loginMode === 'login' ? 'Sign in to Dashboard' : 'Create my shop →'}
+            </button>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+              <a href="mailto:streetlocallive@gmail.com?subject=Password%20reset" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 600 }}>Forgot password?</a>
+              <a href="/food/chat/" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 600 }}>← Back to shop</a>
+            </div>
+
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 14, background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#FDE68A', marginBottom: 6, letterSpacing: 0.3, textTransform: 'uppercase' }}>What you get</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.55 }}>
+                Premium PWA shop · 15 payment gateways · 0% commission · multi-staff · loyalty stamps · marketing automation. Three tiers — Starter, Professional, Enterprise.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={S.page}>
 

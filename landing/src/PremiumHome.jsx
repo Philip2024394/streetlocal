@@ -228,6 +228,7 @@ export default function PremiumHome () {
         .sl-brand__name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
         .sl-nav__links { display: none; gap: 26px; }
         @media (min-width: 768px) { .sl-nav__links { display: flex; } }
+        @media (min-width: 600px) { [data-sl-nav-signin] { display: inline-flex !important; } }
         .sl-nav__link { color: var(--sl-gray-600); text-decoration: none; font-size: 14px; font-weight: 600; }
         .sl-nav__link:hover { color: var(--sl-black); }
         .sl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; border: none; font-family: inherit; text-decoration: none; padding: 12px 22px; border-radius: 12px; font-size: 14px; line-height: 1; min-height: 44px; }
@@ -391,7 +392,10 @@ export default function PremiumHome () {
             <a className="sl-nav__link" href="#pricing">Pricing</a>
             <a className="sl-nav__link" href="#faq">FAQ</a>
           </div>
-          <a href="#pricing" className="sl-btn sl-btn--primary">Start your app</a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a className="sl-nav__link" href="/food/chat/login" style={{ display: 'none' }} data-sl-nav-signin>Sign in</a>
+            <a href="#pricing" className="sl-btn sl-btn--primary">Start your app</a>
+          </div>
         </div>
       </nav>
 
@@ -594,12 +598,19 @@ export default function PremiumHome () {
               <a href="/services">Services</a>
             </div>
             <div className="sl-footer__col">
+              <div className="sl-footer__col-title">Vendors</div>
+              <a href="/food/chat/login"><strong>Sign in to your dashboard →</strong></a>
+              <a href="/food/chat/login?signup=true">Start a new shop</a>
+              <a href="#pricing">Pricing</a>
+              <a href="mailto:streetlocallive@gmail.com">Email support</a>
+              <a href="/affiliate">Affiliate program</a>
+            </div>
+            <div className="sl-footer__col">
               <div className="sl-footer__col-title">Company</div>
               <a href="#features">Features</a>
-              <a href="#pricing">Pricing</a>
               <a href="#faq">FAQ</a>
-              <a href="mailto:streetlocallive@gmail.com">Email us</a>
-              <a href="/affiliate">Affiliate program</a>
+              <a href="/about">About</a>
+              <a href="/terms">Terms</a>
             </div>
           </div>
           <div className="sl-footer__copy">© {new Date().getFullYear()} StreetLocal · streetlocal.live · Built in Yogyakarta, Indonesia</div>
