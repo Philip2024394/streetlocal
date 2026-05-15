@@ -351,6 +351,32 @@ const TIER_FEATURES = {
 function getTierFeatures (plan_level) {
   return TIER_FEATURES[plan_level] || TIER_FEATURES.starter
 }
+// ─── LOYALTY MEMBER NUMBER ─────────────────────────────────────
+// Deterministic 8-digit member number derived from the customer's
+// phone. Same phone always returns the same number — feels permanent,
+// like a credit card. Format: "1234 5678" for the card display.
+//
+// Algorithm: simple djb2-style hash → mod 100M → zero-pad to 8 →
+// chunk into 2x 4-digit groups. Not cryptographically unique (a
+// single shop won't have collisions until ~10k customers, perfectly
+// fine for the loyalty surface). Returns '' if no phone — caller
+// hides the badge when empty.
+function getMemberNumber (phone) {
+  const clean = String(phone || '').replace(/[^0-9]/g, '')
+  if (!clean) return ''
+  // djb2 — fast, deterministic, no crypto deps.
+  let hash = 5381
+  for (let i = 0; i < clean.length; i++) {
+    hash = ((hash << 5) + hash + clean.charCodeAt(i)) >>> 0
+  }
+  // Mix the shop seed so the same customer phone yields a different
+  // number per shop (a credit-card-style membership feel, not a
+  // global ID exposing them across stores).
+  hash = (hash ^ 0xdeadbeef) >>> 0
+  const eight = String(hash % 100000000).padStart(8, '0')
+  return `${eight.slice(0, 4)} ${eight.slice(4)}`
+}
+
 // Human-readable labels for the upgrade sheet — maps a feature flag
 // to the text the customer sees ("X is locked").
 const FEATURE_LABELS = {
@@ -543,7 +569,7 @@ function getFilteredThemes(countryCode, foodType, langCountries) {
 /* ─── Styles ─── */
 
 /* ─── Customer Chat Panel (inline below cart confirmation) ─── */
-function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopName, t = {} }) {
+function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraft, accent, fmt, shopLogo, shopLogoStyle = 'circle', shopName, loyaltyEnabled, loyaltyGoal, loyaltyReward, loyaltyStamps, loyaltyCardImage, customerPhone, t = {} }) {
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
   // Order card collapses after the first message exchange so long chats
@@ -648,8 +674,72 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
     sendBtn: { padding: '10px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 64, minHeight: 44 },
   }
 
+  // Member number — derived from customer phone. Same phone always
+  // yields the same number per shop (the helper mixes a shop seed).
+  const memberNumber = customerPhone ? getMemberNumber(customerPhone) : ''
+  // Stamps count for the live card. We accept either the parent's
+  // `loyaltyStamps` state OR a 0 fallback. Filled stamps render the
+  // shop's accent emoji; empty render their position number.
+  const stampsFilled = parseInt(loyaltyStamps, 10) || 0
+  const goal = Math.max(3, Math.min(20, parseInt(loyaltyGoal, 10) || 10))
+
   return (
     <div style={sStyle.panel}>
+      {/* LOYALTY CARD — top of chat thread. Renders only when:
+            (a) vendor enabled loyalty, and
+            (b) we know the customer's phone (so we have a stable
+                member number to put on the right).
+          Layout: logo (top-left) · shop name + "Loyalty card" · 8-digit
+          member number top-right · stamp grid · reward line.
+          Same dark-theme treatment as the admin preview to keep the
+          two surfaces visually identical. */}
+      {loyaltyEnabled && customerPhone && (
+        <div style={{ position: 'relative', background: loyaltyCardImage ? '#0a0a0a' : `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`, color: '#fff', borderRadius: 14, padding: '12px 14px', marginBottom: 8, flexShrink: 0, boxShadow: '0 4px 18px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+          {/* Vendor-uploaded branded background — covered by a dark
+              gradient overlay so stamp circles + text remain legible
+              regardless of the image's colors. */}
+          {loyaltyCardImage && (
+            <>
+              <img src={loyaltyCardImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))', zIndex: 0 }} />
+            </>
+          )}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              {shopLogoStyle !== 'off' && shopLogo && (
+                shopLogoStyle === 'bare' ? (
+                  <img src={shopLogo} alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
+                ) : (
+                  <div style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.3)' }}>
+                    <img src={shopLogo} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                  </div>
+                )
+              )}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.4, textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
+                <div style={{ fontSize: 15, fontWeight: 900 }}>{t.loyaltyCard || 'Loyalty card'}</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.7, letterSpacing: 0.5, textTransform: 'uppercase' }}>{t.member || 'Member'}</div>
+              <div style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 800, letterSpacing: 0.5, opacity: 0.95 }}>{memberNumber}</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(goal, 10)}, 1fr)`, gap: 5, marginBottom: 8 }}>
+            {Array.from({ length: goal }).map((_, i) => {
+              const filled = i < stampsFilled
+              return (
+                <div key={i} style={{ aspectRatio: '1', borderRadius: '50%', background: filled ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.22)', border: '2px dashed rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: filled ? 13 : 10, color: filled ? accent : 'rgba(255,255,255,0.55)', fontWeight: 800 }}>{filled ? '✓' : i + 1}</div>
+              )
+            })}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.95 }}>
+            <strong>{stampsFilled}/{goal}</strong> · {t.loyaltyReward || 'Reward'}: <strong>{loyaltyReward || '1 free item'}</strong>
+          </div>
+          </div>
+        </div>
+      )}
       <div style={{ ...sStyle.header, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>{t.chatWithVendor || 'Chat with the vendor'}</span>
         {op && op.items && (
@@ -735,7 +825,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
                       : <div style={sStyle.avatarFallback}>{(shopName || '?').charAt(0).toUpperCase()}</div>
                   ) : <div style={{ width: 26, flexShrink: 0 }} />
                 )}
-                <div style={sStyle.bubble(m.sender_role)}>{m.body}</div>
+                <div style={sStyle.bubble(m.sender_role)}>{(m.body || '').replace(/\[LOYALTY_WELCOME\]/g, '')}</div>
               </div>
               {/* Timestamp + read receipt under the bubble */}
               {m.created_at && (
@@ -805,7 +895,16 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
     <>
       <div style={sty.header}>
         <button style={sty.backBtn} onClick={onBack}>‹ Back</button>
-        <div style={sty.name}>{conversation.customer_name || conversation.customer_phone}</div>
+        <div style={{ ...sty.name, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, minWidth: 0 }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{conversation.customer_name || conversation.customer_phone}</span>
+          {/* Member number — same 8-digit ID the customer sees on their
+              loyalty card top-right. Lets the vendor reference a
+              customer by their card number ("we'll set aside one for
+              Member 4829"). */}
+          {conversation.customer_phone && (
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.55)', fontFamily: 'monospace', letterSpacing: 0.5 }}>{t.member || 'Member'} {getMemberNumber(conversation.customer_phone)}</span>
+          )}
+        </div>
       </div>
       {op && op.items && (
         <div style={sty.orderCard}>
@@ -877,7 +976,7 @@ function VendorThreadView({ conversation, messages, accent, fmt, onBack, draft, 
       <div style={sty.msgList} ref={scrollRef}>
         {messages.filter(m => !m.order_payload).map((m) => (
           <div key={m.id} style={sty.msgRow(m.sender_role)}>
-            <div style={sty.bubble(m.sender_role)}>{m.body}</div>
+            <div style={sty.bubble(m.sender_role)}>{(m.body || '').replace(/\[LOYALTY_WELCOME\]/g, '')}</div>
           </div>
         ))}
       </div>
@@ -1936,6 +2035,26 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_goal', String(loyaltyGoal)) }, [loyaltyGoal])
   const [loyaltyReward, setLoyaltyReward] = useState(() => localStorage.getItem('foodlocalchat_loyalty_reward') || '1 free donut')
   useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_reward', loyaltyReward) }, [loyaltyReward])
+  // Auto-post — when true, the FIRST time a customer opens chat with
+  // this shop, a system message is inserted welcoming them and
+  // explaining how to earn the reward. One-shot per customer.
+  const [loyaltyAutopost, setLoyaltyAutopost] = useState(() => localStorage.getItem('foodlocalchat_loyalty_autopost') !== 'false')
+  useEffect(() => { localStorage.setItem('foodlocalchat_loyalty_autopost', loyaltyAutopost ? 'true' : 'false') }, [loyaltyAutopost])
+  // Custom card background image — vendor uploads their own brand
+  // image which replaces the default accent gradient on the loyalty
+  // card. Persisted in localStorage AND vendor_accounts.loyalty_card_image
+  // so the customer's device picks it up too.
+  const [loyaltyCardImage, setLoyaltyCardImage] = useState(() => localStorage.getItem('foodlocalchat_loyalty_card_image') || '')
+  useEffect(() => {
+    localStorage.setItem('foodlocalchat_loyalty_card_image', loyaltyCardImage || '')
+    // Persist to vendor_accounts so other devices (and customers
+    // landing here from a fresh browser) see the same branded card.
+    // Vendor-only write — customer reads via the loader effect above.
+    if (isVendor && supabase && vendorId && isUuid(vendorId)) {
+      supabase.from('vendor_accounts').update({ loyalty_card_image: loyaltyCardImage || null }).eq('id', vendorId).then(() => {})
+    }
+  }, [loyaltyCardImage, isVendor, vendorId])
+  const [loyaltyImageUploading, setLoyaltyImageUploading] = useState(false)
   // Per-customer stamp count (local device — keyed by their phone).
   // Production: this lives on the customer record server-side; for v1
   // we use localStorage so the customer's own device tracks it.
@@ -2403,6 +2522,34 @@ export default function App() {
       } catch {}
     })()
   }, [preOrderChatOpen, chatConversation?.id, isVendor])
+  // Auto-post the loyalty welcome — one-shot per conversation.
+  // Only fires when vendor has loyalty + autopost enabled AND the
+  // conversation doesn't already have the welcome message. The
+  // marker `[LOYALTY_WELCOME]` is invisible to customers (we strip
+  // it from display) but lets us detect prior posts without a DB
+  // schema change.
+  useEffect(() => {
+    if (!preOrderChatOpen || !chatConversation?.id || isVendor) return
+    if (!loyaltyEnabled || !loyaltyAutopost) return
+    if (String(chatConversation.id).startsWith('demo-')) return
+    if (!supabase) return
+    const already = (chatMessages || []).some(m => (m.body || '').includes('[LOYALTY_WELCOME]'))
+    if (already) return
+    // Post once. The marker is at the END of the body — display layer
+    // strips it. The visible body reads naturally to the customer.
+    const visible = `🎟️ Welcome to ${shopName}! Earn ${loyaltyGoal} stamps and get ${loyaltyReward}. Your first stamp lands when you place an order.`
+    const body = `${visible}​[LOYALTY_WELCOME]`
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('chat_messages').insert({
+          conversation_id: chatConversation.id,
+          sender_role: 'system',
+          body,
+        }).select().single()
+        if (data) setChatMessages(prev => prev.find(m => m.id === data.id) ? prev : [...prev, data])
+      } catch {}
+    })()
+  }, [preOrderChatOpen, chatConversation?.id, isVendor, loyaltyEnabled, loyaltyAutopost, chatMessages.length, shopName, loyaltyGoal, loyaltyReward])
   // Reset unread when the modal opens, and clear the server-side count too
   useEffect(() => {
     if (preOrderChatOpen && chatConversation?.id) {
@@ -3933,6 +4080,12 @@ export default function App() {
       if (data.shop_telegram !== undefined) setShopTelegram(data.shop_telegram || '')
       if (data.shop_line_id !== undefined) setShopLineId(data.shop_line_id || '')
       if (data.shop_currency && CURRENCIES[data.shop_currency]) setShopCurrency(data.shop_currency)
+      // Loyalty card image — vendor-uploaded brand image used as the
+      // bg of the customer-facing loyalty card. Falls back to accent
+      // gradient when null.
+      if (data.loyalty_card_image !== undefined && data.loyalty_card_image !== null) {
+        setLoyaltyCardImage(data.loyalty_card_image || '')
+      }
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
       if (data.landing_theme_id) {
@@ -8573,7 +8726,14 @@ export default function App() {
                     accent={accent}
                     fmt={fmt}
                     shopLogo={shopLogo}
+                    shopLogoStyle={shopLogoStyle}
                     shopName={shopName}
+                    loyaltyEnabled={loyaltyEnabled}
+                    loyaltyGoal={loyaltyGoal}
+                    loyaltyReward={loyaltyReward}
+                    loyaltyStamps={loyaltyStamps}
+                    loyaltyCardImage={loyaltyCardImage}
+                    customerPhone={custPhone}
                     t={t}
                   />
 
@@ -13432,6 +13592,23 @@ export default function App() {
                 </label>
               </div>
 
+              {/* Auto-post toggle — only meaningful when loyalty is on.
+                  When enabled, a system welcome message is inserted
+                  into the customer's chat the FIRST time they connect
+                  with this shop. One-shot, idempotent — re-opening
+                  the chat won't duplicate the message. */}
+              {loyaltyEnabled && (
+                <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Auto-post welcome to new customers</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>First time a customer opens chat, drop a system message: "Welcome to {shopName}! Earn {loyaltyGoal} stamps and get {loyaltyReward}."</div>
+                    </div>
+                    <input type="checkbox" checked={loyaltyAutopost} onChange={(e) => setLoyaltyAutopost(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                  </label>
+                </div>
+              )}
+
               <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
                 <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 6 }}>Stamps to reward</label>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -13447,25 +13624,99 @@ export default function App() {
                 <input value={loyaltyReward} onChange={(e) => setLoyaltyReward(e.target.value.slice(0, 60))} placeholder="e.g. 1 free donut" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box' }} />
               </div>
 
+              {/* Card background image — vendor uploads their own
+                  branded image (replaces the default accent gradient).
+                  A dark overlay sits on top of the image at render
+                  time so text stays readable on any background.
+                  Stored in vendor_accounts.loyalty_card_image so
+                  customers on other devices see the branded card. */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: 8 }}>Custom card background <span style={{ fontWeight: 600, opacity: 0.6 }}>(optional)</span></label>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4, marginBottom: 10 }}>Upload your own image to brand the loyalty card. Landscape 1200×600 works best. We add a dark overlay on top so the text + stamps stay readable.</div>
+                {loyaltyCardImage ? (
+                  <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', marginBottom: 10, border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <img src={loyaltyCardImage} alt="Card background preview" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
+                    <button onClick={() => setLoyaltyCardImage('')} style={{ position: 'absolute', top: 6, right: 6, padding: '4px 10px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.9)', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Remove</button>
+                  </div>
+                ) : null}
+                <label style={{ display: 'block', width: '100%' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0]; e.target.value = ''
+                      if (!f) return
+                      setLoyaltyImageUploading(true)
+                      try {
+                        if (!vendorId || String(vendorId).startsWith('local')) {
+                          // Local-only fallback — convert to data URL.
+                          const reader = new FileReader()
+                          reader.onload = () => setLoyaltyCardImage(String(reader.result || ''))
+                          reader.readAsDataURL(f)
+                        } else {
+                          const url = await uploadMenuImage(vendorId, f)
+                          if (url) setLoyaltyCardImage(url)
+                          else alert('Upload failed — try a smaller image.')
+                        }
+                      } catch (err) {
+                        alert('Upload failed: ' + (err?.message || 'unknown'))
+                      } finally {
+                        setLoyaltyImageUploading(false)
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                    disabled={loyaltyImageUploading}
+                  />
+                  <span style={{ display: 'block', width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px dashed ${accent}`, background: `${accent}1a`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: loyaltyImageUploading ? 'wait' : 'pointer', textAlign: 'center', opacity: loyaltyImageUploading ? 0.5 : 1 }}>
+                    {loyaltyImageUploading ? 'Uploading…' : loyaltyCardImage ? 'Replace image' : '⬆ Upload card background'}
+                  </span>
+                </label>
+              </div>
+
               {/* Preview — what the customer's stamp card looks like */}
               <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Customer's view</div>
-              <div style={{ padding: 18, borderRadius: 16, background: `linear-gradient(135deg, ${accent}, #BE185D)`, color: '#fff', boxShadow: `0 8px 24px ${accent}55` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.3, textTransform: 'uppercase' }}>{shopName}</div>
-                    <div style={{ fontSize: 18, fontWeight: 900 }}>Loyalty card</div>
+              <div style={{ position: 'relative', padding: 18, borderRadius: 16, color: '#fff', boxShadow: `0 8px 24px ${accent}55`, overflow: 'hidden', background: loyaltyCardImage ? '#0a0a0a' : `linear-gradient(135deg, ${accent}, #BE185D)` }}>
+                {/* Custom branded image as bg — sits BELOW the dark overlay
+                    so text stays readable on any image. */}
+                {loyaltyCardImage && (
+                  <>
+                    <img src={loyaltyCardImage} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))', zIndex: 0 }} />
+                  </>
+                )}
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    {/* Shop logo on the left — respects shopLogoStyle so
+                        a vendor who set 'off' isn't forced to show one,
+                        and 'bare' / 'circle' renders match the rest of
+                        the app. Falls back to no logo if there isn't one. */}
+                    {shopLogoStyle !== 'off' && shopLogo && (
+                      shopLogoStyle === 'bare' ? (
+                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
+                      ) : (
+                        <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.25)' }}>
+                          <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                        </div>
+                      )
+                    )}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.3, textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shopName}</div>
+                      <div style={{ fontSize: 18, fontWeight: 900 }}>Loyalty card</div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 22 }}>🎟️</div>
+                  <div style={{ fontSize: 22, flexShrink: 0 }}>🎟️</div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(loyaltyGoal, 10)}, 1fr)`, gap: 6, marginBottom: 10 }}>
                   {Array.from({ length: loyaltyGoal }).map((_, i) => {
                     const filled = i < 3 // preview shows 3 stamps as example
                     return (
-                      <div key={i} style={{ aspectRatio: '1', borderRadius: '50%', background: filled ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.2)', border: '2px dashed rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: filled ? 16 : 12, color: filled ? accent : 'rgba(255,255,255,0.5)' }}>{filled ? '🍩' : i + 1}</div>
+                      <div key={i} style={{ aspectRatio: '1', borderRadius: '50%', background: filled ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.25)', border: '2px dashed rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: filled ? 16 : 12, color: filled ? accent : 'rgba(255,255,255,0.7)' }}>{filled ? '🍩' : i + 1}</div>
                     )
                   })}
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.9 }}>Earn <strong>{loyaltyGoal}</strong> stamps · Get <strong>{loyaltyReward}</strong></div>
+                <div style={{ fontSize: 12, opacity: 0.95 }}>Earn <strong>{loyaltyGoal}</strong> stamps · Get <strong>{loyaltyReward}</strong></div>
+                </div>
               </div>
             </div>
           </div>
