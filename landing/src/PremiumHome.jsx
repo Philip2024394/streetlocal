@@ -382,7 +382,7 @@ export default function PremiumHome () {
       <nav className="sl-nav">
         <div className="sl-container sl-nav__inner">
           <a href="/" className="sl-brand">
-            <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="StreetLocal" className="sl-brand__mark sl-brand__mark--img" />
+            <img fetchpriority="high" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="StreetLocal" className="sl-brand__mark sl-brand__mark--img" />
             <div className="sl-brand__name">StreetLocal</div>
           </a>
           <div className="sl-nav__links">

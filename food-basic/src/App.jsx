@@ -759,7 +759,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
               regardless of the image's colors. */}
           {loyaltyCardImage && (
             <>
-              <img src={loyaltyCardImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+              <img loading="lazy"src={loyaltyCardImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))', zIndex: 0 }} />
             </>
           )}
@@ -768,10 +768,10 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               {shopLogoStyle !== 'off' && shopLogo && (
                 shopLogoStyle === 'bare' ? (
-                  <img src={shopLogo} alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
+                  <img loading="lazy"src={shopLogo} alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
                 ) : (
                   <div style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.3)' }}>
-                    <img src={shopLogo} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                    <img loading="lazy"src={shopLogo} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                   </div>
                 )
               )}
@@ -880,7 +880,7 @@ function CustomerChatPanel({ conversation, messages, setMessages, draft, setDraf
                 {m.sender_role === 'vendor' && (
                   showAvatar ? (
                     shopLogo
-                      ? <img src={shopLogo} alt="" style={sStyle.avatar} />
+                      ? <img loading="lazy"src={shopLogo} alt="" style={sStyle.avatar} />
                       : <div style={sStyle.avatarFallback}>{(shopName || '?').charAt(0).toUpperCase()}</div>
                   ) : <div style={{ width: 26, flexShrink: 0 }} />
                 )}
@@ -1319,22 +1319,22 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
     </div>
   ), [])
   const bgImgEl = React.useMemo(() => (
-    L.bgImg ? <img src={L.bgImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} /> : null
+    L.bgImg ? <img loading="lazy"src={L.bgImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} /> : null
   ), [L.bgImg])
   const bouncingImgEl = React.useMemo(() => (
     // zIndex: 10 — above the main content card (zIndex: 3) so the
     // dancing donut bounces in front of the splash UI. pointerEvents:
     // none keeps it from blocking taps on the button it overlaps.
-    L.bouncingImg ? <img src={L.bouncingImg} alt="" style={{ position: 'absolute', top: 64, right: -40, width: 208, height: 208, borderRadius: '50%', objectFit: 'cover', animation: 'donutBounce 1s infinite', zIndex: 10, willChange: 'transform', pointerEvents: 'none' }} /> : null
+    L.bouncingImg ? <img loading="lazy"src={L.bouncingImg} alt="" style={{ position: 'absolute', top: 64, right: -40, width: 208, height: 208, borderRadius: '50%', objectFit: 'cover', animation: 'donutBounce 1s infinite', zIndex: 10, willChange: 'transform', pointerEvents: 'none' }} /> : null
   ), [L.bouncingImg])
   const bottomLeftImgEl = React.useMemo(() => (
-    L.bottomLeftImg ? <img src={L.bottomLeftImg} alt="" style={{ position: 'absolute', bottom: 0, left: -40, width: 176, height: 176, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 40px 140px rgba(34,211,238,0.4)', zIndex: 1 }} /> : null
+    L.bottomLeftImg ? <img loading="lazy"src={L.bottomLeftImg} alt="" style={{ position: 'absolute', bottom: 0, left: -40, width: 176, height: 176, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 40px 140px rgba(34,211,238,0.4)', zIndex: 1 }} /> : null
   ), [L.bottomLeftImg])
   const heroImgEl = React.useMemo(() => (
-    L.heroImg ? <img src={L.heroImg} alt="" style={{ width: 125, height: 125, objectFit: 'contain', flexShrink: 0, alignSelf: 'center', filter: `drop-shadow(0 8px 24px ${L.pink}66)` }} /> : null
+    L.heroImg ? <img loading="lazy"src={L.heroImg} alt="" style={{ width: 125, height: 125, objectFit: 'contain', flexShrink: 0, alignSelf: 'center', filter: `drop-shadow(0 8px 24px ${L.pink}66)` }} /> : null
   ), [L.heroImg, L.pink])
   const flavourOrbImgEl = React.useMemo(() => (
-    L.flavourOrbImg ? <img src={L.flavourOrbImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null
+    L.flavourOrbImg ? <img loading="lazy"src={L.flavourOrbImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null
   ), [L.flavourOrbImg])
   useEffect(() => {
     const el = wrapperRef.current
@@ -2211,7 +2211,7 @@ export default function App() {
 
   // Keep the global app-bg-img in sync with shopTheme on EVERY change, no matter the path.
   // Without this, the landing page (React <img>) shows the current theme but the
-  // app-shell <img id="app-bg-img"> stays on whatever it was loaded with at first paint.
+  // app-shell <img loading="lazy"id="app-bg-img"> stays on whatever it was loaded with at first paint.
   useEffect(() => {
     const preset = THEME_PRESETS.find(t => t.id === shopTheme)
     const bgUrl = preset?.img || localStorage.getItem('foodlocalchat_themeBg')
@@ -5571,16 +5571,16 @@ export default function App() {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden' }}>
         {/* Theme background — same as landing */}
-        <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...bgStyle }} />
+        <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...bgStyle }} />
         <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
         {/* Logo — respects shopLogoStyle (off / bare / circle) */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, zIndex: 2 }}>
           {shopLogoStyle !== 'off' && shopLogo ? (
             shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 200, height: 200, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+              <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 200, height: 200, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
             ) : (
               <div style={{ width: 156, height: 156, borderRadius: 78, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: Math.round(156 * logoInner / 100), height: Math.round(156 * logoInner / 100), objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: Math.round(156 * logoInner / 100), height: Math.round(156 * logoInner / 100), objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
               </div>
             )
           ) : shopLogoStyle !== 'off' ? (
@@ -5621,7 +5621,7 @@ export default function App() {
             const idx = codes.indexOf(locale)
             setLocale(codes[(idx + 1) % codes.length])
           }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
+            <img loading="lazy"src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
           </button>
           {/* DonutSplash — React port of the frozen donuts.html design.
@@ -5634,7 +5634,7 @@ export default function App() {
     return (
       <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
         {/* Background image — uses vendor's selected theme */}
-        <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
+        <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle }} />
 
 
         {/* Language toggle — top right, single flag, tap to switch */}
@@ -5643,7 +5643,7 @@ export default function App() {
           const idx = codes.indexOf(locale)
           setLocale(codes[(idx + 1) % codes.length])
         }} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, height: 36, borderRadius: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <img src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
+          <img loading="lazy"src={LANGUAGES.find(l => l.code === locale)?.flag} alt="" onError={imgError('generic')} style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2 }} />
           <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{LANGUAGES.find(l => l.code === locale)?.label || 'EN'}</span>
         </button>
 
@@ -5666,10 +5666,10 @@ export default function App() {
             // touch the edges. objectFit:contain keeps the entire logo visible (no cropping).
             const innerPx = Math.round(heroOuter * logoInner / 100)
             return shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: heroBare, height: heroBare, maxWidth: 'calc(100vw - 20px)', maxHeight: '50vh', objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+              <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: heroBare, height: heroBare, maxWidth: 'calc(100vw - 20px)', maxHeight: '50vh', objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
             ) : (
               <div style={{ width: heroOuter, height: heroOuter, maxWidth: 'calc(100vw - 20px)', maxHeight: '50vh', borderRadius: heroOuter / 2, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: `0 4px 24px rgba(0,0,0,0.5)`, border: '3px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: innerPx, height: innerPx, objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
+                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: innerPx, height: innerPx, objectFit: 'contain', transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)` }} />
               </div>
             )
           })() : shopLogoStyle !== 'off' ? (() => {
@@ -5907,10 +5907,10 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, gap: 10 }}>
           {shopLogoStyle !== 'off' && shopLogo ? (
             shopLogoStyle === 'bare' ? (
-              <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
+              <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
             ) : (
               <div style={{ width: 44, height: 44, borderRadius: 22, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
+                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', transform: `translate(${logoOffsetX * 40 / 156}px, ${logoOffsetY * 40 / 156}px)` }} />
               </div>
             )
           ) : shopLogoStyle !== 'off' ? (
@@ -5974,7 +5974,7 @@ export default function App() {
       {/* --- Coming Soon overlay for pending vendors (public visitors only) --- */}
       {!isVendor && publicVendorStatus === 'pending' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          {publicVendorLogo && <img src={publicVendorLogo} alt="" onError={imgError('logo')} style={{ width: 80, height: 80, borderRadius: 20, objectFit: 'cover', marginBottom: 16 }} />}
+          {publicVendorLogo && <img loading="lazy"src={publicVendorLogo} alt="" onError={imgError('logo')} style={{ width: 80, height: 80, borderRadius: 20, objectFit: 'cover', marginBottom: 16 }} />}
           <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 8, textAlign: 'center' }}>{publicVendorName || shopName}</h1>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: '#FFD600', marginBottom: 8 }}>{t.comingSoon || 'Coming Soon!'}</h2>
@@ -6029,7 +6029,7 @@ export default function App() {
       {reviewsOpen && shopTheme === 'donut' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 260, display: 'flex', flexDirection: 'column' }} onClick={() => setReviewsOpen(false)}>
           {/* Theme bg + scrim — matches the rest of the app */}
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
           {/* Header */}
@@ -6245,7 +6245,7 @@ export default function App() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 250, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Main-site theme bg (donut hero pink) + dark scrim so foreground
                 content stays legible. Matches the app's main background. */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
             {/* Soft pink atmospheric glow behind the donut */}
             <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '90vw', height: '40vh', background: `radial-gradient(closest-side, ${accent}55, transparent 70%)`, pointerEvents: 'none', filter: 'blur(20px)', zIndex: 0 }} />
@@ -6295,7 +6295,7 @@ export default function App() {
                     boxSizing: 'border-box',
                     position: 'relative',
                   }}>
-                    <img src={slideImg} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.68)' : 'scale(0.9)' }} />
+                    <img loading="lazy"src={slideImg} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.68)' : 'scale(0.9)' }} />
                     {extra > 0 && (
                       <span style={{ position: 'absolute', bottom: 12, right: 16, padding: '6px 12px', borderRadius: 20, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 13, fontWeight: 700, backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>📷 +{extra} more</span>
                     )}
@@ -6354,7 +6354,7 @@ export default function App() {
         <div style={{ margin: '4px 12px 0' }}>
           <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', aspectRatio: '3 / 1', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
             {menuBanners.map((url, i) => (
-              <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
+              <img loading="lazy"key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
             ))}
           </div>
           {menuBanners.length > 1 && (
@@ -6396,7 +6396,7 @@ export default function App() {
                 const mins = Math.floor((remaining % 3600000) / 60000)
                 return (
                   <div key={deal.id} style={{ background: 'rgba(255,214,0,0.08)', border: '1px solid rgba(255,214,0,0.2)', borderRadius: 14, padding: 14, display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {deal.photo && <img src={deal.photo} alt="" onError={imgError('food')} style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />}
+                    {deal.photo && <img loading="lazy"src={deal.photo} alt="" onError={imgError('food')} style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />}
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deal.name}</div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
@@ -6822,7 +6822,7 @@ export default function App() {
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 28 : 6 })(), right: 6, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
-              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
+              <img loading="lazy"src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
                 donutCardStyles
                   ? {
                       // Match Design Studio preview: 4:3 landscape, contain
@@ -6919,7 +6919,7 @@ export default function App() {
               {isVendor && vendorStatus !== 'expired' && (
                 <button style={{ ...S.toggle(item.available), position: 'absolute', top: (() => { const cd = getPerkCountdown(item); return getPerkDisplay(item) && cd !== 'expired' && cd !== 'soldout' ? 36 : 8 })(), right: 8, zIndex: 4 }} onClick={() => toggleAvailability(item.id)}><div style={S.toggleDot(item.available)} /></button>
               )}
-              <img src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
+              <img loading="lazy"src={item.photo || PLACEHOLDER_SM} alt={item.name} onError={imgError('food')} style={
                 donutCardStyles
                   ? {
                       // Donut: image inset under the promo banner, shorter
@@ -7122,7 +7122,7 @@ export default function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200 }} onClick={() => setItemModal(null)}>
           {/* Fixed background + glass — stays in place while content scrolls */}
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 0 }} />
 
           {/* Content — scrollable over the fixed glass background */}
@@ -7199,7 +7199,7 @@ export default function App() {
                             border: '2px solid ' + (modalPhotoIdx === i ? (isCustomAccent ? accent : '#FACC15') : 'rgba(255,255,255,0.1)'),
                             background: 'none', cursor: 'pointer', overflow: 'hidden',
                           }}>
-                            <img src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            <img loading="lazy"src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                           </button>
                         ))}
                       </div>
@@ -7414,7 +7414,7 @@ export default function App() {
 
         return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0, pointerEvents: 'none' }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -7439,10 +7439,10 @@ export default function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
                 {shopLogoStyle !== 'off' && shopLogo ? (
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
+                    <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
                   ) : (
                     <div style={{ width: 68, height: 68, borderRadius: 34, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 58, height: 58, objectFit: 'contain', transform: `translate(${logoOffsetX * 58 / 156}px, ${logoOffsetY * 58 / 156}px)` }} />
                     </div>
                   )
                 ) : shopLogoStyle !== 'off' ? (
@@ -7458,7 +7458,7 @@ export default function App() {
                   {/* WhatsApp on Visit Us — only when vendor opts in (foodlocalchat) */}
                   {(isVendor || showVisitUsWA) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
-                    <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbv-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                    <img loading="lazy"src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledbbbbv-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 14, height: 14, objectFit: 'contain' }} />
                     {!isVendor && shopPhone ? (
                       <a href={`https://wa.me/${String(shopPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>{shopPhone}</a>
                     ) : (
@@ -7535,7 +7535,7 @@ export default function App() {
 
               {/* Location */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdvvvdsds-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+                <img loading="lazy"src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledsdasdvvvdsds-removebg-preview.png" alt="" onError={imgError('generic')} style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{shopAddress || 'Address not set'}</div>
                   {(shopCity || shopCountry) && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{[shopCity, shopCountry].filter(Boolean).join(', ')}</div>}
@@ -7554,39 +7554,39 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
                     {shopInstagram && (
                       <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/instagram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/instagram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopFacebook && (
                       <a href={shopFacebook.startsWith('http') ? shopFacebook : `https://facebook.com/${shopFacebook}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/facebook/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/facebook/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopTiktok && (
                       <a href={`https://tiktok.com/@${shopTiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/tiktok/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/tiktok/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopYoutube && (
                       <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/x/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/x/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {/* Telegram deeplink: t.me/<username> */}
                     {shopTelegram && (
                       <a href={`https://t.me/${shopTelegram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Message on Telegram" style={{ width: 44, height: 44, borderRadius: 12, background: '#229ED9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/telegram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/telegram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {/* LINE deeplink — line.me/R/oaMessage/<id>/ */}
                     {shopLineId && (
                       <a href={`https://line.me/R/oaMessage/${shopLineId.replace(/^@/, '')}/?`} target="_blank" rel="noopener noreferrer" aria-label="Message on LINE" style={{ width: 44, height: 44, borderRadius: 12, background: '#06C755', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://cdn.simpleicons.org/line/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://cdn.simpleicons.org/line/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopWebsite && (
                       <a href={shopWebsite.startsWith('http') ? shopWebsite : `https://${shopWebsite}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="https://api.iconify.design/mdi/web.svg?color=white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                        <img loading="lazy"src="https://api.iconify.design/mdi/web.svg?color=white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                   </div>
@@ -7659,7 +7659,7 @@ export default function App() {
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 500 }}>
             {/* Theme background + glass overlay (Shop Config pattern) — covers viewport, stays put while content scrolls */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
             {/* Content scroll container — sits above the fixed bg + overlay */}
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -7700,7 +7700,7 @@ export default function App() {
                     )}
                     {/* Background image */}
                     {landingThemeId !== 'donuts' && (<>
-                    <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
                     {/* Content */}
                     <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
@@ -7711,10 +7711,10 @@ export default function App() {
                       {/* Logo */}
                       {shopLogoStyle !== 'off' && shopLogo ? (
                         shopLogoStyle === 'bare' ? (
-                          <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
+                          <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }} />
                         ) : (
                           <div style={{ width: 52, height: 52, borderRadius: 26, background: isCustomAccent ? accent : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)' }}>
-                            <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover' }} />
+                            <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover' }} />
                           </div>
                         )
                       ) : shopLogoStyle !== 'off' ? (
@@ -7762,7 +7762,7 @@ export default function App() {
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       {L[valueKey] ? (
-                        <img src={L[valueKey]} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                        <img loading="lazy"src={L[valueKey]} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }} />
                       ) : (
                         <div style={{ width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📷</div>
                       )}
@@ -8011,7 +8011,7 @@ export default function App() {
 
         return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
-          <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-06_24_54-pm.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <img loading="lazy"src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/chatgpt-image-may-7-2026-06_24_54-pm.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* Top bar — close + save */}
           <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', flexShrink: 0 }}>
@@ -8032,15 +8032,15 @@ export default function App() {
               {/* Screen */}
               <div style={{ width: '100%', height: '100%', borderRadius: 25, overflow: 'hidden', position: 'relative', background: '#000' }}>
                 <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 46, height: 14, background: '#000', borderRadius: 14, zIndex: 5 }} />
-                <img src={themeEditor.url} alt="" onError={imgError('theme')} style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${editorPos.x}% ${editorPos.y}%`, transition: 'object-position 0.2s ease' }} />
+                <img loading="lazy"src={themeEditor.url} alt="" onError={imgError('theme')} style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${editorPos.x}% ${editorPos.y}%`, transition: 'object-position 0.2s ease' }} />
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
                   {/* Respects shopLogoStyle — single source of truth. */}
                   {shopLogoStyle === 'off' ? null : shopLogo ? (
                     shopLogoStyle === 'bare' ? (
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 6, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }} />
                     ) : (
                       <div style={{ width: 72, height: 72, borderRadius: 36, background: editorColor, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', transition: 'background 0.2s' }}>
-                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 62, height: 62, borderRadius: 31, objectFit: 'cover' }} />
+                        <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 62, height: 62, borderRadius: 31, objectFit: 'cover' }} />
                       </div>
                     )
                   ) : (
@@ -8182,7 +8182,7 @@ export default function App() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 250 }}>
             {/* Same bg + glass as the item modal */}
             <div style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 0 }} />
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, margin: '0 auto', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -8221,7 +8221,7 @@ export default function App() {
                   list.map((r, idx) => (
                     <div key={r.id}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: idx === 0 ? '0 0 14px' : '14px 0' }}>
-                        <img src={avatar} alt={item.name} onError={imgError('food')} style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.12)' }} />
+                        <img loading="lazy"src={avatar} alt={item.name} onError={imgError('food')} style={{ width: 46, height: 46, borderRadius: 23, objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.12)' }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -8380,7 +8380,7 @@ export default function App() {
         const qtyColor = isCustomAccent ? '#fff' : '#000'
         return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
@@ -8407,7 +8407,7 @@ export default function App() {
                   {cart.map((c) => (
                     <div key={c.id} style={{ display: 'flex', gap: 12, padding: 12, marginBottom: 8, background: 'rgba(0,0,0,0.6)', borderRadius: 16, position: 'relative', border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)', ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
                       <button onClick={() => setCart(cart.filter(x => x.id !== c.id))} style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>&times;</button>
-                      <img src={c.photo || PLACEHOLDER_SM} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                      <img loading="lazy"src={c.photo || PLACEHOLDER_SM} alt="" onError={imgError('food')} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 20 }}>{c.name}</div>
                         <div style={{ fontSize: 15, fontWeight: 800, color: '#FACC15', marginTop: 4 }}>{fmt(c.price * c.qty)}</div>
@@ -8740,7 +8740,7 @@ export default function App() {
                     >
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#86EFAC', letterSpacing: 0.5, textTransform: 'uppercase' }}>Scan to pay · {fmt(totalPrice + (delEnabled ? (deliveryZone.fee || 0) : 0))}</div>
                       <div style={{ background: '#fff', borderRadius: 12, padding: 10, boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}>
-                        <img src={shopQris} alt="QRIS code" onError={imgError('qr')} style={{ width: 200, height: 200, objectFit: 'contain', display: 'block' }} />
+                        <img loading="lazy"src={shopQris} alt="QRIS code" onError={imgError('qr')} style={{ width: 200, height: 200, objectFit: 'contain', display: 'block' }} />
                       </div>
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, textAlign: 'center', maxWidth: 280 }}>
                         GoPay · OVO · DANA · ShopeePay · Bank Transfer
@@ -8828,7 +8828,7 @@ export default function App() {
                       }}
                     >
                       <div style={{ background: '#fff', borderRadius: 8, padding: 4, flexShrink: 0, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                        <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 4, display: 'block' }} />
+                        <img loading="lazy"src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 4, display: 'block' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{t.scanToPay || 'Scan to Pay'}</div>
@@ -8892,7 +8892,7 @@ export default function App() {
                   {qrModalOpen && shopQris && (
                     <div onClick={() => setQrModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, padding: 18, boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}>
-                        <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 280, height: 280, maxWidth: '70vw', maxHeight: '70vw', objectFit: 'contain', display: 'block' }} />
+                        <img loading="lazy"src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 280, height: 280, maxWidth: '70vw', maxHeight: '70vw', objectFit: 'contain', display: 'block' }} />
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginTop: 16 }}>{t.scanToPay || 'Scan to Pay'}</div>
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>GoPay · OVO · DANA · ShopeePay · Bank Transfer</div>
@@ -9024,7 +9024,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
           {/* Same bg + glass scrim as the main app — pulled from the saved
               theme bg so the Orders page sits inside the donut atmosphere. */}
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', gap: 12 }}>
@@ -9033,7 +9033,7 @@ export default function App() {
                   the customer sees in the menu header, so the vendor's
                   inbox feels like part of their own shop. */}
               {shopLogo ? (
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: shopLogoStyle === 'bare' ? 0 : 18, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', flexShrink: 0, border: shopLogoStyle === 'bare' ? 'none' : '1.5px solid rgba(255,255,255,0.2)' }} />
+                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: shopLogoStyle === 'bare' ? 0 : 18, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', flexShrink: 0, border: shopLogoStyle === 'bare' ? 'none' : '1.5px solid rgba(255,255,255,0.2)' }} />
               ) : (
                 <div style={{ width: 36, height: 36, borderRadius: 18, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>{(shopName || '?').charAt(0).toUpperCase()}</div>
               )}
@@ -9173,7 +9173,7 @@ export default function App() {
                         {/* Item photo + extra count chip */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           {firstImg ? (
-                            <img src={firstImg} alt="" onError={imgError('food')} style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', background: '#222', border: '1.5px solid rgba(255,255,255,0.1)' }} />
+                            <img loading="lazy"src={firstImg} alt="" onError={imgError('food')} style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', background: '#222', border: '1.5px solid rgba(255,255,255,0.1)' }} />
                           ) : (
                             <div style={{ width: 72, height: 72, borderRadius: 12, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, border: '1.5px solid rgba(255,255,255,0.1)' }}>🍩</div>
                           )}
@@ -9382,7 +9382,7 @@ export default function App() {
 
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -9563,7 +9563,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: '#0a0a0a', display: 'flex', flexDirection: 'column', maxWidth: 480, margin: '0 auto', overflow: 'hidden' }}>
           {/* Same donut bg as the app — visual continuity with the rest
               of the vendor surface (Theme Library, Settings hub, etc.). */}
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
           {/* Premium header — accent back button + title + subtitle, matches drawer pattern */}
@@ -9683,7 +9683,7 @@ export default function App() {
             {/* Logo chip — keeps brand color identity */}
             <div style={{ width: 38, height: 38, borderRadius: 10, background: g.color, color: '#fff', fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 6px ${g.color}40`, overflow: 'hidden' }}>
               {g.logoUrl
-                ? <img src={g.logoUrl} alt={g.name} onError={(e) => { e.currentTarget.parentElement.textContent = g.name.charAt(0) }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                ? <img loading="lazy"src={g.logoUrl} alt={g.name} onError={(e) => { e.currentTarget.parentElement.textContent = g.name.charAt(0) }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                 : g.name.charAt(0)
               }
             </div>
@@ -9712,7 +9712,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* App theme background + glass overlay (matches the rest of the app) */}
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           {/* Scrollable foreground content */}
@@ -9813,7 +9813,7 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* App theme background — clear, no blur overlay on setup page */}
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#0a0a0a', zIndex: 0 }} />
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'fill', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
           {/* Header — transparent, no shade */}
@@ -9836,7 +9836,7 @@ export default function App() {
             <div style={{ background: `linear-gradient(135deg, ${gw.color}28 0%, rgba(0,0,0,0.4) 100%)`, border: `1px solid ${gw.color}40`, borderRadius: 16, padding: '18px 16px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: `0 4px 18px ${gw.color}30` }}>
               <div style={{ width: 54, height: 54, borderRadius: 14, background: gw.color, color: '#fff', fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${gw.color}55`, overflow: 'hidden' }}>
                 {gw.logoUrl
-                  ? <img src={gw.logoUrl} alt={gw.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                  ? <img loading="lazy"src={gw.logoUrl} alt={gw.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                   : gw.name.charAt(0)
                 }
               </div>
@@ -9911,7 +9911,7 @@ export default function App() {
                             color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
                           }}>
                             {b.logo
-                              ? <img src={b.logo} alt={b.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 24, height: 16, objectFit: 'contain', flexShrink: 0, background: '#fff', borderRadius: 3, padding: 2 }} />
+                              ? <img loading="lazy"src={b.logo} alt={b.name} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 24, height: 16, objectFit: 'contain', flexShrink: 0, background: '#fff', borderRadius: 3, padding: 2 }} />
                               : <span style={{ width: 24, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>🏦</span>
                             }
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
@@ -10043,7 +10043,7 @@ export default function App() {
               }
             `}</style>
             {/* Custom chat backdrop (donut-themed) */}
-            <img src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2004_20_51%20AM.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
+            <img loading="lazy"src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2004_20_51%20AM.png" alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* HEADER — sticky bar with rounded left + right corners and
@@ -10051,7 +10051,7 @@ export default function App() {
                 the page Close button or the existing close handle. */}
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', margin: '6px 8px 0', borderRadius: 18, background: `linear-gradient(180deg, ${accent} 0%, ${donutLanding.pinkBright || '#EC4899'} 100%)`, boxShadow: `0 4px 14px ${accent}55` }}>
               {shopLogo ? (
-                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.4)', flexShrink: 0 }} />
               ) : (
                 <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 900, flexShrink: 0 }}>{(shopName || '?').charAt(0)}</div>
               )}
@@ -10173,7 +10173,7 @@ export default function App() {
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, justifyContent: isCust ? 'flex-end' : 'flex-start' }}>
                       {!isCust && (showAvatar
                         ? (shopLogo
-                          ? <img src={shopLogo} alt="" style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }} />
+                          ? <img loading="lazy"src={shopLogo} alt="" style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }} />
                           : <div style={{ width: 28, height: 28, borderRadius: 14, background: accent, color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }}>{(shopName || '?').charAt(0)}</div>)
                         : <div style={{ width: 28, flexShrink: 0 }} />)}
                       {/* Bubble — customer = black tinted, vendor = light pink */}
@@ -10403,10 +10403,10 @@ export default function App() {
                     'circle' renders the colour-tinted circle with image inside. */}
                 {shopLogoStyle === 'off' ? null : shopLogo ? (
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
+                    <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
                   ) : (
                     <div style={{ width: 44, height: 44, borderRadius: 22, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: 18, objectFit: 'cover' }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: 18, objectFit: 'cover' }} />
                     </div>
                   )
                 ) : (
@@ -10642,7 +10642,7 @@ export default function App() {
                     setShowLanding(true)
                   }} style={{ border: shopTheme === theme.id ? '3px solid #FFD600' : '3px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', width: '100%' }}>
                     <div style={{ width: '100%', height: 240, position: 'relative' }}>
-                      <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} />
+                      <img loading="lazy"src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} />
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: shopTheme === theme.id ? '#FFD600' : '#888', padding: '6px 0', textAlign: 'center', background: shopTheme === theme.id ? 'rgba(255,214,0,0.1)' : '#111' }}>
                       {shopTheme === theme.id ? '✓ ' : ''}{theme.label}
@@ -10750,7 +10750,7 @@ export default function App() {
       {/* ═══ DELIVERY SETTINGS ═══ */}
       {showDeliverySettings && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -10905,7 +10905,7 @@ export default function App() {
       {/* ═══ VENDOR EDIT ITEM PAGE ═══ */}
       {editItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -10925,7 +10925,7 @@ export default function App() {
                 <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   {formPhoto ? (
                     <>
-                      <img src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
+                      <img loading="lazy"src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
                         <div style={{ width: 38, height: 38, borderRadius: 19, background: '#8B0000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ fontSize: 18, lineHeight: 1, display: 'block' }}>📷</span>
@@ -11002,7 +11002,7 @@ export default function App() {
                     return (
                       <div key={i} style={{ flex: 1, position: 'relative' }}>
                         <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
-                          <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
+                          <img loading="lazy"src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
                         </button>
                         <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                       </div>
@@ -11175,7 +11175,7 @@ export default function App() {
       {/* ═══ VENDOR ADD ITEM PAGE ═══ */}
       {addingItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -11194,7 +11194,7 @@ export default function App() {
               <div style={{ ...S.card, margin: 0, ...(isCustomAccent ? { borderLeft: `3px solid ${accent}` } : {}) }}>
                 <label style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', border: formPhoto ? 'none' : `2px dashed ${accent}40`, background: formPhoto ? 'none' : 'rgba(0,0,0,0.4)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {formPhoto ? (
-                    <img src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
+                    <img loading="lazy"src={formPhoto} alt="" onError={imgError('food')} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12 }} />
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: accent, gap: 2 }}>
                       <span style={{ fontSize: 22 }}>📷</span>
@@ -11267,7 +11267,7 @@ export default function App() {
                     return (
                       <div key={i} style={{ flex: 1, position: 'relative' }}>
                         <button type="button" onClick={swapWithMain} title="Tap to make main image" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', background: 'rgba(0,0,0,0.4)', cursor: 'pointer', padding: 0, display: 'block', transition: 'transform 200ms ease, box-shadow 200ms ease' }}>
-                          <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
+                          <img loading="lazy"src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 200ms ease' }} />
                         </button>
                         <button type="button" onClick={remove} style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, background: '#EF4444', border: '2px solid #1a1a1a', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                       </div>
@@ -11437,7 +11437,7 @@ export default function App() {
       {/* ═══ SHOP CONFIG PAGE ═══ */}
       {shopConfig && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
           {/* Header */}
@@ -11509,14 +11509,14 @@ export default function App() {
                   // landing page exactly. Bare = image only, no ring, no
                   // background. Off = nothing rendered on landing.
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 100, height: 100, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
+                    <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 100, height: 100, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
                   ) : shopLogoStyle === 'off' ? (
                     <div style={{ width: 100, height: 100, borderRadius: 50, border: '1px dashed rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px', textAlign: 'center', boxSizing: 'border-box' }}>
                       <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600, lineHeight: 1.3 }}>Logo hidden on landing</span>
                     </div>
                   ) : (
                     <div style={{ width: 100, height: 100, borderRadius: 50, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.15)', boxShadow: `0 4px 16px rgba(0,0,0,0.3)` }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 86, height: 86, borderRadius: 43, objectFit: 'cover' }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 86, height: 86, borderRadius: 43, objectFit: 'cover' }} />
                     </div>
                   )
                 ) : (
@@ -11727,7 +11727,7 @@ export default function App() {
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 20, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <img src={s.icon} alt="" onError={imgError('generic')} style={{ width: 20, height: 20 }} />
+                  <img loading="lazy"src={s.icon} alt="" onError={imgError('generic')} style={{ width: 20, height: 20 }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 2 }}>{s.label}</div>
@@ -11750,7 +11750,7 @@ export default function App() {
                   if (url) { setShopQris(url); localStorage.setItem('foodlocalchat_shopQris', url) }
                 }} />
                 {shopQris ? (
-                  <img src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 8 }} />
+                  <img loading="lazy"src={shopQris} alt="QRIS" onError={imgError('qr')} style={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 12, background: '#fff', padding: 8 }} />
                 ) : (
                   <div style={{ width: 160, height: 160, borderRadius: 12, background: `${accent}10`, border: `2px dashed ${accent}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <span style={{ fontSize: 36 }}>📱</span>
@@ -11853,7 +11853,7 @@ export default function App() {
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
             {/* Same donut bg as the app — keeps the visual continuity */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             {/* Header */}
@@ -11883,7 +11883,7 @@ export default function App() {
                           <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
                             <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
                             <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                              <img src={url} alt={`${group.label} ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img loading="lazy"src={url} alt={`${group.label} ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
                             </div>
                             {isActive && (
@@ -11920,7 +11920,7 @@ export default function App() {
                           <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
                             <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
                             <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
-                              <img src={url} alt={`Your upload ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img loading="lazy"src={url} alt={`Your upload ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
                             </div>
                             {isActive && (
@@ -12079,7 +12079,7 @@ export default function App() {
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
             {/* Same donut bg as the app — visual continuity */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             {/* Header */}
@@ -12392,7 +12392,7 @@ export default function App() {
           const isStory = b.format === 'story'
           return (
             <div style={{ position: 'relative', width: w, height: h, borderRadius: 12, overflow: 'hidden', background: '#1a1a1a', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
-              {b.bgImage && <img src={b.bgImage} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+              {b.bgImage && <img loading="lazy"src={b.bgImage} alt="" onError={imgError('food')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${b.tint} 0%, ${b.tint} 100%)` }} />
               {/* Header row: logo + shop name (top-left). Logo render
                   honours shopLogoStyle from Design Studio. Logo + name
@@ -12516,7 +12516,7 @@ export default function App() {
 
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             {/* Header */}
@@ -12772,7 +12772,7 @@ export default function App() {
                         {BANNER_TEMPLATES[fmtKey].map(tpl => (
                           <button key={tpl.id} type="button" onClick={() => createBanner(fmtKey, tpl)} style={{ flexShrink: 0, padding: 0, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', borderRadius: 12, cursor: 'pointer', overflow: 'hidden' }}>
                             <div style={{ width: 120, aspectRatio: fmt.aspect, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
-                              <img src={tpl.bg} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img loading="lazy"src={tpl.bg} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               <div style={{ position: 'absolute', inset: 0, background: tpl.tint }} />
                               <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 13, fontWeight: 900, color: tpl.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>20% OFF</div>
                             </div>
@@ -12861,7 +12861,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
@@ -12942,7 +12942,7 @@ export default function App() {
         ]
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
@@ -13064,7 +13064,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
@@ -13207,7 +13207,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
@@ -13397,7 +13397,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
@@ -13506,7 +13506,7 @@ export default function App() {
         const tiers = ['starter', 'professional', 'enterprise']
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
@@ -13526,7 +13526,7 @@ export default function App() {
                   <div key={t} style={{ marginBottom: 22 }}>
                     {/* Banner image — all tier info baked in */}
                     <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-                      <img src={banner.image} alt={`${banner.label} plan`} onError={imgError('theme')} style={{ width: 'calc(100% + 4px)', height: 'auto', display: 'block', margin: '-2px' }} />
+                      <img loading="lazy"src={banner.image} alt={`${banner.label} plan`} onError={imgError('theme')} style={{ width: 'calc(100% + 4px)', height: 'auto', display: 'block', margin: '-2px' }} />
                     </div>
                     {/* Tier-aware CTA under the banner */}
                     <div style={{ marginTop: 12 }}>
@@ -13574,7 +13574,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
@@ -13644,7 +13644,7 @@ export default function App() {
       {loyaltyPageOpen && (() => {
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
@@ -13709,7 +13709,7 @@ export default function App() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4, marginBottom: 10 }}>Upload your own image to brand the loyalty card. Landscape 1200×600 works best. We add a dark overlay on top so the text + stamps stay readable.</div>
                 {loyaltyCardImage ? (
                   <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', marginBottom: 10, border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <img src={loyaltyCardImage} alt="Card background preview" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
+                    <img loading="lazy"src={loyaltyCardImage} alt="Card background preview" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
                     <button onClick={() => setLoyaltyCardImage('')} style={{ position: 'absolute', top: 6, right: 6, padding: '4px 10px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.9)', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Remove</button>
                   </div>
                 ) : null}
@@ -13754,7 +13754,7 @@ export default function App() {
                     so text stays readable on any image. */}
                 {loyaltyCardImage && (
                   <>
-                    <img src={loyaltyCardImage} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+                    <img loading="lazy"src={loyaltyCardImage} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))', zIndex: 0 }} />
                   </>
                 )}
@@ -13767,10 +13767,10 @@ export default function App() {
                         the app. Falls back to no logo if there isn't one. */}
                     {shopLogoStyle !== 'off' && shopLogo && (
                       shopLogoStyle === 'bare' ? (
-                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
+                        <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
                       ) : (
                         <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.25)' }}>
-                          <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                          <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain' }} />
                         </div>
                       )
                     )}
@@ -13808,7 +13808,7 @@ export default function App() {
         const placed = o.placedAt ? new Date(o.placedAt) : new Date()
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} className="no-print" />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} className="no-print" />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} className="no-print" />
 
             {/* Print-specific CSS: white paper, dark text. Hides chrome. */}
@@ -13837,7 +13837,7 @@ export default function App() {
                 {/* Shop header */}
                 <div style={{ textAlign: 'center', borderBottom: '2px dashed #ccc', paddingBottom: 14, marginBottom: 14 }}>
                   {shopLogo && shopLogoStyle !== 'off' && (
-                    <img src={shopLogo} alt="" style={{ width: 60, height: 60, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', borderRadius: shopLogoStyle === 'circle' ? '50%' : 0, marginBottom: 8 }} />
+                    <img loading="lazy"src={shopLogo} alt="" style={{ width: 60, height: 60, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', borderRadius: shopLogoStyle === 'circle' ? '50%' : 0, marginBottom: 8 }} />
                   )}
                   <div style={{ fontSize: 18, fontWeight: 900, color: '#111', marginBottom: 2 }}>{shopName}</div>
                   {shopAddress && <div style={{ fontSize: 12, color: '#555', marginBottom: 2 }}>{shopAddress}</div>}
@@ -13919,7 +13919,7 @@ export default function App() {
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
             {/* Themed background — matches the rest of the app */}
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0, pointerEvents: 'none' }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
               {/* Header — branded with vendor's logo so it feels like their app */}
@@ -13928,10 +13928,10 @@ export default function App() {
                 {/* Respects shopLogoStyle — single source of truth. */}
                 {shopLogoStyle === 'off' ? null : shopLogo ? (
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 38, height: 38, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }} />
+                    <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 38, height: 38, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }} />
                   ) : (
                     <div style={{ width: 38, height: 38, borderRadius: 19, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain', transform: `translate(${logoOffsetX * 32 / 156}px, ${logoOffsetY * 32 / 156}px)` }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 32, height: 32, objectFit: 'contain', transform: `translate(${logoOffsetX * 32 / 156}px, ${logoOffsetY * 32 / 156}px)` }} />
                     </div>
                   )
                 ) : (
@@ -14022,7 +14022,7 @@ export default function App() {
                       <div onClick={(e) => { e.stopPropagation(); setThemeBrowser(false); setShopTheme(theme.id); setShopAccentColor(theme.accent || '#8DC63F'); localStorage.setItem('foodlocalchat_theme', theme.id); localStorage.setItem('foodlocalchat_themeBg', theme.img); localStorage.setItem('foodlocalchat_accentColor', theme.accent || '#8DC63F'); const bgImg = document.getElementById('app-bg-img'); if (bgImg) bgImg.src = theme.img; setEditorColor(theme.accent || '#8DC63F'); setEditorBaseColor(theme.accent || '#8DC63F'); setThemeEditor({ url: theme.img }); }} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#1a1a1a', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5, lineHeight: 1 }}>DEV</div>
                       <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)', width: 32, height: 8, background: '#000', borderRadius: 6, zIndex: 3 }} />
-                        <img src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                        <img loading="lazy"src={theme.img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
                         <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 30, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)', zIndex: 3 }} />
                       </div>
                     </div>
@@ -14086,7 +14086,7 @@ export default function App() {
                       <div style={{ position: 'absolute', left: -3, top: 110, width: 3, height: 18, borderRadius: '2px 0 0 2px', background: '#333' }} />
                       <div style={{ width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', position: 'relative', background: '#000' }}>
                         <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 56, height: 16, background: '#000', borderRadius: 12, zIndex: 10 }} />
-                        <img src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                        <img loading="lazy"src={activeImg} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                         <div style={{ position: 'absolute', inset: 0, background: themePreviewPage === 'menu' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.35)', backdropFilter: themePreviewPage === 'menu' ? 'blur(6px)' : 'none', transition: 'all 0.3s' }} />
                         {themePreviewPage === 'landing' && (
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '0 20px' }}>
@@ -14107,7 +14107,7 @@ export default function App() {
                             <div style={{ padding: '0 6px' }}>
                               {DEMO_MENU.filter(m => m.category === 'Meal').slice(0, 3).map(item => (
                                 <div key={item.id} style={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 0 5px', padding: 6, display: 'flex', gap: 6, alignItems: 'center', minHeight: 52, borderLeft: `3px solid ${ac}` }}>
-                                  <img src={item.photo} alt="" onError={imgError('food')} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                                  <img loading="lazy"src={item.photo} alt="" onError={imgError('food')} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                                   <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}{item.spice > 0 && shopTheme !== 'donut' &&' 🌶️'}</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div><div style={{ fontSize: 13, fontWeight: 700, color: '#FACC15', marginTop: 1 }}>{fmt(item.price)}</div></div>
                                   <div style={{ width: 16, height: 16, borderRadius: 8, background: '#FFD600', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1a1a1a', flexShrink: 0 }}>+</div>
                                 </div>
@@ -14127,7 +14127,7 @@ export default function App() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                         {allImages.map((img, i) => (
                           <button key={i} onClick={() => setThemePreviewImg(img)} style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', border: activeImg === img ? `3px solid ${ac}` : '2px solid rgba(255,255,255,0.15)', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
-                            <img src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img loading="lazy"src={img} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </button>
                         ))}
                       </div>
@@ -14274,7 +14274,7 @@ export default function App() {
         }
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+            <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
               {/* Header */}
@@ -14393,7 +14393,7 @@ export default function App() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
                     {images.map((url, idx) => (
                       <div key={url + idx} style={{ position: 'relative', aspectRatio: '4 / 3', borderRadius: 12, overflow: 'hidden', background: '#000', border: idx === 0 ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)' }}>
-                        <img src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <img loading="lazy"src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         {idx === 0 && <span style={{ position: 'absolute', top: 4, left: 4, padding: '2px 6px', borderRadius: 6, background: accent, color: '#fff', fontSize: 10, fontWeight: 900, letterSpacing: 0.5 }}>HERO</span>}
                         <button onClick={() => removeImageAt(idx)} aria-label="Remove image" style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: '1.5px solid #fff', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
                       </div>
@@ -14480,7 +14480,7 @@ export default function App() {
 
       {menuCardsPage && shopTheme === 'donut' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
@@ -14544,7 +14544,7 @@ export default function App() {
                       <div style={{ ...cardBase, display: 'flex', gap: 8, padding: 8, paddingTop: 28 }}>
                         {/* Active perk top strip */}
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 24, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 4 }}>🎁 Buy 1 Get 1</div>
-                        <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 60, height: 60, marginLeft: 4, borderRadius: 6, objectFit: 'contain', background: '#f5f5f5', flexShrink: 0, border: imgRim }} />
+                        <img loading="lazy"src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 60, height: 60, marginLeft: 4, borderRadius: 6, objectFit: 'contain', background: '#f5f5f5', flexShrink: 0, border: imgRim }} />
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
                           <div style={{ fontSize: 13, color: dimTxt, marginTop: 2, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
@@ -14563,7 +14563,7 @@ export default function App() {
                         {[0, 1].map(i => (
                           <div key={i} style={{ ...cardBase }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 22, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 6px', display: 'flex', alignItems: 'center', gap: 3, zIndex: 2 }}>🎁 Buy 1 Get 1</div>
-                            <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, marginTop: 22, aspectRatio: '4 / 3', objectFit: 'contain', background: '#f5f5f5', display: 'block', border: imgRim }} />
+                            <img loading="lazy"src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, marginTop: 22, aspectRatio: '4 / 3', objectFit: 'contain', background: '#f5f5f5', display: 'block', border: imgRim }} />
                             <div style={{ padding: '6px 8px 8px' }}>
                               <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
                               <div style={{ fontSize: 13, color: dimTxt, marginBottom: 4, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
@@ -14582,7 +14582,7 @@ export default function App() {
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Full Width</div>
                       <div style={{ ...cardBase }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 26, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>🎁 Buy 1 Get 1 — 12h left</div>
-                        <img src={sampleFullWidth} alt="" onError={imgError('food')} style={{ width: '70%', maxHeight: 140, marginTop: 28, marginLeft: 'auto', marginRight: 'auto', height: 'auto', objectFit: 'contain', display: 'block', background: '#f5f5f5', border: imgRim }} />
+                        <img loading="lazy"src={sampleFullWidth} alt="" onError={imgError('food')} style={{ width: '70%', maxHeight: 140, marginTop: 28, marginLeft: 'auto', marginRight: 'auto', height: 'auto', objectFit: 'contain', display: 'block', background: '#f5f5f5', border: imgRim }} />
                         <div style={{ padding: '10px 12px 12px' }}>
                           <div style={{ fontSize: 14, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
                           <div style={{ fontSize: 13, color: dimTxt, marginBottom: 6, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
@@ -14636,7 +14636,7 @@ export default function App() {
               {donutCardStyle === 'image' && (
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <div style={{ width: 70, height: 70, borderRadius: 10, background: donutCardImage ? '#000' : `${accent}20`, border: donutCardImage ? '1px solid rgba(255,255,255,0.1)' : `2px dashed ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                    {donutCardImage ? <img src={donutCardImage} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22 }}>🖼️</span>}
+                    {donutCardImage ? <img loading="lazy"src={donutCardImage} alt="" onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22 }}>🖼️</span>}
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ padding: '10px 14px', borderRadius: 10, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'center', minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -14824,7 +14824,7 @@ export default function App() {
 
       {designStudio && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
             {/* Header */}
@@ -14865,14 +14865,14 @@ export default function App() {
                     wrapper background AND no surrounding row container. */}
                 {shopLogo ? (
                   shopLogoStyle === 'bare' ? (
-                    <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 56, height: 56, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
+                    <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 56, height: 56, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} />
                   ) : shopLogoStyle === 'off' ? (
                     <div style={{ width: 56, height: 56, borderRadius: 28, border: '1px dashed rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 4px', textAlign: 'center' }}>
                       <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600, lineHeight: 1.2 }}>Off</span>
                     </div>
                   ) : (
                     <div style={{ width: 56, height: 56, borderRadius: 28, background: accent, border: '2px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                      <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 48, height: 48, borderRadius: 24, objectFit: 'cover' }} />
+                      <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 48, height: 48, borderRadius: 24, objectFit: 'cover' }} />
                     </div>
                   )
                 ) : (
@@ -14931,7 +14931,7 @@ export default function App() {
                             {/* Live circle preview — left, matches phone preview pixel-for-pixel */}
                             <div style={{ width: prevOuter, height: prevOuter, borderRadius: prevOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', transition: 'width 0.15s ease, height 0.15s ease' }}>
                               {shopLogo ? (
-                                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: prevInner, height: prevInner, objectFit: 'contain', transform: `translate(${prevOffX}px, ${prevOffY}px)`, transition: 'width 0.15s ease, height 0.15s ease' }} />
+                                <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: prevInner, height: prevInner, objectFit: 'contain', transform: `translate(${prevOffX}px, ${prevOffY}px)`, transition: 'width 0.15s ease, height 0.15s ease' }} />
                               ) : (
                                 <div style={{ fontSize: Math.round(prevOuter * 0.32), fontWeight: 900, color: '#fff' }}>{(shopName || '?').charAt(0)}</div>
                               )}
@@ -15019,7 +15019,7 @@ export default function App() {
                           )}
                           {previewTab === 'landing' && landingThemeId !== 'donuts' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={(THEME_PRESETS.find(t => t.id === shopTheme) || {}).img || localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img loading="lazy"src={(THEME_PRESETS.find(t => t.id === shopTheme) || {}).img || localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlayOpacity / 100})` }} />
                               {!shopOpen && <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#EF4444', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 13, fontWeight: 800, zIndex: 5 }}>CLOSED</div>}
                               <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: landingLayout === 'footer' ? 'flex-end' : 'center', paddingBottom: landingLayout === 'footer' ? 54 : 0 }}>
@@ -15033,9 +15033,9 @@ export default function App() {
                                   const pX = logoOffsetX * PHONE_RATIO
                                   const pY = logoOffsetY * PHONE_RATIO
                                   return shopLogoStyle === 'bare'
-                                    ? <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: 'calc(100% - 20px)', maxHeight: '50%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
+                                    ? <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pBare, height: pBare, maxWidth: 'calc(100% - 20px)', maxHeight: '50%', objectFit: 'contain', marginBottom: 6, transform: `translate(${pX}px, ${pY}px)` }} />
                                     : <div style={{ width: pOuter, height: pOuter, maxWidth: 'calc(100% - 20px)', maxHeight: '50%', borderRadius: pOuter / 2, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6, border: '2px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                                        <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pInner, height: pInner, objectFit: 'contain', transform: `translate(${pX}px, ${pY}px)` }} />
+                                        <img loading="lazy"src={shopLogo} alt="" onError={imgError('logo')} style={{ width: pInner, height: pInner, objectFit: 'contain', transform: `translate(${pX}px, ${pY}px)` }} />
                                       </div>
                                 })() : shopLogoStyle !== 'off' ? (() => {
                                   const PHONE_RATIO = 220 / 360
@@ -15087,7 +15087,7 @@ export default function App() {
                           )}
                           {previewTab === 'menu' && (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+                              <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} />
                               <div style={{ position: 'relative', zIndex: 2, padding: '24px 8px 8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}><div style={{ width: 18, height: 18, borderRadius: 9, background: accent }} /><div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{shopName}</div></div>
@@ -15103,7 +15103,7 @@ export default function App() {
                                         menu uses its own native size. */}
                                     <div style={{ position: 'relative', width: '100%', height: 70, borderRadius: 6, overflow: 'hidden', marginBottom: menuBanners.length > 1 ? 4 : 6 }}>
                                       {menuBanners.map((url, i) => (
-                                        <img key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
+                                        <img loading="lazy"key={url + i} src={url} alt="" onError={imgError('banner')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === menuBannerIdx ? 1 : 0, transition: 'opacity 0.6s ease' }} />
                                       ))}
                                     </div>
                                     {menuBanners.length > 1 && (
@@ -15175,7 +15175,7 @@ export default function App() {
                               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
                                 {menuBanners.map((url, i) => (
                                   <div key={url + i} style={{ position: 'relative', width: 'calc(33% - 4px)' }}>
-                                    <img src={url} alt="" onError={imgError('banner')} style={{ width: '100%', aspectRatio: '3 / 1', objectFit: 'cover', borderRadius: 6, border: i === menuBannerIdx ? `2px solid ${accent}` : '2px solid transparent' }} />
+                                    <img loading="lazy"src={url} alt="" onError={imgError('banner')} style={{ width: '100%', aspectRatio: '3 / 1', objectFit: 'cover', borderRadius: 6, border: i === menuBannerIdx ? `2px solid ${accent}` : '2px solid transparent' }} />
                                     <button onClick={() => setMenuBanners(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, border: '2px solid #1a1a1a', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                                   </div>
                                 ))}
@@ -15268,7 +15268,7 @@ export default function App() {
       {/* ─── Custom Domain Page ─── */}
       {domainPage && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
 
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', overflowY: 'auto' }}>
@@ -15438,7 +15438,7 @@ export default function App() {
       {/* ═══ TERMS OF LISTING PAGE ═══ */}
       {termsOfListing && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
-          <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
+          <img loading="lazy"src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
           <div style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', padding: '20px 16px 40px' }}>
             {/* Header */}

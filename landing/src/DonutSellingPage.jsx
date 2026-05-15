@@ -269,13 +269,13 @@ export default function DonutSellingPage() {
           opens WhatsApp pre-filled with the customer's message. */}
       {activePage === 'support' && (
         <div className="ds-cs" role="dialog" aria-modal="true">
-          <img className="ds-cs__bg" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_40_27%20PM.png" alt="" aria-hidden />
+          <img loading="lazy" className="ds-cs__bg" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_40_27%20PM.png" alt="" aria-hidden />
           <div className="ds-cs__scrim" aria-hidden />
 
           {/* Header: back arrow + logo + Street Local + status dot */}
           <div className="ds-cs__header">
             <button type="button" className="ds-cs__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
-            <img className="ds-cs__logo" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="Street Local" />
+            <img loading="lazy" className="ds-cs__logo" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="Street Local" />
             <div className="ds-cs__brand">
               <div className="ds-cs__name">Street Local</div>
               <div className="ds-cs__status">
@@ -621,8 +621,8 @@ export default function DonutSellingPage() {
       <section className="ds-cta">
         <div className="ds-cta__blob ds-cta__blob--tl" aria-hidden></div>
         <div className="ds-cta__blob ds-cta__blob--br" aria-hidden></div>
-        <img src={IMAGES.bouncing} alt="" aria-hidden className="ds-cta__donut ds-cta__donut--tr" />
-        <img src={IMAGES.chocolate} alt="" aria-hidden className="ds-cta__donut ds-cta__donut--bl" />
+        <img loading="lazy" src={IMAGES.bouncing} alt="" aria-hidden className="ds-cta__donut ds-cta__donut--tr" />
+        <img loading="lazy" src={IMAGES.chocolate} alt="" aria-hidden className="ds-cta__donut ds-cta__donut--bl" />
         <div className="ds-container ds-cta__inner">
           <h2 className="ds-cta__h">
             Your donut shop.<br />
