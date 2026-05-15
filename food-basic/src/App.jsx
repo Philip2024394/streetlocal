@@ -10752,7 +10752,11 @@ export default function App() {
         const hubBtn = (item) => (
           <button
             key={item.label}
-            onClick={() => { item.onClick && item.onClick(); setSettingsHubOpen(false) }}
+            // Leave the Settings hub OPEN underneath the child page so
+            // the child's back/close button returns to the hub instead
+            // of the home screen. Child pages render at z-index 700,
+            // hub is at 600 — natural stack does the rest.
+            onClick={() => { item.onClick && item.onClick() }}
             style={{
               display: 'flex', alignItems: 'center', gap: 14, width: '100%',
               padding: '14px 16px', borderRadius: 16,
@@ -10774,8 +10778,14 @@ export default function App() {
           </button>
         )
 
+        // zIndex: 100 on the hub container so every child page
+        // (Shop Config 200, Donut Types 200, Menu Cards 200, Design
+        // Studio 200, Custom Domain 300, Terms 300, Hero Editor 500,
+        // Visit Us 500, Marketing 600, Theme Library 600) renders
+        // ON TOP of an open hub. Closing a child reveals the hub
+        // underneath — back returns to Settings, not all the way home.
         return (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
             {/* Same donut bg as the app — visual continuity */}
             <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
