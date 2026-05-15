@@ -736,7 +736,7 @@ const DONUT_LANDING_DEFAULTS = {
   bouncingImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png',
   bottomLeftImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png',
   flavourOrbImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png',
-  bgImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png',
+  bgImg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png',
   pink: '#F472B6',
   pinkBright: '#EC4899',
   heroFontSize: 44,
@@ -1510,7 +1510,14 @@ export default function App() {
   const [donutLanding, setDonutLanding] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('foodlocalchat_donut_landing') || 'null')
-      return { ...DONUT_LANDING_DEFAULTS, ...(saved || {}) }
+      const merged = { ...DONUT_LANDING_DEFAULTS, ...(saved || {}) }
+      // One-shot migration (May 15 2026): when the saved bgImg matches
+      // the previous default donut artwork, upgrade it to the new
+      // default so the splash + app theme show the same background.
+      // Vendors who uploaded a custom bg keep their own URL untouched.
+      const OLD_DEFAULT = 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%209,%202026,%2001_52_32%20PM.png'
+      if (merged.bgImg === OLD_DEFAULT) merged.bgImg = DONUT_LANDING_DEFAULTS.bgImg
+      return merged
     } catch { return DONUT_LANDING_DEFAULTS }
   })
   useEffect(() => {
