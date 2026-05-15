@@ -1752,6 +1752,20 @@ export default function App() {
   const [staffList, setStaffList] = useState([])
   const [staffEditingId, setStaffEditingId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
+  // ── MULTI-LOCATION ────────────────────────────────────────────
+  // One vendor account can own multiple physical shops. Each
+  // location has its own name + address + hours + delivery rates.
+  // The vendor flips between them via a picker; customers land on
+  // a specific location via ?loc=slug or the primary one.
+  const [locationsPageOpen, setLocationsPageOpen] = useState(false)
+  const [locations, setLocations] = useState([])
+  const [activeLocationId, setActiveLocationId] = useState(() => localStorage.getItem('foodlocalchat_active_location') || null)
+  useEffect(() => {
+    if (activeLocationId) localStorage.setItem('foodlocalchat_active_location', activeLocationId)
+    else localStorage.removeItem('foodlocalchat_active_location')
+  }, [activeLocationId])
+  const [locationEditingId, setLocationEditingId] = useState(null)
+  const [locationForm, setLocationForm] = useState({ name: '', slug: '', address: '', phone: '', hours: '' })
   // ── KITCHEN PRINTER (Bluetooth ESC/POS) ───────────────────────
   // device + characteristic kept in refs so they survive re-renders.
   // Pairing state in useState so the UI updates.
@@ -2826,6 +2840,39 @@ export default function App() {
       } catch {}
     })()
   }, [isVendor, vendorId])
+  // Multi-location: fetch locations + resolve active one on mount.
+  // Customer-side: ?loc=<slug> takes priority, else primary location.
+  // Vendor-side: localStorage 'foodlocalchat_active_location' takes
+  // priority so they can switch and stay there.
+  useEffect(() => {
+    if (!supabase || !vendorId || !isUuid(vendorId)) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('vendor_locations')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .eq('active', true)
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: true })
+        if (cancelled || !data) return
+        setLocations(data)
+        // Resolve which location is "active" for this page load.
+        const urlLoc = new URLSearchParams(window.location.search).get('loc')
+        if (urlLoc) {
+          const match = data.find(l => l.slug === urlLoc || l.id === urlLoc)
+          if (match) { setActiveLocationId(match.id); return }
+        }
+        // Vendor's saved choice, if still valid
+        if (activeLocationId && data.find(l => l.id === activeLocationId)) return
+        // Else fall back to primary, then first
+        const primary = data.find(l => l.is_primary) || data[0]
+        if (primary) setActiveLocationId(primary.id)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [vendorId])
   // Multi-staff: fetch the staff list for this shop when the page opens
   // or on mount for active vendors. Lives here (after vendorId useState)
   // for TDZ safety.
@@ -11234,6 +11281,7 @@ export default function App() {
         const account = [
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
           { icon: '👥', label: 'Staff Accounts', desc: 'Invite team — manager / cashier / kitchen', onClick: () => setStaffPageOpen(true) },
+          { icon: '🏪', label: 'Locations', desc: 'Multiple shops under one account', onClick: () => setLocationsPageOpen(true) },
           { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
           { icon: '🖨️', label: 'Kitchen Printer', desc: 'Pair a Bluetooth thermal printer', onClick: () => setPrinterPageOpen(true) },
           { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
@@ -12220,6 +12268,146 @@ export default function App() {
                   )
                 })()}
               </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ LOCATIONS — multi-shop management ═══
+          Vendor adds multiple physical shops under one account.
+          Each location has its own name, slug (for URL), address,
+          phone, hours. Active selection lives in localStorage so
+          the inbox + dashboard show that location's data. */}
+      {locationsPageOpen && (() => {
+        const saveLocation = async () => {
+          const name = (locationForm.name || '').trim()
+          if (!name) { alert('Name is required.'); return }
+          if (!supabase || !isUuid(vendorId)) { alert('Sign in as a real vendor first.'); return }
+          const slug = (locationForm.slug || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || null
+          const payload = {
+            vendor_id: vendorId,
+            name,
+            slug,
+            address: locationForm.address || null,
+            phone: locationForm.phone || null,
+            hours: locationForm.hours || null,
+            is_primary: locations.length === 0 && !locationEditingId, // first one is primary by default
+            active: true,
+          }
+          try {
+            if (locationEditingId) {
+              const { data } = await supabase.from('vendor_locations').update(payload).eq('id', locationEditingId).select().single()
+              if (data) setLocations(prev => prev.map(l => l.id === locationEditingId ? data : l))
+            } else {
+              const { data } = await supabase.from('vendor_locations').insert(payload).select().single()
+              if (data) { setLocations(prev => [...prev, data]); if (!activeLocationId) setActiveLocationId(data.id) }
+            }
+            setLocationEditingId(null)
+            setLocationForm({ name: '', slug: '', address: '', phone: '', hours: '' })
+          } catch (e) {
+            alert(e?.message || 'Save failed. Slug may already be in use.')
+          }
+        }
+        const editLocation = (l) => { setLocationEditingId(l.id); setLocationForm({ name: l.name, slug: l.slug || '', address: l.address || '', phone: l.phone || '', hours: l.hours || '' }) }
+        const removeLocation = async (l) => {
+          if (locations.length === 1) { alert('Cannot delete the last location.'); return }
+          if (!window.confirm(`Remove "${l.name}"? Its orders + menu links stay but go unassigned.`)) return
+          try {
+            await supabase.from('vendor_locations').delete().eq('id', l.id)
+            setLocations(prev => prev.filter(x => x.id !== l.id))
+            if (activeLocationId === l.id) {
+              const next = locations.find(x => x.id !== l.id)
+              setActiveLocationId(next?.id || null)
+            }
+          } catch (e) { alert(e?.message || 'Delete failed.') }
+        }
+        const setPrimary = async (l) => {
+          try {
+            // Clear is_primary on all, set on this one.
+            await supabase.from('vendor_locations').update({ is_primary: false }).eq('vendor_id', vendorId)
+            const { data } = await supabase.from('vendor_locations').update({ is_primary: true }).eq('id', l.id).select().single()
+            setLocations(prev => prev.map(x => ({ ...x, is_primary: x.id === l.id })))
+          } catch {}
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => { setLocationsPageOpen(false); setLocationEditingId(null); setLocationForm({ name: '', slug: '', address: '', phone: '', hours: '' }) }} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🏪 Locations</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{locations.length} {locations.length === 1 ? 'shop' : 'shops'} · one account</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {/* Active location switcher */}
+              {locations.length > 1 && (
+                <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Active location</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>Your orders, dashboard, and menu show this location's data.</div>
+                  <select value={activeLocationId || ''} onChange={(e) => setActiveLocationId(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+                    {locations.map(l => <option key={l.id} value={l.id} style={{ background: '#1a1a1a' }}>{l.name}{l.is_primary ? ' · primary' : ''}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Add / edit form */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 10 }}>{locationEditingId ? 'Edit location' : 'Add new location'}</div>
+                <input value={locationForm.name} onChange={(e) => setLocationForm(f => ({ ...f, name: e.target.value }))} placeholder="Name (e.g. Jakarta — Main)" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={locationForm.slug} onChange={(e) => setLocationForm(f => ({ ...f, slug: e.target.value }))} placeholder="URL slug (jakarta) · optional" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={locationForm.address} onChange={(e) => setLocationForm(f => ({ ...f, address: e.target.value }))} placeholder="Address" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={locationForm.phone} onChange={(e) => setLocationForm(f => ({ ...f, phone: e.target.value }))} placeholder="Phone" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }} />
+                <input value={locationForm.hours} onChange={(e) => setLocationForm(f => ({ ...f, hours: e.target.value }))} placeholder="Hours (e.g. 07:00 – 21:00)" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={saveLocation} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', minHeight: 44 }}>{locationEditingId ? 'Save' : '+ Add location'}</button>
+                  {locationEditingId && (
+                    <button onClick={() => { setLocationEditingId(null); setLocationForm({ name: '', slug: '', address: '', phone: '', hours: '' }) }} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Roster */}
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.18em', margin: '4px 4px 10px' }}>Your locations</div>
+              {locations.length === 0 && (
+                <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No locations yet. Add your first shop above — it'll become the primary.</div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {locations.map(l => (
+                  <div key={l.id} style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.5)', border: activeLocationId === l.id ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 18, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏪</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{l.name}</span>
+                          {l.is_primary && <span style={{ fontSize: 11, fontWeight: 800, color: '#FACC15', background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.4)', padding: '1px 5px', borderRadius: 4 }}>PRIMARY</span>}
+                          {activeLocationId === l.id && <span style={{ fontSize: 11, fontWeight: 800, color: '#86EFAC' }}>· ACTIVE</span>}
+                        </div>
+                        {l.slug && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', marginTop: 2 }}>?loc={l.slug}</div>}
+                      </div>
+                    </div>
+                    {l.address && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>📍 {l.address}</div>}
+                    {(l.phone || l.hours) && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{l.phone}{l.phone && l.hours ? ' · ' : ''}{l.hours}</div>}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                      {!l.is_primary && <button onClick={() => setPrimary(l)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(250,204,21,0.4)', background: 'rgba(250,204,21,0.1)', color: '#FCD34D', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Set primary</button>}
+                      {activeLocationId !== l.id && <button onClick={() => setActiveLocationId(l.id)} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${accent}55`, background: `${accent}1a`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Switch to</button>}
+                      <button onClick={() => editLocation(l)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => removeLocation(l)} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.2)', color: '#FCA5A5', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Customer URL helper */}
+              {locations.length > 1 && (
+                <div style={{ marginTop: 16, padding: 12, borderRadius: 12, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)', fontSize: 13, color: '#fff', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 800, marginBottom: 4 }}>Share location-specific links</div>
+                  <div style={{ color: 'rgba(255,255,255,0.75)' }}>Append <code style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace' }}>?loc=jakarta</code> to your shop URL — customers land directly on that shop's menu.</div>
+                </div>
+              )}
             </div>
           </div>
         )
