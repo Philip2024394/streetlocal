@@ -1964,6 +1964,11 @@ export default function App() {
     )
   }
   const [payMethod, setPayMethod] = useState('cod')
+  // Scheduled pre-order: customer can pick a future date+time for
+  // pickup/delivery. Saved as a timestamp on the order_payload so
+  // the vendor inbox can sort + filter. Null = order ASAP (default).
+  const [scheduledFor, setScheduledFor] = useState(null)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
   const [deliveryZones, setDeliveryZones] = useState(DEFAULT_DELIVERY_ZONES)
   const [deliveryZone, setDeliveryZone] = useState(DEFAULT_DELIVERY_ZONES[0])
   const [gpsLoading, setGpsLoading] = useState(false)
@@ -3960,6 +3965,10 @@ export default function App() {
       total: grandTotal,
       prepMins: maxPrep,
       shop: { name: shopName, address: shopAddress },
+      // Customer-chosen future date+time, if any. The order is still
+      // "active" at submit; the vendor sees it tagged with a 📅
+      // badge and can schedule prep against the requested time.
+      scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
     }
 
     // Persist this device's order numbers so the customer can earn the
@@ -7507,6 +7516,64 @@ export default function App() {
                     </div>
                   )}
 
+                  {/* SCHEDULE PRE-ORDER picker — collapsed by default.
+                      When expanded, lets the customer pick a future
+                      date + time (today–14 days, 15-min slots). Saved
+                      to orderPayload.scheduledFor as an ISO timestamp
+                      and surfaced on the vendor inbox card. */}
+                  {cart.length > 0 && (() => {
+                    const minDate = new Date(); minDate.setHours(minDate.getHours() + 1)
+                    const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 14)
+                    const toLocalInput = (d) => {
+                      const tz = d.getTimezoneOffset() * 60000
+                      return new Date(d.getTime() - tz).toISOString().slice(0, 16)
+                    }
+                    return (
+                      <div style={{ marginBottom: 14 }}>
+                        <button type="button" onClick={() => setScheduleOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, border: `1px solid ${scheduledFor ? '#22c55e' : 'rgba(255,255,255,0.1)'}`, background: scheduledFor ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 48 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 18 }}>📅</span>
+                            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+                              <span>{scheduledFor ? 'Scheduled for' : 'Schedule for later'}</span>
+                              {scheduledFor && (
+                                <span style={{ fontSize: 12, fontWeight: 600, color: '#86EFAC' }}>{new Date(scheduledFor).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                              )}
+                            </span>
+                          </span>
+                          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>{scheduleOpen ? '▲' : '▼'}</span>
+                        </button>
+                        {scheduleOpen && (
+                          <div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 10, lineHeight: 1.5 }}>Pick when you want to pick up or receive your donuts. Up to 14 days ahead.</div>
+                            {/* Quick presets — today / tomorrow / Saturday-morning bundle scenario */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                              {[
+                                { label: 'Tomorrow 8am', fn: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); return d.getTime() } },
+                                { label: 'Tomorrow 6pm', fn: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(18, 0, 0, 0); return d.getTime() } },
+                                { label: 'Saturday 9am', fn: () => { const d = new Date(); const days = (6 - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + days); d.setHours(9, 0, 0, 0); return d.getTime() } },
+                                { label: 'Sunday 10am', fn: () => { const d = new Date(); const days = (0 - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + days); d.setHours(10, 0, 0, 0); return d.getTime() } },
+                              ].map(p => (
+                                <button key={p.label} type="button" onClick={() => setScheduledFor(p.fn())} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.label}</button>
+                              ))}
+                            </div>
+                            <label style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)', display: 'block', marginBottom: 4 }}>Or pick exact time</label>
+                            <input
+                              type="datetime-local"
+                              min={toLocalInput(minDate)}
+                              max={toLocalInput(maxDate)}
+                              value={scheduledFor ? toLocalInput(new Date(scheduledFor)) : ''}
+                              onChange={(e) => setScheduledFor(e.target.value ? new Date(e.target.value).getTime() : null)}
+                              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', colorScheme: 'dark' }}
+                            />
+                            {scheduledFor && (
+                              <button type="button" onClick={() => setScheduledFor(null)} style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Clear — order ASAP instead</button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
                   {/* Payment method picker — the customer picks ONE before
                       submitting. The list is MODE-AWARE:
                       - WhatsApp mode: shows MANUAL methods only (COD / Bank /
@@ -7979,8 +8046,10 @@ export default function App() {
               caramel: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-caramel.png',
             }
             const MOCK_DONUT_CONVS = shopTheme === 'donut' && vendorConversations.length === 0 ? [
-              { id: 'mock-1', customer_name: 'Maya P.',    customer_phone: '+62 812 3456 7890', last_message_at: new Date(now - 5*60*1000).toISOString(),       unread_vendor_count: 2, isMock: true, preview: 'Hi! Could I get 6 Glazed and 2 Boston Cream?',
+              { id: 'mock-1', customer_name: 'Maya P.',    customer_phone: '+62 812 3456 7890', last_message_at: new Date(now - 5*60*1000).toISOString(),       unread_vendor_count: 2, isMock: true, preview: 'Hi! Could I get 6 Glazed and 2 Boston Cream — for Saturday 9am pickup?',
                 orderPayload: { orderNumber: 'DD-487193', placedAt: new Date(now - 5*60*1000).toISOString(), total: 84000, address: 'Jl. Malioboro No. 32, Yogyakarta',
+                  // Scheduled pre-order example for the demo inbox.
+                  scheduledFor: (() => { const d = new Date(); const days = (6 - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + days); d.setHours(9, 0, 0, 0); return d.toISOString() })(),
                   items: [{ name: 'Classic Glazed', qty: 6, lineTotal: 60000, image: D.glazed }, { name: 'Boston Cream', qty: 2, lineTotal: 24000, image: D.boston }] } },
               { id: 'mock-2', customer_name: 'Jordan L.',  customer_phone: '+62 813 4567 8901', last_message_at: new Date(now - 32*60*1000).toISOString(),      unread_vendor_count: 0, isMock: true, preview: 'Thanks, picked up — these are amazing!',
                 orderPayload: { orderNumber: 'DD-958432', placedAt: new Date(now - 32*60*1000).toISOString(), total: 60000, address: 'Pickup — Sweet Demo Donuts',
@@ -8126,6 +8195,19 @@ export default function App() {
                           </div>
                           {/* Items summary */}
                           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.35 }}>{itemsLine}</div>
+                          {/* Scheduled pickup/delivery badge — shown when
+                              the customer chose a future date+time. Gold
+                              chip so the vendor scans the inbox and instantly
+                              spots pre-orders that need prep timing. */}
+                          {op.scheduledFor && (() => {
+                            const sched = new Date(op.scheduledFor)
+                            const isUpcoming = sched.getTime() > Date.now()
+                            return (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, padding: '4px 10px', borderRadius: 8, background: isUpcoming ? 'rgba(250,204,21,0.18)' : 'rgba(255,255,255,0.06)', border: `1px solid ${isUpcoming ? 'rgba(250,204,21,0.45)' : 'rgba(255,255,255,0.1)'}`, color: isUpcoming ? '#FACC15' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 800 }}>
+                                📅 {sched.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            )
+                          })()}
                           {/* Footer row: order # · time · qty */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.55)', flexWrap: 'wrap' }}>
                             {op.orderNumber && <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>#{op.orderNumber}</span>}
