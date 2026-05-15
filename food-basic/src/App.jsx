@@ -1645,42 +1645,8 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_dispatch', marketingAutoPostDispatch ? 'true' : 'false') }, [marketingAutoPostDispatch])
   const [marketingAutoPost14Days, setMarketingAutoPost14Days] = useState(() => localStorage.getItem('foodlocalchat_marketing_autopost_14days') === 'true')
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_14days', marketingAutoPost14Days ? 'true' : 'false') }, [marketingAutoPost14Days])
-  // Sync marketing banners from Supabase on mount when the vendor has
-  // a real UUID id. Demo / local vendors stay localStorage-only. The
-  // remote shape uses snake_case columns; map them to the camelCase
-  // banner records the rest of the page reads.
-  useEffect(() => {
-    if (!isVendor || !supabase || !vendorId) return
-    if (!isUuid(vendorId)) return
-    ;(async () => {
-      try {
-        const { data } = await supabase
-          .from('marketing_banners')
-          .select('*')
-          .eq('vendor_id', vendorId)
-          .order('created_at', { ascending: false })
-        if (!data) return
-        const remoteBanners = data.map(r => ({
-          id: r.id,
-          format: r.format,
-          bgImage: r.bg_image,
-          tint: r.tint,
-          textColor: r.text_color,
-          headline: r.headline,
-          discount: r.discount,
-          subtitle: r.subtitle || '',
-          showLogo: !!r.show_logo,
-          showShopName: !!r.show_shop_name,
-          bakedImageUrl: r.baked_image_url,
-          bakedAt: r.baked_at ? new Date(r.baked_at).getTime() : null,
-          createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
-        }))
-        // Replace only if remote has any rows — otherwise the local
-        // unsynced drafts stay until the vendor saves them.
-        if (remoteBanners.length > 0) setMarketingBanners(remoteBanners)
-      } catch {}
-    })()
-  }, [isVendor, vendorId])
+  // (Marketing-banners Supabase fetch lives further down, after the
+  // vendorId state declaration — putting it here caused a TDZ.)
   // Vendor's own uploaded backgrounds — persisted so they survive
   // reloads and can be re-selected later. Capped at 8 to avoid
   // unbounded growth.
@@ -2663,6 +2629,40 @@ export default function App() {
     })()
     return () => { cancelled = true }
   }, [vendorChatListOpen, isVendor, vendorId])
+  // Marketing banners — sync from Supabase on mount for real-UUID
+  // vendors. Demo / local vendors stay localStorage-only. Lives HERE
+  // (after vendorId useState) to avoid the TDZ that bit when this
+  // effect lived in the marketing state cluster up top.
+  useEffect(() => {
+    if (!isVendor || !supabase || !vendorId) return
+    if (!isUuid(vendorId)) return
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('marketing_banners')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('created_at', { ascending: false })
+        if (!data) return
+        const remoteBanners = data.map(r => ({
+          id: r.id,
+          format: r.format,
+          bgImage: r.bg_image,
+          tint: r.tint,
+          textColor: r.text_color,
+          headline: r.headline,
+          discount: r.discount,
+          subtitle: r.subtitle || '',
+          showLogo: !!r.show_logo,
+          showShopName: !!r.show_shop_name,
+          bakedImageUrl: r.baked_image_url,
+          bakedAt: r.baked_at ? new Date(r.baked_at).getTime() : null,
+          createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
+        }))
+        if (remoteBanners.length > 0) setMarketingBanners(remoteBanners)
+      } catch {}
+    })()
+  }, [isVendor, vendorId])
   useEffect(() => {
     if (!supabase || !vendorId || isVendor) return
     // Demo vendor IDs (e.g. local-demo-*) aren't UUIDs — Supabase rejects
