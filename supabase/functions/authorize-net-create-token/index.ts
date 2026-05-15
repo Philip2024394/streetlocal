@@ -10,6 +10,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ANET_API, ANET_HOSTED, anetRequest } from '../_shared/authorizenet.ts'
+import { assertAmountMatches, jsonResponse, newErrorId, logWithId, customerCors } from '../_shared/paymentSecurity.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,28 @@ serve(async (req) => {
     const body = await req.json()
     const { vendorId, orderId, amount, items, customerName, customerEmail, customerPhone, deliveryFee, returnUrl, conversationId } = body
     if (!vendorId || !orderId || !amount) return json({ error: 'vendorId, orderId, amount required' }, 400)
+
+    // SECURITY: server-side amount recalculation. Prevents client-side
+    // tampering — a DevTools edit of the total can't get past this.
+    const amountCheck = assertAmountMatches(
+      Number(amount),
+      {
+        items: items?.map((it: any) => ({
+          id: it.id, price: it.price, promoPrice: it.promoPrice,
+          qty: it.qty, lineTotal: it.lineTotal, name: it.name,
+        })),
+        delivery: { fee: Number(deliveryFee || 0) },
+        promo: body.promo ? { discount: Number(body.promo.discount || 0) } : undefined,
+        tax: body.tax ? { rate: Number(body.tax.rate || 0), inclusive: !!body.tax.inclusive } : undefined,
+      },
+      2, // 2% tolerance — covers tax rounding + currency conversion edge cases
+    )
+    if (!amountCheck.ok) {
+      const errId = newErrorId()
+      logWithId(errId, 'amount-tampering', { vendorId, orderId, ...amountCheck })
+      return jsonResponse({ error: 'Amount validation failed', errorId: errId }, 400, customerCors)
+    }
+    const verifiedAmount = amountCheck.total
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
@@ -50,9 +73,9 @@ serve(async (req) => {
       customer_phone: customerPhone ?? null,
       customer_name: customerName ?? null,
       items: items ?? [],
-      subtotal: Number(amount) - Number(deliveryFee || 0),
+      subtotal: Number(verifiedAmount) - Number(deliveryFee || 0),
       delivery_fee: Number(deliveryFee || 0),
-      total: Number(amount),
+      total: Number(verifiedAmount),
       currency: 'USD',
       gateway_id: 'authorize-net',
       gateway_order_id: orderId,
@@ -68,7 +91,7 @@ serve(async (req) => {
         merchantAuthentication: { name: apiLoginId, transactionKey },
         transactionRequest: {
           transactionType: 'authCaptureTransaction',
-          amount: Number(amount).toFixed(2),
+          amount: Number(verifiedAmount).toFixed(2),
           order: {
             invoiceNumber: orderId.slice(0, 20),
             description: (items?.length ? (items as any[]).slice(0, 3).map((it) => `${it.qty}x ${it.name}`).join(', ') : `Order ${orderId}`).slice(0, 255),
@@ -85,7 +108,7 @@ serve(async (req) => {
         hostedPaymentSettings: {
           setting: [
             { settingName: 'hostedPaymentReturnOptions',  settingValue: JSON.stringify({ showReceipt: false, url: successUrl, urlText: 'Continue', cancelUrl, cancelUrlText: 'Cancel' }) },
-            { settingName: 'hostedPaymentButtonOptions',  settingValue: JSON.stringify({ text: `Pay $${Number(amount).toFixed(2)}` }) },
+            { settingName: 'hostedPaymentButtonOptions',  settingValue: JSON.stringify({ text: `Pay $${Number(verifiedAmount).toFixed(2)}` }) },
             { settingName: 'hostedPaymentBillingAddressOptions', settingValue: JSON.stringify({ show: true, required: false }) },
             { settingName: 'hostedPaymentShippingAddressOptions', settingValue: JSON.stringify({ show: false, required: false }) },
             { settingName: 'hostedPaymentPaymentOptions',  settingValue: JSON.stringify({ cardCodeRequired: true }) },

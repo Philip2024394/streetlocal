@@ -11,12 +11,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 // Midtrans signs every notification with:
 //   signature_key = SHA512(order_id + status_code + gross_amount + server_key)
@@ -95,14 +92,22 @@ serve(async (req) => {
 
     const paymentStatus = mapStatus(transaction_status, fraud_status)
     const patch: Record<string, unknown> = {
-      payment_status: paymentStatus,
       payment_method: payment_type,
       gateway_transaction_id: transaction_id,
     }
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
     if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    const updateResult = await guardedStatusUpdate(supabase, {
+      table: 'orders',
+      matchColumn: 'id',
+      matchValue: order.id,
+      nextStatus: paymentStatus,
+      patch,
+    })
+    if (!updateResult.updated && updateResult.reason !== 'not-found') {
+      console.log(`midtrans webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+    }
 
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {

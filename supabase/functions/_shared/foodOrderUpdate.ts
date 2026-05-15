@@ -3,6 +3,10 @@
 // Existing webhooks already update the food-basic `orders` table; this
 // helper is ADDITIVE — it only writes to food_orders, never touches orders.
 //
+// Now idempotent: uses guardedStatusUpdate so duplicate webhook deliveries
+// (standard gateway behaviour) don't double-decrement stock or downgrade
+// a terminal status. Closes audit finding #1 (duplicate webhook processing).
+//
 // Usage at the bottom of each webhook handler, right after the orders update:
 //
 //   import { maybeUpdateFoodOrder } from '../_shared/foodOrderUpdate.ts'
@@ -11,30 +15,33 @@
 // `paymentStatus` follows the existing webhook vocabulary: 'paid' | 'pending'
 // | 'failed' | 'cancelled' | 'refunded'.
 
+import { guardedStatusUpdate } from './paymentSecurity.ts'
+
 export async function maybeUpdateFoodOrder(
   supabase: any,
   gatewayOrderId: string,
   paymentStatus: string,
   transactionId: string | undefined,
   gatewayId: string,
-): Promise<void> {
-  if (!gatewayOrderId || !String(gatewayOrderId).startsWith('FOO-')) return
+): Promise<{ updated: boolean, reason?: string }> {
+  if (!gatewayOrderId || !String(gatewayOrderId).startsWith('FOO-')) {
+    return { updated: false, reason: 'not-food-order' }
+  }
   const { data: foodOrder } = await supabase
     .from('food_orders')
-    .select('id, restaurant_id, customer_phone, total')
+    .select('id, restaurant_id, customer_phone, total, status')
     .eq('gateway_order_id', gatewayOrderId)
     .single()
-  if (!foodOrder) return
+  if (!foodOrder) return { updated: false, reason: 'order-not-found' }
 
   let nextStatus: string | null = null
   if (paymentStatus === 'paid') nextStatus = 'confirmed'
   else if (paymentStatus === 'pending') nextStatus = 'payment_submitted'
   else if (paymentStatus === 'cancelled' || paymentStatus === 'failed') nextStatus = 'cancelled'
-  // 'refunded' is handled by the refunds console flow, not via webhook here.
-  if (!nextStatus) return
+  else if (paymentStatus === 'refunded') nextStatus = 'refunded'
+  if (!nextStatus) return { updated: false, reason: 'unknown-payment-status' }
 
   const patch: Record<string, unknown> = {
-    status: nextStatus,
     payment_intent_id: transactionId || null,
     gateway_used: gatewayId,
     updated_at: new Date().toISOString(),
@@ -47,10 +54,28 @@ export async function maybeUpdateFoodOrder(
   if (nextStatus === 'cancelled') {
     patch.cancel_reason = `${gatewayId} ${paymentStatus}`
   }
-  await supabase.from('food_orders').update(patch).eq('id', foodOrder.id)
+
+  // Idempotent update — won't flip a terminal status backwards, won't
+  // double-process duplicate webhook deliveries, race-safe via status
+  // guard in the UPDATE WHERE clause.
+  const result = await guardedStatusUpdate(supabase, {
+    table: 'food_orders',
+    matchColumn: 'id',
+    matchValue: foodOrder.id,
+    nextStatus,
+    statusColumn: 'status',
+    patch,
+  })
+
+  if (!result.updated) {
+    // Already in this status, terminal lock, or race — none of these
+    // are errors, but we shouldn't double-fire notifications either.
+    return { updated: false, reason: result.reason }
+  }
 
   if (nextStatus === 'confirmed') {
-    // Best-effort vendor push + customer WhatsApp.
+    // Best-effort vendor push + customer WhatsApp. Only fires on the
+    // FIRST 'confirmed' transition (the guard above ensures this).
     try {
       await supabase.functions.invoke('send-vendor-push', {
         body: { restaurant_id: foodOrder.restaurant_id, title: 'New order confirmed', body: `Order #${foodOrder.id} paid (${gatewayId})`, order_id: foodOrder.id },
@@ -64,4 +89,5 @@ export async function maybeUpdateFoodOrder(
       }
     } catch {}
   }
+  return { updated: true }
 }

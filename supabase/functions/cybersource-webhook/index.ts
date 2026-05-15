@@ -14,12 +14,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { verifySecureAcceptanceFields } from '../_shared/cybersource.ts'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -77,11 +74,20 @@ serve(async (req) => {
 
     if (!paymentStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
 
-    const patch: Record<string, unknown> = { payment_status: paymentStatus }
+    const patch: Record<string, unknown> = {}
     if (fields.transaction_id) patch.gateway_transaction_id = fields.transaction_id
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    const updateResult = await guardedStatusUpdate(supabase, {
+      table: 'orders',
+      matchColumn: 'id',
+      matchValue: order.id,
+      nextStatus: paymentStatus,
+      patch,
+    })
+    if (!updateResult.updated && updateResult.reason !== 'not-found') {
+      console.log(`cybersource webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+    }
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {
     console.error('cybersource webhook error', e)

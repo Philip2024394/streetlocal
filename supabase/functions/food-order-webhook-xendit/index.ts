@@ -10,12 +10,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, x-callback-token',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -61,7 +58,6 @@ serve(async (req) => {
     if (!nextStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
 
     const patch: Record<string, unknown> = {
-      status: nextStatus,
       payment_intent_id: event?.id,
       gateway_used: 'xendit',
       payment_method: event?.payment_method || event?.payment_channel || 'unknown',
@@ -74,9 +70,19 @@ serve(async (req) => {
     if (nextStatus === 'cancelled') {
       patch.cancel_reason = `xendit ${status.toLowerCase()}`
     }
-    await supabase.from('food_orders').update(patch).eq('id', order.id)
+    const updateResult = await guardedStatusUpdate(supabase, {
+      table: 'food_orders',
+      matchColumn: 'id',
+      matchValue: order.id,
+      nextStatus,
+      statusColumn: 'status',
+      patch,
+    })
+    if (!updateResult.updated && updateResult.reason !== 'not-found') {
+      console.log(`food-order-webhook-xendit: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+    }
 
-    if (paid) {
+    if (updateResult.updated && paid) {
       const { data: full } = await supabase.from('food_orders').select('customer_phone, total').eq('id', order.id).single()
       try {
         await supabase.functions.invoke('send-vendor-push', {

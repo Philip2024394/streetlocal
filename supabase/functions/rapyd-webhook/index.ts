@@ -14,12 +14,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { verifyRapydWebhook } from '../_shared/rapyd.ts'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, access_key, signature, salt, timestamp',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -106,7 +103,7 @@ serve(async (req) => {
 
     if (!paymentStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
 
-    const patch: Record<string, unknown> = { payment_status: paymentStatus }
+    const patch: Record<string, unknown> = {}
     if (transactionId) patch.gateway_transaction_id = transactionId
     if (paymentMethod) patch.payment_method = paymentMethod
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
@@ -116,7 +113,16 @@ serve(async (req) => {
       const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
       await maybeUpdateFoodOrder(supabase, merchantRef, paymentStatus, (patch as any).gateway_transaction_id, 'rapyd')
     } else {
-      await supabase.from('orders').update(patch).eq('id', order.id)
+      const updateResult = await guardedStatusUpdate(supabase, {
+        table: 'orders',
+        matchColumn: 'id',
+        matchValue: order.id,
+        nextStatus: paymentStatus,
+        patch,
+      })
+      if (!updateResult.updated && updateResult.reason !== 'not-found') {
+        console.log(`rapyd webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+      }
     }
 
     return new Response('OK', { status: 200, headers: corsHeaders })

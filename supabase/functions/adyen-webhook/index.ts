@@ -18,12 +18,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { adyenVerifyNotification } from '../_shared/adyen.ts'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, authorization',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -92,7 +89,7 @@ serve(async (req) => {
 
       if (!paymentStatus) continue
 
-      const patch: Record<string, unknown> = { payment_status: paymentStatus }
+      const patch: Record<string, unknown> = {}
       if (i.pspReference) patch.gateway_transaction_id = i.pspReference
       if (i.paymentMethod) patch.payment_method = i.paymentMethod
       if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
@@ -102,7 +99,16 @@ serve(async (req) => {
         const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
         await maybeUpdateFoodOrder(supabase, merchantReference, paymentStatus, i.pspReference, 'adyen')
       } else {
-        await supabase.from('orders').update(patch).eq('id', order.id)
+        const updateResult = await guardedStatusUpdate(supabase, {
+          table: 'orders',
+          matchColumn: 'id',
+          matchValue: order.id,
+          nextStatus: paymentStatus,
+          patch,
+        })
+        if (!updateResult.updated && updateResult.reason !== 'not-found') {
+          console.log(`adyen webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+        }
       }
     }
 

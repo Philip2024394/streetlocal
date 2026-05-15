@@ -19,6 +19,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { assertAmountMatches, assertCurrencyMatches, webhookUrlFor, newErrorId, logWithId } from '../_shared/paymentSecurity.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +58,41 @@ serve(async (req) => {
     if (!conn) conn = conns[0]
     if (!conn.server_key) return json({ error: `gateway "${conn.gateway_id}" missing server_key` }, 400)
 
-    const amount = Math.round(Number(order.total) || 0)
+    // SECURITY: assert the vendor's gateway currency matches the order
+    // currency. Without this, an IDR order would silently convert to
+    // USD/EUR at a hardcoded rate (see chargePayPal `amount/15500`),
+    // potentially shorting the vendor by 5-20% on every order.
+    const orderCurrency = (order as any).currency || 'IDR'
+    const gwCurrency = conn.additional_config?.currency
+    const currencyCheck = assertCurrencyMatches(orderCurrency, gwCurrency)
+    if (!currencyCheck.ok && gwCurrency) {
+      return json({
+        error: `Currency mismatch: ${currencyCheck.error}`,
+        gateway: conn.gateway_id,
+        orderCurrency,
+        gatewayCurrency: gwCurrency,
+      }, 400)
+    }
+
+    // SECURITY: defence in depth. Even though `order.total` was read
+    // from the DB (not the request body), we re-compute from `order.items`
+    // to catch any case where the upstream order-creation flow trusted
+    // a client-side total. If items-derived total differs from order.total
+    // by >2% (covers tax/rounding/currency-conversion edge cases),
+    // refuse to charge — this gateway should never bill a fabricated price.
+    const declaredAmount = Math.round(Number(order.total) || 0)
+    const amountCheck = assertAmountMatches(declaredAmount, {
+      items: (order.items || []).map((it: any) => ({
+        id: it.id, price: it.price, promoPrice: it.promoPrice,
+        qty: it.qty, lineTotal: it.lineTotal, name: it.name,
+      })),
+    }, 2)
+    if (!amountCheck.ok) {
+      const errId = newErrorId()
+      logWithId(errId, 'amount-tampering', { restaurantId, foodOrderId, ...amountCheck })
+      return json({ error: 'Order amount validation failed. Contact support.', errorId: errId }, 400)
+    }
+    const amount = amountCheck.total
     const orderId = order.gateway_order_id || `FOO-${restaurantId}-${order.id}-${Date.now()}`
     const finishUrl = (returnUrl || 'https://imoutnow.vercel.app/') +
       ((returnUrl || '').includes('?') ? '&' : '?') +
@@ -252,7 +287,7 @@ async function chargeHitPay(conn: any, order: any, orderId: string, amount: numb
   const params = new URLSearchParams()
   params.set('amount', value); params.set('currency', currency)
   params.set('reference_number', orderId); params.set('redirect_url', finishUrl)
-  params.set('webhook', `https://fjvafjkzvygkhiwjuvla.supabase.co/functions/v1/hitpay-webhook`)
+  params.set('webhook', webhookUrlFor('hitpay-webhook'))
   if (order.customer_name) params.set('name', order.customer_name)
   if (order.customer_phone) params.set('phone', order.customer_phone)
   const r = await fetch(`${apiBase}/payment-requests`, {

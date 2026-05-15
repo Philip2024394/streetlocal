@@ -17,12 +17,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { verifyAnetWebhook } from '../_shared/authorizenet.ts'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, x-anet-signature',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -118,7 +115,6 @@ serve(async (req) => {
     if (!paymentStatus) return new Response('OK', { status: 200, headers: corsHeaders })
 
     const patch: Record<string, unknown> = {
-      payment_status: paymentStatus,
       payment_method: 'card',
     }
     if (trxnId) patch.gateway_transaction_id = trxnId
@@ -129,7 +125,16 @@ serve(async (req) => {
       const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
       await maybeUpdateFoodOrder(supabase, foodOrderRef, paymentStatus, trxnId, 'authorize-net')
     } else {
-      await supabase.from('orders').update(patch).eq('id', order.id)
+      const updateResult = await guardedStatusUpdate(supabase, {
+        table: 'orders',
+        matchColumn: 'id',
+        matchValue: order.id,
+        nextStatus: paymentStatus,
+        patch,
+      })
+      if (!updateResult.updated && updateResult.reason !== 'not-found') {
+        console.log(`anet webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+      }
     }
 
     return new Response('OK', { status: 200, headers: corsHeaders })

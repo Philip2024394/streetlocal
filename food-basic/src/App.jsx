@@ -2703,7 +2703,7 @@ export default function App() {
   // Persist gateway connections to Supabase too (so Edge Functions can use the keys server-side).
   // localStorage stays as a UI cache only.
   const saveGatewayConnection = async (gatewayId, config) => {
-    if (!supabase || !vendorId) return
+    if (!supabase || !vendorId) return { ok: false, error: 'No session — log in first' }
     try {
       const map = GATEWAY_FIELD_MAP[gatewayId] || {}
       const knownCols = new Set(['server_key', 'client_key', 'webhook_secret'])
@@ -2723,8 +2723,35 @@ export default function App() {
         if (knownCols.has(mapped)) row[mapped] = v
         else row.additional_config[k] = v
       })
+      // VALIDATE the credentials BEFORE saving. Closes audit findings
+      // #11 (invalid keys silently saved), #12 (sandbox/live mismatch),
+      // #13 (no format check). The Edge Function makes a live call to
+      // the gateway — if it fails we surface a clear error to the vendor
+      // instead of letting them save bad keys + discover the failure
+      // mid-checkout.
+      if (row.server_key) {
+        try {
+          const { data: validation, error: vErr } = await supabase.functions.invoke('validate-payment-credentials', {
+            body: {
+              gateway_id: gatewayId,
+              mode: row.mode,
+              server_key: row.server_key,
+              client_key: row.client_key,
+              additional_config: row.additional_config,
+            },
+          })
+          if (vErr) return { ok: false, error: `Validation service unreachable: ${vErr.message}` }
+          if (validation?.ok === false) return { ok: false, error: validation.error || 'Credentials rejected by gateway', code: validation.code }
+        } catch (e) {
+          return { ok: false, error: 'Credential validation failed: ' + (e?.message || 'unknown') }
+        }
+      }
       await supabase.from('vendor_payment_connections').upsert(row, { onConflict: 'vendor_id,gateway_id' })
-    } catch (e) { console.warn('gateway save failed', e) }
+      return { ok: true }
+    } catch (e) {
+      console.warn('gateway save failed', e)
+      return { ok: false, error: e?.message || 'Save failed' }
+    }
   }
   const removeGatewayConnection = async (gatewayId) => {
     if (!supabase || !vendorId) return

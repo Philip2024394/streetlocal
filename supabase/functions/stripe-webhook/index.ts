@@ -19,12 +19,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, stripe-signature',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 // Stripe signs each webhook with a timestamp + HMAC-SHA256.
 // Header format: `t=<unix_ts>,v1=<hex_sig>` (may include older v0 too).
@@ -148,13 +145,22 @@ serve(async (req) => {
 
     if (!paymentStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
 
-    const patch: Record<string, unknown> = { payment_status: paymentStatus }
+    const patch: Record<string, unknown> = {}
     if (transactionId) patch.gateway_transaction_id = transactionId
     if (paymentMethod) patch.payment_method = paymentMethod
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
     if (paymentStatus === 'refunded') patch.refunded_at = new Date().toISOString()
 
-    await supabase.from('orders').update(patch).eq('id', order.id)
+    const updateResult = await guardedStatusUpdate(supabase, {
+      table: 'orders',
+      matchColumn: 'id',
+      matchValue: order.id,
+      nextStatus: paymentStatus,
+      patch,
+    })
+    if (!updateResult.updated && updateResult.reason !== 'not-found') {
+      console.log(`stripe webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+    }
 
     return new Response('OK', { status: 200, headers: corsHeaders })
   } catch (e) {

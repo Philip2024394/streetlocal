@@ -12,12 +12,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { verifyTwoCheckoutIPN } from '../_shared/twocheckout.ts'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -84,7 +81,7 @@ serve(async (req) => {
 
     if (!paymentStatus) return new Response('event ignored', { status: 200, headers: corsHeaders })
 
-    const patch: Record<string, unknown> = { payment_status: paymentStatus }
+    const patch: Record<string, unknown> = {}
     const refNo = fields.REFNO || fields.IPN_PID_1 || fields.SALENO
     if (refNo) patch.gateway_transaction_id = refNo
     if (paymentStatus === 'paid') patch.paid_at = new Date().toISOString()
@@ -94,7 +91,16 @@ serve(async (req) => {
       const { maybeUpdateFoodOrder } = await import('../_shared/foodOrderUpdate.ts')
       await maybeUpdateFoodOrder(supabase, orderId, paymentStatus, (patch as any).gateway_transaction_id, '2checkout')
     } else {
-      await supabase.from('orders').update(patch).eq('id', order.id)
+      const updateResult = await guardedStatusUpdate(supabase, {
+        table: 'orders',
+        matchColumn: 'id',
+        matchValue: order.id,
+        nextStatus: paymentStatus,
+        patch,
+      })
+      if (!updateResult.updated && updateResult.reason !== 'not-found') {
+        console.log(`2checkout webhook: idempotent skip (${updateResult.reason}) for order ${order.id}, current: ${updateResult.currentStatus}`)
+      }
     }
 
     // 2Checkout expects a specific echo response — they want us to echo

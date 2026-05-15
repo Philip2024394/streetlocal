@@ -15,12 +15,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { webhookCors, guardedStatusUpdate } from '../_shared/paymentSecurity.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type, stripe-signature',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+const corsHeaders = webhookCors
 
 async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -103,18 +100,36 @@ serve(async (req) => {
       gateway_used: 'stripe',
       updated_at: new Date().toISOString(),
     }
+    let nextStatus: string | null = null
     if (paid) {
-      patch.status = 'confirmed'
+      nextStatus = 'confirmed'
       patch.auto_confirmed_at = new Date().toISOString()
       patch.payment_confirmed_at = new Date().toISOString()
       patch.payment_method = 'card'
     } else if (session.payment_status === 'unpaid') {
-      patch.status = 'payment_submitted'
+      nextStatus = 'payment_submitted'
     }
 
-    await supabase.from('food_orders').update(patch).eq('id', order.id)
+    let updateResult: { updated: boolean, reason?: string, currentStatus?: string } = { updated: false, reason: 'no-status-change' }
+    if (nextStatus) {
+      const r = await guardedStatusUpdate(supabase, {
+        table: 'food_orders',
+        matchColumn: 'id',
+        matchValue: order.id,
+        nextStatus,
+        statusColumn: 'status',
+        patch,
+      })
+      updateResult = r as any
+      if (!r.updated && r.reason !== 'not-found') {
+        console.log(`food-order-webhook-stripe: idempotent skip (${r.reason}) for order ${order.id}, current: ${(r as any).currentStatus}`)
+      }
+    } else {
+      // No status transition — still record gateway metadata.
+      await supabase.from('food_orders').update(patch).eq('id', order.id)
+    }
 
-    if (paid) {
+    if (updateResult.updated && nextStatus === 'confirmed') {
       const { data: full } = await supabase.from('food_orders').select('customer_phone, total').eq('id', order.id).single()
       try {
         await supabase.functions.invoke('send-vendor-push', {
