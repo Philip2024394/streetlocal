@@ -13426,6 +13426,16 @@ export default function App() {
           Visual pattern matches Tax / Loyalty / Promo (dark theme bg
           with rgba overlay + accent borders). */}
       {planPageOpen && (() => {
+        // Banner-first plan page. Each banner is a single image that
+        // carries the tier's features + price. The CTA below it is
+        // tier-aware: shows "Current" badge on the active tier, an
+        // "Upgrade" primary button for higher tiers, and nothing for
+        // lower tiers (downgrade goes through support).
+        const TIER_BANNERS = {
+          starter:      { label: 'Standard',     image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_54_24%20PM.png', color: 'rgba(255,255,255,0.6)' },
+          professional: { label: 'Professional', image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2008_04_21%20PM.png', color: '#FACC15' },
+          enterprise:   { label: 'Enterprise',   image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_56_32%20PM.png', color: '#A855F7' },
+        }
         const tiers = ['starter', 'professional', 'enterprise']
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
@@ -13442,48 +13452,36 @@ export default function App() {
 
             <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
               {tiers.map(t => {
-                const tier = TIER_FEATURES[t]
+                const banner = TIER_BANNERS[t]
                 const isCurrent = t === vendorPlanLevel
                 const isLower = tiers.indexOf(t) < tiers.indexOf(vendorPlanLevel)
-                const accentColor = t === 'enterprise' ? '#A855F7' : t === 'professional' ? '#FACC15' : 'rgba(255,255,255,0.5)'
                 return (
-                  <div key={t} style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.6)', border: `${isCurrent ? '2' : '1'}px solid ${isCurrent ? accentColor : 'rgba(255,255,255,0.1)'}`, marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          {tier.label}
-                          {isCurrent && <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: accentColor, color: '#000', fontWeight: 900, letterSpacing: 0.4 }}>CURRENT</span>}
-                        </div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
-                          {t === 'starter' && 'Small shops, single owner'}
-                          {t === 'professional' && 'Busy cafes, growing brands'}
-                          {t === 'enterprise' && 'Multi-location chains, franchises'}
-                        </div>
-                      </div>
+                  <div key={t} style={{ marginBottom: 22 }}>
+                    {/* Banner image — all tier info baked in */}
+                    <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                      <img src={banner.image} alt={`${banner.label} plan`} onError={imgError('theme')} style={{ width: 'calc(100% + 4px)', height: 'auto', display: 'block', margin: '-2px' }} />
                     </div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.55 }}>
-                      <div style={{ marginBottom: 4 }}>👥 Staff: <strong>{tier.staffCap === Infinity ? 'Unlimited' : tier.staffCap}</strong></div>
-                      <div style={{ marginBottom: 4 }}>🏪 Locations: <strong>{tier.locationCap === Infinity ? 'Unlimited' : tier.locationCap}</strong></div>
-                      <div style={{ marginBottom: 4 }}>💳 Payment gateways: <strong>{tier.paymentGateways ? '✓ All 15' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>🎁 Promo codes: <strong>{tier.promoCodes ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>🖨️ Kitchen printer: <strong>{tier.bluetoothPrinter ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>📣 Marketing banners: <strong>{tier.marketingBanners ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>✨ AI suggest: <strong>{tier.aiMenuSuggest ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>📊 Advanced analytics: <strong>{tier.advancedAnalytics ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>💾 Backup & restore: <strong>{tier.backupRestore ? '✓' : '—'}</strong></div>
-                      <div style={{ marginBottom: 4 }}>🌐 Custom domain: <strong>{tier.customDomain ? '✓' : '—'}</strong></div>
-                      <div>🎨 White-label: <strong>{tier.whiteLabel ? '✓' : '—'}</strong></div>
+                    {/* Tier-aware CTA under the banner */}
+                    <div style={{ marginTop: 12 }}>
+                      {isCurrent ? (
+                        <div style={{ padding: '14px 16px', borderRadius: 14, background: `${banner.color}1a`, border: `1.5px solid ${banner.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 800, color: '#fff' }}>
+                          <span>✓</span>
+                          <span>Your current plan</span>
+                        </div>
+                      ) : !isLower ? (
+                        <button onClick={() => { setPlanPageOpen(false); setSubPickerOpen(true) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none', background: banner.color, color: '#000', fontSize: 15, fontWeight: 900, cursor: 'pointer', boxShadow: `0 6px 18px ${banner.color}66` }}>
+                          Upgrade to {banner.label} →
+                        </button>
+                      ) : (
+                        <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+                          Want to downgrade? Email <a href="mailto:streetlocallive@gmail.com" style={{ color: '#FACC15', textDecoration: 'none' }}>streetlocallive@gmail.com</a>
+                        </div>
+                      )}
                     </div>
-                    {!isCurrent && !isLower && (
-                      <button onClick={() => { setSubPickerOpen(true) }} style={{ marginTop: 14, width: '100%', padding: '12px 14px', borderRadius: 12, border: 'none', background: accentColor, color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Upgrade to {tier.label} →</button>
-                    )}
-                    {!isCurrent && isLower && (
-                      <div style={{ marginTop: 14, fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '8px 0' }}>Downgrade — contact support if you need this</div>
-                    )}
                   </div>
                 )
               })}
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', padding: '8px 4px 0', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', padding: '8px 4px 0', lineHeight: 1.5, textAlign: 'center' }}>
                 Pricing is detected from your country at signup. Changes take effect from your next billing cycle.
               </div>
             </div>
