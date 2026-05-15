@@ -306,16 +306,16 @@ export default function PremiumHome () {
 
         /* PRICING — 3-tier card grid */
         .sl-pricing-bg { background: var(--sl-gray-50); border-top: 1px solid var(--sl-gray-200); border-bottom: 1px solid var(--sl-gray-200); }
-        .sl-tier-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 50px auto 0; max-width: 1100px; }
-        @media (min-width: 760px) { .sl-tier-grid { grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; } }
-        .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 0 22px 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
-        .sl-tier__banner { margin: 0 -22px 28px; overflow: hidden; position: relative; background: var(--sl-gray-100); }
-        .sl-tier__banner img { width: 100%; height: auto; display: block; }
-        .sl-tier--featured .sl-tier__banner { margin-bottom: 32px; }
-        .sl-tier--featured .sl-tier__banner { border-bottom-color: rgba(255,255,255,0.08); background: #111; }
-        .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); transform: none; }
-        @media (min-width: 760px) { .sl-tier--featured { transform: translateY(-8px); } }
-        .sl-tier__ribbon { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.5); z-index: 2; }
+        .sl-tier-grid { display: grid; grid-template-columns: 1fr; gap: 28px; margin: 50px auto 0; max-width: 1100px; }
+        @media (min-width: 760px) { .sl-tier-grid { grid-template-columns: 1fr 1fr 1fr; gap: 22px; align-items: start; } }
+        /* Each tier is now a column: standalone banner card on top,
+           clear gap, package card below. They never share a border. */
+        .sl-tier-col { display: flex; flex-direction: column; gap: 22px; }
+        .sl-tier-banner-card { background: var(--sl-gray-100); border: 1px solid var(--sl-gray-200); border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .sl-tier-banner-card img { width: 100%; height: auto; display: block; }
+        .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 28px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); }
+        .sl-tier__ribbon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.5); z-index: 2; white-space: nowrap; }
         .sl-tier__label { font-size: 14px; font-weight: 800; color: var(--sl-yellow-deep); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 6px; }
         .sl-tier--featured .sl-tier__label { color: var(--sl-yellow); }
         .sl-tier__blurb { font-size: 13px; color: var(--sl-gray-500); line-height: 1.45; margin-bottom: 20px; min-height: 38px; }
@@ -508,25 +508,27 @@ export default function PremiumHome () {
               const tier = TIER_BULLETS[tierKey]
               const price = plan[tierKey]
               return (
-                <div key={tierKey} className={`sl-tier${tier.featured ? ' sl-tier--featured' : ''}`}>
+                <div key={tierKey} className="sl-tier-col">
                   {tier.image && (
-                    <div className="sl-tier__banner">
+                    <div className="sl-tier-banner-card">
                       <img src={tier.image} alt={`${tier.label} plan`} loading="lazy" />
                     </div>
                   )}
-                  {tier.featured && <div className="sl-tier__ribbon">Most popular</div>}
-                  <div className="sl-tier__label">{tier.label}</div>
-                  <div className="sl-tier__blurb">{tier.blurb}</div>
-                  <div className="sl-tier__amount">
-                    <span className="sl-tier__symbol">{plan.symbol}</span>{price}
-                    <span className="sl-tier__per">/month</span>
+                  <div className={`sl-tier${tier.featured ? ' sl-tier--featured' : ''}`}>
+                    {tier.featured && <div className="sl-tier__ribbon">Most popular</div>}
+                    <div className="sl-tier__label">{tier.label}</div>
+                    <div className="sl-tier__blurb">{tier.blurb}</div>
+                    <div className="sl-tier__amount">
+                      <span className="sl-tier__symbol">{plan.symbol}</span>{price}
+                      <span className="sl-tier__per">/month</span>
+                    </div>
+                    <ul className="sl-tier__list">
+                      {tier.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                    </ul>
+                    <a href="/food/chat" className={`sl-btn ${tier.featured ? 'sl-btn--primary' : 'sl-btn--ghost'} sl-btn--lg sl-tier__cta`}>
+                      Start {tier.label}
+                    </a>
                   </div>
-                  <ul className="sl-tier__list">
-                    {tier.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
-                  <a href="/food/chat" className={`sl-btn ${tier.featured ? 'sl-btn--primary' : 'sl-btn--ghost'} sl-btn--lg sl-tier__cta`}>
-                    Start {tier.label}
-                  </a>
                 </div>
               )
             })}
