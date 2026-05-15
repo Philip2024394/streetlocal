@@ -1377,6 +1377,7 @@ export default function App() {
   const [designStudio, setDesignStudio] = useState(false) // show design studio
   const [menuCardsPage, setMenuCardsPage] = useState(false) // donut-only menu-cards customisation page
   const [donutTypesPage, setDonutTypesPage] = useState(false) // donut-only "Meet our donuts" editor for the vendor
+  const [donutTypesSelectedItemId, setDonutTypesSelectedItemId] = useState(null) // which menu item is being edited in Donut Types
   const [donutTypesGallery, setDonutTypesGallery] = useState(false) // customer-side swipe gallery
   const [donutTypesIdx, setDonutTypesIdx] = useState(0) // active card in the swipe gallery
   const [donutTypesEditIdx, setDonutTypesEditIdx] = useState(0) // active type in the vendor step-by-step editor
@@ -5135,18 +5136,36 @@ export default function App() {
           ['Chocolate Frosted', { image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2009_19_03%20PM.png', description: 'Deep, glossy chocolate ganache on a soft yeast ring. Simple, decadent, and the one regulars order without thinking.', rating: 5 }],
           ['Strawberry Frosted', { image: 'https://ik.imagekit.io/nepgaxllc/Untitledasdaaaavdddddd-removebg-preview%20(1).png', description: 'Real-strawberry icing in soft pink, dusted with pearl sprinkles. As pretty as it tastes — Instagram-bait with substance.', rating: 5 }],
         ]
-        const publishedReal = Object.entries(donutTypesContent).filter(([, c]) => c && c.image && c.description)
+        // Real vendor content — now keyed by menu item id (post-refactor)
+        // but still falls back to the legacy single-image field for older
+        // entries. Each enriched entry carries: name, images[], description,
+        // and computed rating from reviewsByItem (verified reviews only).
+        const publishedReal = Object.entries(donutTypesContent)
+          .map(([key, c]) => {
+            if (!c || (!c.images?.length && !c.image) || !c.description) return null
+            const imgs = c.images && c.images.length > 0 ? c.images : (c.image ? [c.image] : [])
+            // Match a real menu item to surface its review-derived rating.
+            const item = menuItems.find(it => (it.id || it.name) === key) || (c.itemName ? menuItems.find(it => it.name === c.itemName) : null)
+            const r = item && getItemRating ? getItemRating(item) : null
+            const name = c.itemName || (item?.name) || key
+            return [name, { images: imgs, image: imgs[0], description: c.description, rating: r ? r.avg : null, reviewCount: r ? r.count : 0, _item: item }]
+          })
+          .filter(Boolean)
         // Always show mocks alongside any real uploads. Vendor uploads win
         // when names collide; otherwise mocks fill out the carousel so there's
         // always 3+ slides to swipe through — not just the one the vendor
         // uploaded.
         const realNames = new Set(publishedReal.map(([n]) => n))
-        const mocksToAdd = MOCK_DONUTS.filter(([n]) => !realNames.has(n))
+        const mocksToAdd = MOCK_DONUTS.filter(([n]) => !realNames.has(n)).map(([n, d]) => [n, { ...d, images: [d.image] }])
         const published = [...publishedReal, ...mocksToAdd]
         const isMock = publishedReal.length === 0
         const safeIdx = Math.min(donutTypesIdx, published.length - 1)
         const [name, data] = published[safeIdx]
-        const rating = Math.max(0, Math.min(5, data.rating || 0))
+        // Rating: real → from reviewsByItem (decimals like 4.7), mock → 1-5 int.
+        const rawRating = data.rating || 0
+        const ratingStars = Math.round(rawRating)
+        const ratingLabel = data.reviewCount ? `${rawRating.toFixed(1)} (${data.reviewCount})` : ''
+        const heroImg = (data.images && data.images[0]) || data.image
         const goPrev = () => {
           const next = Math.max(0, safeIdx - 1)
           setDonutTypesIdx(next)
@@ -5227,27 +5246,30 @@ export default function App() {
               }}
             >
               <style>{`#donut-swipe-track::-webkit-scrollbar { display: none; }`}</style>
-              {published.map(([n, d]) => (
-                <div key={n} style={{
-                  // Bulletproof scroll-snap slide sizing — minWidth + flexShrink:0
-                  // forces each slide to be at least the container's width and
-                  // never collapse. `flex: 0 0 100%` was ambiguous in a
-                  // horizontally-scrolling flex container — basis 100% folded
-                  // back on itself and slides ended up zero-width.
-                  flexShrink: 0,
-                  minWidth: '100%',
-                  height: '100%',
-                  scrollSnapAlign: 'start',
-                  scrollSnapStop: 'always',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 8%',
-                  boxSizing: 'border-box',
-                }}>
-                  <img src={d.image} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.68)' : 'scale(0.9)' }} />
-                </div>
-              ))}
+              {published.map(([n, d]) => {
+                const slideImg = (d.images && d.images[0]) || d.image
+                const extra = ((d.images?.length || 0) - 1)
+                return (
+                  <div key={n} style={{
+                    flexShrink: 0,
+                    minWidth: '100%',
+                    height: '100%',
+                    scrollSnapAlign: 'start',
+                    scrollSnapStop: 'always',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 8%',
+                    boxSizing: 'border-box',
+                    position: 'relative',
+                  }}>
+                    <img src={slideImg} alt={n} onError={imgError('food')} style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', transform: n === 'Chocolate Frosted' ? 'scale(0.7)' : n === 'Boston Cream' ? 'scale(1.3)' : n === 'Strawberry Frosted' ? 'scale(0.68)' : 'scale(0.9)' }} />
+                    {extra > 0 && (
+                      <span style={{ position: 'absolute', bottom: 12, right: 16, padding: '6px 12px', borderRadius: 20, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 13, fontWeight: 700, backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>📷 +{extra} more</span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
             {/* Floating left/right arrows over the hero band */}
             {published.length > 1 && (
@@ -5265,14 +5287,22 @@ export default function App() {
             {/* Body container — name, rating, full description, order */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 20px', position: 'relative', zIndex: 2 }}>
               <div style={{ borderRadius: 20, padding: '20px 18px 18px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${accent}33`, boxShadow: `0 16px 40px rgba(0,0,0,0.55)` }}>
-                {/* Name + Star rating row */}
+                {/* Name + Star rating row. Rating now comes from real
+                    reviews on the linked menu item (real entries) or the
+                    hardcoded mock value (mocks). Decimal value + count
+                    chip shown when we have a real average. */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                   <div style={{ flex: 1, fontSize: 24, fontWeight: 900, color: '#fff', minWidth: 0, lineHeight: 1.2 }}>{name}</div>
-                  {rating > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <span key={i} style={{ fontSize: 18, color: i <= rating ? '#FACC15' : 'rgba(255,255,255,0.25)' }}>★</span>
-                      ))}
+                  {rawRating > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <span key={i} style={{ fontSize: 18, color: i <= ratingStars ? '#FACC15' : 'rgba(255,255,255,0.25)' }}>★</span>
+                        ))}
+                      </div>
+                      {ratingLabel && (
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', whiteSpace: 'nowrap' }}>{ratingLabel}</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -10582,8 +10612,9 @@ export default function App() {
           { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
           isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
         ].filter(Boolean)
+        // Old "Themes" entry removed — Theme Library (in the drawer's
+        // Quick Access) is the canonical way to swap backgrounds now.
         const design = [
-          { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
           { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
         ]
         const menuRows = [
@@ -11008,140 +11039,201 @@ export default function App() {
           flow: edit one type at a time → Save & Next advances → Save & Exit
           closes back to the drawer. ═══ */}
       {donutTypesPage && shopTheme === 'donut' && (() => {
-        const types = (THEME_CATEGORY_OVERRIDES.donut?.[0]?.types) || []
-        const publishedCount = Object.values(donutTypesContent).filter(c => c && c.image && c.description).length
-        const safeIdx = Math.min(Math.max(0, donutTypesEditIdx), types.length - 1)
-        const typeName = types[safeIdx]
-        const data = donutTypesContent[typeName] || {}
-        const isPublished = !!(data.image && data.description)
-        const updateType = (patch) => {
-          setDonutTypesContent(prev => ({ ...prev, [typeName]: { ...(prev[typeName] || {}), ...patch } }))
+        // Refactored: vendor now picks an item from their menu to write
+        // about, and uploads MULTIPLE carousel images instead of one.
+        // The star rating block was removed — rating now flows from
+        // reviewsByItem (verified per-item reviews) directly into the
+        // Meet Our Donuts gallery, so there's no duplicate input.
+        //
+        // Data shape (backward-compatible):
+        //   donutTypesContent[itemKey] = {
+        //     images: string[],         // carousel — first is hero
+        //     image: string,            // legacy single-image field, still read
+        //     description: string,
+        //     itemId: string,           // menu item id link
+        //     itemName: string,
+        //   }
+        const itemKey = donutTypesSelectedItemId
+        const selectedItem = itemKey ? menuItems.find(it => (it.id || it.name) === itemKey) : null
+        const data = itemKey ? (donutTypesContent[itemKey] || {}) : {}
+        const images = (data.images && data.images.length > 0) ? data.images : (data.image ? [data.image] : [])
+        const publishedCount = Object.values(donutTypesContent).filter(c => c && (c.images?.length || c.image) && c.description).length
+        const isPublished = !!((images.length > 0) && data.description)
+        const updateItem = (patch) => {
+          if (!itemKey) return
+          setDonutTypesContent(prev => ({ ...prev, [itemKey]: { itemId: itemKey, itemName: selectedItem?.name || itemKey, ...(prev[itemKey] || {}), ...patch } }))
+        }
+        const addImageUrl = (url) => {
+          if (!itemKey || !url) return
+          setDonutTypesContent(prev => {
+            const cur = prev[itemKey] || {}
+            const list = cur.images && cur.images.length > 0 ? cur.images : (cur.image ? [cur.image] : [])
+            const next = [...list, url].slice(0, 8) // cap at 8 carousel images
+            return { ...prev, [itemKey]: { itemId: itemKey, itemName: selectedItem?.name || itemKey, ...cur, images: next, image: next[0] } }
+          })
+        }
+        const removeImageAt = (idx) => {
+          if (!itemKey) return
+          setDonutTypesContent(prev => {
+            const cur = prev[itemKey] || {}
+            const list = cur.images && cur.images.length > 0 ? cur.images : (cur.image ? [cur.image] : [])
+            const next = list.filter((_, i) => i !== idx)
+            return { ...prev, [itemKey]: { ...cur, images: next, image: next[0] || '' } }
+          })
         }
         const removeCurrent = () => {
-          setDonutTypesContent(prev => { const next = { ...prev }; delete next[typeName]; return next })
+          if (!itemKey) return
+          setDonutTypesContent(prev => { const next = { ...prev }; delete next[itemKey]; return next })
         }
-        const saveAndNext = () => {
-          if (safeIdx < types.length - 1) setDonutTypesEditIdx(safeIdx + 1)
-          else setDonutTypesPage(false) // wrapped past the end
-        }
-        const saveAndExit = () => setDonutTypesPage(false)
         return (
           <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
             <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', ...bgStyle, zIndex: 0 }} />
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-              {/* Header — progress + back */}
+              {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10, flexShrink: 0 }}>
-                <button onClick={() => setDonutTypesPage(false)} style={{ width: 44, height: 44, borderRadius: 22, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Donut Types</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{safeIdx + 1} of {types.length} · {publishedCount} live</div>
+                <button onClick={() => { setDonutTypesSelectedItemId(null); setDonutTypesPage(false) }} style={{ width: 44, height: 44, borderRadius: 22, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>←</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{selectedItem ? selectedItem.name : 'Donut Types'}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{selectedItem ? `Editing · ${publishedCount} live` : `Pick a menu item to feature · ${publishedCount} live`}</div>
                 </div>
-                {isPublished ? (
+                {selectedItem && (isPublished ? (
                   <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.2)', color: '#86EFAC', padding: '6px 10px', borderRadius: 8 }}>LIVE</span>
                 ) : (
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Draft</span>
-                )}
+                ))}
               </div>
-              {/* Type name banner */}
-              <div style={{ padding: '0 16px 8px', flexShrink: 0 }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{typeName}</div>
-              </div>
-              {/* Scrollable body */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 20px' }}>
-                {/* IMAGE upload — large */}
-                <label style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, background: data.image ? '#000' : `${accent}18`, border: data.image ? '1px solid rgba(255,255,255,0.1)' : `2px dashed ${accent}55`, overflow: 'hidden', cursor: 'pointer', position: 'relative', marginBottom: 16 }}>
-                  {data.image ? (
-                    <img src={data.image} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                  ) : (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'rgba(255,255,255,0.6)' }}>
-                      <span style={{ fontSize: 48 }}>📷</span>
-                      <span style={{ fontSize: 14, fontWeight: 700 }}>Tap to upload donut photo</span>
-                    </div>
-                  )}
-                  {data.image && (
-                    <div style={{ position: 'absolute', bottom: 10, right: 10, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 13, fontWeight: 700 }}>Tap to change</div>
-                  )}
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    e.target.value = ''
-                    // Try Supabase upload first; fall back to a local data URL
-                    // so the image saves even without a backend connection.
-                    let url = null
-                    try { url = await uploadMenuImage(vendorId, file) } catch {}
-                    if (!url) {
-                      const reader = new FileReader()
-                      reader.onload = () => {
-                        const img = new Image()
-                        img.onload = () => {
-                          const canvas = document.createElement('canvas')
-                          const max = 900
-                          let w = img.width, h = img.height
-                          if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
-                          canvas.width = w; canvas.height = h
-                          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-                          updateType({ image: canvas.toDataURL('image/jpeg', 0.82) })
-                        }
-                        img.src = reader.result
-                      }
-                      reader.readAsDataURL(file)
-                      return
-                    }
-                    updateType({ image: url })
-                  }} />
-                </label>
-                {/* DESCRIPTION — large textarea, 1000 char max */}
-                <div style={{ marginBottom: 14, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Story / description</div>
-                    <div style={{ fontSize: 13, color: (data.description || '').length >= 950 ? '#FCD34D' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{(data.description || '').length}/1000</div>
+
+              {/* PICKER mode — when no item is selected yet */}
+              {!selectedItem && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 20px' }}>
+                  <div style={{ padding: 12, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}55`, fontSize: 13, color: '#fff', marginBottom: 12, lineHeight: 1.5 }}>
+                    Pick an item from your menu to feature in <b>Meet Our Donuts</b>. You can upload up to 8 photos and write a short story. The star rating comes from real customer reviews automatically.
                   </div>
-                  <textarea
-                    value={data.description || ''}
-                    onChange={(e) => updateType({ description: e.target.value.slice(0, 1000) })}
-                    placeholder={`Tell the story of your ${typeName.toLowerCase()} — ingredients, how it's made, why customers love it. Up to 1000 characters.`}
-                    rows={10}
-                    style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14, lineHeight: 1.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', minHeight: 220, boxSizing: 'border-box' }}
-                  />
-                </div>
-                {/* Star rating */}
-                <div style={{ marginBottom: 14, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Rating</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <button key={i} type="button" onClick={() => updateType({ rating: (data.rating || 0) === i ? 0 : i })} aria-label={`${i} stars`} style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: 'transparent', color: i <= (data.rating || 0) ? '#FACC15' : 'rgba(255,255,255,0.25)', fontSize: 28, cursor: 'pointer', padding: 0, lineHeight: 1 }}>★</button>
-                    ))}
+                  {menuItems.length === 0 && (
+                    <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Add items to your menu first, then come back to feature them here.</div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {menuItems.map(it => {
+                      const key = it.id || it.name
+                      const has = donutTypesContent[key]
+                      const r = getItemRating ? getItemRating(it) : null
+                      return (
+                        <button key={key} type="button" onClick={() => setDonutTypesSelectedItemId(key)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: has ? `${accent}1a` : 'rgba(0,0,0,0.45)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+                          <img src={it.photo || it.image || ''} alt="" onError={imgError('food')} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', background: '#222', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.name}</div>
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                              {r && <span><span style={{ color: '#FACC15' }}>★</span> {r.avg.toFixed(1)} <span style={{ opacity: 0.6 }}>({r.count})</span></span>}
+                              {has && <span style={{ color: '#86EFAC', fontWeight: 800 }}>· Featured</span>}
+                            </div>
+                          </div>
+                          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 18 }}>›</span>
+                        </button>
+                      )
+                    })}
                   </div>
-                  <div style={{ flex: 1 }} />
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{data.rating || 0}/5</div>
-                </div>
-                {/* Clear / remove */}
-                {(data.image || data.description) && (
-                  <button onClick={removeCurrent} style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 8 }}>
-                    Clear this donut
-                  </button>
-                )}
-              </div>
-              {/* Preview Gallery button — opens the customer-facing swipe
-                  gallery so the vendor can see exactly what customers see.
-                  Only enabled when at least one type is published. */}
-              {publishedCount > 0 && (
-                <div style={{ padding: '0 16px 8px', flexShrink: 0 }}>
-                  <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true) }} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #FACC15', background: 'rgba(250,204,21,0.12)', color: '#FACC15', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
-                    👁️ Preview Gallery ({publishedCount} live)
-                  </button>
+                  {publishedCount > 0 && (
+                    <button onClick={() => { setDonutTypesIdx(0); setDonutTypesGallery(true) }} style={{ marginTop: 16, width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid #FACC15', background: 'rgba(250,204,21,0.12)', color: '#FACC15', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>
+                      👁️ Preview Gallery ({publishedCount} live)
+                    </button>
+                  )}
                 </div>
               )}
-              {/* Sticky action bar — Save & Next + Save & Exit */}
-              <div style={{ display: 'flex', gap: 10, padding: '12px 16px 16px', flexShrink: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 60%)' }}>
-                <button onClick={saveAndExit} style={{ flex: 1, padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}`, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
-                  Save & Exit
-                </button>
-                <button onClick={saveAndNext} style={{ flex: 1.4, padding: '14px 16px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', boxShadow: `0 6px 18px ${accent}55`, minHeight: 48 }}>
-                  {safeIdx < types.length - 1 ? `Save & Next → ${types[safeIdx + 1]}` : 'Save & Finish'}
-                </button>
-              </div>
+
+              {/* EDITOR mode — an item is selected */}
+              {selectedItem && (
+                <>
+                <div style={{ padding: '0 16px 8px', flexShrink: 0 }}>
+                  <button onClick={() => setDonutTypesSelectedItemId(null)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>‹ Pick a different item</button>
+                </div>
+                {/* Scrollable body */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 20px' }}>
+                  {/* CAROUSEL IMAGES — thumbnails + Add tile */}
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Carousel images ({images.length}/8)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+                    {images.map((url, idx) => (
+                      <div key={url + idx} style={{ position: 'relative', aspectRatio: '4 / 3', borderRadius: 12, overflow: 'hidden', background: '#000', border: idx === 0 ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={url} alt="" onError={imgError('food')} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        {idx === 0 && <span style={{ position: 'absolute', top: 4, left: 4, padding: '2px 6px', borderRadius: 6, background: accent, color: '#fff', fontSize: 10, fontWeight: 900, letterSpacing: 0.5 }}>HERO</span>}
+                        <button onClick={() => removeImageAt(idx)} aria-label="Remove image" style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: '1.5px solid #fff', background: '#8B0000', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+                      </div>
+                    ))}
+                    {images.length < 8 && (
+                      <label style={{ aspectRatio: '4 / 3', borderRadius: 12, background: `${accent}15`, border: `2px dashed ${accent}55`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#fff' }}>
+                        <span style={{ fontSize: 28 }}>＋</span>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>Add photo</span>
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          e.target.value = ''
+                          let url = null
+                          try { url = await uploadMenuImage(vendorId, file) } catch {}
+                          if (!url) {
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              const img = new Image()
+                              img.onload = () => {
+                                const canvas = document.createElement('canvas')
+                                const max = 900
+                                let w = img.width, h = img.height
+                                if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r) }
+                                canvas.width = w; canvas.height = h
+                                canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+                                addImageUrl(canvas.toDataURL('image/jpeg', 0.82))
+                              }
+                              img.src = reader.result
+                            }
+                            reader.readAsDataURL(file)
+                            return
+                          }
+                          addImageUrl(url)
+                        }} />
+                      </label>
+                    )}
+                  </div>
+                  {/* Linked review rating — shown read-only so vendor knows
+                      what customers will see on the Meet Our Donuts card. */}
+                  {(() => {
+                    const r = getItemRating ? getItemRating(selectedItem) : null
+                    return (
+                      <div style={{ marginBottom: 14, padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 22, color: '#FACC15' }}>★</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{r ? `${r.avg.toFixed(1)} from ${r.count} review${r.count === 1 ? '' : 's'}` : 'No reviews yet'}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Star rating comes from real customers — shows on Meet Our Donuts automatically.</div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  {/* DESCRIPTION — large textarea, 1000 char max */}
+                  <div style={{ marginBottom: 14, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Story / description</div>
+                      <div style={{ fontSize: 13, color: (data.description || '').length >= 950 ? '#FCD34D' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{(data.description || '').length}/1000</div>
+                    </div>
+                    <textarea
+                      value={data.description || ''}
+                      onChange={(e) => updateItem({ description: e.target.value.slice(0, 1000) })}
+                      placeholder={`Tell the story of your ${selectedItem.name.toLowerCase()} — ingredients, how it's made, why customers love it. Up to 1000 characters.`}
+                      rows={10}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14, lineHeight: 1.5, outline: 'none', resize: 'vertical', fontFamily: 'inherit', minHeight: 180, boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  {/* Clear */}
+                  {(images.length > 0 || data.description) && (
+                    <button onClick={removeCurrent} style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 8 }}>
+                      Clear all photos + story
+                    </button>
+                  )}
+                </div>
+                {/* Sticky action bar */}
+                <div style={{ display: 'flex', gap: 10, padding: '12px 16px 16px', flexShrink: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 60%)' }}>
+                  <button onClick={() => setDonutTypesSelectedItemId(null)} style={{ flex: 1, padding: '14px 16px', borderRadius: 14, border: `1px solid ${accent}`, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>Save & Pick another</button>
+                  <button onClick={() => { setDonutTypesSelectedItemId(null); setDonutTypesPage(false) }} style={{ flex: 1.4, padding: '14px 16px', borderRadius: 14, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', boxShadow: `0 6px 18px ${accent}55`, minHeight: 48 }}>Save & Finish</button>
+                </div>
+                </>
+              )}
             </div>
           </div>
         )
