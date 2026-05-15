@@ -311,7 +311,7 @@ export default function PremiumHome () {
         /* Each tier is now a column: standalone banner card on top,
            clear gap, package card below. They never share a border. */
         .sl-tier-col { display: flex; flex-direction: column; gap: 22px; }
-        .sl-tier-banner-card { background: var(--sl-gray-100); border: 1px solid var(--sl-gray-200); border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .sl-tier-banner-card { background: var(--sl-gray-100); border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .sl-tier-banner-card img { width: 100%; height: auto; display: block; }
         .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 28px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); }
