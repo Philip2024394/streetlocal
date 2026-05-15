@@ -2694,6 +2694,11 @@ export default function App() {
   // order_payload history. Vendor-only.
   const [salesDashboardOpen, setSalesDashboardOpen] = useState(false)
   const [setupGatewayId, setSetupGatewayId] = useState(null)        // which gateway is being configured
+  // Surface validate-payment-credentials errors + busy state on the
+  // setup screen so vendors aren't left guessing why their keys
+  // didn't take. Empty on success; populated on save failure.
+  const [paymentGatewaySaveError, setPaymentGatewaySaveError] = useState(null)
+  const [paymentGatewaySaving, setPaymentGatewaySaving] = useState(false)
   const [paymentGateways, setPaymentGateways] = useState(() => {
     try { return JSON.parse(localStorage.getItem('foodlocalchat_payment_gateways') || '{}') } catch { return {} }
   })
@@ -9771,10 +9776,24 @@ export default function App() {
           // Build a config object containing only the fields the gateway needs
           const config = { mode: current.mode || 'test' }
           gw.fields.forEach(f => { if (current[f.key]) config[f.key] = current[f.key] })
-          // Persist to Supabase so Edge Functions can use the keys
-          await saveGatewayConnection(gw.id, config)
-          setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: config.mode, connectedAt: new Date().toISOString() } }))
-          setSetupGatewayId(null)
+          // Persist to Supabase. saveGatewayConnection runs the
+          // validate-payment-credentials Edge Function first, which
+          // makes a live API call to the gateway. If keys are bad
+          // (wrong prefix, expired, invalid mode, etc.) we get a
+          // clear error to show the vendor BEFORE marking connected.
+          setPaymentGatewaySaveError(null)
+          setPaymentGatewaySaving(true)
+          try {
+            const result = await saveGatewayConnection(gw.id, config)
+            if (!result?.ok) {
+              setPaymentGatewaySaveError(result?.error || 'Gateway rejected the credentials. Double-check your keys + mode setting.')
+              return
+            }
+            setPaymentGateways(p => ({ ...p, [gw.id]: { ...(p[gw.id] || {}), connected: true, mode: config.mode, connectedAt: new Date().toISOString() } }))
+            setSetupGatewayId(null)
+          } finally {
+            setPaymentGatewaySaving(false)
+          }
         }
         const disconnect = async () => {
           if (!confirm(`Disconnect ${gw.name}? Your keys will be removed and payments via this gateway will stop working.`)) return
@@ -9791,7 +9810,7 @@ export default function App() {
           <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', maxWidth: 480, width: '100%', margin: '0 auto' }}>
           {/* Header — transparent, no shade */}
           <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12 }}>
-            <button onClick={() => setSetupGatewayId(null)} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
+            <button onClick={() => { setSetupGatewayId(null); setPaymentGatewaySaveError(null) }} aria-label="Back" style={{ width: 38, height: 38, borderRadius: 19, background: accent, border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 8px ${accent}40` }}>←</button>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 {gw.name}
@@ -9918,15 +9937,35 @@ export default function App() {
                   background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 48,
                 }}>{t.disconnect || 'Disconnect'}</button>
               )}
-              <button onClick={save} style={{
+              <button onClick={save} disabled={paymentGatewaySaving} style={{
                 flex: 1, padding: '13px 16px', borderRadius: 12, border: 'none',
-                background: `linear-gradient(135deg, ${gw.color} 0%, ${gw.color}dd 100%)`,
-                color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48,
-                boxShadow: `0 4px 14px ${gw.color}55`,
+                background: paymentGatewaySaving
+                  ? 'rgba(255,255,255,0.1)'
+                  : `linear-gradient(135deg, ${gw.color} 0%, ${gw.color}dd 100%)`,
+                color: '#fff', fontSize: 14, fontWeight: 800, cursor: paymentGatewaySaving ? 'wait' : 'pointer', minHeight: 48,
+                boxShadow: paymentGatewaySaving ? 'none' : `0 4px 14px ${gw.color}55`,
+                opacity: paymentGatewaySaving ? 0.7 : 1,
               }}>
-                {isConnected ? `Update ${gw.name}` : `Connect ${gw.name}`}
+                {paymentGatewaySaving
+                  ? 'Validating keys with gateway…'
+                  : (isConnected ? `Update ${gw.name}` : `Connect ${gw.name}`)}
               </button>
             </div>
+            {/* Validation error surface — shown when the credentials
+                Edge Function rejected the keys (bad prefix, expired,
+                mode mismatch, gateway returned 401). Clears on
+                successful save / cancel / form edit. */}
+            {paymentGatewaySaveError && (
+              <div role="alert" style={{ marginTop: 12, padding: '12px 14px', borderRadius: 12, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.45)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#FCA5A5', marginBottom: 4 }}>Keys rejected by {gw.name}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>{paymentGatewaySaveError}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           </div>{/* close scrollable foreground */}
         </div>
