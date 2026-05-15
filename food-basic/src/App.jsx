@@ -12,6 +12,13 @@ import { SUPPORTED_GATEWAYS as RAW_GATEWAYS, ID_BANKS } from '@shared/constants/
 // Everything else is honestly flagged "Coming Soon" until its Edge Functions are built —
 // previously vendors could "connect" Stripe etc. but no payment actually went through.
 const LIVE_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal', 'razorpay', 'braintree', 'mollie', 'hitpay', 'adyen', 'rapyd', 'checkout-com', 'fomo-pay', 'authorize-net', '2checkout', 'cybersource', 'worldpay', 'ewallet', 'bank'])
+// CERTIFIED = battle-tested end-to-end in production with at least
+// one real charge through the live keys. Vendors connecting these
+// can trust the flow today. Everything else in LIVE_GATEWAY_IDS is
+// "Beta" — edge functions exist but the integration hasn't been
+// proven in a real charge by us. Anything NOT in LIVE is "Coming
+// Soon" (UI shows the SOON badge already).
+const CERTIFIED_GATEWAY_IDS = new Set(['midtrans', 'stripe', 'xendit', 'paypal'])
 // Map gateway-specific field names to our shared DB columns
 // (server_key | client_key | webhook_secret). Anything not mapped lands in additional_config jsonb.
 const GATEWAY_FIELD_MAP = {
@@ -8631,6 +8638,8 @@ export default function App() {
                 {isLive && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86efac', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>LIVE</span>}
                 {g.tier === 'enterprise' && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(168,85,247,0.16)', color: '#D8B4FE', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>ENTERPRISE</span>}
                 {g.comingSoon && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(245,158,11,0.18)', color: '#FCD34D', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>SOON</span>}
+                {!g.comingSoon && CERTIFIED_GATEWAY_IDS.has(g.id) && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>✓ CERTIFIED</span>}
+                {!g.comingSoon && !CERTIFIED_GATEWAY_IDS.has(g.id) && g.id !== 'ewallet' && g.id !== 'bank' && <span style={{ fontSize: 13, fontWeight: 800, background: 'rgba(59,130,246,0.18)', color: '#93C5FD', padding: '1px 6px', borderRadius: 6, letterSpacing: 0.3 }}>BETA</span>}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 2 }}>{g.tagline}</div>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{g.countryCount}</div>
@@ -8657,6 +8666,20 @@ export default function App() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 0.2, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{t.paymentMethods || 'Payment Methods'}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 1, fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{connectedCount} of {SUPPORTED_GATEWAYS.filter(g => !g.comingSoon).length} active · funds go to your accounts</div>
+            </div>
+          </div>
+
+          {/* Certification status banner — explains the 3 tiers so
+              vendors don't connect a Beta gateway thinking it's
+              production-tested. */}
+          <div style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <span style={{ padding: '2px 6px', borderRadius: 6, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', fontSize: 11, fontWeight: 800 }}>✓ CERTIFIED</span>
+              <span>= production-tested with real charges.</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 4 }}>
+              <span style={{ padding: '2px 6px', borderRadius: 6, background: 'rgba(59,130,246,0.18)', color: '#93C5FD', fontSize: 11, fontWeight: 800 }}>BETA</span>
+              <span>= wired but not production-verified in your market — test with a small charge first.</span>
             </div>
           </div>
 
