@@ -308,22 +308,34 @@ const DEMO_VENDOR_UUID = '00000000-0000-0000-0000-00000000d0c0'
 // false advertising. Treat as a tier-contract document.
 const PLAN_LEVELS = ['starter', 'professional', 'enterprise']
 const TIER_FEATURES = {
+  // Starter is intentionally generous — the donut-app pitch is
+  // "everything you need, no commission, no surprise locks". Pro/
+  // Enterprise unlock things with REAL cost-to-serve (custom domain
+  // DNS/SSL, server-side crons, multi-location data isolation) or
+  // clear scale upgrades (more staff, more locations). Hidden-when-
+  // locked Settings UI means vendors only see what they're paying for.
   starter: {
     label: 'Starter',
     staffCap: 1,
     locationCap: 1,
     imageLibraryCap: 50,
-    paymentGateways: false,    // 15 gateway integrations
-    bluetoothPrinter: false,
-    scheduledOrders: false,
-    marketingBanners: false,
-    reengagementCron: false,
-    promoCodes: false,
-    aiMenuSuggest: false,
-    customDomain: false,
-    advancedAnalytics: false,  // WoW, top customers, profit estimator
+    paymentGateways: true,     // all 16 gateways available — vendor pays processor directly
+    bluetoothPrinter: true,    // vendor owns the hardware, no cost to us
+    scheduledOrders: true,     // basic pre-order date picker
+    marketingBanners: true,    // banners + auto-post to chat
+    promoCodes: true,          // % / flat / first-order / expiry / cap
+    backupRestore: true,       // data safety is non-negotiable
+    emailCampaigns: true,      // Resend free tier covers most shops
+    // Pro/Enterprise-only flags stay false:
+    reengagementCron: false,   // server-side scheduled job we run
+    aiMenuSuggest: false,      // LLM API cost
+    customDomain: false,       // DNS + SSL provisioning cost
+    advancedAnalytics: false,  // heavy WoW / cohort queries
+    giftCards: false,          // we host the codes
+    gatewayHealthPing: false,  // we poll gateways every 5 min
+    recurringOrdersCron: false,// server-side scheduled job
+    affiliatePayouts: false,   // admin tool
     multiLocation: false,
-    backupRestore: false,
     whiteLabel: false,
     centralisedAnalytics: false,
   },
@@ -341,8 +353,13 @@ const TIER_FEATURES = {
     aiMenuSuggest: true,
     customDomain: true,
     advancedAnalytics: true,
-    multiLocation: false,
     backupRestore: true,
+    emailCampaigns: true,
+    giftCards: true,
+    gatewayHealthPing: true,
+    recurringOrdersCron: true,
+    affiliatePayouts: true,
+    multiLocation: false,
     whiteLabel: false,
     centralisedAnalytics: false,
   },
@@ -360,8 +377,13 @@ const TIER_FEATURES = {
     aiMenuSuggest: true,
     customDomain: true,
     advancedAnalytics: true,
-    multiLocation: true,
     backupRestore: true,
+    emailCampaigns: true,
+    giftCards: true,
+    gatewayHealthPing: true,
+    recurringOrdersCron: true,
+    affiliatePayouts: true,
+    multiLocation: true,
     whiteLabel: true,
     centralisedAnalytics: true,
   },
@@ -13165,21 +13187,23 @@ export default function App() {
           { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
           { icon: '📄', label: 'Invoices', desc: 'Letterhead, templates (4), legal name, tax ID, auto-send', onClick: () => setInvoicePageOpen(true) },
           // ── Feature-sweep entries (mig 20260615) ───────────────────
+          // Starter-included features (no `requires:` = always shown):
           { icon: '🍩', label: 'Build-your-own Dozen', desc: 'Let customers pick a custom box of donuts', onClick: () => setMixboxPageOpen(true) },
           { icon: '💸', label: 'Tipping', desc: 'Enable 10/15/20/custom tips at checkout', onClick: () => setTipPageOpen(true) },
           { icon: '📋', label: 'Production Planner', desc: 'Daily bake plan from 7-day averages + wastage log', onClick: () => setProductionPageOpen(true) },
           { icon: '🍳', label: 'Kitchen Display (KDS)', desc: 'Live orders on a tablet — QR-code install', onClick: () => setKdsPageOpen(true) },
           { icon: '👥', label: 'Customer accounts', desc: 'Order history, 1-tap reorder, tax-exempt flag', onClick: () => setCustomersPageOpen(true) },
           { icon: '🥡', label: 'Catering / Wholesale', desc: 'Lead-time orders, minimum size, separate inbox', onClick: () => setCateringPageOpen(true) },
-          { icon: '🔁', label: 'Recurring orders', desc: '"Every Tuesday" subscriptions', onClick: () => setRecurringPageOpen(true) },
-          { icon: '🎁', label: 'Gift cards', desc: 'Digital cards with unique codes', onClick: () => setGiftcardsPageOpen(true) },
           { icon: '💰', label: 'End-of-day Z-report', desc: 'Cash counted vs expected, variance', onClick: () => setCashReconPageOpen(true) },
           { icon: '📺', label: 'Self-serve kiosk', desc: 'Locked /kiosk URL for in-store tablet', onClick: () => setKioskPageOpen(true) },
           { icon: '📱', label: 'SMS notifications', desc: 'Twilio — order ready / dispatch SMS', onClick: () => setSmsPageOpen(true) },
-          { icon: '📧', label: 'Email campaigns', desc: 'Resend — segment + send marketing emails', onClick: () => setEmailCampaignsPageOpen(true) },
-          { icon: '💳', label: 'Affiliate payouts', desc: 'Track + mark referral payouts paid', onClick: () => setAffiliatePayoutsPageOpen(true) },
-          { icon: '📡', label: 'Gateway health', desc: 'Check that each payment gateway is reachable + credentials valid', onClick: () => setGatewayHealthPageOpen(true) },
           { icon: '🎉', label: 'Pre-order windows', desc: "Mother's Day / Valentine's lead-time orders", onClick: () => setPreorderPageOpen(true) },
+          // Pro/Enterprise — hidden from Starter view:
+          { icon: '🔁', label: 'Recurring orders', desc: '"Every Tuesday" subscriptions', requires: 'recurringOrdersCron', onClick: gate('recurringOrdersCron', () => setRecurringPageOpen(true)) },
+          { icon: '🎁', label: 'Gift cards', desc: 'Digital cards with unique codes', requires: 'giftCards', onClick: gate('giftCards', () => setGiftcardsPageOpen(true)) },
+          { icon: '📧', label: 'Email campaigns', desc: 'Resend — segment + send marketing emails', requires: 'emailCampaigns', onClick: gate('emailCampaigns', () => setEmailCampaignsPageOpen(true)) },
+          { icon: '💳', label: 'Affiliate payouts', desc: 'Track + mark referral payouts paid', requires: 'affiliatePayouts', onClick: gate('affiliatePayouts', () => setAffiliatePayoutsPageOpen(true)) },
+          { icon: '📡', label: 'Gateway health', desc: 'Check that each payment gateway is reachable + credentials valid', requires: 'gatewayHealthPing', onClick: gate('gatewayHealthPing', () => setGatewayHealthPageOpen(true)) },
           { icon: '⬇️', label: 'Export sales CSV', desc: 'Download orders as CSV for your accountant', onClick: () => {
             // Inline export — no separate page. Filters by past 90 days, dumps vendor_orders to CSV client-side.
             if (!supabase || !vendorId) { alert('Sign in to export.'); return }
@@ -13289,26 +13313,65 @@ export default function App() {
 
             {/* Scrollable groups */}
             <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 40px', WebkitOverflowScrolling: 'touch' }}>
-              {brand.length > 0 && (<>
-                {sectionHeader('Brand')}
-                {brand.map(hubBtn)}
-              </>)}
-              {design.length > 0 && (<>
-                {sectionHeader('Design')}
-                {design.map(hubBtn)}
-              </>)}
-              {menuRows.length > 0 && (<>
-                {sectionHeader('Menu')}
-                {menuRows.map(hubBtn)}
-              </>)}
-              {account.length > 0 && (<>
-                {sectionHeader('Account')}
-                {account.map(hubBtn)}
-              </>)}
-              {advanced.length > 0 && (<>
-                {sectionHeader('Advanced')}
-                {advanced.map(hubBtn)}
-              </>)}
+              {(() => {
+                // Filter locked items OUT of each section so the vendor
+                // only sees what their plan includes. The total locked
+                // count goes into a single "More features in Pro →"
+                // footer banner that opens the Plan comparison page.
+                // This replaces the previous "show all with 🔒" model,
+                // which was overwhelming for Starter vendors paying
+                // Rp 38k in Indonesia (20+ lock icons = perceived nag).
+                const visible = (arr) => arr.filter(it => !it.requires || tierFeatures[it.requires])
+                const lockedCount = (arr) => arr.reduce((n, it) => n + ((it.requires && !tierFeatures[it.requires]) ? 1 : 0), 0)
+                const vBrand   = visible(brand)
+                const vDesign  = visible(design)
+                const vMenu    = visible(menuRows)
+                const vAccount = visible(account)
+                const vAdvanced= visible(advanced)
+                const totalLocked = lockedCount(brand) + lockedCount(design) + lockedCount(menuRows) + lockedCount(account) + lockedCount(advanced)
+                return (
+                  <>
+                    {vBrand.length > 0 && (<>
+                      {sectionHeader('Brand')}
+                      {vBrand.map(hubBtn)}
+                    </>)}
+                    {vDesign.length > 0 && (<>
+                      {sectionHeader('Design')}
+                      {vDesign.map(hubBtn)}
+                    </>)}
+                    {vMenu.length > 0 && (<>
+                      {sectionHeader('Menu')}
+                      {vMenu.map(hubBtn)}
+                    </>)}
+                    {vAccount.length > 0 && (<>
+                      {sectionHeader('Account')}
+                      {vAccount.map(hubBtn)}
+                    </>)}
+                    {vAdvanced.length > 0 && (<>
+                      {sectionHeader('Advanced')}
+                      {vAdvanced.map(hubBtn)}
+                    </>)}
+
+                    {/* Single soft upsell footer — only when there ARE
+                        locked features (i.e. not Enterprise). Opens the
+                        Plan page where the vendor can compare and upgrade. */}
+                    {totalLocked > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => { setSettingsHubOpen(false); setPlanPageOpen(true) }}
+                        style={{ marginTop: 24, width: '100%', padding: '14px 16px', borderRadius: 14, background: 'rgba(250,204,21,0.08)', border: '1px dashed rgba(250,204,21,0.35)', color: '#FDE68A', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
+                      >
+                        <span style={{ fontSize: 18 }}>✨</span>
+                        <span style={{ flex: 1 }}>
+                          <strong style={{ color: '#fff', display: 'block', marginBottom: 2 }}>{totalLocked} more feature{totalLocked === 1 ? '' : 's'} available</strong>
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>Currently on {tierFeatures.label} · tap to see what Pro / Enterprise unlock</span>
+                        </span>
+                        <span style={{ color: '#FDE68A' }}>›</span>
+                      </button>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           </div>
         )
