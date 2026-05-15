@@ -1645,6 +1645,18 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_dispatch', marketingAutoPostDispatch ? 'true' : 'false') }, [marketingAutoPostDispatch])
   const [marketingAutoPost14Days, setMarketingAutoPost14Days] = useState(() => localStorage.getItem('foodlocalchat_marketing_autopost_14days') === 'true')
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_14days', marketingAutoPost14Days ? 'true' : 'false') }, [marketingAutoPost14Days])
+  // Re-engagement window (in days). Replaces the fixed 14-day name.
+  const [marketingIntervalDays, setMarketingIntervalDays] = useState(() => {
+    const n = parseInt(localStorage.getItem('foodlocalchat_marketing_interval_days') || '14', 10)
+    return isNaN(n) || n < 1 ? 14 : n
+  })
+  useEffect(() => { localStorage.setItem('foodlocalchat_marketing_interval_days', String(marketingIntervalDays)) }, [marketingIntervalDays])
+  // Random-landscape: when ON, every auto-post picks a RANDOM landscape
+  // banner (excluding expired countdowns) so the customer doesn't see
+  // the same image every time. When OFF, the single active banner is
+  // used. Lets vendors run banner rotations like a small campaign.
+  const [marketingRandomLandscape, setMarketingRandomLandscape] = useState(() => localStorage.getItem('foodlocalchat_marketing_random_landscape') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_marketing_random_landscape', marketingRandomLandscape ? 'true' : 'false') }, [marketingRandomLandscape])
   // (Marketing-banners Supabase fetch lives further down, after the
   // vendorId state declaration — putting it here caused a TDZ.)
   // Vendor's own uploaded backgrounds — persisted so they survive
@@ -2657,6 +2669,7 @@ export default function App() {
           showShopName: !!r.show_shop_name,
           bakedImageUrl: r.baked_image_url,
           bakedAt: r.baked_at ? new Date(r.baked_at).getTime() : null,
+          countdownEndsAt: r.countdown_ends_at ? new Date(r.countdown_ends_at).getTime() : null,
           createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
         }))
         if (remoteBanners.length > 0) setMarketingBanners(remoteBanners)
@@ -8022,16 +8035,35 @@ export default function App() {
                       setOrderActionStatuses(p => ({ ...p, [conv.id]: 'dispatched' }))
                       if (!conv.isMock) {
                         try { await sendSystemStatus({ conversationId: conv.id, body: 'Your order is on the way! 🛵' }) } catch {}
-                        // Auto-post the active marketing banner right after
-                        // the dispatch confirmation — best window for a
-                        // repeat-purchase nudge. Uses the BAKED PNG so
-                        // the customer's chat shows the full composed
-                        // image, not raw text fragments.
-                        if (marketingAutoPostDispatch && marketingActiveBannerId) {
-                          const banner = marketingBanners.find(b => b.id === marketingActiveBannerId)
+                        // Auto-post a marketing banner right after dispatch.
+                        // - When marketingRandomLandscape is ON, picks a
+                        //   random non-expired landscape banner from the
+                        //   pool so customers don't see the same one twice.
+                        // - Otherwise uses the single active banner.
+                        // - Countdown is included in the message body so
+                        //   even text-only WhatsApp previews show urgency.
+                        if (marketingAutoPostDispatch) {
+                          let banner = null
+                          if (marketingRandomLandscape) {
+                            const pool = marketingBanners.filter(b => b.format === 'landscape' && (!b.countdownEndsAt || b.countdownEndsAt > Date.now()))
+                            if (pool.length > 0) banner = pool[Math.floor(Math.random() * pool.length)]
+                          }
+                          if (!banner && marketingActiveBannerId) {
+                            banner = marketingBanners.find(b => b.id === marketingActiveBannerId)
+                          }
                           if (banner) {
                             const imageUrl = banner.bakedImageUrl || banner.bgImage || ''
-                            const promoBody = `🎁 ${banner.discount} · ${banner.headline}${banner.subtitle ? '\n' + banner.subtitle : ''}${imageUrl ? '\n' + imageUrl : ''}`
+                            const cd = banner.countdownEndsAt ? `\n⏰ ${banner.countdownEndsAt > Date.now() ? (() => {
+                              const ms = banner.countdownEndsAt - Date.now()
+                              const s = Math.floor(ms / 1000)
+                              const days = Math.floor(s / 86400)
+                              const hours = Math.floor((s % 86400) / 3600)
+                              const mins = Math.floor((s % 3600) / 60)
+                              if (days > 0) return `${days}d ${hours}h left`
+                              if (hours > 0) return `${hours}h ${mins}m left`
+                              return `${mins}m left`
+                            })() : 'EXPIRED'}` : ''
+                            const promoBody = `🎁 ${banner.discount} · ${banner.headline}${banner.subtitle ? '\n' + banner.subtitle : ''}${cd}${imageUrl ? '\n' + imageUrl : ''}`
                             try { await sendSystemStatus({ conversationId: conv.id, body: promoBody }) } catch {}
                           }
                         }
@@ -10877,6 +10909,23 @@ export default function App() {
           setMarketingEditingBannerId(id)
         }
 
+        // ── COUNTDOWN HELPER ────────────────────────────────
+        // Returns a short relative string ("23h 42m left", "EXPIRED",
+        // or '' when no countdown) for the given timestamp. Used by
+        // the banner preview, the baked PNG, AND the auto-post text.
+        const fmtCountdown = (endsAtMs) => {
+          if (!endsAtMs) return ''
+          const ms = endsAtMs - Date.now()
+          if (ms <= 0) return 'EXPIRED'
+          const s = Math.floor(ms / 1000)
+          const days = Math.floor(s / 86400)
+          const hours = Math.floor((s % 86400) / 3600)
+          const mins  = Math.floor((s % 3600) / 60)
+          if (days > 0) return `${days}d ${hours}h left`
+          if (hours > 0) return `${hours}h ${mins}m left`
+          return `${mins}m left`
+        }
+
         // ── CANVAS BAKE ─────────────────────────────────────
         // Draws the banner (bg + tint + logo + shop name + discount +
         // headline + subtitle) onto a high-resolution canvas, uploads
@@ -10983,6 +11032,42 @@ export default function App() {
             ctx.globalAlpha = 1
           }
           ctx.shadowBlur = 0
+          // 7b. Countdown chip — top-right corner of the banner.
+          // Shows "23h 42m left" relative to render time. Baked into
+          // the PNG so the customer sees the countdown at the moment
+          // they receive the message.
+          const cd = fmtCountdown(b.countdownEndsAt)
+          if (cd) {
+            const chipFont = W * 0.034
+            ctx.font = `800 ${chipFont}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+            const chipText = '⏰ ' + cd
+            const chipPadX = W * 0.025
+            const chipPadY = W * 0.012
+            const tw = ctx.measureText(chipText).width
+            const chipW = tw + chipPadX * 2
+            const chipH = chipFont * 1.6
+            const chipX = W - margin - chipW
+            const chipY = margin
+            ctx.fillStyle = cd === 'EXPIRED' ? 'rgba(139,0,0,0.95)' : 'rgba(0,0,0,0.7)'
+            // Rounded rect
+            const r = chipH / 2
+            ctx.beginPath()
+            ctx.moveTo(chipX + r, chipY)
+            ctx.lineTo(chipX + chipW - r, chipY)
+            ctx.quadraticCurveTo(chipX + chipW, chipY, chipX + chipW, chipY + r)
+            ctx.lineTo(chipX + chipW, chipY + chipH - r)
+            ctx.quadraticCurveTo(chipX + chipW, chipY + chipH, chipX + chipW - r, chipY + chipH)
+            ctx.lineTo(chipX + r, chipY + chipH)
+            ctx.quadraticCurveTo(chipX, chipY + chipH, chipX, chipY + chipH - r)
+            ctx.lineTo(chipX, chipY + r)
+            ctx.quadraticCurveTo(chipX, chipY, chipX + r, chipY)
+            ctx.closePath()
+            ctx.fill()
+            ctx.fillStyle = '#fff'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(chipText, chipX + chipPadX, chipY + chipH / 2)
+            ctx.textBaseline = 'alphabetic'
+          }
           // 8. Export to blob → upload to Supabase storage → public URL
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.92))
           if (!blob) throw new Error('canvas-to-blob failed')
@@ -11021,6 +11106,7 @@ export default function App() {
                 show_shop_name: !!b.showShopName,
                 baked_image_url: url,
                 baked_at: new Date().toISOString(),
+                countdown_ends_at: b.countdownEndsAt ? new Date(b.countdownEndsAt).toISOString() : null,
               })
             } catch {}
           }
@@ -11191,6 +11277,45 @@ export default function App() {
                     ))}
                   </div>
 
+                  {/* Countdown timer — adds an "Ends in Xh Ym" chip to
+                      the banner. Bakes into the PNG so customers see
+                      the time-remaining at the moment they receive it.
+                      Presets are quick-set; custom datetime picker for
+                      exact promo windows. Clear removes the chip. */}
+                  <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>⏰ Countdown timer</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{editing.countdownEndsAt ? fmtCountdown(editing.countdownEndsAt) : 'Optional — adds urgency'}</div>
+                      </div>
+                      {editing.countdownEndsAt && (
+                        <button type="button" onClick={() => updateBanner({ countdownEndsAt: null })} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                      {[
+                        { label: '1 hour',  ms: 1 * 3600 * 1000 },
+                        { label: '6 hours', ms: 6 * 3600 * 1000 },
+                        { label: '12 hours',ms: 12 * 3600 * 1000 },
+                        { label: '24 hours',ms: 24 * 3600 * 1000 },
+                        { label: '3 days',  ms: 3 * 24 * 3600 * 1000 },
+                        { label: '1 week',  ms: 7 * 24 * 3600 * 1000 },
+                      ].map(preset => (
+                        <button key={preset.label} type="button" onClick={() => updateBanner({ countdownEndsAt: Date.now() + preset.ms })} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{preset.label}</button>
+                      ))}
+                    </div>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)', display: 'block', marginBottom: 4 }}>Or pick exact end time</label>
+                    <input
+                      type="datetime-local"
+                      value={editing.countdownEndsAt ? new Date(editing.countdownEndsAt - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                      onChange={(e) => {
+                        if (!e.target.value) { updateBanner({ countdownEndsAt: null }); return }
+                        updateBanner({ countdownEndsAt: new Date(e.target.value).getTime() })
+                      }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', colorScheme: 'dark' }}
+                    />
+                  </div>
+
                   {/* Share + activate — each share auto-bakes the
                       banner into a real PNG first, uploads to Supabase
                       storage, then hands the public URL to the channel. */}
@@ -11212,27 +11337,74 @@ export default function App() {
               {/* ── LIST MODE ───────────────────────────────── */}
               {!editing && (
                 <>
-                  {/* AUTO-POST settings — show first since they're the
-                      most-changed setting on this page once banners exist. */}
+                  {/* AUTO-POST settings — three controls:
+                      1. After-dispatched toggle
+                      2. N-day re-engagement (interval is editable)
+                      3. Random-landscape picker so customers don't see
+                         the same banner every time. */}
                   <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Auto-post to customer chat</div>
+
+                    {/* Toggle 1: after dispatched */}
                     <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer', padding: '8px 0' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>After dispatched</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends the active banner right after you tap Dispatched on an order. Best window for repeat purchases.</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends a banner right after you tap Dispatched on an order. Best window for repeat purchases.</div>
                       </div>
                       <input type="checkbox" checked={marketingAutoPostDispatch} onChange={(e) => setMarketingAutoPostDispatch(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
                     </label>
+
+                    {/* Toggle 2: N-day re-engagement with editable interval */}
+                    <div style={{ padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>Re-engagement broadcast</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends a banner to customers who haven't ordered in {marketingIntervalDays} {marketingIntervalDays === 1 ? 'day' : 'days'}. Win-back the quiet ones.</div>
+                        </div>
+                        <input type="checkbox" checked={marketingAutoPost14Days} onChange={(e) => setMarketingAutoPost14Days(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                      </label>
+                      {marketingAutoPost14Days && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, paddingLeft: 4 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Send after</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={365}
+                            value={marketingIntervalDays}
+                            onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 1) setMarketingIntervalDays(n) }}
+                            style={{ width: 64, padding: '6px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', outline: 'none', fontFamily: 'inherit' }}
+                          />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>days of no activity</span>
+                          <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                            {[4, 7, 14, 30].map(n => (
+                              <button key={n} type="button" onClick={() => setMarketingIntervalDays(n)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: marketingIntervalDays === n ? `${accent}33` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{n}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Toggle 3: random landscape selection */}
                     <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>14-day re-engagement</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Sends the active banner to customers who haven't ordered in 14 days. Win-back the inactive ones.</div>
+                        <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>🎲 Random landscape rotation</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>Each auto-post picks a random landscape banner so customers don't see the same one every time. Expired countdowns are skipped.</div>
                       </div>
-                      <input type="checkbox" checked={marketingAutoPost14Days} onChange={(e) => setMarketingAutoPost14Days(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                      <input type="checkbox" checked={marketingRandomLandscape} onChange={(e) => setMarketingRandomLandscape(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
                     </label>
-                    {marketingActiveBannerId
-                      ? <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', color: '#86EFAC', fontSize: 13, fontWeight: 700 }}>✓ Active banner is set</div>
-                      : <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', color: '#FCD34D', fontSize: 13, fontWeight: 700 }}>⚠ No active banner — pick one below.</div>}
+
+                    {/* Status: which banner(s) will be used */}
+                    {(() => {
+                      if (marketingRandomLandscape) {
+                        const pool = marketingBanners.filter(b => b.format === 'landscape' && (!b.countdownEndsAt || b.countdownEndsAt > Date.now()))
+                        return pool.length > 0
+                          ? <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', color: '#86EFAC', fontSize: 13, fontWeight: 700 }}>✓ {pool.length} landscape banner{pool.length === 1 ? '' : 's'} in rotation</div>
+                          : <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', color: '#FCD34D', fontSize: 13, fontWeight: 700 }}>⚠ No active landscape banners — create some below.</div>
+                      }
+                      return marketingActiveBannerId
+                        ? <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', color: '#86EFAC', fontSize: 13, fontWeight: 700 }}>✓ Active banner is set</div>
+                        : <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', color: '#FCD34D', fontSize: 13, fontWeight: 700 }}>⚠ No active banner — pick one below or enable random rotation.</div>
+                    })()}
                   </div>
 
                   {/* Saved banners list */}
