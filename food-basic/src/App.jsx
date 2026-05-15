@@ -280,6 +280,94 @@ const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v)
 // promoted to this UUID so chat, gateway probes, and the sales dashboard
 // all hit a real row instead of 400ing on a bogus `local-demo-*` id.
 const DEMO_VENDOR_UUID = '00000000-0000-0000-0000-00000000d0c0'
+
+// ─── PLAN LEVEL / TIER FEATURES ───────────────────────────────────
+// Single source of truth for what every plan unlocks. Used by the
+// hasFeature() helper + every gate-aware admin button. If a feature
+// isn't listed here it's assumed available to all tiers.
+//
+// IMPORTANT: This map is the contract shown on the marketing landing.
+// Changing it without updating the StreetLocal /pricing page risks
+// false advertising. Treat as a tier-contract document.
+const PLAN_LEVELS = ['starter', 'professional', 'enterprise']
+const TIER_FEATURES = {
+  starter: {
+    label: 'Starter',
+    staffCap: 1,
+    locationCap: 1,
+    paymentGateways: false,    // 15 gateway integrations
+    bluetoothPrinter: false,
+    scheduledOrders: false,
+    marketingBanners: false,
+    reengagementCron: false,
+    promoCodes: false,
+    aiMenuSuggest: false,
+    customDomain: false,
+    advancedAnalytics: false,  // WoW, top customers, profit estimator
+    multiLocation: false,
+    backupRestore: false,
+    whiteLabel: false,
+    centralisedAnalytics: false,
+  },
+  professional: {
+    label: 'Professional',
+    staffCap: 5,
+    locationCap: 1,
+    paymentGateways: true,
+    bluetoothPrinter: true,
+    scheduledOrders: true,
+    marketingBanners: true,
+    reengagementCron: true,
+    promoCodes: true,
+    aiMenuSuggest: true,
+    customDomain: true,
+    advancedAnalytics: true,
+    multiLocation: false,
+    backupRestore: true,
+    whiteLabel: false,
+    centralisedAnalytics: false,
+  },
+  enterprise: {
+    label: 'Enterprise',
+    staffCap: Infinity,
+    locationCap: Infinity,
+    paymentGateways: true,
+    bluetoothPrinter: true,
+    scheduledOrders: true,
+    marketingBanners: true,
+    reengagementCron: true,
+    promoCodes: true,
+    aiMenuSuggest: true,
+    customDomain: true,
+    advancedAnalytics: true,
+    multiLocation: true,
+    backupRestore: true,
+    whiteLabel: true,
+    centralisedAnalytics: true,
+  },
+}
+// Resolve a vendor's tier to its feature flags. Unknown / null tier
+// defaults to 'starter' — the safest assumption (nothing unlocked).
+function getTierFeatures (plan_level) {
+  return TIER_FEATURES[plan_level] || TIER_FEATURES.starter
+}
+// Human-readable labels for the upgrade sheet — maps a feature flag
+// to the text the customer sees ("X is locked").
+const FEATURE_LABELS = {
+  paymentGateways:   'Payment gateways',
+  bluetoothPrinter:  'Kitchen printer',
+  scheduledOrders:   'Scheduled orders',
+  marketingBanners:  'Marketing banners',
+  reengagementCron:  'Re-engagement automation',
+  promoCodes:        'Promo codes',
+  aiMenuSuggest:     'AI menu suggest',
+  customDomain:      'Custom domain',
+  advancedAnalytics: 'Advanced analytics',
+  multiLocation:     'Multi-location',
+  backupRestore:     'Backup & restore',
+  whiteLabel:        'White-label branding',
+  centralisedAnalytics: 'Centralised analytics',
+}
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
 import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
@@ -2342,6 +2430,23 @@ export default function App() {
   // vendor.plan_tier loaded from supabase: 'whatsapp' | 'chat' | 'both' | null
   // null = legacy vendor with no plan set; treated as 'both' for back-compat.
   const [vendorPlanTier, setVendorPlanTier] = useState(null)
+  // vendor.plan_level — Starter / Professional / Enterprise. Separate from
+  // plan_tier above (which is order-channel routing). Drives every gate
+  // via the TIER_FEATURES map. Defaults to 'starter' on the client until
+  // the real value is fetched.
+  const [vendorPlanLevel, setVendorPlanLevel] = useState('starter')
+  const tierFeatures = getTierFeatures(vendorPlanLevel)
+  // Upgrade sheet — set to { feature, requiredTier } when a locked row
+  // is tapped. Phase 4 builds the slide-up sheet that consumes this.
+  const [upgradeSheet, setUpgradeSheet] = useState(null)
+  // Plan page (Settings → 💎 Plan) — full tier comparison + upgrade CTA.
+  const [planPageOpen, setPlanPageOpen] = useState(false)
+  // Backup & Restore page — Pro+ gated.
+  const [backupPageOpen, setBackupPageOpen] = useState(false)
+  // Dismissible "see Pro" banner on Starter dashboard.
+  const [tierBannerDismissed, setTierBannerDismissed] = useState(() => {
+    try { return sessionStorage.getItem('foodlocalchat_tierBannerDismissed') === 'true' } catch { return false }
+  })
   // Subscription payment state — for the post-signup "pay to activate" gate.
   const [subPickerOpen, setSubPickerOpen] = useState(false)
   // Country override for the activation price tile. Null = auto-detect
@@ -3091,10 +3196,11 @@ export default function App() {
     const poll = async () => {
       attempts++
       try {
-        const { data } = await supabase.from('vendor_accounts').select('status, plan_tier, expires_at').eq('id', vendorId).single()
+        const { data } = await supabase.from('vendor_accounts').select('status, plan_tier, plan_level, expires_at').eq('id', vendorId).single()
         if (data?.status === 'active') {
           setVendorStatus('active')
           if (data.plan_tier) setVendorPlanTier(data.plan_tier)
+          if (data.plan_level) setVendorPlanLevel(data.plan_level)
           if (data.expires_at) setVendorExpiresAt(data.expires_at)
           setSubMessage('Your shop is live!')
           emitFunnelStep('payment_completed', { vendorId, metadata: { plan_tier: data.plan_tier || null } })
@@ -3855,6 +3961,8 @@ export default function App() {
       // plan_tier drives the order-channel routing (see openOrderModePicker).
       // null is acceptable — handled as legacy 'both' in the dispatcher.
       setVendorPlanTier(data.plan_tier || null)
+      // plan_level drives feature gating (Starter / Pro / Enterprise).
+      if (data.plan_level) setVendorPlanLevel(data.plan_level)
     })
   }, [vendorId])
 
@@ -10252,6 +10360,23 @@ export default function App() {
               }
               return (
                 <div style={{ paddingBottom: 20 }}>
+                  {/* Starter dashboard banner — dismissible per session.
+                      Shown only when vendor is on Starter and hasn't
+                      dismissed it this session. Tapping opens the Plan
+                      page where they can see what Pro unlocks. */}
+                  {vendorPlanLevel === 'starter' && !tierBannerDismissed && (
+                    <div style={{ margin: '8px 16px 14px', padding: 14, borderRadius: 14, background: 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(234,179,8,0.10))', border: '1px solid rgba(250,204,21,0.35)', position: 'relative' }}>
+                      <button onClick={() => { setTierBannerDismissed(true); try { sessionStorage.setItem('foodlocalchat_tierBannerDismissed', 'true') } catch {} }} style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: 12, border: 'none', background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.6)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Dismiss">×</button>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, paddingRight: 24 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #FACC15, #EAB308)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>✨</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 2 }}>You're on Starter</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 8, lineHeight: 1.4 }}>Unlock payment gateways, marketing, kitchen printer + 7 more features with Professional.</div>
+                          <button onClick={() => setPlanPageOpen(true)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#FACC15', color: '#000', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>See what Pro unlocks →</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {sectionHeader('Orders')}
                   <div style={{ padding: '0 16px' }}>{orders.map(drawerBtn)}</div>
                   {sectionHeader('Quick Access')}
@@ -11607,13 +11732,24 @@ export default function App() {
           the drawer so they're always one tap. */}
       {settingsHubOpen && (() => {
         const isDonut = shopTheme === 'donut'
+        // Each row carries an optional `requires` key — the feature flag
+        // from TIER_FEATURES that gates it. If the vendor's plan_level
+        // doesn't have that flag, the row renders desaturated with a 🔒
+        // and clicking opens the upgrade sheet instead of the feature.
+        const gate = (requires, onClick) => () => {
+          if (requires && !tierFeatures[requires]) {
+            setUpgradeSheet({ feature: requires, requiredTier: requires === 'multiLocation' || requires === 'whiteLabel' ? 'enterprise' : 'professional' })
+            return
+          }
+          onClick()
+        }
         // Re-build the same arrays from the drawer block — local scope
         // because most onClick handlers close over component state.
         const brand = [
           { icon: '🎨', label: 'Landing Page Edit', desc: 'Text, images, colours, font', onClick: () => setHeroEditor(true) },
-          { icon: '📣', label: 'Marketing', desc: 'Promo banners + auto-post to chat', onClick: () => setMarketingPageOpen(true) },
+          { icon: '📣', label: 'Marketing', desc: 'Promo banners + auto-post to chat', requires: 'marketingBanners', onClick: gate('marketingBanners', () => setMarketingPageOpen(true)) },
           { icon: '🎟️', label: 'Loyalty Stamps', desc: 'Reward returning customers — buy N get one free', onClick: () => setLoyaltyPageOpen(true) },
-          { icon: '🎁', label: 'Promo Codes', desc: 'Discount codes — % off, flat off, first-order, expiry', onClick: () => setPromoPageOpen(true) },
+          { icon: '🎁', label: 'Promo Codes', desc: 'Discount codes — % off, flat off, first-order, expiry', requires: 'promoCodes', onClick: gate('promoCodes', () => setPromoPageOpen(true)) },
           isDonut && { icon: '🍩', label: 'Menu Cards', desc: 'Card colour, glass, frame, promo bar', onClick: () => setMenuCardsPage(true) },
         ].filter(Boolean)
         // Old "Themes" entry removed — Theme Library (in the drawer's
@@ -11627,11 +11763,13 @@ export default function App() {
         ].filter(Boolean)
         const account = [
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
-          { icon: '👥', label: 'Staff Accounts', desc: 'Invite team — manager / cashier / kitchen', onClick: () => setStaffPageOpen(true) },
-          { icon: '🏪', label: 'Locations', desc: 'Multiple shops under one account', onClick: () => setLocationsPageOpen(true) },
+          { icon: '👥', label: 'Staff Accounts', desc: `Invite team — manager / cashier / kitchen (cap ${tierFeatures.staffCap === Infinity ? '∞' : tierFeatures.staffCap})`, onClick: () => setStaffPageOpen(true) },
+          { icon: '🏪', label: 'Locations', desc: 'Multiple shops under one account', requires: 'multiLocation', onClick: gate('multiLocation', () => setLocationsPageOpen(true)) },
           { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
-          { icon: '🖨️', label: 'Kitchen Printer', desc: 'Pair a Bluetooth thermal printer', onClick: () => setPrinterPageOpen(true) },
-          { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
+          { icon: '🖨️', label: 'Kitchen Printer', desc: 'Pair a Bluetooth thermal printer', requires: 'bluetoothPrinter', onClick: gate('bluetoothPrinter', () => setPrinterPageOpen(true)) },
+          { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', requires: 'customDomain', onClick: gate('customDomain', () => setDomainPage(true)) },
+          { icon: '💾', label: 'Backup & Restore', desc: 'Export / import your menu, banners, settings', requires: 'backupRestore', onClick: gate('backupRestore', () => setBackupPageOpen(true)) },
+          { icon: '💎', label: 'Plan', desc: `Currently on ${tierFeatures.label} — see what each tier unlocks`, onClick: () => setPlanPageOpen(true) },
           { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
           { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
         ]
@@ -11655,34 +11793,46 @@ export default function App() {
         const sectionHeader = (label) => (
           <div key={`hub-sh-${label}`} style={{ margin: '20px 4px 8px', padding: '6px 0 6px 12px', borderLeft: `3px solid ${accent}`, fontSize: 13, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{label}</div>
         )
-        const hubBtn = (item) => (
-          <button
-            key={item.label}
-            // Leave the Settings hub OPEN underneath the child page so
-            // the child's back/close button returns to the hub instead
-            // of the home screen. Child pages render at z-index 700,
-            // hub is at 600 — natural stack does the rest.
-            onClick={() => { item.onClick && item.onClick() }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 14, width: '100%',
-              padding: '14px 16px', borderRadius: 16,
-              border: `1.5px solid ${item.danger ? '#8B0000' : 'rgba(255,255,255,0.08)'}`,
-              background: item.danger ? 'rgba(139,0,0,0.18)' : 'rgba(0,0,0,0.55)',
-              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-              cursor: 'pointer', textAlign: 'left', minHeight: 64, marginBottom: 10,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-            }}
-          >
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: item.danger ? '#8B0000' : accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22, lineHeight: 1 }}>
-              <span style={{ filter: 'brightness(0) invert(1)' }}>{item.icon}</span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{item.label}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{item.desc}</div>
-            </div>
-            <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.35)' }}>›</span>
-          </button>
-        )
+        const hubBtn = (item) => {
+          // A row is "locked" when item.requires names a tier flag that
+          // this vendor doesn't have. The row stays clickable (it'll
+          // open the upgrade sheet instead of the feature), just visually
+          // dimmed with a 🔒 corner badge.
+          const locked = item.requires && !tierFeatures[item.requires]
+          return (
+            <button
+              key={item.label}
+              // Leave the Settings hub OPEN underneath the child page so
+              // the child's back/close button returns to the hub instead
+              // of the home screen. Child pages render at z-index 700,
+              // hub is at 600 — natural stack does the rest.
+              onClick={() => { item.onClick && item.onClick() }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                padding: '14px 16px', borderRadius: 16,
+                border: `1.5px solid ${item.danger ? '#8B0000' : (locked ? 'rgba(250,204,21,0.25)' : 'rgba(255,255,255,0.08)')}`,
+                background: item.danger ? 'rgba(139,0,0,0.18)' : 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                cursor: 'pointer', textAlign: 'left', minHeight: 64, marginBottom: 10,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                opacity: locked ? 0.65 : 1,
+                position: 'relative',
+              }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: item.danger ? '#8B0000' : (locked ? 'rgba(255,255,255,0.1)' : accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22, lineHeight: 1 }}>
+                <span style={{ filter: locked ? 'grayscale(1) brightness(1.5)' : 'brightness(0) invert(1)' }}>{item.icon}</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {item.label}
+                  {locked && <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 6, background: 'rgba(250,204,21,0.18)', color: '#FDE68A', fontWeight: 800, letterSpacing: 0.3 }}>PRO</span>}
+                </div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{item.desc}</div>
+              </div>
+              <span style={{ fontSize: 16, color: locked ? '#FDE68A' : 'rgba(255,255,255,0.35)' }}>{locked ? '🔒' : '›'}</span>
+            </button>
+          )
+        }
 
         // zIndex: 100 on the hub container so every child page
         // (Shop Config 200, Donut Types 200, Menu Cards 200, Design
@@ -12910,6 +13060,262 @@ export default function App() {
                     <button onClick={resetForm} style={{ padding: '12px 18px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ BACKUP & RESTORE ═══
+          Pro+ gated (already enforced at the Settings Hub entry).
+          Export bundles menu items, promo codes, banners, staff,
+          locations, loyalty/tax settings, and the theme bg URL into
+          a single JSON download. Restore reads the JSON, previews
+          counts, asks for confirmation, then upserts back into the
+          same vendor_id.
+          Same dark theme as every other admin page. */}
+      {backupPageOpen && (() => {
+        const doExport = async () => {
+          if (!supabase || !vendorId || !isUuid(vendorId)) {
+            alert('Backup needs a real shop — log in first.'); return
+          }
+          try {
+            const [items, banners, promo, staff, locs] = await Promise.all([
+              supabase.from('vendor_menu_items').select('*').eq('vendor_id', vendorId),
+              supabase.from('marketing_banners').select('*').eq('vendor_id', vendorId),
+              supabase.from('promo_codes').select('*').eq('vendor_id', vendorId),
+              supabase.from('vendor_staff').select('*').eq('vendor_id', vendorId),
+              supabase.from('vendor_locations').select('*').eq('vendor_id', vendorId),
+            ])
+            const bundle = {
+              version: 1,
+              exportedAt: new Date().toISOString(),
+              vendorId,
+              shopName,
+              menuItems:    items.data || [],
+              marketingBanners: banners.data || [],
+              promoCodes:   promo.data || [],
+              staff:        staff.data || [],
+              locations:    locs.data || [],
+              settings: {
+                taxRate, taxLabel, taxInclusive,
+                loyaltyEnabled, loyaltyGoal, loyaltyReward,
+                shopCurrency,
+                themeBg: localStorage.getItem('foodlocalchat_themeBg') || null,
+              },
+            }
+            const json = JSON.stringify(bundle, null, 2)
+            const blob = new Blob([json], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${(shopName || 'shop').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.streetlocal.json`
+            document.body.appendChild(a); a.click(); document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          } catch (e) {
+            alert('Backup failed: ' + (e?.message || 'unknown'))
+          }
+        }
+        const handleRestore = async (e) => {
+          const f = e.target.files?.[0]; e.target.value = ''
+          if (!f) return
+          let bundle
+          try { bundle = JSON.parse(await f.text()) } catch { alert('That file is not a valid StreetLocal backup.'); return }
+          if (!bundle || bundle.version !== 1) { alert('Unsupported backup version — newer or older than expected.'); return }
+          const summary = [
+            `${(bundle.menuItems || []).length} menu items`,
+            `${(bundle.marketingBanners || []).length} marketing banners`,
+            `${(bundle.promoCodes || []).length} promo codes`,
+            `${(bundle.staff || []).length} staff`,
+            `${(bundle.locations || []).length} locations`,
+          ].join(', ')
+          if (!window.confirm(`Restore from ${f.name}?\n\nFound: ${summary}\n\nThis REPLACES the items, banners, and promo codes in your shop. Staff, locations, and settings will be merged.`)) return
+          try {
+            // Wipe and reload the bulk items. Upsert wouldn't work cleanly
+            // because the IDs in the backup belong to the same vendor (the
+            // unique constraint would block re-insert of existing rows).
+            await supabase.from('vendor_menu_items').delete().eq('vendor_id', vendorId)
+            await supabase.from('marketing_banners').delete().eq('vendor_id', vendorId)
+            await supabase.from('promo_codes').delete().eq('vendor_id', vendorId)
+            // Re-insert with vendor_id forced — never trust the backup's id.
+            const reseed = (rows) => rows.map(r => { const { id, ...rest } = r; return { ...rest, vendor_id: vendorId } })
+            if ((bundle.menuItems || []).length) await supabase.from('vendor_menu_items').insert(reseed(bundle.menuItems))
+            if ((bundle.marketingBanners || []).length) await supabase.from('marketing_banners').insert(reseed(bundle.marketingBanners))
+            if ((bundle.promoCodes || []).length) await supabase.from('promo_codes').insert(reseed(bundle.promoCodes))
+            // Settings: merge into localStorage + state (don't wipe).
+            if (bundle.settings) {
+              const s = bundle.settings
+              if (s.taxRate != null) setTaxRate(s.taxRate)
+              if (s.taxLabel) setTaxLabel(s.taxLabel)
+              if (s.taxInclusive != null) setTaxInclusive(!!s.taxInclusive)
+              if (s.loyaltyEnabled != null) setLoyaltyEnabled(!!s.loyaltyEnabled)
+              if (s.loyaltyGoal) setLoyaltyGoal(s.loyaltyGoal)
+              if (s.loyaltyReward) setLoyaltyReward(s.loyaltyReward)
+              if (s.themeBg) { try { localStorage.setItem('foodlocalchat_themeBg', s.themeBg) } catch {} }
+            }
+            alert(`Restored. ${summary}.`)
+            setBackupPageOpen(false)
+          } catch (e) {
+            alert('Restore failed midway — your shop may be in a partial state. Re-import or contact support: ' + (e?.message || ''))
+          }
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => setBackupPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>💾 Backup &amp; Restore</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Export your entire shop to a JSON file — restore any time</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {/* Export */}
+              <div style={{ padding: 16, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${accent}33`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 8 }}>📥 Export shop</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, marginBottom: 14 }}>
+                  Downloads a single <code style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 4, fontFamily: 'monospace' }}>.streetlocal.json</code> file containing your menu, marketing banners, promo codes, staff, locations, and core settings. Keep it somewhere safe — Pro vendors back up monthly as standard practice.
+                </div>
+                <button onClick={doExport} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Download backup</button>
+              </div>
+
+              {/* Restore */}
+              <div style={{ padding: 16, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 8 }}>📤 Restore from backup</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, marginBottom: 14 }}>
+                  ⚠️ <strong style={{ color: '#FCA5A5' }}>Replaces</strong> your current menu, banners, and promo codes with what's in the file. Staff, locations, and settings are merged. Pick a file you exported from THIS shop.
+                </div>
+                <label style={{ display: 'block', width: '100%' }}>
+                  <input type="file" accept=".json,application/json" onChange={handleRestore} style={{ display: 'none' }} />
+                  <span style={{ display: 'block', width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)', color: '#FCA5A5', fontSize: 14, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}>Choose backup file…</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ UPGRADE SHEET ═══
+          Slide-up modal triggered when a Starter vendor taps a Pro/Ent
+          feature. Lists what the target tier unlocks + an Upgrade CTA
+          that routes to the Plan page. Dismissible. */}
+      {upgradeSheet && (() => {
+        const required = upgradeSheet.requiredTier || 'professional'
+        const requiredFeatures = TIER_FEATURES[required] || TIER_FEATURES.professional
+        const featureLabel = upgradeSheet.feature ? FEATURE_LABELS[upgradeSheet.feature] || 'This feature' : 'This feature'
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} onClick={() => setUpgradeSheet(null)}>
+            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', background: '#0a0a0a', borderTopLeftRadius: 22, borderTopRightRadius: 22, border: '1px solid rgba(255,255,255,0.08)', borderBottom: 'none', padding: '20px 18px 28px', position: 'relative' }}>
+              <div style={{ width: 44, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', margin: '0 auto 18px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #FACC15, #EAB308)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🔒</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: '#FDE68A', fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase' }}>{requiredFeatures.label} Plan</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{featureLabel} is locked</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 16 }}>
+                Upgrade to <strong style={{ color: '#FACC15' }}>{requiredFeatures.label}</strong> to unlock this and more.
+              </div>
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#FDE68A', marginBottom: 10, letterSpacing: 0.4 }}>WHAT YOU UNLOCK</div>
+                {[
+                  required === 'professional' && '📣 Marketing banners + countdown auto-post',
+                  required === 'professional' && '🎁 Promo codes (% + flat + first-order)',
+                  required === 'professional' && '💳 15 payment gateways (Stripe, Midtrans, …)',
+                  required === 'professional' && '🖨️ Bluetooth kitchen printer',
+                  required === 'professional' && '📅 Scheduled pre-orders',
+                  required === 'professional' && '🌐 Custom domain support',
+                  required === 'professional' && '✨ AI menu descriptions',
+                  required === 'professional' && '💾 Backup & restore',
+                  required === 'professional' && '📊 Advanced analytics (WoW, top customers, profit)',
+                  required === 'professional' && '👥 Up to 5 staff accounts',
+                  required === 'enterprise' && '🏪 Multi-location management',
+                  required === 'enterprise' && '👥 Unlimited staff',
+                  required === 'enterprise' && '🎨 White-label branding',
+                  required === 'enterprise' && '📊 Centralised multi-location analytics',
+                  required === 'enterprise' && 'Everything in Professional',
+                ].filter(Boolean).map((line, i) => (
+                  <div key={i} style={{ fontSize: 13, color: '#fff', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ flex: 1 }}>{line}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => { setUpgradeSheet(null); setPlanPageOpen(true) }} style={{ width: '100%', padding: '14px 20px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FACC15, #EAB308)', color: '#000', fontSize: 15, fontWeight: 900, cursor: 'pointer', marginBottom: 10 }}>See plans & upgrade →</button>
+              <button onClick={() => setUpgradeSheet(null)} style={{ width: '100%', padding: '12px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Maybe later</button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ PLAN PAGE ═══
+          Settings → 💎 Plan. Shows the full tier comparison, the
+          vendor's current tier, and an Upgrade CTA per other tier.
+          Visual pattern matches Tax / Loyalty / Promo (dark theme bg
+          with rgba overlay + accent borders). */}
+      {planPageOpen && (() => {
+        const tiers = ['starter', 'professional', 'enterprise']
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => setPlanPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>💎 Your plan</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Currently on <strong style={{ color: '#FACC15' }}>{tierFeatures.label}</strong></div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {tiers.map(t => {
+                const tier = TIER_FEATURES[t]
+                const isCurrent = t === vendorPlanLevel
+                const isLower = tiers.indexOf(t) < tiers.indexOf(vendorPlanLevel)
+                const accentColor = t === 'enterprise' ? '#A855F7' : t === 'professional' ? '#FACC15' : 'rgba(255,255,255,0.5)'
+                return (
+                  <div key={t} style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.6)', border: `${isCurrent ? '2' : '1'}px solid ${isCurrent ? accentColor : 'rgba(255,255,255,0.1)'}`, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {tier.label}
+                          {isCurrent && <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: accentColor, color: '#000', fontWeight: 900, letterSpacing: 0.4 }}>CURRENT</span>}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+                          {t === 'starter' && 'Small shops, single owner'}
+                          {t === 'professional' && 'Busy cafes, growing brands'}
+                          {t === 'enterprise' && 'Multi-location chains, franchises'}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.55 }}>
+                      <div style={{ marginBottom: 4 }}>👥 Staff: <strong>{tier.staffCap === Infinity ? 'Unlimited' : tier.staffCap}</strong></div>
+                      <div style={{ marginBottom: 4 }}>🏪 Locations: <strong>{tier.locationCap === Infinity ? 'Unlimited' : tier.locationCap}</strong></div>
+                      <div style={{ marginBottom: 4 }}>💳 Payment gateways: <strong>{tier.paymentGateways ? '✓ All 15' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>🎁 Promo codes: <strong>{tier.promoCodes ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>🖨️ Kitchen printer: <strong>{tier.bluetoothPrinter ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>📣 Marketing banners: <strong>{tier.marketingBanners ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>✨ AI suggest: <strong>{tier.aiMenuSuggest ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>📊 Advanced analytics: <strong>{tier.advancedAnalytics ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>💾 Backup & restore: <strong>{tier.backupRestore ? '✓' : '—'}</strong></div>
+                      <div style={{ marginBottom: 4 }}>🌐 Custom domain: <strong>{tier.customDomain ? '✓' : '—'}</strong></div>
+                      <div>🎨 White-label: <strong>{tier.whiteLabel ? '✓' : '—'}</strong></div>
+                    </div>
+                    {!isCurrent && !isLower && (
+                      <button onClick={() => { setSubPickerOpen(true) }} style={{ marginTop: 14, width: '100%', padding: '12px 14px', borderRadius: 12, border: 'none', background: accentColor, color: '#000', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Upgrade to {tier.label} →</button>
+                    )}
+                    {!isCurrent && isLower && (
+                      <div style={{ marginTop: 14, fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '8px 0' }}>Downgrade — contact support if you need this</div>
+                    )}
+                  </div>
+                )
+              })}
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', padding: '8px 4px 0', lineHeight: 1.5 }}>
+                Pricing is detected from your country at signup. Changes take effect from your next billing cycle.
               </div>
             </div>
           </div>

@@ -27,25 +27,34 @@ const VERTICALS = [
   { id: 'services', label: 'Salons, Tattoo Studios & Bookings', emoji: '💇', desc: 'Time-slot bookings, service menu, deposit-on-book — any appointment trade.', href: '/services',       demoHref: '/services',       live: false, cta: 'Try the demo →' },
 ]
 
-// ── Same pricing table the donut app uses. Single unified plan,
-//    localised to the visitor's market. Source of truth here so the
-//    landing doesn't import from food-basic.
+// ── Country × tier pricing matrix.
+//
+//    Three tiers (starter / professional / enterprise) × 15 markets =
+//    45 prices. Asia keeps the historical Starter anchor (Rp 38k etc.)
+//    and adds Pro / Enterprise on top. International gets the full
+//    USD / GBP / EUR matrix the user signed off on.
+//
+//    Currency + symbol are per-country (currency doesn't change with
+//    tier). Tier prices are integers in the display unit (you'll
+//    show "$19" not "$19.00").
 const PLAN_PRICING = {
-  ID:   { code: 'ID', currency: 'IDR', symbol: 'Rp', label: 'Rp 38,000',  display: '38,000' },
-  US:   { code: 'US', currency: 'USD', symbol: '$',  label: '$4.99',      display: '4.99' },
-  GB:   { code: 'GB', currency: 'GBP', symbol: '£',  label: '£4.99',      display: '4.99' },
-  EU:   { code: 'EU', currency: 'EUR', symbol: '€',  label: '€4.99',      display: '4.99' },
-  AU:   { code: 'AU', currency: 'AUD', symbol: 'A$', label: 'A$4.99',     display: '4.99' },
-  NZ:   { code: 'NZ', currency: 'NZD', symbol: 'NZ$',label: 'NZ$4.99',    display: '4.99' },
-  CA:   { code: 'CA', currency: 'CAD', symbol: 'C$', label: 'C$4.99',     display: '4.99' },
-  SG:   { code: 'SG', currency: 'SGD', symbol: 'S$', label: 'S$4.99',     display: '4.99' },
-  MY:   { code: 'MY', currency: 'MYR', symbol: 'RM', label: 'RM 10.99',   display: '10.99' },
-  PH:   { code: 'PH', currency: 'PHP', symbol: '₱',  label: '₱149',       display: '149' },
-  VN:   { code: 'VN', currency: 'VND', symbol: '₫',  label: '₫69,000',    display: '69,000' },
-  TH:   { code: 'TH', currency: 'THB', symbol: '฿',  label: '฿89',        display: '89' },
-  IN:   { code: 'IN', currency: 'INR', symbol: '₹',  label: '₹199',       display: '199' },
-  AE:   { code: 'AE', currency: 'AED', symbol: 'AED',label: 'AED 18',     display: '18' },
-  SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',label: 'SAR 18',     display: '18' },
+  // International — USD anchor, PPP-light pricing
+  US:   { code: 'US', currency: 'USD', symbol: '$',  starter: '19',     professional: '49',     enterprise: '99' },
+  GB:   { code: 'GB', currency: 'GBP', symbol: '£',  starter: '15',     professional: '39',     enterprise: '79' },
+  EU:   { code: 'EU', currency: 'EUR', symbol: '€',  starter: '17',     professional: '45',     enterprise: '89' },
+  AU:   { code: 'AU', currency: 'AUD', symbol: 'A$', starter: '29',     professional: '69',     enterprise: '139' },
+  CA:   { code: 'CA', currency: 'CAD', symbol: 'C$', starter: '25',     professional: '69',     enterprise: '129' },
+  NZ:   { code: 'NZ', currency: 'NZD', symbol: 'NZ$',starter: '29',     professional: '79',     enterprise: '149' },
+  SG:   { code: 'SG', currency: 'SGD', symbol: 'S$', starter: '25',     professional: '69',     enterprise: '129' },
+  MY:   { code: 'MY', currency: 'MYR', symbol: 'RM', starter: '69',     professional: '179',    enterprise: '359' },
+  AE:   { code: 'AE', currency: 'AED', symbol: 'AED',starter: '75',     professional: '199',    enterprise: '399' },
+  SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',starter: '75',     professional: '199',    enterprise: '399' },
+  // Asia PPP — keep historic Asia anchor as Starter
+  ID:   { code: 'ID', currency: 'IDR', symbol: 'Rp', starter: '38,000', professional: '99,000', enterprise: '249,000' },
+  PH:   { code: 'PH', currency: 'PHP', symbol: '₱',  starter: '999',    professional: '2,499',  enterprise: '4,999' },
+  VN:   { code: 'VN', currency: 'VND', symbol: '₫',  starter: '399,000',professional: '999,000',enterprise: '1,999,000' },
+  TH:   { code: 'TH', currency: 'THB', symbol: '฿',  starter: '599',    professional: '1,499',  enterprise: '2,999' },
+  IN:   { code: 'IN', currency: 'INR', symbol: '₹',  starter: '1,499',  professional: '3,499',  enterprise: '6,999' },
 }
 const EU_COUNTRIES = new Set(['FR','DE','ES','IT','NL','BE','IE','PT','AT','FI','GR','LU','SE','DK','NO','CH','PL','CZ','RO','HU'])
 function resolvePlanPricing (cc) {
@@ -53,6 +62,57 @@ function resolvePlanPricing (cc) {
   if (PLAN_PRICING[code]) return PLAN_PRICING[code]
   if (EU_COUNTRIES.has(code)) return PLAN_PRICING.EU
   return PLAN_PRICING.US
+}
+// What each tier promises on the landing. Drives the 3-card pricing
+// display below. Source of truth = the TIER_FEATURES contract in the
+// donut app; this is the marketing-friendly bullet list version.
+const TIER_BULLETS = {
+  starter: {
+    label: 'Starter',
+    blurb: 'For small shops & single-owner businesses',
+    bullets: [
+      'Premium PWA app + mobile install',
+      'Unlimited menu items',
+      'WhatsApp + in-app chat checkout',
+      'Loyalty stamps, tax / VAT, receipts',
+      'Stock auto-hide',
+      '11 languages, 15 currencies',
+      '1 staff account',
+      'Shop subdomain (your-shop.streetlocal.live)',
+    ],
+  },
+  professional: {
+    label: 'Professional',
+    blurb: 'For busy cafes & growing brands · most popular',
+    featured: true,
+    bullets: [
+      'Everything in Starter',
+      '15 payment gateways (Stripe, Midtrans, …)',
+      'Bluetooth kitchen printer (ESC/POS)',
+      'Scheduled pre-orders',
+      'Marketing banners + auto-post countdown',
+      '14-day re-engagement automation',
+      'Promo codes (% / flat / first-order)',
+      'AI menu descriptions (✨ powered by Claude)',
+      'Custom domain (your-shop.com)',
+      'Advanced analytics + profit estimator',
+      'Backup & restore',
+      'Up to 5 staff accounts',
+    ],
+  },
+  enterprise: {
+    label: 'Enterprise',
+    blurb: 'For multi-location chains & premium brands',
+    bullets: [
+      'Everything in Professional',
+      'Multi-location management',
+      'Centralised cross-location analytics',
+      'Unlimited staff accounts',
+      'White-label branding (no "Powered by")',
+      'Priority support',
+      'Early access to new features',
+    ],
+  },
 }
 
 // ── FitIframe: renders an iframe at NATURAL design size and scales
@@ -100,33 +160,40 @@ const FAQS = [
   ['Can I cancel any time?', 'Yes. No long-term commitment. The day you cancel, your shop stays live until the end of the paid period.'],
 ]
 
+// Supabase Edge Function URL — the server-side authority on pricing.
+// We never trust client-detected country; this is the geofence boundary.
+const RESOLVE_PRICING_URL = 'https://fjvafjkzvygkhiwjuvla.supabase.co/functions/v1/resolve-pricing'
+const RESOLVE_PRICING_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqdmFmamt6dnlna2hpd2p1dmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDk0NDEsImV4cCI6MjA5MDY4NTQ0MX0.UoXfKznY9gAEqZDSTegDjIfYAeAeFg6Eh1D40Hoe2KM'
+
 export default function PremiumHome () {
-  // IP-detected country drives the pricing tile. Stored to localStorage
-  // under the same key the i18n auto-detect uses, so the donut app
-  // picks it up too.
-  const [country, setCountry] = useState(() => {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem('sl_app_country')
-  })
-  const [overrideCountry, setOverrideCountry] = useState(null)
-  const [countryPickerOpen, setCountryPickerOpen] = useState(false)
+  // Pricing market is resolved SERVER-SIDE — IP + VPN flags + timezone
+  // triangulation. We never read country from URL params, localStorage,
+  // or the manual picker (which is intentionally removed). On failure
+  // we hold at US pricing — never default to Asia.
+  const [market, setMarket] = useState('US')
+  const [marketLoaded, setMarketLoaded] = useState(false)
 
   useEffect(() => {
-    if (country) return
-    fetch('https://ip2c.org/s')
-      .then(r => r.text())
-      .then(t => {
-        const parts = (t || '').split(';')
-        if (parts[0] === '1' && parts[1]) {
-          setCountry(parts[1])
-          try { localStorage.setItem('sl_app_country', parts[1]) } catch {}
-        }
-      })
-      .catch(() => {})
-  }, [country])
+    const ctrl = new AbortController()
+    ;(async () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+        const lang = (navigator.language || navigator.userLanguage || '').slice(0, 12)
+        const resp = await fetch(RESOLVE_PRICING_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': RESOLVE_PRICING_KEY },
+          body: JSON.stringify({ timezone: tz, language: lang }),
+          signal: ctrl.signal,
+        })
+        const data = await resp.json()
+        if (data?.market) setMarket(String(data.market).toUpperCase())
+      } catch { /* keep US default */ }
+      finally { setMarketLoaded(true) }
+    })()
+    return () => ctrl.abort()
+  }, [])
 
-  const plan = resolvePlanPricing(overrideCountry || country)
-  const allCountries = Object.values(PLAN_PRICING)
+  const plan = resolvePlanPricing(market)
 
   return (
     <div className="sl-home">
@@ -228,10 +295,28 @@ export default function PremiumHome () {
         .sl-feature__title { font-size: 19px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.2px; color: var(--sl-black); }
         .sl-feature__desc { font-size: 14px; color: var(--sl-gray-600); line-height: 1.55; margin: 0; }
 
-        /* PRICING */
+        /* PRICING — 3-tier card grid */
         .sl-pricing-bg { background: var(--sl-gray-50); border-top: 1px solid var(--sl-gray-200); border-bottom: 1px solid var(--sl-gray-200); }
-        .sl-price-card { max-width: 480px; margin: 50px auto 0; background: var(--sl-black); color: #fff; border-radius: 24px; padding: 28px 20px; box-shadow: 0 22px 60px rgba(0,0,0,0.18); position: relative; overflow: hidden; }
-        @media (min-width: 480px) { .sl-price-card { border-radius: 28px; padding: 36px 28px; } }
+        .sl-tier-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 50px auto 0; max-width: 1100px; }
+        @media (min-width: 760px) { .sl-tier-grid { grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; } }
+        .sl-tier { position: relative; background: #fff; border: 1px solid var(--sl-gray-200); border-radius: 22px; padding: 28px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .sl-tier--featured { background: var(--sl-black); color: #fff; border-color: var(--sl-black); box-shadow: 0 22px 50px rgba(0,0,0,0.25); transform: none; }
+        @media (min-width: 760px) { .sl-tier--featured { transform: translateY(-8px); } }
+        .sl-tier__ribbon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); color: var(--sl-black); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 6px 16px rgba(250,204,21,0.4); }
+        .sl-tier__label { font-size: 14px; font-weight: 800; color: var(--sl-yellow-deep); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 6px; }
+        .sl-tier--featured .sl-tier__label { color: var(--sl-yellow); }
+        .sl-tier__blurb { font-size: 13px; color: var(--sl-gray-500); line-height: 1.45; margin-bottom: 20px; min-height: 38px; }
+        .sl-tier--featured .sl-tier__blurb { color: rgba(255,255,255,0.65); }
+        .sl-tier__amount { font-size: 48px; font-weight: 900; line-height: 1; letter-spacing: -1.4px; display: flex; align-items: baseline; gap: 4px; margin-bottom: 22px; }
+        .sl-tier__symbol { font-size: 24px; font-weight: 800; opacity: 0.75; }
+        .sl-tier__per { font-size: 14px; font-weight: 600; color: var(--sl-gray-500); margin-left: 6px; }
+        .sl-tier--featured .sl-tier__per { color: rgba(255,255,255,0.55); }
+        .sl-tier__list { list-style: none; padding: 0; margin: 0 0 24px; flex: 1; }
+        .sl-tier__list li { padding: 6px 0 6px 22px; position: relative; font-size: 13px; line-height: 1.45; color: var(--sl-gray-700); }
+        .sl-tier--featured .sl-tier__list li { color: rgba(255,255,255,0.85); }
+        .sl-tier__list li::before { content: '✓'; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border-radius: 4px; background: var(--sl-yellow); color: var(--sl-black); font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .sl-tier__cta { width: 100%; margin-top: auto; }
+        .sl-tier--featured .sl-btn--ghost { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
         .sl-price-card::before { content: ''; position: absolute; top: -50%; right: -30%; width: 80%; height: 200%; background: radial-gradient(closest-side, rgba(250,204,21,0.25) 0%, transparent 70%); pointer-events: none; }
         .sl-price-card__label { font-size: 12px; font-weight: 800; color: var(--sl-yellow); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 10px; position: relative; }
         .sl-price-card__amount { font-size: 48px; font-weight: 900; line-height: 1; letter-spacing: -1.4px; display: flex; align-items: baseline; gap: 6px; position: relative; }
@@ -405,32 +490,31 @@ export default function PremiumHome () {
             <h2 className="sl-h2">Your country's price.<br /><span className="sl-h2__accent">All-inclusive.</span></h2>
             <p className="sl-section__lede">No tiers. No surprises. Everything in the platform is included — pricing localised to your market via your IP.</p>
           </div>
-          <div className="sl-price-card">
-            <div className="sl-price-card__label">Activate · 30 days · per shop</div>
-            <div className="sl-price-card__amount">
-              <span className="sl-price-card__amount-symbol">{plan.symbol}</span>{plan.display}
-            </div>
-            <div className="sl-price-card__per">per shop · per month · all features included</div>
-            <div className="sl-price-card__inc">
-              {['📱 WhatsApp orders', '💬 In-app chat', '💳 Payment gateways', '📊 Sales dashboard', '🍩 Unlimited menu', '🌍 11 languages', '🖨️ Kitchen printer', '🎟️ Loyalty stamps', '🏪 Multi-location', '👥 Multi-staff'].map(f => (
-                <span key={f} className="sl-price-card__chip">{f}</span>
-              ))}
-            </div>
-            <a href="/food/chat" className="sl-btn sl-btn--primary sl-btn--lg" style={{ width: '100%', marginBottom: 12 }}>Start your shop for {plan.symbol}{plan.display}</a>
-            <button type="button" className="sl-price-card__country" onClick={() => setCountryPickerOpen(o => !o)}>
-              <span><span style={{ opacity: 0.55 }}>Pricing for </span><strong style={{ color: 'var(--sl-yellow)' }}>{plan.code}</strong></span>
-              <span style={{ opacity: 0.5 }}>{countryPickerOpen ? '▲' : '▼'} Wrong country?</span>
-            </button>
-            {countryPickerOpen && (
-              <div className="sl-country-list">
-                {allCountries.map(p => (
-                  <button key={p.code} onClick={() => { setOverrideCountry(p.code); setCountryPickerOpen(false) }}>
-                    <span>{p.code} · {p.currency}</span>
-                    <span style={{ fontWeight: 800, color: 'var(--sl-yellow)' }}>{p.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="sl-tier-grid">
+            {['starter', 'professional', 'enterprise'].map(tierKey => {
+              const tier = TIER_BULLETS[tierKey]
+              const price = plan[tierKey]
+              return (
+                <div key={tierKey} className={`sl-tier${tier.featured ? ' sl-tier--featured' : ''}`}>
+                  {tier.featured && <div className="sl-tier__ribbon">Most popular</div>}
+                  <div className="sl-tier__label">{tier.label}</div>
+                  <div className="sl-tier__blurb">{tier.blurb}</div>
+                  <div className="sl-tier__amount">
+                    <span className="sl-tier__symbol">{plan.symbol}</span>{price}
+                    <span className="sl-tier__per">/month</span>
+                  </div>
+                  <ul className="sl-tier__list">
+                    {tier.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                  </ul>
+                  <a href="/food/chat" className={`sl-btn ${tier.featured ? 'sl-btn--primary' : 'sl-btn--ghost'} sl-btn--lg sl-tier__cta`}>
+                    Start {tier.label}
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--sl-gray-500)', textAlign: 'center', marginTop: 18 }}>
+            Pricing for <strong style={{ color: 'var(--sl-black)', fontWeight: 800 }}>{plan.code}</strong>{!marketLoaded && ' …'} · auto-detected from your location · no commission on orders, ever
           </div>
         </div>
       </section>
