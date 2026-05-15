@@ -1553,6 +1553,7 @@ export default function App() {
     },
   ]
   const [themeBrowser, setThemeBrowser] = useState(false) // show theme browser
+  const [themeLibraryOpen, setThemeLibraryOpen] = useState(false) // curated background picker
   const [themeSearch, setThemeSearch] = useState('')
   const [themeCountry, setThemeCountry] = useState('all')
   const [themePreviewId, setThemePreviewId] = useState(null)
@@ -8907,6 +8908,7 @@ export default function App() {
 
               const design = [
                 { icon: '🖼️', label: 'Themes', desc: 'Browse & apply app themes', onClick: () => setThemeBrowser(true) },
+                { icon: '🌅', label: 'Theme Library', desc: 'Pick a background — or upload your own', onClick: () => setThemeLibraryOpen(true) },
                 { icon: '✨', label: 'Design Studio', desc: 'Logo, layout, effects, splash', onClick: () => setDesignStudio(true) },
               ]
 
@@ -10089,6 +10091,96 @@ export default function App() {
       )}
 
       <style>{`@keyframes newBadgeDance { 0%, 100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.15) rotate(-3deg); } 50% { transform: scale(1) rotate(3deg); } 75% { transform: scale(1.1) rotate(-2deg); } }`}</style>
+      {/* ═══ THEME LIBRARY PAGE ═══
+          Curated grid of background images shown inside iPhone frames.
+          Vendor picks one (or uploads their own) and the bg applies to
+          BOTH the splash and the in-app theme so the shop reads as one
+          coherent surface. The 6 starter images are placeholders the
+          user will replace with their own curated set. */}
+      {themeLibraryOpen && (() => {
+        const donutPreset = THEME_PRESETS.find(t => t.id === 'donut')
+        const LIBRARY = donutPreset ? [donutPreset.img, ...(donutPreset.variants || [])] : []
+        // Track which bg is currently active so the selected tile gets
+        // a visible "Active" outline + chip.
+        const currentBg = donutLanding.bgImg || localStorage.getItem('foodlocalchat_themeBg') || ''
+        const applyBg = (url) => {
+          if (!url) return
+          // Update splash + theme together so both surfaces share one bg.
+          setDonutField('bgImg', url)
+          try { localStorage.setItem('foodlocalchat_themeBg', url) } catch {}
+          const bgImg = document.getElementById('app-bg-img')
+          if (bgImg) bgImg.src = url
+        }
+        const handleUpload = async (e) => {
+          const f = e.target.files?.[0]
+          e.target.value = ''
+          if (!f) return
+          const url = await uploadMenuImage(vendorId, f)
+          if (url) applyBg(url)
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            {/* Same donut bg as the app — keeps the visual continuity */}
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            {/* Header */}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', flexShrink: 0 }}>
+              <button onClick={() => setThemeLibraryOpen(false)} aria-label="Back" style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>←</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', lineHeight: 1.1 }}>Theme Library</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Pick a background — or upload your own</div>
+              </div>
+            </div>
+
+            {/* Scrollable grid */}
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {LIBRARY.map((url, idx) => {
+                  const isActive = currentBg === url
+                  return (
+                    <button key={idx} type="button" onClick={() => applyBg(url)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      {/* iPhone frame */}
+                      <div style={{ width: 140, height: 250, borderRadius: 22, background: '#1a1a1a', padding: 4, position: 'relative', border: isActive ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.12)', boxShadow: isActive ? `0 0 16px ${accent}66, 0 6px 16px rgba(0,0,0,0.45)` : '0 6px 16px rgba(0,0,0,0.45)', transition: 'all 0.25s ease' }}>
+                        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
+                        <div style={{ width: '100%', height: '100%', borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#000' }}>
+                          <img src={url} alt={`Background ${idx + 1}`} onError={imgError('theme')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {/* Subtle bottom shadow for the home-indicator effect */}
+                          <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.35)', zIndex: 3 }} />
+                        </div>
+                        {isActive && (
+                          <div style={{ position: 'absolute', top: -8, right: -8, padding: '3px 8px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 900, boxShadow: '0 2px 6px rgba(34,197,94,0.5)', zIndex: 4 }}>Active</div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>Theme {idx + 1}</div>
+                    </button>
+                  )
+                })}
+
+                {/* Upload-your-own tile — same iPhone frame size so the
+                    grid stays balanced. Tap opens the file picker. */}
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
+                  <div style={{ width: 140, height: 250, borderRadius: 22, background: 'rgba(255,255,255,0.06)', padding: 4, position: 'relative', border: `2px dashed ${accent}55`, boxShadow: '0 6px 16px rgba(0,0,0,0.3)' }}>
+                    <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 44, height: 10, background: '#000', borderRadius: 7, zIndex: 3 }} />
+                    <div style={{ width: '100%', height: '100%', borderRadius: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: `linear-gradient(180deg, ${accent}15 0%, rgba(0,0,0,0.4) 100%)`, color: '#fff' }}>
+                      <div style={{ width: 52, height: 52, borderRadius: 26, background: `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>＋</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '0 8px', lineHeight: 1.3 }}>Upload<br />your own</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>From your photos</div>
+                </label>
+              </div>
+
+              <div style={{ marginTop: 28, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.45)', border: `1px solid ${accent}33`, fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
+                <div style={{ fontWeight: 800, color: '#fff', marginBottom: 4 }}>Tip</div>
+                Pick portrait images (3:4 or taller) for the cleanest fit on phone screens. The background applies to both the splash and the menu — keep it bold but uncluttered so menu text stays readable.
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ═══ THEME BROWSER PAGE ═══ */}
       {themeBrowser && (() => {
         const countries = [...new Set(THEME_PRESETS.flatMap(t => t.countries))]
