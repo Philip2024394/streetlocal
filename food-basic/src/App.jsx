@@ -1645,6 +1645,42 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_dispatch', marketingAutoPostDispatch ? 'true' : 'false') }, [marketingAutoPostDispatch])
   const [marketingAutoPost14Days, setMarketingAutoPost14Days] = useState(() => localStorage.getItem('foodlocalchat_marketing_autopost_14days') === 'true')
   useEffect(() => { localStorage.setItem('foodlocalchat_marketing_autopost_14days', marketingAutoPost14Days ? 'true' : 'false') }, [marketingAutoPost14Days])
+  // Sync marketing banners from Supabase on mount when the vendor has
+  // a real UUID id. Demo / local vendors stay localStorage-only. The
+  // remote shape uses snake_case columns; map them to the camelCase
+  // banner records the rest of the page reads.
+  useEffect(() => {
+    if (!isVendor || !supabase || !vendorId) return
+    if (!isUuid(vendorId)) return
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('marketing_banners')
+          .select('*')
+          .eq('vendor_id', vendorId)
+          .order('created_at', { ascending: false })
+        if (!data) return
+        const remoteBanners = data.map(r => ({
+          id: r.id,
+          format: r.format,
+          bgImage: r.bg_image,
+          tint: r.tint,
+          textColor: r.text_color,
+          headline: r.headline,
+          discount: r.discount,
+          subtitle: r.subtitle || '',
+          showLogo: !!r.show_logo,
+          showShopName: !!r.show_shop_name,
+          bakedImageUrl: r.baked_image_url,
+          bakedAt: r.baked_at ? new Date(r.baked_at).getTime() : null,
+          createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
+        }))
+        // Replace only if remote has any rows — otherwise the local
+        // unsynced drafts stay until the vendor saves them.
+        if (remoteBanners.length > 0) setMarketingBanners(remoteBanners)
+      } catch {}
+    })()
+  }, [isVendor, vendorId])
   // Vendor's own uploaded backgrounds — persisted so they survive
   // reloads and can be re-selected later. Capped at 8 to avoid
   // unbounded growth.
@@ -7988,11 +8024,14 @@ export default function App() {
                         try { await sendSystemStatus({ conversationId: conv.id, body: 'Your order is on the way! 🛵' }) } catch {}
                         // Auto-post the active marketing banner right after
                         // the dispatch confirmation — best window for a
-                        // repeat-purchase nudge.
+                        // repeat-purchase nudge. Uses the BAKED PNG so
+                        // the customer's chat shows the full composed
+                        // image, not raw text fragments.
                         if (marketingAutoPostDispatch && marketingActiveBannerId) {
                           const banner = marketingBanners.find(b => b.id === marketingActiveBannerId)
                           if (banner) {
-                            const promoBody = `🎁 ${banner.discount} · ${banner.headline}${banner.subtitle ? '\n' + banner.subtitle : ''}${banner.bgImage ? '\n' + banner.bgImage : ''}`
+                            const imageUrl = banner.bakedImageUrl || banner.bgImage || ''
+                            const promoBody = `🎁 ${banner.discount} · ${banner.headline}${banner.subtitle ? '\n' + banner.subtitle : ''}${imageUrl ? '\n' + imageUrl : ''}`
                             try { await sendSystemStatus({ conversationId: conv.id, body: promoBody }) } catch {}
                           }
                         }
@@ -10828,6 +10867,156 @@ export default function App() {
           setMarketingEditingBannerId(id)
         }
 
+        // ── CANVAS BAKE ─────────────────────────────────────
+        // Draws the banner (bg + tint + logo + shop name + discount +
+        // headline + subtitle) onto a high-resolution canvas, uploads
+        // the PNG to Supabase storage, returns the public URL. Used by
+        // share buttons so Instagram / Facebook / WhatsApp receive a
+        // single PNG with all the text BAKED IN — no overlay tricks,
+        // no "copy text + bg separately" workaround.
+        //
+        // Output sizes match the canonical aspect ratios social
+        // platforms expect:
+        //   landscape: 1200×630 (Open Graph + WA share)
+        //   square:    1080×1080 (Instagram feed)
+        //   story:     1080×1920 (Instagram / Facebook story)
+        const bakeBanner = async (b) => {
+          const sizes = { landscape: [1200, 630], square: [1080, 1080], story: [1080, 1920] }
+          const [W, H] = sizes[b.format] || sizes.landscape
+          const canvas = document.createElement('canvas')
+          canvas.width = W; canvas.height = H
+          const ctx = canvas.getContext('2d')
+          // 1. Background image — drawn cover-fit
+          if (b.bgImage) {
+            const img = await new Promise((resolve, reject) => {
+              const i = new Image()
+              i.crossOrigin = 'anonymous'
+              i.onload = () => resolve(i)
+              i.onerror = reject
+              i.src = b.bgImage
+            }).catch(() => null)
+            if (img) {
+              const r = Math.max(W / img.width, H / img.height)
+              const dw = img.width * r, dh = img.height * r
+              ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh)
+            }
+          } else {
+            ctx.fillStyle = '#222'
+            ctx.fillRect(0, 0, W, H)
+          }
+          // 2. Tint overlay (full-canvas)
+          ctx.fillStyle = b.tint || 'rgba(0,0,0,0.4)'
+          ctx.fillRect(0, 0, W, H)
+          // 3. Logo (top-left, circle-clipped)
+          const margin = W * 0.04
+          let headerCursorX = margin
+          if (b.showLogo && shopLogo) {
+            const logoImg = await new Promise((resolve) => {
+              const i = new Image()
+              i.crossOrigin = 'anonymous'
+              i.onload = () => resolve(i)
+              i.onerror = () => resolve(null)
+              i.src = shopLogo
+            })
+            if (logoImg) {
+              const ls = W * 0.10
+              ctx.save()
+              ctx.beginPath()
+              ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
+              ctx.closePath()
+              ctx.clip()
+              ctx.drawImage(logoImg, margin, margin, ls, ls)
+              ctx.restore()
+              ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+              ctx.lineWidth = W * 0.005
+              ctx.beginPath()
+              ctx.arc(margin + ls / 2, margin + ls / 2, ls / 2, 0, Math.PI * 2)
+              ctx.stroke()
+              headerCursorX = margin + ls + W * 0.025
+            }
+          }
+          // 4. Shop name (right of logo, top)
+          if (b.showShopName && shopName) {
+            const nameSize = W * 0.04
+            ctx.font = `800 ${nameSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+            ctx.fillStyle = b.textColor
+            ctx.textBaseline = 'middle'
+            ctx.shadowColor = 'rgba(0,0,0,0.6)'
+            ctx.shadowBlur = W * 0.012
+            ctx.fillText(shopName, headerCursorX, margin + (W * 0.10) / 2)
+            ctx.shadowBlur = 0
+          }
+          // 5. Discount (huge, bottom-left)
+          const isStory = b.format === 'story'
+          const discountSize = W * (isStory ? 0.18 : 0.14)
+          ctx.font = `900 ${discountSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+          ctx.fillStyle = b.textColor
+          ctx.textBaseline = 'alphabetic'
+          ctx.shadowColor = 'rgba(0,0,0,0.6)'
+          ctx.shadowBlur = W * 0.018
+          const discountY = isStory ? H * 0.72 : H * 0.65
+          ctx.fillText(b.discount || '', margin, discountY)
+          ctx.shadowBlur = 0
+          // 6. Headline
+          const headlineSize = W * 0.052
+          ctx.font = `800 ${headlineSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+          ctx.fillStyle = b.textColor
+          ctx.shadowColor = 'rgba(0,0,0,0.6)'
+          ctx.shadowBlur = W * 0.01
+          ctx.fillText(b.headline || '', margin, discountY + headlineSize * 1.2)
+          // 7. Subtitle
+          if (b.subtitle) {
+            const subSize = W * 0.035
+            ctx.font = `600 ${subSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+            ctx.globalAlpha = 0.92
+            ctx.fillText(b.subtitle, margin, discountY + headlineSize * 1.2 + subSize * 1.4)
+            ctx.globalAlpha = 1
+          }
+          ctx.shadowBlur = 0
+          // 8. Export to blob → upload to Supabase storage → public URL
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.92))
+          if (!blob) throw new Error('canvas-to-blob failed')
+          if (!supabase) {
+            // No backend → return a local object URL for download/share
+            return URL.createObjectURL(blob)
+          }
+          const path = `vendor-marketing/${vendorId}/${b.id}-${Date.now()}.png`
+          const up = await supabase.storage.from('images').upload(path, blob, { contentType: 'image/png', upsert: false })
+          if (up.error) throw up.error
+          const { data: pub } = supabase.storage.from('images').getPublicUrl(path)
+          return pub?.publicUrl || null
+        }
+        // Bake + persist the baked URL on the banner record (local +
+        // Supabase). Used by share buttons + auto-post-on-dispatch.
+        const bakeAndPersist = async (b) => {
+          const url = await bakeBanner(b)
+          if (!url) return null
+          // Local state
+          setMarketingBanners(prev => prev.map(x => x.id === b.id ? { ...x, bakedImageUrl: url, bakedAt: Date.now() } : x))
+          // Supabase: upsert this banner row so the baked URL persists
+          // server-side too. Skip when vendorId isn't a real UUID (demo).
+          if (supabase && isUuid(vendorId)) {
+            try {
+              await supabase.from('marketing_banners').upsert({
+                id: isUuid(b.id) ? b.id : undefined, // let DB generate when local id is "b-…"
+                vendor_id: vendorId,
+                format: b.format,
+                bg_image: b.bgImage || '',
+                tint: b.tint,
+                text_color: b.textColor,
+                headline: b.headline,
+                discount: b.discount,
+                subtitle: b.subtitle || '',
+                show_logo: !!b.showLogo,
+                show_shop_name: !!b.showShopName,
+                baked_image_url: url,
+                baked_at: new Date().toISOString(),
+              })
+            } catch {}
+          }
+          return url
+        }
+
         // ── INNER PREVIEW RENDER ──────────────────────────────
         // Renders one banner at the given pixel size. Used in the
         // editor, the saved-banners list, and (eventually) inside
@@ -10863,18 +11052,54 @@ export default function App() {
         }
 
         // ── SHARE HELPERS ─────────────────────────────────────
+        // Every share goes through bakeAndPersist() first so the URL
+        // sent to social platforms is the FULL composed PNG with
+        // discount + headline + subtitle baked in. No "share text +
+        // bg URL separately" hack anymore.
         const shareText = (b) => `🍩 ${shopName} · ${b.discount}\n${b.headline}\n${b.subtitle || ''}`.trim()
-        const shareWhatsApp = (b) => {
-          const txt = encodeURIComponent(shareText(b) + (b.bgImage ? `\n\n${b.bgImage}` : ''))
-          window.open(`https://wa.me/?text=${txt}`, '_blank', 'noopener,noreferrer')
+        const ensureBaked = async (b) => {
+          if (b.bakedImageUrl) return b.bakedImageUrl
+          try { return await bakeAndPersist(b) } catch { return null }
         }
-        const shareFacebook = (b) => {
-          // Facebook share dialog accepts a URL — share the bg image
-          // URL with the caption baked into the share text. Best
-          // result: vendor downloads the rendered banner and uploads
-          // manually. This is the deeplink fallback for now.
-          const u = encodeURIComponent(b.bgImage || window.location.href)
+        const shareWhatsApp = async (b) => {
+          const url = await ensureBaked(b)
+          const body = shareText(b) + (url ? `\n\n${url}` : '')
+          window.open(`https://wa.me/?text=${encodeURIComponent(body)}`, '_blank', 'noopener,noreferrer')
+        }
+        const shareFacebook = async (b) => {
+          const url = await ensureBaked(b)
+          const u = encodeURIComponent(url || b.bgImage || window.location.href)
           window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${encodeURIComponent(shareText(b))}`, '_blank', 'noopener,noreferrer')
+        }
+        // Instagram has no web share intent. The reliable mobile path
+        // is navigator.share({ files: [pngFile] }) — iOS Safari +
+        // Chrome Android both surface Instagram in the picker. On
+        // desktop we fall back to download + copy-text-to-clipboard.
+        const shareInstagram = async (b) => {
+          const url = await ensureBaked(b)
+          if (!url) { alert('Could not generate image — try again.'); return }
+          try {
+            const res = await fetch(url)
+            const blob = await res.blob()
+            const file = new File([blob], `promo-${b.id}.png`, { type: 'image/png' })
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], text: shareText(b), title: shopName })
+              return
+            }
+          } catch {}
+          // Fallback: copy text, download image, open instagram.com
+          try { await navigator.clipboard.writeText(shareText(b)) } catch {}
+          const a = document.createElement('a')
+          a.href = url; a.download = `promo-${b.id}.png`
+          document.body.appendChild(a); a.click(); a.remove()
+          window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer')
+        }
+        const downloadBanner = async (b) => {
+          const url = await ensureBaked(b)
+          if (!url) return
+          const a = document.createElement('a')
+          a.href = url; a.download = `promo-${b.format}-${b.id}.png`
+          document.body.appendChild(a); a.click(); a.remove()
         }
         const copyShareText = async (b) => {
           try { await navigator.clipboard.writeText(shareText(b)); alert('Copied promo text — paste it into your post.') } catch { alert('Copy failed. Long-press the text to copy manually.') }
@@ -10956,13 +11181,19 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Share + activate row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <button type="button" onClick={() => shareWhatsApp(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.12)', color: '#86EFAC', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📱 WhatsApp</button>
-                    <button type="button" onClick={() => shareFacebook(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.12)', color: '#93C5FD', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📘 Facebook</button>
-                    <button type="button" onClick={() => copyShareText(editing)} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>📋 Copy text</button>
-                    <button type="button" onClick={() => setMarketingActiveBannerId(editing.id)} style={{ padding: '12px', borderRadius: 12, border: 'none', background: marketingActiveBannerId === editing.id ? '#22c55e' : accent, color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', minHeight: 44 }}>{marketingActiveBannerId === editing.id ? '✓ Active' : 'Set as active'}</button>
+                  {/* Share + activate — each share auto-bakes the
+                      banner into a real PNG first, uploads to Supabase
+                      storage, then hands the public URL to the channel. */}
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.4, marginTop: 4 }}>Share</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                    <button type="button" onClick={() => shareWhatsApp(editing)}  style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(37,211,102,0.4)',  background: 'rgba(37,211,102,0.12)',  color: '#86EFAC', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>📱 WhatsApp</button>
+                    <button type="button" onClick={() => shareInstagram(editing)} style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(236,72,153,0.4)',  background: 'rgba(236,72,153,0.12)',  color: '#F9A8D4', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>📷 Instagram</button>
+                    <button type="button" onClick={() => shareFacebook(editing)}  style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(59,130,246,0.4)',  background: 'rgba(59,130,246,0.12)',  color: '#93C5FD', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>📘 Facebook</button>
+                    <button type="button" onClick={() => downloadBanner(editing)} style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)',  color: '#fff',    fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>⬇ Download</button>
+                    <button type="button" onClick={() => copyShareText(editing)}  style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)',  color: '#fff',    fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>📋 Copy text</button>
+                    <button type="button" onClick={async () => { await bakeAndPersist(editing); alert('Banner image generated and saved.') }} style={{ padding: '12px 6px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>🔄 Re-bake</button>
                   </div>
+                  <button type="button" onClick={() => setMarketingActiveBannerId(editing.id)} style={{ padding: '14px', borderRadius: 12, border: 'none', background: marketingActiveBannerId === editing.id ? '#22c55e' : accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', minHeight: 48, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{marketingActiveBannerId === editing.id ? '✓ Active — auto-posts after dispatch' : 'Set as active'}</button>
 
                   <button type="button" onClick={() => { if (window.confirm('Delete this banner?')) removeBanner(editing.id) }} style={{ padding: 12, borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🗑 Delete banner</button>
                 </div>
