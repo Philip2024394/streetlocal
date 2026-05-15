@@ -1351,10 +1351,25 @@ function EmailCampaigns ({ vendorId, supabase, pink, labelStyle, inputStyle }) {
       <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 }}>Drafts ({rows.length})</div>
         {rows.length === 0 ? <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>No campaigns yet.</div> :
-          rows.map(c => <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 13 }}>
-            <div style={{ fontWeight: 700, color: '#fff' }}>{c.name}</div>
-            <div style={{ color: 'rgba(255,255,255,0.55)' }}>{c.subject} · {c.status}</div>
-          </div>)
+          rows.map(c => (
+            <div key={c.id} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, color: '#fff' }}>{c.name}</div>
+                <div style={{ color: 'rgba(255,255,255,0.55)' }}>{c.subject}{c.recipients_count > 0 ? ` · ${c.recipients_count} sent` : ''}</div>
+              </div>
+              {c.status === 'draft' ? (
+                <button type="button" onClick={async () => {
+                  if (!window.confirm(`Send "${c.name}" now? This will fire emails to the segment immediately.`)) return
+                  const { data, error } = await supabase.functions.invoke('campaign-batch-send', { body: { campaign_id: c.id } })
+                  if (error) { alert('Send failed: ' + error.message); return }
+                  alert(`Sent ${data?.sent || 0} emails.`)
+                  refresh()
+                }} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: pink, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Send now</button>
+              ) : (
+                <span style={{ padding: '4px 8px', borderRadius: 6, background: c.status === 'sent' ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)', color: c.status === 'sent' ? '#86EFAC' : '#FCA5A5', fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>{c.status.toUpperCase()}</span>
+              )}
+            </div>
+          ))
         }
       </div>
     </>
@@ -1387,6 +1402,45 @@ function AffiliatePayouts ({ supabase, pink, fmt }) {
       }
     </div>
   ))
+}
+
+function PreorderBanner ({ vendorId, supabase, pink }) {
+  // Customer-facing banner. Queries active preorder_windows for this
+  // vendor (RLS public-select policy lets anon see active ones).
+  // Renders the FIRST active window — if multiple are open at once,
+  // vendors should close older ones manually.
+  const [win, setWin] = React.useState(null)
+  React.useEffect(() => {
+    if (!supabase || !vendorId) return
+    let cancelled = false
+    ;(async () => {
+      const now = new Date().toISOString()
+      const { data } = await supabase
+        .from('preorder_windows')
+        .select('id, name, banner_text, banner_color, banner_image_url, fulfill_at, order_close_at')
+        .eq('vendor_id', vendorId)
+        .eq('active', true)
+        .lte('order_open_at', now)
+        .gte('order_close_at', now)
+        .order('order_close_at', { ascending: true })
+        .limit(1)
+      if (!cancelled) setWin(data?.[0] || null)
+    })()
+    return () => { cancelled = true }
+  }, [vendorId, supabase])
+  if (!win) return null
+  const closesAt = new Date(win.order_close_at)
+  const fulfillsAt = new Date(win.fulfill_at)
+  return (
+    <div style={{ margin: '0 12px 12px', padding: '14px 16px', borderRadius: 14, background: win.banner_image_url ? `linear-gradient(135deg, ${win.banner_color || pink}cc, ${win.banner_color || pink}88), url(${win.banner_image_url})` : `linear-gradient(135deg, ${win.banner_color || pink}, ${win.banner_color || pink}cc)`, backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', boxShadow: `0 6px 18px ${win.banner_color || pink}55`, display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ fontSize: 28, lineHeight: 1 }}>🎉</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: -0.3, marginBottom: 2 }}>{win.name}</div>
+        <div style={{ fontSize: 13, opacity: 0.92, lineHeight: 1.4 }}>{win.banner_text || `Pre-order ahead — fulfilled ${fulfillsAt.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}`}</div>
+        <div style={{ fontSize: 11, opacity: 0.75, marginTop: 4, fontWeight: 700 }}>Orders close {closesAt.toLocaleDateString([], { month: 'short', day: 'numeric' })}</div>
+      </div>
+    </div>
+  )
 }
 
 function GatewayHealth ({ vendorId, supabase, pink }) {
@@ -2646,6 +2700,15 @@ export default function App() {
   // Customer-side mix-box picker state — open + selected items map
   const [mixboxPickerOpen, setMixboxPickerOpen] = useState(false)
   const [mixboxPicked, setMixboxPicked] = useState({}) // { menuItemId: qty }
+
+  // Gift card redeem at checkout — customer types a code, we call the
+  // redeem_gift_card RPC (security-definer) which atomically deducts
+  // the requested amount from the card balance. Applied as a discount
+  // on the total. Errors surface inline.
+  const [giftCardCode, setGiftCardCode] = useState('')
+  const [giftCardApplied, setGiftCardApplied] = useState(null) // { code, used, remaining }
+  const [giftCardError, setGiftCardError] = useState('')
+  const [giftCardChecking, setGiftCardChecking] = useState(false)
 
   // 🥇 Tipping
   const [tipPageOpen, setTipPageOpen] = useState(false)
@@ -5553,13 +5616,17 @@ export default function App() {
     const baseAfterTax = taxRatePct > 0 && !taxInclusive
       ? +(taxableBase + taxAmount).toFixed(2)
       : +taxableBase.toFixed(2)
+    // Gift card — was already redeemed by the redeem_gift_card RPC
+    // when the customer applied it. Just subtract from the displayed
+    // total + bake into order_payload for the receipt breakdown.
+    const giftCardUsed = giftCardApplied ? Math.min(baseAfterTax, parseFloat(giftCardApplied.used) || 0) : 0
     // Compute tip (if vendor enabled it). Custom amount or percent of
     // base-after-tax. Zero if tipping is disabled or no choice made.
     const tipComputed = !tipEnabled ? 0
       : (tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0)
                                   : (baseAfterTax * (parseFloat(tipPercent) || 0) / 100))
     const tipAmountFinal = Math.max(0, +tipComputed.toFixed(2))
-    const grandTotal = +(baseAfterTax + tipAmountFinal).toFixed(2)
+    const grandTotal = Math.max(0, +(baseAfterTax + tipAmountFinal - giftCardUsed).toFixed(2))
 
     const cleanPhone = String(custPhone || '').replace(/[^0-9]/g, '')
     if (!cleanPhone) { setChatError('Enter your phone number'); return }
@@ -5927,6 +5994,10 @@ export default function App() {
           // Tip — server-side query support (e.g. "total tips this week").
           tip_amount: tipAmountFinal,
           tip_percent: tipEnabled && tipPercent !== 'custom' ? (parseInt(tipPercent, 10) || 0) : null,
+          // Gift card — code + amount used. Already debited via the
+          // redeem_gift_card RPC when the customer applied it.
+          gift_card_code: giftCardApplied?.code || null,
+          gift_card_used: giftCardUsed,
           // Scheduled order time — column existed but never populated.
           // Customer's chosen pickup/delivery time goes here so the
           // orders inbox can sort + filter "due soon" without parsing
@@ -6412,6 +6483,13 @@ export default function App() {
     if (DONUT_GROUP_FILTERS && menuFilter === '__donuts__') return DONUT_GROUP_FILTERS.donuts.has(m.category)
     if (DONUT_GROUP_FILTERS && menuFilter === '__drinks__') return DONUT_GROUP_FILTERS.drinks.has(m.category)
     return m.category === menuFilter
+  }).filter(m => {
+    // Allergen filter — customer's selected dietary chips. OR semantics:
+    // item passes if its `allergens` array includes ANY of the selected
+    // chips. Empty filter = no constraint. Vendors always see all items.
+    if (isVendor || allergenFilter.length === 0) return true
+    const mAllergens = Array.isArray(m.allergens) ? m.allergens : []
+    return allergenFilter.some(a => mAllergens.includes(a))
   })
 
   // Active daily deals — filter by current time
@@ -7790,6 +7868,37 @@ export default function App() {
         )}
 
         <div style={{ height: 12 }} />
+
+        {/* Allergen / dietary filter chips — only on customer side and
+            only when at least one menu item has tags configured. Click
+            to toggle filters; multiple chips = OR. */}
+        {!isVendor && (() => {
+          // Collect every unique allergen across the menu so we only
+          // render chips for tags vendors actually use.
+          const all = new Set()
+          menuItems.forEach(m => (Array.isArray(m.allergens) ? m.allergens : []).forEach(a => all.add(a)))
+          if (all.size === 0) return null
+          const LABELS = { gluten_free: 'Gluten-free', vegan: 'Vegan', vegetarian: 'Vegetarian', halal: 'Halal', kosher: 'Kosher', dairy_free: 'Dairy-free', nut_free: 'Nut-free', sugar_free: 'Sugar-free' }
+          const tags = [...all]
+          return (
+            <div style={{ padding: '4px 12px 8px', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.5, textTransform: 'uppercase', marginRight: 4 }}>Filter:</span>
+              {tags.map(tag => {
+                const on = allergenFilter.includes(tag)
+                return (
+                  <button key={tag} type="button" onClick={() => setAllergenFilter(on ? allergenFilter.filter(a => a !== tag) : [...allergenFilter, tag])} style={{ padding: '6px 12px', borderRadius: 999, border: on ? `1.5px solid ${donutLanding.pink || accent}` : '1px solid rgba(255,255,255,0.18)', background: on ? `${donutLanding.pink || accent}22` : 'rgba(0,0,0,0.4)', color: on ? '#fff' : 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{LABELS[tag] || tag}</button>
+                )
+              })}
+              {allergenFilter.length > 0 && (
+                <button type="button" onClick={() => setAllergenFilter([])} style={{ padding: '6px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* Pre-order banner — shown when an active preorder_window
+            exists for this vendor. Tap → opens info / pre-order flow. */}
+        {!isVendor && preorderEnabled && <PreorderBanner vendorId={vendorId} supabase={supabase} pink={donutLanding.pink || accent} />}
 
         {/* Build-your-own-dozen card — tap opens the picker overlay
             below where the customer chooses N donuts. Only renders when
@@ -9598,9 +9707,55 @@ export default function App() {
                           const base = discounted + (delEnabled ? (deliveryZone.fee || 0) : 0)
                           const afterTax = r > 0 && !taxInclusive ? base + base * r / 100 : base
                           const tip = !tipEnabled ? 0 : (tipPercent === 'custom' ? (parseFloat(tipCustomAmount) || 0) : (afterTax * (parseFloat(tipPercent) || 0) / 100))
-                          return fmt(Math.round(afterTax + tip))
+                          const gc = giftCardApplied ? Math.min(afterTax + tip, parseFloat(giftCardApplied.used) || 0) : 0
+                          return fmt(Math.max(0, Math.round(afterTax + tip - gc)))
                         })()}</span>
                       </div>
+                    </div>
+                  )}
+
+                  {/* GIFT CARD redeem input — same UI pattern as promo
+                      code. Validates by calling the redeem_gift_card RPC
+                      with the cart total as p_amount; if it succeeds,
+                      we lock the input and apply `used` as a discount
+                      on the order total. */}
+                  {cart.length > 0 && !isVendor && giftcardsEnabled && (
+                    <div style={{ marginBottom: 14 }}>
+                      {!giftCardApplied ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={giftCardCode}
+                            onChange={(e) => { setGiftCardCode(e.target.value.toUpperCase()); setGiftCardError('') }}
+                            placeholder="Gift card code"
+                            maxLength={32}
+                            style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: `1px solid ${giftCardError ? '#EF4444' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 14, fontWeight: 700, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', letterSpacing: 1, textTransform: 'uppercase' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!giftCardCode.trim() || !supabase || !vendorId) return
+                              setGiftCardChecking(true); setGiftCardError('')
+                              try {
+                                const requested = Math.max(0, totalPrice - promoDiscount + (delEnabled ? (deliveryZone?.fee || 0) : 0))
+                                const { data, error } = await supabase.rpc('redeem_gift_card', { p_code: giftCardCode.trim().toUpperCase(), p_vendor_id: vendorId, p_amount: requested })
+                                if (error || !Array.isArray(data) || data.length === 0) { setGiftCardError('Redeem failed — try again.'); return }
+                                const row = data[0]
+                                if (!row.ok) { setGiftCardError(row.message || 'Code rejected.'); return }
+                                setGiftCardApplied({ code: giftCardCode.trim().toUpperCase(), used: requested, remaining: parseFloat(row.balance) || 0 })
+                                setGiftCardCode('')
+                              } finally { setGiftCardChecking(false) }
+                            }}
+                            disabled={giftCardChecking || !giftCardCode.trim()}
+                            style={{ padding: '12px 18px', borderRadius: 12, border: 'none', background: giftCardCode.trim() ? (donutLanding.pink || accent) : 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: giftCardCode.trim() ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', opacity: giftCardChecking ? 0.5 : 1 }}
+                          >{giftCardChecking ? 'Checking…' : 'Redeem'}</button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', borderRadius: 12, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                          <span style={{ fontSize: 13, color: '#86EFAC', fontWeight: 800 }}>🎁 {giftCardApplied.code} · -{fmt(Math.round(giftCardApplied.used))}{giftCardApplied.remaining > 0 ? ` · ${fmt(Math.round(giftCardApplied.remaining))} remaining` : ''}</span>
+                          <button type="button" onClick={() => { setGiftCardApplied(null) }} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                        </div>
+                      )}
+                      {giftCardError && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4 }}>{giftCardError}</div>}
                     </div>
                   )}
 
@@ -9855,6 +10010,42 @@ export default function App() {
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textAlign: 'center', lineHeight: 1.5, maxWidth: 360, padding: '0 8px' }}>
                     Your order is now in your chat with <span style={{ fontWeight: 800, color: '#fff' }}>{shopName}</span>. The vendor will confirm there.
                   </div>
+
+                  {/* Repeat-this-order CTA — only when vendor enabled
+                      recurring orders + customer entered a phone. Adds
+                      the row to recurring_orders; vendor sees the new
+                      subscription in their Settings → Recurring page. */}
+                  {recurringEnabled && custPhone && !isVendor && cart.length > 0 && (() => {
+                    const cleanPhone = String(custPhone).replace(/[^0-9+]/g, '')
+                    const REPEAT_OPTS = [{ cad: 'weekly', label: 'Weekly' }, { cad: 'biweekly', label: 'Every 2 weeks' }, { cad: 'monthly', label: 'Monthly' }]
+                    const scheduleRepeat = async (cadence) => {
+                      if (!supabase || !vendorId) return
+                      const nextRun = new Date()
+                      nextRun.setDate(nextRun.getDate() + (cadence === 'weekly' ? 7 : cadence === 'biweekly' ? 14 : 30))
+                      const { error } = await supabase.from('recurring_orders').insert({
+                        vendor_id: vendorId,
+                        customer_phone: cleanPhone,
+                        customer_name: custName || null,
+                        items: cart.map(c => ({ id: c.id, name: c.name, qty: c.qty, price: c.price, builtBox: c.builtBox || null })),
+                        cadence,
+                        next_run: nextRun.toISOString().slice(0, 10),
+                        active: true,
+                      })
+                      if (error) { alert('Could not schedule — please try again.'); return }
+                      alert(`Got it. We'll prep your order ${cadence === 'weekly' ? 'every week' : cadence === 'biweekly' ? 'every 2 weeks' : 'every month'}.`)
+                    }
+                    return (
+                      <div style={{ width: '100%', maxWidth: 360, padding: '14px 16px', borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: `1px dashed ${donutLanding.pink || accent}55`, marginTop: 8 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>🔁 Repeat this order?</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 10 }}>We'll set this same order up to recur. No payment now — vendor confirms each one in chat.</div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {REPEAT_OPTS.map(o => (
+                            <button key={o.cad} type="button" onClick={() => scheduleRepeat(o.cad)} style={{ flex: 1, padding: '10px 6px', borderRadius: 10, border: `1px solid ${donutLanding.pink || accent}55`, background: `${donutLanding.pink || accent}1a`, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>{o.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {/* QR PAY — only when vendor has uploaded a QRIS. Big, clear,
                       central. Vendor can just say "scan this QR" in WhatsApp
