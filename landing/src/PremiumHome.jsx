@@ -49,12 +49,17 @@ const PLAN_PRICING = {
   MY:   { code: 'MY', currency: 'MYR', symbol: 'RM', starter: '69',     professional: '179',    enterprise: '359' },
   AE:   { code: 'AE', currency: 'AED', symbol: 'AED',starter: '75',     professional: '199',    enterprise: '399' },
   SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',starter: '75',     professional: '199',    enterprise: '399' },
-  // Asia PPP — keep historic Asia anchor as Starter
-  ID:   { code: 'ID', currency: 'IDR', symbol: 'Rp', starter: '38,000', professional: '99,000', enterprise: '249,000' },
-  PH:   { code: 'PH', currency: 'PHP', symbol: '₱',  starter: '999',    professional: '2,499',  enterprise: '4,999' },
-  VN:   { code: 'VN', currency: 'VND', symbol: '₫',  starter: '399,000',professional: '999,000',enterprise: '1,999,000' },
-  TH:   { code: 'TH', currency: 'THB', symbol: '฿',  starter: '599',    professional: '1,499',  enterprise: '2,999' },
-  IN:   { code: 'IN', currency: 'INR', symbol: '₹',  starter: '1,499',  professional: '3,499',  enterprise: '6,999' },
+  // Asia PPP — Starter keeps the historic anchor (we promised not to
+  // raise it on existing markets). Pro / Ent revised upward to ~5×
+  // Starter so a single month's revenue safely covers a year of domain
+  // registration cost in the rare 1-month-then-quit scenario. Also
+  // brings these markets in line with local POS competitor pricing
+  // (Pawoon Premium Rp 199k, Moka Pro Rp 290k, etc.).
+  ID:   { code: 'ID', currency: 'IDR', symbol: 'Rp', starter: '38,000', professional: '199,000', enterprise: '449,000' },
+  PH:   { code: 'PH', currency: 'PHP', symbol: '₱',  starter: '999',    professional: '4,999',   enterprise: '9,999' },
+  VN:   { code: 'VN', currency: 'VND', symbol: '₫',  starter: '399,000',professional: '1,999,000',enterprise: '3,999,000' },
+  TH:   { code: 'TH', currency: 'THB', symbol: '฿',  starter: '599',    professional: '2,999',   enterprise: '5,999' },
+  IN:   { code: 'IN', currency: 'INR', symbol: '₹',  starter: '1,499',  professional: '6,999',   enterprise: '13,999' },
 }
 const EU_COUNTRIES = new Set(['FR','DE','ES','IT','NL','BE','IE','PT','AT','FI','GR','LU','SE','DK','NO','CH','PL','CZ','RO','HU'])
 function resolvePlanPricing (cc) {
@@ -94,7 +99,7 @@ const TIER_BULLETS = {
       '14-day re-engagement automation',
       'Promo codes (% / flat / first-order)',
       'AI menu descriptions (✨ powered by Claude)',
-      'Custom domain (your-shop.com)',
+      'Custom domain support (you bring the domain — CNAME instructions + auto-SSL)',
       'Advanced analytics + profit estimator',
       'Backup & restore',
       'Up to 5 staff accounts',
@@ -105,6 +110,7 @@ const TIER_BULLETS = {
     blurb: 'For multi-location chains & premium brands',
     bullets: [
       'Everything in Professional',
+      'Full domain management (we register, renew + SSL — annual)',
       'Multi-location management',
       'Centralised cross-location analytics',
       'Unlimited staff accounts',
