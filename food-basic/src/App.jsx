@@ -799,26 +799,58 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
     // chocolate crumbs visibly fall in FRONT of the donut down the
     // entire splash. pointerEvents: none keeps the layer transparent
     // to taps so the underlying buttons stay clickable.
+    //
+    // Natural-looking variation: each crumb gets independent
+    // pseudo-random values for position, size, speed, rotation,
+    // horizontal drift, opacity, and even slight blur — pulled from
+    // distinct prime multipliers so no two crumbs trace the same
+    // path. Right-side weighted (45–100%) so the shower visually
+    // emanates from the dancing donut's side.
     <div style={{ position: 'absolute', inset: 0, zIndex: 11, pointerEvents: 'none', overflow: 'hidden' }}>
-      {Array.from({ length: 22 }, (_, i) => {
-        const colors = ['#2C1810', '#3D1F0F', '#5C3317', '#7B4B2A', '#8B5A2B', '#A0522D']
-        const leftPct = 60 + ((i * 19) % 38)
-        const topPx = 60 + ((i * 29) % 140)
-        const delay = ((i * 11) % 100) / 14
-        const duration = 4 + (i % 4) * 0.6
-        const size = 5 + (i % 3) * 2
-        const color = colors[i % colors.length]
+      {Array.from({ length: 48 }, (_, i) => {
+        const colors = ['#2C1810', '#3D1F0F', '#5C3317', '#7B4B2A', '#8B5A2B', '#A0522D', '#4A2511', '#6B3A1A']
+        // Five independent pseudo-random values per crumb using
+        // different multipliers + offsets — kills the visible
+        // repetition of the old (i * 19) % 38 pattern.
+        const r1 = (((i + 1) * 2654435761) >>> 0) % 1000 / 1000
+        const r2 = (((i + 1) * 40503 + 17) >>> 0) % 1000 / 1000
+        const r3 = (((i + 1) * 73856093 + 31) >>> 0) % 1000 / 1000
+        const r4 = (((i + 1) * 19349663 + 53) >>> 0) % 1000 / 1000
+        const r5 = (((i + 1) * 83492791 + 71) >>> 0) % 1000 / 1000
+        // 45% → 100% horizontal, weighted right via r1^0.7 power curve
+        const leftPct = 45 + Math.pow(r1, 0.7) * 55
+        // Start above the viewport so each crumb enters mid-fall — no
+        // visible "spawn" pop at the top.
+        const topPx = -60 + r2 * 120
+        const delay = r3 * 9          // 0–9s — fully de-syncs the start
+        const duration = 3.2 + r4 * 6.5  // 3.2–9.7s — wider speed band
+        const size = 3 + r5 * 9       // 3–12px — wider visual variation
+        const color = colors[Math.floor(r1 * colors.length)]
+        const drift = (r5 - 0.5) * 90 // −45 to +45 px horizontal sway
+        const rotateEnd = 360 + r3 * 720 // 360–1080 deg total spin
+        const opacity = 0.55 + r4 * 0.45 // 0.55–1.0 — depth feel
+        const useBlur = r2 < 0.18     // ~18% of crumbs get a soft blur
+        const shape = i % 5
         return (
           <div key={i} style={{
             position: 'absolute',
             left: `${leftPct}%`, top: `${topPx}px`,
             width: size, height: size,
-            borderRadius: i % 2 === 0 ? '50%' : 3,
+            // 5 alternating shapes: dot, rounded square, square, oval, pellet
+            borderRadius: shape === 0 ? '50%'
+              : shape === 1 ? 3
+              : shape === 2 ? 2
+              : shape === 3 ? '40% 60% 60% 40%'
+              : '50% 30%',
             background: color,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.45)',
+            opacity,
+            filter: useBlur ? 'blur(0.6px)' : 'none',
             animation: `donutSprinkleFall ${duration}s linear infinite`,
             animationDelay: `${delay}s`,
             willChange: 'transform',
+            ['--cdrift']: `${drift}px`,
+            ['--crot']: `${rotateEnd}deg`,
           }} />
         )
       })}
@@ -910,7 +942,16 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
           @keyframes donutBounce { 0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); } }
           @keyframes donutPulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
           @keyframes donutBreath { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-          @keyframes donutSprinkleFall { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 8% { opacity: 0.85; } 92% { opacity: 0.85; } 100% { transform: translateY(900px) rotate(720deg); opacity: 0; } }
+          /* Each crumb supplies --cdrift (horizontal sway) and --crot
+             (total rotation) inline, so 48 crumbs all spin different
+             amounts and curve different sides while falling. */
+          @keyframes donutSprinkleFall {
+            0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+            8%   { opacity: 0.9; }
+            45%  { transform: translate(calc(var(--cdrift, 0px) * 0.6), 50vh) rotate(calc(var(--crot, 720deg) * 0.55)); }
+            92%  { opacity: 0.85; }
+            100% { transform: translate(var(--cdrift, 0px), 110vh) rotate(var(--crot, 720deg)); opacity: 0; }
+          }
           @keyframes donutHeadingGlow {
             0%, 100% { text-shadow: 0 0 8px ${L.pink}99, 0 0 18px ${L.pink}66; }
             50% { text-shadow: 0 0 24px ${L.pink}, 0 0 40px ${L.pink}99, 0 0 60px ${L.pink}55; }
