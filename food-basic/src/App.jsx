@@ -259,6 +259,11 @@ const BANNER_TEMPLATES = {
     { id: 'sq-pink',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_13_34%20PM.png', tint: 'rgba(0,0,0,0.35)', textColor: '#fff' },
     { id: 'sq-choco',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_09_32%20PM.png', tint: 'rgba(0,0,0,0.4)',  textColor: '#fff' },
     { id: 'sq-cream',   bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_01_57%20PM.png', tint: 'rgba(0,0,0,0.3)',  textColor: '#fff' },
+    // Instagram feed templates — 1080×1080 square. Tint kept low
+    // since these are finished designs; vendor's discount overlay
+    // still reads on top without obscuring the artwork.
+    { id: 'sq-ig-1',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_20_22%20PM.png', tint: 'rgba(0,0,0,0.25)', textColor: '#fff' },
+    { id: 'sq-ig-2',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2003_23_34%20PM.png', tint: 'rgba(0,0,0,0.25)', textColor: '#fff' },
   ],
   story: [
     { id: 'st-pink',    bg: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_15_02%20PM.png', tint: 'rgba(236,72,153,0.3)', textColor: '#fff' },
