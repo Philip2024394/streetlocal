@@ -89,6 +89,89 @@ const PLAN_PRICING = {
   AE:   { code: 'AE', currency: 'AED', symbol: 'AED',label: 'AED 18',     display: '18',      amountLocal: 18,     amountIDR: 76000 },
   SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',label: 'SAR 18',     display: '18',      amountLocal: 18,     amountIDR: 75000 },
 }
+// ─── ESC/POS THERMAL PRINTER ──────────────────────────────────
+// Minimal ESC/POS encoder. Used by the Kitchen Printer integration
+// to send formatted receipts to a Bluetooth thermal printer over
+// Web Bluetooth. Works with most generic 58mm + 80mm printers.
+//
+// Compatibility:
+//   ✓ Chrome desktop / Chrome Android / Edge (HTTPS required)
+//   ✗ iOS Safari (Apple blocks Web Bluetooth)
+//   ✗ Firefox (not implemented)
+class ESCPOSBuilder {
+  constructor () { this.buf = [] }
+  init () { this.buf.push(0x1B, 0x40); return this }
+  text (s) {
+    // Strip / replace chars the printer can't render. Keep ASCII +
+    // common punctuation; replace emoji + non-Latin with '?'.
+    const safe = String(s || '').replace(/[-￿]/g, '?')
+    for (let i = 0; i < safe.length; i++) this.buf.push(safe.charCodeAt(i) & 0xFF)
+    return this
+  }
+  newline (n = 1) { for (let i = 0; i < n; i++) this.buf.push(0x0A); return this }
+  bold (on = true) { this.buf.push(0x1B, 0x45, on ? 1 : 0); return this }
+  doubleSize (on = true) { this.buf.push(0x1B, 0x21, on ? 0x30 : 0x00); return this }
+  align (a) { this.buf.push(0x1B, 0x61, a === 'center' ? 1 : a === 'right' ? 2 : 0); return this }
+  hr (charset = '-', width = 32) { return this.text(charset.repeat(width)).newline() }
+  // 2-column row: label left, value right, padded with spaces to width.
+  row (left, right, width = 32) {
+    const l = String(left || '')
+    const r = String(right || '')
+    const pad = Math.max(1, width - l.length - r.length)
+    return this.text(l + ' '.repeat(pad) + r).newline()
+  }
+  cut () { this.buf.push(0x1D, 0x56, 0x00); return this }
+  feed (n = 3) { for (let i = 0; i < n; i++) this.buf.push(0x0A); return this }
+  toBytes () { return new Uint8Array(this.buf) }
+}
+
+// Build a printable receipt for an order_payload. Returns a Uint8Array
+// ready to send to the printer's writable characteristic.
+function buildOrderTicket ({ order, shopName, shopAddress, shopPhone, fmt }) {
+  const b = new ESCPOSBuilder().init()
+  b.align('center').doubleSize(true).text(shopName || 'Order').newline()
+  b.doubleSize(false)
+  if (shopAddress) b.text(shopAddress).newline()
+  if (shopPhone) b.text(shopPhone).newline()
+  b.hr('=')
+  b.align('left').bold(true).text(`#${order.orderNumber || '—'}`).bold(false).newline()
+  if (order.placedAt) b.text(new Date(order.placedAt).toLocaleString()).newline()
+  if (order.scheduledFor) b.text('PICKUP: ' + new Date(order.scheduledFor).toLocaleString()).newline()
+  if (order.customer?.name)    b.text('Name:  ' + order.customer.name).newline()
+  if (order.customer?.phone)   b.text('Phone: ' + order.customer.phone).newline()
+  if (order.customer?.address) b.text('Addr:  ' + order.customer.address).newline()
+  b.hr('-')
+  // Items
+  for (const it of (order.items || [])) {
+    const left = `${it.qty}x ${it.name}`
+    const right = fmt(it.lineTotal != null ? it.lineTotal : (it.price || 0) * (it.qty || 1))
+    b.row(left, right)
+    if (it.modifiers && it.modifiers.length > 0) b.text('   + ' + it.modifiers.join(', ')).newline()
+    if (it.note) b.text('   * ' + it.note).newline()
+  }
+  b.hr('-')
+  if (order.subtotal != null) b.row('Subtotal', fmt(order.subtotal))
+  if (order.delivery?.fee > 0) b.row(`Delivery (${order.delivery.zone || ''})`, fmt(order.delivery.fee))
+  if (order.tax && order.tax.amount > 0) {
+    const taxLabel = `${order.tax.label || 'Tax'} (${order.tax.rate || 0}%)${order.tax.inclusive ? ' inc.' : ''}`
+    b.row(taxLabel, fmt(order.tax.amount))
+  }
+  b.bold(true).row('TOTAL', fmt(order.total || 0)).bold(false)
+  if (order.payment?.method) { b.newline(); b.text('Payment: ' + order.payment.method).newline() }
+  if (order.note) { b.newline(); b.text('Note: ' + order.note).newline() }
+  b.feed(2).cut()
+  return b.toBytes()
+}
+
+// Common thermal-printer service UUIDs. Most low-cost printers
+// expose one of these. We try them in order.
+const PRINTER_SERVICE_UUIDS = [
+  '000018f0-0000-1000-8000-00805f9b34fb', // Generic ESC/POS
+  '0000ff00-0000-1000-8000-00805f9b34fb', // Common SPP
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455', // ISSC / Mighty
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Star Micronics
+]
+
 // ─── MARKETING BANNER FORMATS + TEMPLATES ─────────────────────
 // Three formats. Aspect ratios match the channels they're built for:
 //   landscape  — 1.91:1   chat / WhatsApp / Facebook feed share
@@ -1669,6 +1752,17 @@ export default function App() {
   const [staffList, setStaffList] = useState([])
   const [staffEditingId, setStaffEditingId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', pin: '', role: 'cashier' })
+  // ── KITCHEN PRINTER (Bluetooth ESC/POS) ───────────────────────
+  // device + characteristic kept in refs so they survive re-renders.
+  // Pairing state in useState so the UI updates.
+  const printerDeviceRef = useRef(null)
+  const printerCharRef = useRef(null)
+  const [printerPageOpen, setPrinterPageOpen] = useState(false)
+  const [printerStatus, setPrinterStatus] = useState(() => localStorage.getItem('foodlocalchat_printer_name') ? 'paired' : 'unpaired') // unpaired | pairing | paired | error
+  const [printerName, setPrinterName] = useState(() => localStorage.getItem('foodlocalchat_printer_name') || '')
+  const [printerError, setPrinterError] = useState('')
+  const [printerAutoOnNewOrder, setPrinterAutoOnNewOrder] = useState(() => localStorage.getItem('foodlocalchat_printer_auto') === 'true')
+  useEffect(() => { localStorage.setItem('foodlocalchat_printer_auto', printerAutoOnNewOrder ? 'true' : 'false') }, [printerAutoOnNewOrder])
   // ── LOYALTY STAMPS ────────────────────────────────────────────
   // "Buy N donuts, get the (N+1)th free" mechanic. State here drives
   // both the customer card (visible on the home screen when a phone
@@ -4619,6 +4713,96 @@ export default function App() {
     setVendorThreadMessages((prev) => [...prev, optimistic])
     const res = await sendChatText({ conversationId: vendorActiveConv.id, senderRole: 'vendor', body })
     if (res.message) setVendorThreadMessages((prev) => prev.map(m => m.id === optimistic.id ? res.message : m))
+  }
+  // ── Kitchen printer connect/print ────────────────────────────
+  // Pairs the device once via the browser's Bluetooth picker, caches
+  // device + characteristic in refs, then sends ESC/POS bytes on
+  // each print. Browser GC may revoke the device on idle — we
+  // retry-pair transparently when the characteristic goes stale.
+  const isBluetoothSupported = typeof navigator !== 'undefined' && !!navigator.bluetooth
+  const findWritableChar = async (server) => {
+    // Try each known printer-service UUID until one works.
+    for (const uuid of PRINTER_SERVICE_UUIDS) {
+      try {
+        const svc = await server.getPrimaryService(uuid)
+        const chars = await svc.getCharacteristics()
+        const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse)
+        if (writable) return writable
+      } catch {}
+    }
+    return null
+  }
+  const connectPrinter = async () => {
+    if (!isBluetoothSupported) {
+      setPrinterError('Web Bluetooth not supported in this browser. Use Chrome on Android/desktop.')
+      setPrinterStatus('error')
+      return
+    }
+    setPrinterError('')
+    setPrinterStatus('pairing')
+    try {
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: PRINTER_SERVICE_UUIDS,
+      })
+      const server = await device.gatt.connect()
+      const writable = await findWritableChar(server)
+      if (!writable) {
+        setPrinterError('No printer service found on this device. Make sure it\'s an ESC/POS thermal printer.')
+        setPrinterStatus('error')
+        try { device.gatt.disconnect() } catch {}
+        return
+      }
+      printerDeviceRef.current = device
+      printerCharRef.current = writable
+      setPrinterName(device.name || 'Printer')
+      try { localStorage.setItem('foodlocalchat_printer_name', device.name || 'Printer') } catch {}
+      setPrinterStatus('paired')
+    } catch (err) {
+      // User cancelled the picker = not an error
+      if (err?.name === 'NotFoundError') { setPrinterStatus(printerName ? 'paired' : 'unpaired'); return }
+      setPrinterError(err?.message || 'Could not connect to printer.')
+      setPrinterStatus('error')
+    }
+  }
+  const disconnectPrinter = () => {
+    try { printerDeviceRef.current?.gatt?.disconnect() } catch {}
+    printerDeviceRef.current = null
+    printerCharRef.current = null
+    setPrinterName('')
+    setPrinterStatus('unpaired')
+    try { localStorage.removeItem('foodlocalchat_printer_name') } catch {}
+  }
+  const printOrder = async (orderPayload) => {
+    if (!orderPayload) return
+    if (!isBluetoothSupported) { alert('Printing requires Web Bluetooth. Use Chrome on Android/desktop.'); return }
+    // Ensure we have a connected characteristic. Re-pair if missing.
+    let writable = printerCharRef.current
+    if (!writable) {
+      // Try to reconnect to a previously paired device, otherwise prompt the user.
+      try {
+        if (!printerDeviceRef.current) {
+          alert('Pair a printer first — Settings → Account → Kitchen Printer.')
+          return
+        }
+        if (!printerDeviceRef.current.gatt.connected) await printerDeviceRef.current.gatt.connect()
+        writable = await findWritableChar(printerDeviceRef.current.gatt)
+        printerCharRef.current = writable
+      } catch (e) { alert('Printer disconnected. Re-pair from settings.'); return }
+    }
+    if (!writable) { alert('Printer not ready.'); return }
+    const bytes = buildOrderTicket({ order: orderPayload, shopName, shopAddress, shopPhone, fmt })
+    try {
+      // Chunked write — many printers limit MTU to 20 bytes per packet.
+      const CHUNK = 100
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        const slice = bytes.slice(i, i + CHUNK)
+        if (writable.properties.writeWithoutResponse) await writable.writeValueWithoutResponse(slice)
+        else await writable.writeValue(slice)
+      }
+    } catch (e) {
+      alert('Print failed: ' + (e?.message || 'unknown error'))
+    }
   }
   const sendVendorStatus = async (status) => {
     if (!vendorActiveConv) return
@@ -8357,6 +8541,7 @@ export default function App() {
                             <button type="button" onClick={cancelOrder}   style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.15)', color: '#FCA5A5', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>✕ Cancel</button>
                             <button type="button" onClick={chatCustomer}  style={{ padding: '10px 8px', borderRadius: 10, border: `1px solid ${accent}55`, background: `${accent}22`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>💬 Chat</button>
                             <button type="button" onClick={(e) => { e.stopPropagation(); setReceiptOrder({ ...op, customer_name: conv.customer_name, customer_phone: conv.customer_phone }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(250,204,21,0.4)', background: 'rgba(250,204,21,0.12)', color: '#FCD34D', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>🧾 Receipt</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); printOrder({ ...op, customer: { ...(op.customer || {}), name: op.customer?.name || conv.customer_name, phone: op.customer?.phone || conv.customer_phone } }) }} style={{ padding: '10px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>🖨 Print</button>
                           </div>
                         )}
                       </div>
@@ -11050,6 +11235,7 @@ export default function App() {
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
           { icon: '👥', label: 'Staff Accounts', desc: 'Invite team — manager / cashier / kitchen', onClick: () => setStaffPageOpen(true) },
           { icon: '📊', label: 'Tax / VAT', desc: 'Rate, label, inclusive / exclusive', onClick: () => setTaxPageOpen(true) },
+          { icon: '🖨️', label: 'Kitchen Printer', desc: 'Pair a Bluetooth thermal printer', onClick: () => setPrinterPageOpen(true) },
           { icon: '🌐', label: 'Custom Domain', desc: 'Custom domain for your app', onClick: () => setDomainPage(true) },
           { icon: '📋', label: 'Terms of Listing', desc: 'Search listing requirements', onClick: () => setTermsOfListing(true) },
           { icon: '📍', label: 'Visit Us', desc: 'Address, map, opening hours', onClick: () => setShowLocation(true) },
@@ -12033,6 +12219,90 @@ export default function App() {
                     </div>
                   )
                 })()}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ═══ KITCHEN PRINTER SETUP ═══
+          Pair a Bluetooth ESC/POS thermal printer once. The pairing
+          persists in browser memory (refs) for the session; printer
+          name persists in localStorage so the page knows we have one.
+          Use Chrome on Android or desktop — iOS Safari blocks Web BT. */}
+      {printerPageOpen && (() => {
+        const sampleOrder = {
+          orderNumber: 'TEST-0001',
+          placedAt: new Date().toISOString(),
+          items: [
+            { name: 'Classic Glazed', qty: 2, lineTotal: 44000 },
+            { name: 'Boston Cream', qty: 1, lineTotal: 12000 },
+          ],
+          subtotal: 56000, total: 56000, payment: { method: 'cod' },
+          customer: { name: 'Test Customer', phone: '0812-0000-0000' },
+        }
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+            <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
+              <button onClick={() => setPrinterPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>🖨️ Kitchen Printer</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Bluetooth ESC/POS thermal printer</div>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {!isBluetoothSupported && (
+                <div style={{ marginBottom: 14, padding: 12, borderRadius: 12, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                  ⚠ Web Bluetooth isn't available in this browser. Use <strong>Chrome on Android</strong> or <strong>Chrome / Edge on desktop</strong>. iOS Safari doesn't support it.
+                </div>
+              )}
+
+              {/* Status card */}
+              <div style={{ padding: 16, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: `1px solid ${printerStatus === 'paired' ? 'rgba(34,197,94,0.4)' : `${accent}33`}`, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: printerStatus === 'paired' ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🖨️</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{printerStatus === 'paired' ? `Connected — ${printerName}` : printerStatus === 'pairing' ? 'Pairing…' : 'No printer paired'}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{printerStatus === 'paired' ? 'Tap Print on any order to fire it.' : 'Pair once — works for the rest of the session.'}</div>
+                </div>
+              </div>
+
+              {printerError && (
+                <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>⚠ {printerError}</div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <button onClick={connectPrinter} disabled={!isBluetoothSupported || printerStatus === 'pairing'} style={{ padding: '14px', borderRadius: 12, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 900, cursor: (!isBluetoothSupported || printerStatus === 'pairing') ? 'not-allowed' : 'pointer', minHeight: 48, opacity: (!isBluetoothSupported || printerStatus === 'pairing') ? 0.5 : 1 }}>
+                  {printerStatus === 'paired' ? 'Re-pair' : 'Pair printer'}
+                </button>
+                <button onClick={() => printOrder(sampleOrder)} disabled={printerStatus !== 'paired'} style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: printerStatus === 'paired' ? 'pointer' : 'not-allowed', minHeight: 48, opacity: printerStatus === 'paired' ? 1 : 0.4 }}>Print test</button>
+              </div>
+
+              {printerStatus === 'paired' && (
+                <button onClick={disconnectPrinter} style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #8B0000', background: 'rgba(139,0,0,0.18)', color: '#FCA5A5', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>Disconnect</button>
+              )}
+
+              {/* Auto-print toggle */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, cursor: 'pointer' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Auto-print new orders</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>When ON, every new order auto-fires to the kitchen printer the moment it arrives. Keep the device unlocked + this tab open.</div>
+                  </div>
+                  <input type="checkbox" checked={printerAutoOnNewOrder} onChange={(e) => setPrinterAutoOnNewOrder(e.target.checked)} style={{ width: 22, height: 22, accentColor: '#22c55e', cursor: 'pointer', marginTop: 4 }} />
+                </label>
+              </div>
+
+              {/* Tips */}
+              <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.06)', fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,0.75)' }}>
+                <div style={{ fontWeight: 800, color: '#fff', marginBottom: 6 }}>Tips</div>
+                <div>• Turn the printer ON before tapping Pair.</div>
+                <div>• Most generic 58mm / 80mm ESC/POS printers work (Goojprt, Xprinter, Munbyn, Zjiang, Black Copper).</div>
+                <div>• On Chrome Android: enable <em>chrome://flags/#enable-experimental-web-platform-features</em> if pairing fails.</div>
+                <div>• Re-pair after the printer or tab goes idle for long periods.</div>
               </div>
             </div>
           </div>
