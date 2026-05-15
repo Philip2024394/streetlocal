@@ -2018,6 +2018,15 @@ export default function App() {
   const [shopFacebook, setShopFacebook] = useState(() => localStorage.getItem('foodlocalchat_shopFB') || 'lummeenoodles')
   const [shopYoutube, setShopYoutube] = useState(() => localStorage.getItem('foodlocalchat_shopYT') || 'lummeenoodles')
   const [shopWebsite, setShopWebsite] = useState(() => localStorage.getItem('foodlocalchat_shopWeb') || 'www.lummeenoodles.com')
+  // Additional messenger channels. Both use deeplink share patterns
+  // identical to wa.me — vendor sets the handle once, customers
+  // tap to open the right app pre-filled.
+  //   Telegram: t.me/<username>?text=<msg>
+  //   LINE:     line.me/R/oaMessage/<lineId>/?<msg>
+  const [shopTelegram, setShopTelegram] = useState(() => localStorage.getItem('foodlocalchat_shopTG') || '')
+  const [shopLineId,  setShopLineId]  = useState(() => localStorage.getItem('foodlocalchat_shopLINE') || '')
+  useEffect(() => { localStorage.setItem('foodlocalchat_shopTG',   shopTelegram) }, [shopTelegram])
+  useEffect(() => { localStorage.setItem('foodlocalchat_shopLINE', shopLineId)  }, [shopLineId])
   const [shopQris, setShopQris] = useState(() => isDemo ? 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png' : (localStorage.getItem('foodlocalchat_shopQris') || 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledxzxcczdsasdsadads.png'))
   const [shopBio, setShopBio] = useState(() => localStorage.getItem('foodlocalchat_shopBio') || '')
   const [shopCity, setShopCity] = useState(() => localStorage.getItem('foodlocalchat_shopCity') || '')
@@ -3676,6 +3685,7 @@ export default function App() {
         shop_maps_link: shopMapsLink, shop_instagram: shopInstagram,
         shop_tiktok: shopTiktok, shop_facebook: shopFacebook,
         shop_youtube: shopYoutube, shop_website: shopWebsite,
+        shop_telegram: shopTelegram, shop_line_id: shopLineId,
         shop_food_type: shopFoodType,
         delivery_base_fee: delBaseFee, delivery_per_km: delPerKm,
         delivery_min_charge: delMinCharge, delivery_max_km: delMaxKm,
@@ -3683,7 +3693,7 @@ export default function App() {
         delivery_enabled: delEnabled,
       })
     }, 2000)
-  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopFoodType, delBaseFee, delPerKm, delMinCharge, delMaxKm, delFreeAbove, delCurrency, delEnabled])
+  }, [shopName, shopLogo, shopPhone, shopOpen, shopAddress, shopHours, shopMapsLink, shopInstagram, shopTiktok, shopFacebook, shopYoutube, shopWebsite, shopTelegram, shopLineId, shopFoodType, delBaseFee, delPerKm, delMinCharge, delMaxKm, delFreeAbove, delCurrency, delEnabled])
 
   // Load shop config from Supabase on vendor login
   useEffect(() => {
@@ -3702,6 +3712,8 @@ export default function App() {
       if (data.shop_facebook) setShopFacebook(data.shop_facebook)
       if (data.shop_youtube) setShopYoutube(data.shop_youtube)
       if (data.shop_website) setShopWebsite(data.shop_website)
+      if (data.shop_telegram !== undefined) setShopTelegram(data.shop_telegram || '')
+      if (data.shop_line_id !== undefined) setShopLineId(data.shop_line_id || '')
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
       if (data.landing_theme_id) {
@@ -6955,11 +6967,11 @@ export default function App() {
                 </a>
               )}
 
-              {/* Social links */}
-              {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite) && (
+              {/* Social links + messenger handles */}
+              {(shopInstagram || shopTiktok || shopFacebook || shopYoutube || shopWebsite || shopTelegram || shopLineId) && (
                 <>
                   <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '10px 0 14px' }} />
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
                     {shopInstagram && (
                       <a href={`https://instagram.com/${shopInstagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src="https://cdn.simpleicons.org/instagram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
@@ -6978,6 +6990,18 @@ export default function App() {
                     {shopYoutube && (
                       <a href={shopYoutube.startsWith('http') ? shopYoutube : `https://x.com/${shopYoutube.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ width: 44, height: 44, borderRadius: 12, background: isCustomAccent ? accent : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src="https://cdn.simpleicons.org/x/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                      </a>
+                    )}
+                    {/* Telegram deeplink: t.me/<username> */}
+                    {shopTelegram && (
+                      <a href={`https://t.me/${shopTelegram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Message on Telegram" style={{ width: 44, height: 44, borderRadius: 12, background: '#229ED9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://cdn.simpleicons.org/telegram/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
+                      </a>
+                    )}
+                    {/* LINE deeplink — line.me/R/oaMessage/<id>/ */}
+                    {shopLineId && (
+                      <a href={`https://line.me/R/oaMessage/${shopLineId.replace(/^@/, '')}/?`} target="_blank" rel="noopener noreferrer" aria-label="Message on LINE" style={{ width: 44, height: 44, borderRadius: 12, background: '#06C755', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="https://cdn.simpleicons.org/line/white" alt="" onError={imgError('generic')} style={{ width: 22, height: 22 }} />
                       </a>
                     )}
                     {shopWebsite && (
@@ -11015,6 +11039,10 @@ export default function App() {
               { label: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/white', value: shopFacebook, set: setShopFacebook, placeholder: 'facebook.com/page' },
               { label: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/white', value: shopTiktok, set: setShopTiktok, placeholder: 'username' },
               { label: 'X', icon: 'https://cdn.simpleicons.org/x/white', value: shopYoutube, set: setShopYoutube, placeholder: 'x.com/handle' },
+              // Messenger channels — these get tappable "Message via X"
+              // buttons on Visit Us + the chat error fallback.
+              { label: 'Telegram', icon: 'https://cdn.simpleicons.org/telegram/white', value: shopTelegram, set: setShopTelegram, placeholder: '@username (no @ needed)' },
+              { label: 'LINE',     icon: 'https://cdn.simpleicons.org/line/white',     value: shopLineId,  set: setShopLineId,  placeholder: 'LINE OA id' },
               { label: 'Website', icon: 'https://api.iconify.design/mdi/web.svg?color=white', value: shopWebsite, set: setShopWebsite, placeholder: 'www.yoursite.com' },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -11061,7 +11089,7 @@ export default function App() {
           {/* Save button */}
           <div style={{ padding: '8px 14px 28px' }}>
             <button onClick={() => {
-              if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_open: shopOpen }).catch(() => {})
+              if (vendorId) updateVendorConfig(vendorId, { shop_name: shopName, shop_phone: shopPhone, shop_address: shopAddress, shop_hours: shopHours, shop_food_type: shopFoodType, shop_maps_link: shopMapsLink, shop_instagram: shopInstagram, shop_tiktok: shopTiktok, shop_facebook: shopFacebook, shop_youtube: shopYoutube, shop_website: shopWebsite, shop_telegram: shopTelegram, shop_line_id: shopLineId, shop_open: shopOpen }).catch(() => {})
               setShopConfig(false)
             }} style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: '#FFD600', color: '#1a1a1a', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>Save Settings</button>
           </div>
