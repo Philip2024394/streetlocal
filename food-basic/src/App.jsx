@@ -56,6 +56,43 @@ const REFUND_FUNCTION_BY_GATEWAY = {
 const SUPPORTED_GATEWAYS = RAW_GATEWAYS.map(g =>
   g.comingSoon || LIVE_GATEWAY_IDS.has(g.id) ? g : { ...g, comingSoon: true }
 )
+
+// ─── ACTIVATION PRICING ─────────────────────────────────────────
+// One plan per shop, covers both WhatsApp orders + In-app Chat. Price
+// localised to the visitor's country. Anchor tiers:
+//   • Indonesia + SEA neighbors → PPP-adjusted (≈ USD 2–3 equivalent)
+//   • International (Western markets + Singapore) → 4.99 in local currency
+// `label` is what the customer sees; `amountIDR` is what we charge
+// through Midtrans (the gateway that's live). Stripe / non-IDR rails
+// will use the local amount when those are wired up.
+const PLAN_PRICING = {
+  ID:   { code: 'ID', currency: 'IDR', symbol: 'Rp', label: 'Rp 38,000',  display: '38,000',  amountLocal: 38000,  amountIDR: 38000 },
+  US:   { code: 'US', currency: 'USD', symbol: '$',  label: '$4.99',      display: '4.99',    amountLocal: 4.99,   amountIDR: 78000 },
+  GB:   { code: 'GB', currency: 'GBP', symbol: '£',  label: '£4.99',      display: '4.99',    amountLocal: 4.99,   amountIDR: 99000 },
+  EU:   { code: 'EU', currency: 'EUR', symbol: '€',  label: '€4.99',      display: '4.99',    amountLocal: 4.99,   amountIDR: 85000 },
+  AU:   { code: 'AU', currency: 'AUD', symbol: 'A$', label: 'A$4.99',     display: '4.99',    amountLocal: 4.99,   amountIDR: 51000 },
+  NZ:   { code: 'NZ', currency: 'NZD', symbol: 'NZ$',label: 'NZ$4.99',    display: '4.99',    amountLocal: 4.99,   amountIDR: 47000 },
+  CA:   { code: 'CA', currency: 'CAD', symbol: 'C$', label: 'C$4.99',     display: '4.99',    amountLocal: 4.99,   amountIDR: 57000 },
+  SG:   { code: 'SG', currency: 'SGD', symbol: 'S$', label: 'S$4.99',     display: '4.99',    amountLocal: 4.99,   amountIDR: 58000 },
+  MY:   { code: 'MY', currency: 'MYR', symbol: 'RM', label: 'RM 10.99',   display: '10.99',   amountLocal: 10.99,  amountIDR: 36000 },
+  PH:   { code: 'PH', currency: 'PHP', symbol: '₱',  label: '₱149',       display: '149',     amountLocal: 149,    amountIDR: 40000 },
+  VN:   { code: 'VN', currency: 'VND', symbol: '₫',  label: '₫69,000',    display: '69,000',  amountLocal: 69000,  amountIDR: 43000 },
+  TH:   { code: 'TH', currency: 'THB', symbol: '฿',  label: '฿89',        display: '89',      amountLocal: 89,     amountIDR: 39000 },
+  IN:   { code: 'IN', currency: 'INR', symbol: '₹',  label: '₹199',       display: '199',     amountLocal: 199,    amountIDR: 37000 },
+  AE:   { code: 'AE', currency: 'AED', symbol: 'AED',label: 'AED 18',     display: '18',      amountLocal: 18,     amountIDR: 76000 },
+  SA:   { code: 'SA', currency: 'SAR', symbol: 'SAR',label: 'SAR 18',     display: '18',      amountLocal: 18,     amountIDR: 75000 },
+}
+// Map any country code → the right plan entry. Western/EU fallback
+// for unmapped countries; same logic as currency selection in
+// landing/checkout pages.
+const EU_COUNTRIES = new Set(['FR','DE','ES','IT','NL','BE','IE','PT','AT','FI','GR','LU','SE','DK','NO','CH','PL','CZ','RO','HU'])
+function resolvePlanPricing(countryCode) {
+  const cc = String(countryCode || '').toUpperCase()
+  if (PLAN_PRICING[cc]) return PLAN_PRICING[cc]
+  if (EU_COUNTRIES.has(cc)) return PLAN_PRICING.EU
+  // Default to USD for anyone we don't have a localised rate for.
+  return PLAN_PRICING.US
+}
 // Supabase columns like vendor_id are UUIDs. Demo-mode IDs (e.g.
 // `local-demo-1778788214763`) aren't valid UUIDs, so any query filtering
 // on them returns 400 from PostgREST. Guard with this before issuing the
@@ -1981,6 +2018,11 @@ export default function App() {
   const [vendorPlanTier, setVendorPlanTier] = useState(null)
   // Subscription payment state — for the post-signup "pay to activate" gate.
   const [subPickerOpen, setSubPickerOpen] = useState(false)
+  // Country override for the activation price tile. Null = auto-detect
+  // from countryCode; if the vendor picks a different country, this
+  // wins so they see the local rate they expect.
+  const [planCountryOverride, setPlanCountryOverride] = useState(null)
+  const [planCountryPickerOpen, setPlanCountryPickerOpen] = useState(false)
   const [subBusy, setSubBusy] = useState(false)
   const [subError, setSubError] = useState('')
   const [subMessage, setSubMessage] = useState('')
@@ -2578,21 +2620,26 @@ export default function App() {
   // Vendor subscription checkout — opens Midtrans Snap for the
   // StreetLocal central account. After payment, the webhook flips
   // vendor.status to 'active'. We poll briefly on return to reflect that.
-  const startSubscriptionCheckout = async (planTier) => {
+  const startSubscriptionCheckout = async (planTier, plan = null) => {
     if (!supabase || !vendorId || subBusy) return
     setSubBusy(true); setSubError('')
     try {
-      emitFunnelStep('payment_started', { vendorId, metadata: { plan_tier: planTier, product: 'basic' } })
+      // Use the resolved local plan when caller supplies one, else
+      // resolve from current country. The backend webhook will receive
+      // the local currency + amount alongside the IDR equivalent so
+      // ledgers reconcile per-market.
+      const p = plan || resolvePlanPricing(planCountryOverride || countryCode)
+      emitFunnelStep('payment_started', { vendorId, metadata: { plan_tier: planTier, product: 'basic', currency: p.currency, amount_local: p.amountLocal, country: p.code } })
       const returnUrl = window.location.origin + window.location.pathname
       const { data, error } = await supabase.functions.invoke('subscription-create-checkout', {
-        body: { vendorId, planTier, returnUrl },
+        body: { vendorId, planTier, returnUrl, currency: p.currency, amountLocal: p.amountLocal, amountIDR: p.amountIDR, country: p.code },
       })
       if (error || !data?.redirectUrl) {
         setSubError(data?.error || 'Could not start payment. Try again in a moment.')
         setSubBusy(false)
         return
       }
-      try { localStorage.setItem('foodlocalchat_pendingSubOrder', JSON.stringify({ orderId: data.orderId, vendorId, planTier, at: Date.now() })) } catch {}
+      try { localStorage.setItem('foodlocalchat_pendingSubOrder', JSON.stringify({ orderId: data.orderId, vendorId, planTier, currency: p.currency, amountLocal: p.amountLocal, at: Date.now() })) } catch {}
       window.location.href = data.redirectUrl
     } catch (e) {
       setSubError(e?.message || 'Payment failed to start')
@@ -4759,32 +4806,65 @@ export default function App() {
           which is the natural moment they want to share their shop. The
           home page stays clean while menu building. */}
 
-      {/* --- Subscription plan picker modal --- */}
-      {subPickerOpen && (
-        <div onClick={() => !subBusy && setSubPickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)' }}>
-            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
-            <div style={{ fontSize: 17, fontWeight: 800 }}>{t.choosePlan || 'Choose your plan'}</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -8, marginBottom: 4 }}>{t.choosePlanSub || '30 days of access. Pay via QRIS, GoPay, OVO, ShopeePay, Card, or Bank Transfer.'}</div>
-            <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('whatsapp')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.08)', color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(37,211,102,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>📱</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{t.whatsappPlanTitle || 'WhatsApp orders · Rp 35.000 / month'}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{t.whatsappPlanDesc || 'Customers send orders to your WhatsApp — you handle the rest.'}</div>
+      {/* --- Subscription plan picker modal — single plan, both
+            order channels included, price localised by country --- */}
+      {subPickerOpen && (() => {
+        const plan = resolvePlanPricing(planCountryOverride || countryCode)
+        const otherMarkets = Object.values(PLAN_PRICING).filter(p => p.code !== plan.code)
+        return (
+          <div onClick={() => !subBusy && setSubPickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f12', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, width: '100%', maxWidth: 480, color: '#fff', display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 -10px 40px rgba(0,0,0,0.6)', maxHeight: '92vh', overflowY: 'auto' }}>
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', alignSelf: 'center', marginBottom: 4 }} />
+              <div style={{ fontSize: 17, fontWeight: 800 }}>{t.choosePlan || 'Activate your shop'}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: -6 }}>30 days of access. Both WhatsApp orders AND in-app chat included — switch any time from the drawer.</div>
+
+              {/* Big price tile — local currency, one plan */}
+              <div style={{ marginTop: 4, padding: 18, borderRadius: 18, background: `linear-gradient(135deg, ${accent} 0%, #BE185D 100%)`, color: '#fff', boxShadow: `0 10px 30px ${accent}55` }}>
+                <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.85, letterSpacing: 0.3 }}>Activate · 30 days</div>
+                <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1.1, marginTop: 4 }}>
+                  <span style={{ fontSize: 22, marginRight: 4 }}>{plan.symbol}</span>{plan.display}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, marginTop: 2 }}>per shop · per month · all features</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+                  {[
+                    '📱 WhatsApp orders',
+                    '💬 In-app chat',
+                    '💳 Payment gateways',
+                    '📊 Sales dashboard',
+                    '🍩 Unlimited menu',
+                    '🌍 11 languages',
+                  ].map(f => (
+                    <span key={f} style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 12, background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.18)' }}>{f}</span>
+                  ))}
+                </div>
               </div>
-            </button>
-            <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('chat')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: `1px solid ${accent}55`, background: `${accent}15`, color: '#fff', textAlign: 'left', cursor: subBusy ? 'wait' : 'pointer', minHeight: 64, opacity: subBusy ? 0.6 : 1 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>💬</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{t.chatPlanTitle || 'App Chat orders · Rp 50.000 / month'}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>{t.chatPlanDesc || 'Real-time in-app chat + 16 payment gateways + order tracking.'}</div>
-              </div>
-            </button>
-            {subError && <div style={{ fontSize: 13, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
-            <button type="button" onClick={() => setSubPickerOpen(false)} disabled={subBusy} style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', minHeight: 44 }}>{subBusy ? 'Opening Midtrans…' : 'Cancel'}</button>
+
+              {/* Country override — collapsed by default */}
+              <button type="button" onClick={() => setPlanCountryPickerOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}>
+                <span><span style={{ opacity: 0.6 }}>Wrong country?</span> Pricing for <strong style={{ color: accent }}>{plan.code}</strong></span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16 }}>{planCountryPickerOpen ? '▲' : '▼'}</span>
+              </button>
+              {planCountryPickerOpen && (
+                <div style={{ maxHeight: 200, overflowY: 'auto', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.4)' }}>
+                  {Object.values(PLAN_PRICING).map(p => (
+                    <button key={p.code} type="button" onClick={() => { setPlanCountryOverride(p.code); setPlanCountryPickerOpen(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', border: 'none', background: planCountryOverride === p.code ? `${accent}22` : 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <span>{p.code} · {p.currency}</span>
+                      <span style={{ fontWeight: 800, color: accent }}>{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {subError && <div style={{ fontSize: 13, color: '#FCA5A5', textAlign: 'center', padding: '4px 8px' }}>{subError}</div>}
+
+              <button type="button" disabled={subBusy} onClick={() => startSubscriptionCheckout('both', plan)} style={{ marginTop: 4, padding: '14px 18px', borderRadius: 14, border: 'none', background: '#22C55E', color: '#fff', fontSize: 15, fontWeight: 900, cursor: subBusy ? 'wait' : 'pointer', minHeight: 52, opacity: subBusy ? 0.6 : 1, boxShadow: '0 4px 16px rgba(34,197,94,0.4)' }}>
+                {subBusy ? 'Opening payment…' : `Activate for ${plan.symbol}${plan.display} →`}
+              </button>
+              <button type="button" onClick={() => setSubPickerOpen(false)} disabled={subBusy} style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', minHeight: 44 }}>Cancel</button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* --- Header --- */}
       <div style={S.header}>
