@@ -99,6 +99,15 @@ export default function DonutSellingPage() {
   // the nav. Holds 4 menu items that each open a full-screen info page.
   const [menuOpen, setMenuOpen] = useState(false)
   const [activePage, setActivePage] = useState(null) // 'faq' | 'setup' | 'about' | 'support'
+  const [supportMsg, setSupportMsg] = useState('')
+  // Support online/offline status — true when within Mon-Sat 09:00–21:00
+  // local time. Drives the dot colour + label in the chat header.
+  const supportOnline = (() => {
+    const d = new Date()
+    const day = d.getDay() // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    const hour = d.getHours()
+    return day >= 1 && day <= 6 && hour >= 9 && hour < 21
+  })()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -179,8 +188,10 @@ export default function DonutSellingPage() {
       {/* Backdrop closes the menu when tapping outside */}
       {menuOpen && <div className="ds-menu-backdrop" aria-hidden onClick={() => setMenuOpen(false)} />}
 
-      {/* ═══ INFO PAGES (full-screen overlays) ═══ */}
-      {activePage && (
+      {/* ═══ INFO PAGES (full-screen overlays) ═══
+          Support gets its own chat-window layout below, so we skip the
+          generic .ds-info card shell for it. */}
+      {activePage && activePage !== 'support' && (
         <div className="ds-info" role="dialog" aria-modal="true">
           <div className="ds-info__bar">
             <button type="button" className="ds-info__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
@@ -247,40 +258,84 @@ export default function DonutSellingPage() {
               </>
             )}
 
-            {activePage === 'support' && (
-              <>
-                <p className="ds-info__lede">We respond within one business day. Most issues resolved same-day.</p>
-                <div className="ds-info-card">
-                  <div className="ds-info-card__label">📧 Email</div>
-                  <a className="ds-info-card__value" href="mailto:streetlocallive@gmail.com">streetlocallive@gmail.com</a>
-                  <div className="ds-info-card__hint">Best for account issues, billing questions, feature requests.</div>
-                </div>
-                <div className="ds-info-card">
-                  <div className="ds-info-card__label">📱 WhatsApp</div>
-                  <a className="ds-info-card__value" href="https://wa.me/6281234567890?text=Hi%20StreetLocal" target="_blank" rel="noreferrer">Open WhatsApp chat</a>
-                  <div className="ds-info-card__hint">Best for fast questions during setup or a live order issue.</div>
-                </div>
-                <div className="ds-info-card">
-                  <div className="ds-info-card__label">🕐 Support hours</div>
-                  <div className="ds-info-card__value">Mon–Sat · 09:00 – 21:00 WIB</div>
-                  <div className="ds-info-card__hint">Indonesia time. Outside these hours we reply by email next morning.</div>
-                </div>
-                <h3 className="ds-info-h3">Common issues</h3>
-                <details className="ds-info-faq" open>
-                  <summary>My link isn't working after I paid.</summary>
-                  <p>Subscriptions activate within 60 seconds of payment confirmation. If your link still shows "shop activating" after 5 minutes, message us — we'll force-refresh it manually.</p>
-                </details>
-                <details className="ds-info-faq">
-                  <summary>Payment gateway not connecting.</summary>
-                  <p>Most gateway connect errors come from incorrect API keys (missing trailing characters, wrong test/live key). Send us a screenshot of the error and which gateway — we'll walk you through it.</p>
-                </details>
-                <details className="ds-info-faq">
-                  <summary>I want to cancel.</summary>
-                  <p>Cancel any time from your shop's settings. No phone call, no exit interview. Your shop stays live until the end of the paid period, then deactivates.</p>
-                </details>
-              </>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ CUSTOMER SERVICE CHAT WINDOW ═══
+          Full-screen WhatsApp-style chat layout: provided bg image,
+          logo + Street Local + online/offline status in the header,
+          welcome bubbles in the thread, type-and-send footer that
+          opens WhatsApp pre-filled with the customer's message. */}
+      {activePage === 'support' && (
+        <div className="ds-cs" role="dialog" aria-modal="true">
+          <img className="ds-cs__bg" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_40_27%20PM.png" alt="" aria-hidden />
+          <div className="ds-cs__scrim" aria-hidden />
+
+          {/* Header: back arrow + logo + Street Local + status dot */}
+          <div className="ds-cs__header">
+            <button type="button" className="ds-cs__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
+            <img className="ds-cs__logo" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="Street Local" />
+            <div className="ds-cs__brand">
+              <div className="ds-cs__name">Street Local</div>
+              <div className="ds-cs__status">
+                <span className={`ds-cs__dot ${supportOnline ? 'ds-cs__dot--on' : 'ds-cs__dot--off'}`} />
+                <span>{supportOnline ? 'Online' : 'Offline'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Welcome thread */}
+          <div className="ds-cs__thread">
+            <div className="ds-cs__bubble ds-cs__bubble--in">
+              <div className="ds-cs__bubble-text">👋 Welcome to StreetLocal support. We respond within one business day — most issues are resolved same-day.</div>
+              <div className="ds-cs__bubble-time">Mon–Sat · 09:00 – 21:00 WIB</div>
+            </div>
+            <div className="ds-cs__bubble ds-cs__bubble--in">
+              <div className="ds-cs__bubble-text">How can we help you today?</div>
+              <div className="ds-cs__quick">
+                <a className="ds-cs__quick-btn" href="mailto:streetlocallive@gmail.com">📧 Email us</a>
+                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=Hi%20StreetLocal" target="_blank" rel="noreferrer">📱 WhatsApp</a>
+              </div>
+            </div>
+            <div className="ds-cs__bubble ds-cs__bubble--in">
+              <div className="ds-cs__bubble-text">Common topics:</div>
+              <div className="ds-cs__quick">
+                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=My%20link%20isn%27t%20working%20after%20payment" target="_blank" rel="noreferrer">My link isn't working</a>
+                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=Payment%20gateway%20not%20connecting" target="_blank" rel="noreferrer">Payment gateway issue</a>
+                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=I%20want%20to%20cancel%20my%20subscription" target="_blank" rel="noreferrer">Cancel my subscription</a>
+              </div>
+            </div>
+            {!supportOnline && (
+              <div className="ds-cs__bubble ds-cs__bubble--in ds-cs__bubble--note">
+                <div className="ds-cs__bubble-text">🌙 We're offline right now. Send a message anyway — we'll reply by email next morning.</div>
+              </div>
             )}
           </div>
+
+          {/* Footer input — submits to WhatsApp with the typed text */}
+          <form
+            className="ds-cs__footer"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const t = supportMsg.trim()
+              if (!t) return
+              window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer')
+              setSupportMsg('')
+            }}
+          >
+            <input
+              type="text"
+              className="ds-cs__input"
+              placeholder="Type a message…"
+              value={supportMsg}
+              onChange={(e) => setSupportMsg(e.target.value)}
+              maxLength={500}
+            />
+            <button type="submit" className="ds-cs__send" aria-label="Send">
+              <span aria-hidden>➤</span>
+            </button>
+          </form>
         </div>
       )}
 
@@ -712,6 +767,33 @@ function PageStyles() {
       .ds-info-card__value { display: block; font-size: 16px; font-weight: 800; color: #EC4899; text-decoration: none; margin-bottom: 6px; word-break: break-word; }
       .ds-info-card__value:hover { color: #BE185D; text-decoration: underline; }
       .ds-info-card__hint { font-size: 13px; color: #8B6B6B; line-height: 1.5; }
+
+      /* ── CUSTOMER SERVICE CHAT WINDOW ───────────────────────── */
+      .ds-cs { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: #0a0a0a; animation: dsInfoSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; }
+      .ds-cs__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
+      .ds-cs__scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.35); z-index: 0; pointer-events: none; }
+      .ds-cs__header { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: linear-gradient(180deg, rgba(236,72,153,0.95) 0%, rgba(190,24,93,0.95) 100%); box-shadow: 0 4px 16px rgba(236,72,153,0.35); flex-shrink: 0; }
+      .ds-cs__back { width: 36px; height: 36px; border-radius: 18px; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.3); color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; line-height: 1; }
+      .ds-cs__logo { width: 44px; height: 44px; border-radius: 22px; object-fit: cover; background: #fff; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+      .ds-cs__brand { flex: 1; min-width: 0; color: #fff; }
+      .ds-cs__name { font-size: 16px; font-weight: 900; line-height: 1.15; }
+      .ds-cs__status { font-size: 13px; opacity: 0.95; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+      .ds-cs__dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; }
+      .ds-cs__dot--on  { background: #22C55E; box-shadow: 0 0 6px rgba(34,197,94,0.9); }
+      .ds-cs__dot--off { background: #EF4444; box-shadow: 0 0 6px rgba(239,68,68,0.85); }
+      .ds-cs__thread { position: relative; z-index: 1; flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; -webkit-overflow-scrolling: touch; }
+      .ds-cs__bubble { max-width: 82%; padding: 10px 14px; border-radius: 16px; align-self: flex-start; background: linear-gradient(180deg, #FCE4EC 0%, #F8BBD0 100%); color: #3a1a2a; border: 1px solid rgba(236,72,153,0.25); box-shadow: 0 2px 10px rgba(236,72,153,0.18); }
+      .ds-cs__bubble--note { background: linear-gradient(180deg, rgba(250,204,21,0.95) 0%, rgba(245,158,11,0.95) 100%); color: #2D1B0A; border-color: rgba(245,158,11,0.4); }
+      .ds-cs__bubble-text { font-size: 14px; line-height: 1.45; font-weight: 500; }
+      .ds-cs__bubble-time { font-size: 12px; margin-top: 6px; opacity: 0.7; font-weight: 600; }
+      .ds-cs__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .ds-cs__quick-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 16px; background: rgba(0,0,0,0.78); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.15s ease; }
+      .ds-cs__quick-btn:hover { transform: translateY(-1px); }
+      .ds-cs__footer { position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 10px); background: rgba(0,0,0,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+      .ds-cs__input { flex: 1; padding: 12px 16px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; outline: none; font-family: inherit; min-height: 44px; }
+      .ds-cs__input::placeholder { color: rgba(255,255,255,0.45); }
+      .ds-cs__send { width: 44px; height: 44px; border-radius: 22px; border: none; background: linear-gradient(180deg, #EC4899 0%, #BE185D 100%); color: #fff; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(236,72,153,0.5); padding: 0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+      .ds-cs__send:hover { transform: translateY(-1px); }
 
       /* ── BUTTONS ───────────────────────────────────────────────── */
       .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; border: none; font-family: inherit; text-decoration: none; min-height: 44px; padding: 10px 18px; border-radius: 12px; font-size: 14px; line-height: 1; }

@@ -7786,8 +7786,11 @@ export default function App() {
                 orderPayload: { orderNumber: 'DD-117462', placedAt: new Date(now - 2*24*60*60*1000).toISOString(), total: 144000, address: 'Pickup — Sweet Demo Donuts',
                   items: [{ name: 'Cookies & Cream', qty: 6, lineTotal: 72000, image: D.cookies }, { name: 'Classic Glazed', qty: 6, lineTotal: 60000, image: D.glazed }, { name: 'Chocolate Sprinkle', qty: 1, lineTotal: 12000, image: D.choco }] } },
             ] : []
-            const list = vendorConversations.length > 0 ? vendorConversations : MOCK_DONUT_CONVS
-            const showingMocks = vendorConversations.length === 0 && MOCK_DONUT_CONVS.length > 0
+            // Show only the 3 newest mocks — keeps the inbox preview
+            // focused without scrolling through a full demo set.
+            const mocksToShow = MOCK_DONUT_CONVS.slice(0, 3)
+            const list = vendorConversations.length > 0 ? vendorConversations : mocksToShow
+            const showingMocks = vendorConversations.length === 0 && mocksToShow.length > 0
             return (
               <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '8px 0' }}>
                 {showingMocks && (
