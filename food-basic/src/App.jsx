@@ -14435,9 +14435,9 @@ export default function App() {
                     {/* HORIZONTAL — image left + body right, mirrors real card layout */}
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Horizontal</div>
-                      <div style={{ ...cardBase, display: 'flex', gap: 8, padding: 8, paddingTop: 22 }}>
+                      <div style={{ ...cardBase, display: 'flex', gap: 8, padding: 8, paddingTop: 28 }}>
                         {/* Active perk top strip */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 18, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 4 }}>🎁 Buy 1 Get 1</div>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 24, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 4 }}>🎁 Buy 1 Get 1</div>
                         <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 60, height: 60, marginLeft: 4, borderRadius: 6, objectFit: 'contain', background: '#f5f5f5', flexShrink: 0, border: imgRim }} />
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
@@ -14456,8 +14456,8 @@ export default function App() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {[0, 1].map(i => (
                           <div key={i} style={{ ...cardBase }}>
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 16, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 6px', display: 'flex', alignItems: 'center', gap: 3, zIndex: 2 }}>🎁 Buy 1 Get 1</div>
-                            <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, aspectRatio: '4 / 3', objectFit: 'contain', background: '#f5f5f5', display: 'block', border: imgRim }} />
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 22, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 6px', display: 'flex', alignItems: 'center', gap: 3, zIndex: 2 }}>🎁 Buy 1 Get 1</div>
+                            <img src={sampleLandscape} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, marginTop: 22, aspectRatio: '4 / 3', objectFit: 'contain', background: '#f5f5f5', display: 'block', border: imgRim }} />
                             <div style={{ padding: '6px 8px 8px' }}>
                               <div style={{ fontSize: 13, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
                               <div style={{ fontSize: 13, color: dimTxt, marginBottom: 4, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
@@ -14475,8 +14475,8 @@ export default function App() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', marginBottom: 4 }}>Full Width</div>
                       <div style={{ ...cardBase }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 20, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>🎁 Buy 1 Get 1 — 12h left</div>
-                        <img src={sampleFullWidth} alt="" onError={imgError('food')} style={{ width: 'calc(100% - 4px)', marginLeft: 4, height: 'auto', display: 'block', background: '#f5f5f5', border: imgRim }} />
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 26, background: promoCol, color: '#fff', fontSize: 13, fontWeight: 800, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, zIndex: 2 }}>🎁 Buy 1 Get 1 — 12h left</div>
+                        <img src={sampleFullWidth} alt="" onError={imgError('food')} style={{ width: '70%', maxHeight: 140, marginTop: 28, marginLeft: 'auto', marginRight: 'auto', height: 'auto', objectFit: 'contain', display: 'block', background: '#f5f5f5', border: imgRim }} />
                         <div style={{ padding: '10px 12px 12px' }}>
                           <div style={{ fontSize: 14, fontWeight: 800, color: cardTxt, marginBottom: 3, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.name}</div>
                           <div style={{ fontSize: 13, color: dimTxt, marginBottom: 6, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sample.desc}</div>
