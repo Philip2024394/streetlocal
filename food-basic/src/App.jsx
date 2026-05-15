@@ -7726,23 +7726,55 @@ export default function App() {
           <img src={localStorage.getItem('foodlocalchat_themeBg') || 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2001_57_58%20PM.png'} alt="" onError={imgError('theme')} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 0, pointerEvents: 'none' }} />
 
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{t.ordersTab || 'Orders'}</div>
-            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>{t.closeBtn || 'Close'}</button>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+              {/* Shop logo on the LEFT of the Orders title — same logo
+                  the customer sees in the menu header, so the vendor's
+                  inbox feels like part of their own shop. */}
+              {shopLogo ? (
+                <img src={shopLogo} alt="" onError={imgError('logo')} style={{ width: 36, height: 36, borderRadius: shopLogoStyle === 'bare' ? 0 : 18, objectFit: shopLogoStyle === 'bare' ? 'contain' : 'cover', flexShrink: 0, border: shopLogoStyle === 'bare' ? 'none' : '1.5px solid rgba(255,255,255,0.2)' }} />
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: 18, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>{(shopName || '?').charAt(0).toUpperCase()}</div>
+              )}
+              <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.ordersTab || 'Orders'}</div>
+            </div>
+            <button onClick={() => { setVendorTab('shop'); setVendorActiveConv(null) }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>{t.closeBtn || 'Close'}</button>
           </div>
 
           {!vendorActiveConv && (() => {
             // Mock conversations — shown when there are no real orders yet
-            // AND the vendor is on donut theme. Gives a fresh shop a populated
-            // preview so they can see what the inbox looks like in use.
+            // AND the vendor is on donut theme. Each mock carries a full
+            // order_payload (items + total + address + phone + time) so
+            // the inbox can render the rich order card preview vendors
+            // expect: photo, customer, address, items, total at a glance.
             const now = Date.now()
+            const D = {
+              glazed:  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-glazed.png',
+              choco:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-choco.png',
+              straw:   'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-strawberry.png',
+              boston:  'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-boston.png',
+              cookies: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-cookies.png',
+              caramel: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/donut-caramel.png',
+            }
             const MOCK_DONUT_CONVS = shopTheme === 'donut' && vendorConversations.length === 0 ? [
-              { id: 'mock-1', customer_name: 'Maya P.',    customer_phone: '+62 812 3456 7890', last_message_at: new Date(now - 5*60*1000).toISOString(),       unread_vendor_count: 2, isMock: true, preview: 'Hi! Could I get 6 Glazed and 2 Boston Cream?' },
-              { id: 'mock-2', customer_name: 'Jordan L.',  customer_phone: '+62 813 4567 8901', last_message_at: new Date(now - 32*60*1000).toISOString(),      unread_vendor_count: 0, isMock: true, preview: 'Thanks, picked up — these are amazing!' },
-              { id: 'mock-3', customer_name: 'Ravi G.',    customer_phone: '+62 821 2345 6789', last_message_at: new Date(now - 2*60*60*1000).toISOString(),    unread_vendor_count: 1, isMock: true, preview: 'Is delivery available to Yogyakarta city centre?' },
-              { id: 'mock-4', customer_name: 'Chloe B.',   customer_phone: '+62 815 6789 0123', last_message_at: new Date(now - 6*60*60*1000).toISOString(),    unread_vendor_count: 0, isMock: true, preview: '4 Sprinkle Donuts ordered · DD-487193' },
-              { id: 'mock-5', customer_name: 'Ava M.',     customer_phone: '+62 819 1234 5678', last_message_at: new Date(now - 26*60*60*1000).toISOString(),   unread_vendor_count: 0, isMock: true, preview: 'Left a 5-star review · DD-301847' },
-              { id: 'mock-6', customer_name: 'Marcus R.',  customer_phone: '+62 817 8901 2345', last_message_at: new Date(now - 2*24*60*60*1000).toISOString(), unread_vendor_count: 0, isMock: true, preview: 'Pickup confirmed for 3pm tomorrow' },
+              { id: 'mock-1', customer_name: 'Maya P.',    customer_phone: '+62 812 3456 7890', last_message_at: new Date(now - 5*60*1000).toISOString(),       unread_vendor_count: 2, isMock: true, preview: 'Hi! Could I get 6 Glazed and 2 Boston Cream?',
+                orderPayload: { orderNumber: 'DD-487193', placedAt: new Date(now - 5*60*1000).toISOString(), total: 84000, address: 'Jl. Malioboro No. 32, Yogyakarta',
+                  items: [{ name: 'Classic Glazed', qty: 6, lineTotal: 60000, image: D.glazed }, { name: 'Boston Cream', qty: 2, lineTotal: 24000, image: D.boston }] } },
+              { id: 'mock-2', customer_name: 'Jordan L.',  customer_phone: '+62 813 4567 8901', last_message_at: new Date(now - 32*60*1000).toISOString(),      unread_vendor_count: 0, isMock: true, preview: 'Thanks, picked up — these are amazing!',
+                orderPayload: { orderNumber: 'DD-958432', placedAt: new Date(now - 32*60*1000).toISOString(), total: 60000, address: 'Pickup — Sweet Demo Donuts',
+                  items: [{ name: 'Strawberry Pink', qty: 5, lineTotal: 50000, image: D.straw }, { name: 'Caramel Pretzel', qty: 1, lineTotal: 10000, image: D.caramel }] } },
+              { id: 'mock-3', customer_name: 'Ravi G.',    customer_phone: '+62 821 2345 6789', last_message_at: new Date(now - 2*60*60*1000).toISOString(),    unread_vendor_count: 1, isMock: true, preview: 'Is delivery available to Yogyakarta city centre?',
+                orderPayload: { orderNumber: 'DD-301847', placedAt: new Date(now - 2*60*60*1000).toISOString(), total: 36000, address: 'Jl. Kaliurang KM 5, Sleman',
+                  items: [{ name: 'Chocolate Sprinkle', qty: 3, lineTotal: 36000, image: D.choco }] } },
+              { id: 'mock-4', customer_name: 'Chloe B.',   customer_phone: '+62 815 6789 0123', last_message_at: new Date(now - 6*60*60*1000).toISOString(),    unread_vendor_count: 0, isMock: true, preview: '4 Sprinkle Donuts ordered · DD-624518',
+                orderPayload: { orderNumber: 'DD-624518', placedAt: new Date(now - 6*60*60*1000).toISOString(), total: 96000, address: 'Jl. Gejayan No. 14, Sleman',
+                  items: [{ name: 'Chocolate Sprinkle', qty: 4, lineTotal: 48000, image: D.choco }, { name: 'Classic Glazed', qty: 4, lineTotal: 40000, image: D.glazed }, { name: 'Caramel Pretzel', qty: 1, lineTotal: 8000, image: D.caramel }] } },
+              { id: 'mock-5', customer_name: 'Ava M.',     customer_phone: '+62 819 1234 5678', last_message_at: new Date(now - 26*60*60*1000).toISOString(),   unread_vendor_count: 0, isMock: true, preview: 'Left a 5-star review · DD-840291',
+                orderPayload: { orderNumber: 'DD-840291', placedAt: new Date(now - 26*60*60*1000).toISOString(), total: 48000, address: 'Jl. Solo No. 88, Yogyakarta',
+                  items: [{ name: 'Boston Cream', qty: 4, lineTotal: 48000, image: D.boston }] } },
+              { id: 'mock-6', customer_name: 'Marcus R.',  customer_phone: '+62 817 8901 2345', last_message_at: new Date(now - 2*24*60*60*1000).toISOString(), unread_vendor_count: 0, isMock: true, preview: 'Pickup confirmed for 3pm tomorrow',
+                orderPayload: { orderNumber: 'DD-117462', placedAt: new Date(now - 2*24*60*60*1000).toISOString(), total: 144000, address: 'Pickup — Sweet Demo Donuts',
+                  items: [{ name: 'Cookies & Cream', qty: 6, lineTotal: 72000, image: D.cookies }, { name: 'Classic Glazed', qty: 6, lineTotal: 60000, image: D.glazed }, { name: 'Chocolate Sprinkle', qty: 1, lineTotal: 12000, image: D.choco }] } },
             ] : []
             const list = vendorConversations.length > 0 ? vendorConversations : MOCK_DONUT_CONVS
             const showingMocks = vendorConversations.length === 0 && MOCK_DONUT_CONVS.length > 0
@@ -7759,6 +7791,78 @@ export default function App() {
                 {list.map((conv) => {
                   const isFlash = flashConvId === conv.id
                   const unread = conv.unread_vendor_count || 0
+                  const op = conv.orderPayload
+                  // RICH ORDER CARD — only when an orderPayload exists.
+                  // Shows the photo of the first item (with a small +N
+                  // chip for the rest), customer + WhatsApp number,
+                  // address, items summary, time, and the order total.
+                  if (op) {
+                    const firstImg = op.items && op.items[0] && op.items[0].image
+                    const extraCount = (op.items?.length || 0) - 1
+                    const totalQty = (op.items || []).reduce((s, it) => s + (it.qty || 0), 0)
+                    const placedAt = op.placedAt || conv.last_message_at
+                    const timeStr = placedAt ? new Date(placedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''
+                    const itemsLine = (op.items || []).map(it => `${it.qty}× ${it.name}`).join(' · ')
+                    const cleanWa = String(conv.customer_phone || '').replace(/[^0-9]/g, '')
+                    return (
+                      <div
+                        key={conv.id}
+                        onClick={() => { if (!conv.isMock) openVendorConv(conv) }}
+                        style={{ position: 'relative', display: 'flex', gap: 12, padding: 14, margin: '0 12px 10px', borderRadius: 14, border: `1px solid ${isFlash ? 'rgba(250,204,21,0.4)' : 'rgba(255,255,255,0.08)'}`, background: isFlash ? 'rgba(250,204,21,0.12)' : 'rgba(0,0,0,0.55)', cursor: conv.isMock ? 'default' : 'pointer', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 10px rgba(0,0,0,0.25)' }}
+                      >
+                        {/* Item photo + extra count chip */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          {firstImg ? (
+                            <img src={firstImg} alt="" onError={imgError('food')} style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', background: '#222', border: '1.5px solid rgba(255,255,255,0.1)' }} />
+                          ) : (
+                            <div style={{ width: 72, height: 72, borderRadius: 12, background: accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, border: '1.5px solid rgba(255,255,255,0.1)' }}>🍩</div>
+                          )}
+                          {extraCount > 0 && (
+                            <div style={{ position: 'absolute', bottom: -6, right: -6, padding: '2px 7px', borderRadius: 10, background: '#0a0a0a', color: '#fff', fontSize: 12, fontWeight: 800, border: '1.5px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>+{extraCount}</div>
+                          )}
+                        </div>
+
+                        {/* Order details */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{conv.customer_name || conv.customer_phone}</span>
+                              {conv.isMock && <span style={{ fontSize: 11, fontWeight: 700, color: accent, background: `${accent}22`, border: `1px solid ${accent}55`, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.3, flexShrink: 0 }}>SAMPLE</span>}
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', flexShrink: 0 }}>{fmt(op.total)}</span>
+                          </div>
+                          {/* WhatsApp — tappable to open in a new tab */}
+                          {conv.customer_phone && (
+                            <a
+                              href={cleanWa ? `https://wa.me/${cleanWa}` : undefined}
+                              target="_blank" rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#86EFAC', textDecoration: 'none', marginTop: 1 }}
+                            >📱 {conv.customer_phone}</a>
+                          )}
+                          {/* Address */}
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 3, display: 'flex', alignItems: 'flex-start', gap: 4, lineHeight: 1.35 }}>
+                            <span style={{ flexShrink: 0 }}>📍</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{op.address || '—'}</span>
+                          </div>
+                          {/* Items summary */}
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.35 }}>{itemsLine}</div>
+                          {/* Footer row: order # · time · qty */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.55)', flexWrap: 'wrap' }}>
+                            {op.orderNumber && <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>#{op.orderNumber}</span>}
+                            {timeStr && <><span>·</span><span>{timeStr}</span></>}
+                            <span>·</span><span>{totalQty} {totalQty === 1 ? 'item' : 'items'}</span>
+                          </div>
+                        </div>
+
+                        {unread > 0 && (
+                          <span style={{ position: 'absolute', top: 10, right: 10, minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#EF4444', color: '#fff', fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0,0,0,0.55)' }}>{unread}</span>
+                        )}
+                      </div>
+                    )
+                  }
+                  // FALLBACK — simple row when no orderPayload is available
+                  // (real conversations with only chat messages, no parsed order).
                   return (
                     <button
                       key={conv.id}
