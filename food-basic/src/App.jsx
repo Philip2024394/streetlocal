@@ -14246,22 +14246,74 @@ export default function App() {
                   {menuItems.length === 0 && (
                     <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Add items to your menu first, then come back to feature them here.</div>
                   )}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {menuItems.map(it => {
                       const key = it.id || it.name
                       const has = donutTypesContent[key]
                       const r = getItemRating ? getItemRating(it) : null
+                      // Use the vendor's Menu Cards style — same background,
+                      // text colour, and frame accent. The picker cards now
+                      // visually match the customer-facing menu, so the
+                      // vendor sees "their" brand the moment they open this
+                      // page instead of generic dark list rows.
+                      const dimTxt = (donutCardStyles?.textColor === '#fff') ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)'
+                      const frameCol = donutFrameAccent
                       return (
-                        <button key={key} type="button" onClick={() => setDonutTypesSelectedItemId(key)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: has ? `${accent}1a` : 'rgba(0,0,0,0.45)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-                          <img src={it.photo || it.image || ''} alt="" onError={imgError('food')} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', background: '#222', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setDonutTypesSelectedItemId(key)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 14,
+                            padding: '12px 14px',
+                            borderRadius: 14,
+                            border: 'none',
+                            background: donutCardStyles?.background || '#ffffff',
+                            backdropFilter: donutCardStyles?.backdropFilter || 'none',
+                            WebkitBackdropFilter: donutCardStyles?.WebkitBackdropFilter || 'none',
+                            color: donutCardStyles?.textColor || '#1a1a1a',
+                            boxShadow: `inset 4px 0 0 ${frameCol}, 0 4px 14px rgba(0,0,0,0.18)`,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            width: '100%',
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <img
+                            src={it.photo || it.image || ''}
+                            alt=""
+                            onError={imgError('food')}
+                            style={{
+                              width: 76, height: 76, borderRadius: 12,
+                              objectFit: 'cover', background: '#f5f5f5',
+                              flexShrink: 0, marginLeft: 4,
+                              border: '1px solid rgba(0,0,0,0.08)',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                            }}
+                          />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.name}</div>
-                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                              {r && <span><span style={{ color: '#FACC15' }}>★</span> {r.avg.toFixed(1)} <span style={{ opacity: 0.6 }}>({r.count})</span></span>}
-                              {has && <span style={{ color: '#86EFAC', fontWeight: 800 }}>· Featured</span>}
+                            <div style={{ fontSize: 15, fontWeight: 900, color: donutCardStyles?.textColor || '#1a1a1a', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{it.name}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              {r && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: dimTxt, padding: '2px 8px', borderRadius: 999, background: 'rgba(250,204,21,0.18)' }}>
+                                  <span style={{ color: '#FACC15', fontSize: 13 }}>★</span>
+                                  <span style={{ color: dimTxt === 'rgba(255,255,255,0.6)' ? '#fff' : '#1a1a1a' }}>{r.avg.toFixed(1)}</span>
+                                  <span style={{ opacity: 0.7 }}>({r.count})</span>
+                                </span>
+                              )}
+                              {has ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 900, padding: '3px 9px', borderRadius: 999, background: '#22C55E', color: '#fff', letterSpacing: 0.3 }}>
+                                  ✓ FEATURED
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: 12, fontWeight: 700, color: dimTxt }}>Tap to feature →</span>
+                              )}
                             </div>
                           </div>
-                          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 18 }}>›</span>
+                          <span style={{ color: frameCol, fontSize: 22, fontWeight: 900, flexShrink: 0, opacity: 0.8 }}>›</span>
                         </button>
                       )
                     })}
