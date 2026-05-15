@@ -795,7 +795,11 @@ function DonutSplash({ landing, onEnter, languageButton = null, fit = 'cover' })
   // causing the visible flash). Each useMemo lists ONLY the props that
   // genuinely affect its output.
   const sprinklesLayerMemo = React.useMemo(() => (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+    // zIndex: 11 — one above the dancing donut (zIndex: 10), so the
+    // chocolate crumbs visibly fall in FRONT of the donut down the
+    // entire splash. pointerEvents: none keeps the layer transparent
+    // to taps so the underlying buttons stay clickable.
+    <div style={{ position: 'absolute', inset: 0, zIndex: 11, pointerEvents: 'none', overflow: 'hidden' }}>
       {Array.from({ length: 22 }, (_, i) => {
         const colors = ['#2C1810', '#3D1F0F', '#5C3317', '#7B4B2A', '#8B5A2B', '#A0522D']
         const leftPct = 60 + ((i * 19) % 38)
