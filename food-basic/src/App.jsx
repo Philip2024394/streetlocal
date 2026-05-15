@@ -2651,6 +2651,11 @@ export default function App() {
   const [planPageOpen, setPlanPageOpen] = useState(false)
   // Backup & Restore page — Pro+ gated.
   const [backupPageOpen, setBackupPageOpen] = useState(false)
+  // Plan upgrade checkout (Plan page → Upgrade button → subscription-create-checkout).
+  // Errors surface above the tier cards; busy state disables all upgrade
+  // buttons so the vendor can't double-fire.
+  const [upgradeCheckoutBusy, setUpgradeCheckoutBusy] = useState(false)
+  const [upgradeCheckoutError, setUpgradeCheckoutError] = useState(null)
   // Dismissible "see Pro" banner on Starter dashboard.
   const [tierBannerDismissed, setTierBannerDismissed] = useState(() => {
     try { return sessionStorage.getItem('foodlocalchat_tierBannerDismissed') === 'true' } catch { return false }
@@ -13522,7 +13527,7 @@ export default function App() {
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px' }}>
-              <button onClick={() => setPlanPageOpen(false)} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
+              <button onClick={() => { setPlanPageOpen(false); setUpgradeCheckoutError(null) }} style={{ width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>←</button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>💎 Your plan</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>Currently on <strong style={{ color: '#FACC15' }}>{tierFeatures.label}</strong></div>
@@ -13530,6 +13535,21 @@ export default function App() {
             </div>
 
             <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '4px 14px 28px' }}>
+              {/* Checkout error — surfaces when subscription-create-checkout
+                  returns a failure (e.g. gateway down, secret missing,
+                  amount tampering caught, etc.). Cleared on next upgrade
+                  attempt or when the vendor closes the page. */}
+              {upgradeCheckoutError && (
+                <div role="alert" style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.45)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#FCA5A5', marginBottom: 4 }}>Couldn't start checkout</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>{upgradeCheckoutError}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {tiers.map(t => {
                 const banner = TIER_BANNERS[t]
                 const isCurrent = t === vendorPlanLevel
@@ -13548,8 +13568,44 @@ export default function App() {
                           <span>Your current plan</span>
                         </div>
                       ) : !isLower ? (
-                        <button onClick={() => { setPlanPageOpen(false); setSubPickerOpen(true) }} style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none', background: banner.color, color: '#000', fontSize: 15, fontWeight: 900, cursor: 'pointer', boxShadow: `0 6px 18px ${banner.color}66` }}>
-                          Upgrade to {banner.label} →
+                        <button
+                          onClick={async () => {
+                            setUpgradeCheckoutBusy(true)
+                            setUpgradeCheckoutError(null)
+                            try {
+                              const { data, error } = await supabase.functions.invoke('subscription-create-checkout', {
+                                body: { vendorId, planLevel: t, returnUrl: window.location.href },
+                              })
+                              if (error) throw new Error(error.message)
+                              if (data?.error) throw new Error(data.error)
+                              if (data?.gateway === 'midtrans' && data?.token) {
+                                // Open Snap modal — global snap.js loaded by checkout flow.
+                                await loadSnapJs(data.mode || 'test', data.clientKey || '')
+                                if (window.snap) {
+                                  window.snap.pay(data.token, {
+                                    onSuccess: () => window.location.reload(),
+                                    onPending: () => window.location.reload(),
+                                    onError: () => setUpgradeCheckoutError('Midtrans returned an error — try again.'),
+                                    onClose:  () => { /* customer dismissed */ },
+                                  })
+                                } else if (data.redirectUrl) {
+                                  window.location.href = data.redirectUrl
+                                }
+                              } else if (data?.redirectUrl) {
+                                // Stripe (international) — full-page redirect.
+                                window.location.href = data.redirectUrl
+                              } else {
+                                throw new Error('No checkout URL returned')
+                              }
+                            } catch (e) {
+                              setUpgradeCheckoutError(e?.message || 'Could not start checkout')
+                            } finally {
+                              setUpgradeCheckoutBusy(false)
+                            }
+                          }}
+                          disabled={upgradeCheckoutBusy}
+                          style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none', background: upgradeCheckoutBusy ? 'rgba(255,255,255,0.1)' : banner.color, color: '#000', fontSize: 15, fontWeight: 900, cursor: upgradeCheckoutBusy ? 'wait' : 'pointer', boxShadow: upgradeCheckoutBusy ? 'none' : `0 6px 18px ${banner.color}66`, opacity: upgradeCheckoutBusy ? 0.6 : 1 }}>
+                          {upgradeCheckoutBusy ? 'Opening checkout…' : `Upgrade to ${banner.label} →`}
                         </button>
                       ) : (
                         <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
