@@ -10505,7 +10505,6 @@ export default function App() {
 
               const menu = [
                 isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
-                isDonut && { icon: '🍩', label: 'Meet the Donuts', desc: 'Open the customer swipe gallery', onClick: () => { setDonutTypesIdx(0); setDonutTypesGallery(true) } },
               ].filter(Boolean)
 
               const account = [
@@ -11941,7 +11940,6 @@ export default function App() {
         ]
         const menuRows = [
           isDonut && { icon: '🍩', label: 'Donut Types', desc: 'Image + story for each donut — shows live', onClick: () => setDonutTypesPage(true) },
-          isDonut && { icon: '🍩', label: 'Meet the Donuts', desc: 'Open the customer swipe gallery', onClick: () => { setDonutTypesIdx(0); setDonutTypesGallery(true) } },
         ].filter(Boolean)
         const account = [
           { icon: '⚙️', label: 'My Shop', desc: 'Name, phone, hours, socials', onClick: () => setShopConfig(true) },
