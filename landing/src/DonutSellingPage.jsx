@@ -22,6 +22,9 @@ const IMAGES = {
   flavourOrb:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png',
 }
 
+// Bigger interactive demo lower on the page — uses the frozen
+// donuts.html static snapshot served by the LANDING vite (so 5173
+// is correct here, not 5177).
 const DEMO_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:5173/themes/donuts.html'
   : '/themes/donuts.html'
@@ -30,10 +33,21 @@ const DEMO_URL = typeof window !== 'undefined' && window.location.hostname === '
 // supports 6 variants. The hero phone cycles through each so visitors
 // see the full design range. Each URL forces a specific theme via
 // the `?landing=<id>` query param the donut app respects.
+//
+// Dev vs prod URL resolution:
+//   - Dev: the donut app's vite server runs on a separate port (5177
+//     per the monorepo root package.json) with base '/food/chat/'.
+//     We point the iframe at that port directly so it loads the
+//     actual donut app, not the landing site at :5173.
+//   - Prod: Vercel rewrites '/food/chat/*' to the food-basic build.
+//     Same-origin works fine via window.location.origin.
 const LANDING_THEME_PREVIEWS = (() => {
-  const origin = typeof window !== 'undefined'
-    ? (window.location.hostname === 'localhost' ? 'http://localhost:5173' : window.location.origin)
-    : ''
+  let origin = ''
+  if (typeof window !== 'undefined') {
+    origin = window.location.hostname === 'localhost'
+      ? 'http://localhost:5177'   // donut app dev port (see /package.json scripts)
+      : window.location.origin
+  }
   const themes = ['donuts', 'classic', 'glass', 'discover', 'float', 'warm']
   return themes.map(id => `${origin}/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0&landing=${id}`)
 })()
