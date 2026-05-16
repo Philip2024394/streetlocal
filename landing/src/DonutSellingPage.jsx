@@ -1063,19 +1063,39 @@ function PageStyles() {
       .ds-btn--dark:hover { background: #000; transform: translateY(-2px); }
 
       /* ── HERO ──────────────────────────────────────────────────── */
-      .ds-hero { position: relative; padding: 110px 0 80px; overflow: hidden; }
-      .ds-hero__grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
+      .ds-hero { position: relative; padding: 90px 0 60px; overflow: hidden; }
+      /* Mobile-first: text left, phone right, side-by-side from the
+         smallest screens. Text column is wider (1.3fr) so the H1 still
+         has breathing room; phone column auto-sizes around its 150-220px
+         width. Reverts to 1fr 1fr at desktop. */
+      .ds-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: center; }
       .ds-hero__copy { position: relative; z-index: 2; }
-      .ds-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #FCE7F3; color: #DB2777; padding: 7px 13px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+      .ds-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #FCE7F3; color: #DB2777; padding: 6px 11px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; }
       .ds-eyebrow__dot { width: 6px; height: 6px; border-radius: 50%; background: #EC4899; animation: dsPulse 2s ease-in-out infinite; }
       @keyframes dsPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
-      .ds-h1 { font-size: 44px; line-height: 0.95; letter-spacing: -0.03em; font-weight: 900; margin: 22px 0 0; color: #2D1B1B; }
-      .ds-lede { font-size: 17px; line-height: 1.55; color: #6B5555; margin: 22px 0 0; max-width: 540px; }
-      .ds-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-      .ds-trust { list-style: none; padding: 0; margin: 26px 0 0; display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; font-weight: 600; color: #705353; }
+      /* H1 + lede scaled down on smallest mobile so the side-by-side
+         layout doesn't overflow. They grow back at ≥480px and again
+         at desktop via existing breakpoints below. */
+      .ds-h1 { font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 900; margin: 16px 0 0; color: #2D1B1B; }
+      .ds-lede { font-size: 13px; line-height: 1.5; color: #6B5555; margin: 14px 0 0; max-width: 540px; }
+      .ds-cta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+      .ds-trust { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 12px; font-weight: 600; color: #705353; }
       .ds-trust li { display: inline-flex; align-items: center; }
+      @media (min-width: 480px) {
+        .ds-h1 { font-size: 36px; margin-top: 20px; }
+        .ds-lede { font-size: 15px; }
+        .ds-cta-row { gap: 12px; margin-top: 26px; }
+        .ds-trust { font-size: 13px; gap: 16px; }
+      }
+      @media (min-width: 640px) {
+        .ds-h1 { font-size: 44px; }
+        .ds-lede { font-size: 17px; }
+        .ds-trust { gap: 18px; }
+      }
 
-      .ds-hero__phone-wrap { position: relative; display: flex; align-items: center; justify-content: center; min-height: 460px; flex-direction: column; }
+      .ds-hero__phone-wrap { position: relative; display: flex; align-items: center; justify-content: center; min-height: 320px; flex-direction: column; }
+      @media (min-width: 480px) { .ds-hero__phone-wrap { min-height: 380px; } }
+      @media (min-width: 980px) { .ds-hero__phone-wrap { min-height: 540px; } }
       /* Dancing donut + chocolate crumb shower — sit behind the phone
          (z-index 0) so they decorate without blocking interaction. */
       .ds-dance-donut { position: absolute; top: 30px; right: 8%; width: 180px; height: 180px; border-radius: 50%; object-fit: cover; z-index: 0; animation: dsDonutBounce 1.2s ease-in-out infinite; filter: drop-shadow(0 14px 30px rgba(91,48,23,0.45)); will-change: transform; pointer-events: none; }
@@ -1088,17 +1108,28 @@ function PageStyles() {
       .ds-hero__float--bl { bottom: -80px; left: -120px; width: 240px; height: 240px; filter: drop-shadow(0 30px 60px rgba(34,211,238,0.18)); }
       .ds-glow { position: absolute; inset: -30px; background: radial-gradient(circle, rgba(244,114,182,0.35), transparent 65%); filter: blur(40px); z-index: 0; pointer-events: none; }
       .ds-glow--big { inset: -60px; }
-      .ds-phone { position: relative; z-index: 1; width: 220px; height: 460px; background: #000; border-radius: 34px; padding: 5px; box-shadow: 0 22px 54px rgba(236,72,153,0.32), 0 6px 16px rgba(0,0,0,0.25); border: 2px solid #2a2a2a; overflow: hidden; }
+      /* Phone scales up with viewport: smallest mobile ≈150×320 so it
+         sits comfortably beside the H1; small mobile ≈180×380; desktop
+         keeps 240×500 from earlier. */
+      .ds-phone { position: relative; z-index: 1; width: 150px; height: 320px; background: #000; border-radius: 24px; padding: 4px; box-shadow: 0 18px 40px rgba(236,72,153,0.32), 0 6px 14px rgba(0,0,0,0.25); border: 2px solid #2a2a2a; overflow: hidden; }
+      @media (min-width: 480px) { .ds-phone { width: 180px; height: 380px; border-radius: 28px; } }
+      @media (min-width: 640px) { .ds-phone { width: 200px; height: 420px; border-radius: 30px; } }
       @media (min-width: 980px) { .ds-phone { width: 240px; height: 500px; border-radius: 38px; } }
       .ds-phone--big { width: 320px; height: 670px; border-radius: 50px; padding: 7px; box-shadow: 0 40px 100px rgba(236,72,153,0.4), 0 10px 30px rgba(0,0,0,0.3); }
-      .ds-phone__notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 86px; height: 18px; background: #000; border-radius: 12px; z-index: 5; }
+      .ds-phone__notch { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 60px; height: 14px; background: #000; border-radius: 10px; z-index: 5; }
+      @media (min-width: 480px) { .ds-phone__notch { top: 9px; width: 72px; height: 16px; } }
+      @media (min-width: 980px) { .ds-phone__notch { top: 10px; width: 86px; height: 18px; border-radius: 12px; } }
       .ds-phone__notch--big { width: 130px; height: 26px; top: 14px; }
       /* Render iframe at native phone-design viewport (390x844) and
          scale it down with CSS to fit the phone shell. Without this,
          donuts.html lays out at the shell's pixel width (~268px) and
          elements get cramped or break — the scale-transform makes the
          page believe it's on a real ~390px phone. */
-      .ds-phone__frame { width: 390px; height: 844px; border: 0; border-radius: 30px; background: #000; display: block; transform-origin: top left; transform: scale(0.539); }
+      /* Iframe is always 390×844 (the design-canvas size used by the
+         donut app) and CSS-scaled to fit each phone breakpoint. */
+      .ds-phone__frame { width: 390px; height: 844px; border: 0; border-radius: 20px; background: #000; display: block; transform-origin: top left; transform: scale(0.364); }
+      @media (min-width: 480px) { .ds-phone__frame { border-radius: 24px; transform: scale(0.441); } }
+      @media (min-width: 640px) { .ds-phone__frame { border-radius: 26px; transform: scale(0.493); } }
       @media (min-width: 980px) { .ds-phone__frame { border-radius: 34px; transform: scale(0.59); } }
       .ds-phone--big .ds-phone__frame { border-radius: 44px; transform: scale(0.785); }
       .ds-phone__tag { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); background: #fff; color: #2D1B1B; padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); white-space: nowrap; }
