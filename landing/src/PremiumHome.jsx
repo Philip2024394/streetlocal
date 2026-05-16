@@ -20,7 +20,7 @@ import React, { useEffect, useRef, useState } from 'react'
 //    To add a new selling page later: flip `live: true` + update
 //    `href` to its sales-page route. Single-line change per app.
 const VERTICALS = [
-  { id: 'donut',    label: 'Donut App only',           emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen printer, 0% commission.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'View selling page →', showPhone: true },
+  { id: 'donut',    label: 'Donut & Bakery App',       emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen-printer integration, 0% commission on every sale.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'Explore →',           showPhone: true },
   { id: 'food',     label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: true,  cta: 'Open the app →' },
   { id: 'food-pro', label: 'Restaurant Pro (Full POS)',  emoji: '🍽️', desc: 'Table service, kitchen tickets, multi-staff roles, daily sales reports.', href: '/food/pro',      demoHref: '/food/pro',      live: false, cta: 'Try the demo →' },
   { id: 'products', label: 'Retail & Local Products',    emoji: '🛍️', desc: 'Catalog, stock, multi-image gallery, anything you sell physically.',     href: '/products/local', demoHref: '/products/local', live: false, cta: 'Try the demo →' },
@@ -503,9 +503,9 @@ export default function PremiumHome () {
       <section className="sl-section" id="apps">
         <div className="sl-container">
           <div style={{ textAlign: 'center' }}>
-            <span className="sl-kicker">App family</span>
-            <h2 className="sl-h2">One platform. <span className="sl-h2__accent">Many businesses.</span></h2>
-            <p className="sl-section__lede">Built for the local trades that actually exist — every category below is a live, shippable product, not a placeholder.</p>
+            <span className="sl-kicker">Our app family</span>
+            <h2 className="sl-h2">Business at <span className="sl-h2__accent">your fingertips.</span></h2>
+            <p className="sl-section__lede">A purpose-built app for every trade — specialised, mobile-first, and ready to ship the day you sign up. Choose the one built for the business you run.</p>
           </div>
           <div className="sl-vert-grid">
             {VERTICALS.map(v => (
