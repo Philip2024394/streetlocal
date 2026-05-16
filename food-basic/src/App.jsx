@@ -2404,6 +2404,14 @@ export default function App() {
   }, [])
   const closePicker = useCallback(() => setPicker(p => ({ ...p, open: false })), [])
   const [landingThemeId, setLandingThemeId] = useState(() => {
+    // `?landing=<id>` forces a specific splash theme — used by the
+    // donut-selling-page hero phone, which cycles through every theme
+    // as a preview carousel. Valid ids: donuts, classic, glass,
+    // discover, float, warm. Skips localStorage write so the override
+    // is per-render only (won't bleed into a real vendor session).
+    const urlLanding = new URLSearchParams(window.location.search).get('landing')
+    const VALID = new Set(['donuts','classic','glass','discover','float','warm'])
+    if (urlLanding && VALID.has(urlLanding)) return urlLanding
     // When the customer arrives from landing's "Use This Theme" with ?theme=donut,
     // also auto-select the matching curated splash ('donuts') so the donut HTML
     // renders as their app's landing — accent + bg already wired via THEME_PRESETS.

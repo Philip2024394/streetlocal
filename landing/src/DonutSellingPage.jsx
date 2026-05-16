@@ -26,6 +26,18 @@ const DEMO_URL = typeof window !== 'undefined' && window.location.hostname === '
   ? 'http://localhost:5173/themes/donuts.html'
   : '/themes/donuts.html'
 
+// Landing splash themes — the donut app's customer-facing splash
+// supports 6 variants. The hero phone cycles through each so visitors
+// see the full design range. Each URL forces a specific theme via
+// the `?landing=<id>` query param the donut app respects.
+const LANDING_THEME_PREVIEWS = (() => {
+  const origin = typeof window !== 'undefined'
+    ? (window.location.hostname === 'localhost' ? 'http://localhost:5173' : window.location.origin)
+    : ''
+  const themes = ['donuts', 'classic', 'glass', 'discover', 'float', 'warm']
+  return themes.map(id => `${origin}/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0&landing=${id}`)
+})()
+
 const FEATURES = [
   { icon: '🍩', title: 'Beautiful menu cards',   desc: 'Photos, descriptions, prices, allergens — customise card layout (grid / horizontal / full-width).' },
   { icon: '📲', title: 'WhatsApp ordering',       desc: 'Customers order through the WhatsApp number you already use. No new app to learn.' },
@@ -123,6 +135,17 @@ const FAQS = [
 
 export default function DonutSellingPage() {
   const [scrolled, setScrolled] = useState(false)
+  // Hero phone cycles through 6 landing splash designs every 5s so a
+  // visitor sees the full design range without scrolling. Indexes the
+  // LANDING_THEME_PREVIEWS array; clicking a chip below the phone
+  // pauses auto-rotate + jumps to that theme.
+  const [heroThemeIdx, setHeroThemeIdx] = useState(0)
+  const [heroThemePaused, setHeroThemePaused] = useState(false)
+  useEffect(() => {
+    if (heroThemePaused) return
+    const t = setInterval(() => setHeroThemeIdx(i => (i + 1) % LANDING_THEME_PREVIEWS.length), 5000)
+    return () => clearInterval(t)
+  }, [heroThemePaused])
   // Settings dropdown — slides down from the ⚙ button on the right of
   // the nav. Holds 4 menu items that each open a full-screen info page.
   const [menuOpen, setMenuOpen] = useState(false)
@@ -384,7 +407,7 @@ export default function DonutSellingPage() {
           <div className="ds-hero__copy">
             <span className="ds-eyebrow">
               <span className="ds-eyebrow__dot" aria-hidden></span>
-              🇮🇩 Built in Yogyakarta · for donut sellers worldwide
+              Donut sellers
             </span>
             <h1 className="ds-h1">
               Your donut shop.<br />
@@ -431,15 +454,34 @@ export default function DonutSellingPage() {
             <div className="ds-phone">
               <div className="ds-phone__notch" aria-hidden></div>
               <iframe
-                src={DEMO_URL}
-                title="Live donut shop demo"
+                src={LANDING_THEME_PREVIEWS[heroThemeIdx]}
+                title="Live donut shop demo — cycling through landing themes"
                 className="ds-phone__frame"
+                key={heroThemeIdx}
                 loading="lazy"
               />
             </div>
+            {/* Theme picker chips — click any to jump to that design.
+                Auto-rotate pauses after first manual selection so the
+                visitor can compare. */}
+            <div className="ds-theme-chips" aria-label="Landing splash theme previews">
+              {['Donuts','Classic','Glass','Discover','Float','Warm'].map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => { setHeroThemePaused(true); setHeroThemeIdx(i) }}
+                  className={`ds-theme-chip ${heroThemeIdx === i ? 'ds-theme-chip--active' : ''}`}
+                  aria-pressed={heroThemeIdx === i}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="ds-phone__tag">
               <span className="ds-phone__tag-dot" aria-hidden></span>
-              This is the real product. Tap around.
+              {heroThemePaused
+                ? `${['Donuts','Classic','Glass','Discover','Float','Warm'][heroThemeIdx]} theme — tap a chip to switch`
+                : 'Cycling 6 landing designs · tap to pause'}
             </div>
           </div>
         </div>
@@ -900,8 +942,8 @@ function PageStyles() {
       .ds-nav__inner { max-width: 1200px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
       .ds-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; }
       .ds-brand__bubble { width: 36px; height: 36px; border-radius: 50%; background: #EC4899; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,0.35); }
-      .ds-brand__logo { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 14px rgba(236,72,153,0.30); flex-shrink: 0; }
-      @media (min-width: 600px) { .ds-brand__logo { width: 48px; height: 48px; border-radius: 14px; } }
+      .ds-brand__logo { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+      @media (min-width: 600px) { .ds-brand__logo { width: 48px; height: 48px; } }
       .ds-brand__text { font-size: 16px; letter-spacing: -0.02em; }
       .ds-brand__suffix { color: #EC4899; font-weight: 800; }
       .ds-brand__text--light { color: #fff; }
@@ -1037,6 +1079,13 @@ function PageStyles() {
       .ds-phone--big .ds-phone__frame { border-radius: 44px; transform: scale(0.785); }
       .ds-phone__tag { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); background: #fff; color: #2D1B1B; padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); white-space: nowrap; }
       .ds-phone__tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: dsPulse 2s ease-in-out infinite; }
+
+      /* Theme picker chips below the hero phone — controls the
+         cycling preview iframe. Active chip highlighted in pink. */
+      .ds-theme-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 24px auto 0; max-width: 360px; }
+      .ds-theme-chip { padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+      .ds-theme-chip:hover { background: rgba(255,255,255,0.12); color: #fff; }
+      .ds-theme-chip--active { background: #EC4899; border-color: #EC4899; color: #fff; box-shadow: 0 4px 12px rgba(236,72,153,0.40); }
 
       /* ── SECTION GENERICS ─────────────────────────────────────── */
       .ds-section { padding: 80px 0; }
