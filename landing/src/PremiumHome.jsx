@@ -251,6 +251,7 @@ export default function PremiumHome () {
         @media (min-width: 768px) { .sl-nav__links { display: flex; } }
         .sl-nav__menu { width: 42px; height: 42px; border-radius: 12px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #0A0A0A; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s ease; font-family: inherit; }
         .sl-nav__menu:hover { background: #FFFBEB; border-color: #FACC15; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(250,204,21,0.2); }
+        @media (min-width: 768px) { .sl-nav__menu { display: none; } }
         @media (min-width: 600px) { [data-sl-nav-signin] { display: inline-flex !important; } }
         .sl-nav__link { color: var(--sl-gray-600); text-decoration: none; font-size: 14px; font-weight: 600; }
         .sl-nav__link:hover { color: var(--sl-black); }
