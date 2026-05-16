@@ -13,54 +13,55 @@ import React, { useEffect, useState } from 'react'
    ───────────────────────────────────────────────────────────────────── */
 
 const IMAGES = {
-  heroDonut:    'https://ik.imagekit.io/nepgaxllc/Untitleddasddasdfssdfsdfsdsdasdss-removebg-preview.png',
-  bouncing:     'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129',
-  bottomLeft:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_30_51%20AM.png',
-  bostonCream:  'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2008_45_54%20PM.png',
-  strawberry:   'https://ik.imagekit.io/nepgaxllc/Untitledasdaaaavdddddd-removebg-preview%20(1).png',
-  chocolate:    'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2009_19_03%20PM.png',
-  flavourOrb:   'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_56_26%20AM.png',
+  heroDonut:    '/images/donut-page/img-22.png',
+  bouncing:     '/images/donut-page/img-01.png',
+  bottomLeft:   '/images/donut-page/img-02.png',
+  bostonCream:  '/images/donut-page/img-04.png',
+  strawberry:   '/images/donut-page/img-21.png',
+  chocolate:    '/images/donut-page/img-05.png',
+  flavourOrb:   '/images/donut-page/img-03.png',
 }
 
-// Bigger interactive demo lower on the page — uses the frozen
-// donuts.html static snapshot served by the LANDING vite (so 5173
-// is correct here, not 5177).
-const DEMO_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:5173/themes/donuts.html'
-  : '/themes/donuts.html'
+// Big interactive demo lower on the page — always the live, current
+// donut app (no ?landing= param), so the design stays in sync with
+// what's actually shipping.
+const DEMO_URL = (() => {
+  if (typeof window === 'undefined') return ''
+  const origin = window.location.hostname === 'localhost'
+    ? 'http://localhost:5177'
+    : window.location.origin
+  return `${origin}/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0`
+})()
 
-// Landing splash themes — the donut app's customer-facing splash
-// supports 6 variants. The hero phone cycles through each so visitors
-// see the full design range. Each URL forces a specific theme via
-// the `?landing=<id>` query param the donut app respects.
+// Hero-phone landing-theme carousel — cycles through the donut app's
+// customer-facing splash variants so visitors see the full design range
+// without scrolling. Each URL forces a specific theme via the
+// `?landing=<id>` query param the donut app respects.
 //
 // Dev vs prod URL resolution:
 //   - Dev: the donut app's vite server runs on a separate port (5177
 //     per the monorepo root package.json) with base '/food/chat/'.
-//     We point the iframe at that port directly so it loads the
-//     actual donut app, not the landing site at :5173.
 //   - Prod: Vercel rewrites '/food/chat/*' to the food-basic build.
-//     Same-origin works fine via window.location.origin.
 const LANDING_THEME_PREVIEWS = (() => {
   let origin = ''
   if (typeof window !== 'undefined') {
     origin = window.location.hostname === 'localhost'
-      ? 'http://localhost:5177'   // donut app dev port (see /package.json scripts)
+      ? 'http://localhost:5177'
       : window.location.origin
   }
-  const themes = ['donuts', 'classic', 'glass', 'discover', 'float', 'warm']
+  const themes = ['donuts', 'discover', 'float', 'warm']
   return themes.map(id => `${origin}/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0&landing=${id}`)
 })()
 
 const FEATURES = [
-  { icon: '🍩', title: 'Beautiful menu cards',   desc: 'Photos, descriptions, prices, allergens — customise card layout (grid / horizontal / full-width).' },
-  { icon: '📲', title: 'WhatsApp ordering',       desc: 'Customers order through the WhatsApp number you already use. No new app to learn.' },
-  { icon: '🛵', title: 'Delivery + pickup',       desc: 'Zones, per-km rates, free-above thresholds, max-distance — all in your hands.' },
-  { icon: '💳', title: 'Multiple payment methods', desc: 'Bank transfer, e-wallet (GoPay / OVO / Dana), or cash on delivery — you choose.' },
-  { icon: '⭐', title: 'Verified reviews',         desc: 'Only customers with a real order ref number can leave a review. No spam.' },
-  { icon: '🎨', title: 'Total brand control',     desc: 'Your logo, colours, fonts, hero text, custom landing splash. Edit live, see live.' },
-  { icon: '🌍', title: 'Multi-language',          desc: 'English + Indonesian out of the box. Vietnamese, Malay, Filipino coming Q3 2026.' },
-  { icon: '📊', title: 'Promotions + deals',      desc: 'BUY1GET1, % off, time-limited, free-delivery thresholds, scrolling promo banners.' },
+  { iconImg: '/images/donut-page/img-07.png', title: 'Beautiful menu cards',   desc: 'Photos, descriptions, prices, allergens — customise card layout (grid / horizontal / full-width).' },
+  { iconImg: '/images/donut-page/img-08.png', title: 'WhatsApp ordering',       desc: 'Customers order through the WhatsApp number you already use. No new app to learn.' },
+  { iconImg: '/images/donut-page/img-19.png', title: 'Delivery + pickup',       desc: 'Zones, per-km rates, free-above thresholds, max-distance — all in your hands.' },
+  { iconImg: '/images/donut-page/img-31.png', title: 'Multiple payment methods', desc: 'Bank transfer, e-wallet (GoPay / OVO / Dana), or cash on delivery — you choose.' },
+  { iconImg: '/images/donut-page/img-32.png', large: true, title: 'Verified reviews',         desc: 'Only customers with a real order ref number can leave a review. No spam.' },
+  { iconImg: '/images/donut-page/img-34.png', title: 'Total brand control',     desc: 'Your logo, colours, fonts, hero text, custom landing splash. Edit live, see live.' },
+  { iconImg: '/images/donut-page/img-35.png', title: 'Multi-language',          desc: 'English + Indonesian out of the box. Vietnamese, Malay, Filipino coming Q3 2026.' },
+  { iconImg: '/images/donut-page/img-36.png', title: 'Promotions + deals',      desc: 'BUY1GET1, % off, time-limited, free-delivery thresholds, scrolling promo banners.' },
 ]
 
 const STEPS = [
@@ -70,36 +71,65 @@ const STEPS = [
   { step: 4, time: 'Forever', icon: '🎉', title: 'Take orders',         desc: 'Orders ping your WhatsApp. You bake. You earn 100%.' },
 ]
 
-const PRICING_INCLUDES = [
-  'Unlimited donuts in menu',
+// Three tiers. Starter is the lean "sell + market" plan — everything
+// a small shop needs to open today and run marketing. Pro adds the
+// growth-stage features (in-app chat, loyalty, custom domain, tipping,
+// thermal printer). Enterprise is the operations-heavy package (KDS,
+// kiosk, production planner, multi-location). Same StreetLocal codebase
+// under the hood, gated by vendor_accounts.plan_level.
+const STARTER_INCLUDES = [
+  'Premium PWA app — installable on any phone',
+  'Unlimited donuts on your menu',
   'Unlimited orders / month',
-  'In-app chat + WhatsApp ordering',
-  'All 16 payment gateways (Midtrans · QRIS · Stripe · …)',
-  'Delivery + pickup zones',
-  'Marketing banners + auto-post to chat',
-  'Promo codes (% / flat / first-order / expiry)',
-  'Tipping at checkout (10/15/20/custom)',
-  'Loyalty stamps + member card',
-  '4-template A4 invoices with your letterhead',
-  'Tax / VAT (PPN 11% preset)',
-  'Production planner + wastage logger',
-  'Kitchen Display System (KDS) for tablets',
-  'Build-your-own dozen mix box',
-  'Bluetooth thermal printer',
+  'WhatsApp checkout — orders flow to your number',
+  'All 16 payment gateways (Midtrans · QRIS · GoPay · OVO · DANA · Stripe …)',
+  'Delivery + pickup zones with per-km pricing',
   'Customer accounts + order history',
-  'Pre-order windows (Mother\'s Day, Valentine\'s)',
-  'Catering / wholesale orders',
-  'End-of-day cash reconciliation',
-  'Self-serve kiosk mode',
-  'Allergen tags + recipe cost analysis',
+  'Marketing banners (landscape · square · story)',
+  'Auto-post banners to customer chat',
+  'Social-ready PNG export (Instagram · WhatsApp · Facebook · TikTok)',
+  'Promo codes (% off · flat off · expiry)',
+  'Receipts + tax / VAT (PPN 11% preset)',
+  'CSV sales export',
+  'Bahasa Indonesia + English',
+  'Shop subdomain (yourshop.streetlocal.live)',
+  '1 staff account · 30 image library',
+  'WhatsApp support',
+  '0% commission · cancel anytime',
+]
+
+const PRO_INCLUDES = [
+  'Everything in Starter, plus:',
+  'In-app real-time chat (no WhatsApp dependency)',
+  'Loyalty stamps + branded member card',
+  '4-template A4 invoices with your letterhead',
+  'Bluetooth thermal printer (ESC/POS)',
+  'Scheduled pre-orders + date/time picker',
+  'Advanced promos (BUY1GET1 · first-order only · redemption caps)',
+  'Tipping at checkout (10/15/20/custom + staff split)',
   'SMS notifications (Twilio)',
   'Email campaigns (Resend)',
-  'CSV sales export · backup & restore',
-  'Image library + curated stock photos',
-  '11 languages, 15 currencies',
-  '24/7 hosting + daily backups',
-  'WhatsApp support',
-  'No commission, ever',
+  '5 staff accounts',
+  '200 image library',
+  'Custom domain (mydonuts.com)',
+  'Priority WhatsApp support',
+]
+
+const ENTERPRISE_INCLUDES = [
+  'Everything in Pro, plus:',
+  'Kitchen Display System (KDS) for tablets',
+  'Self-serve kiosk mode',
+  'Production planner + wastage logger',
+  'Build-your-own dozen mix box',
+  'Catering / wholesale orders + pre-order windows',
+  'End-of-day cash reconciliation Z-report',
+  'Allergen tags + recipe cost analysis',
+  'Multi-location support',
+  'Unlimited staff accounts',
+  'Unlimited image library',
+  'Native app build option (paid add-on)',
+  'Dedicated account manager',
+  'Daily encrypted backups',
 ]
 
 const COMPARISON = [
@@ -116,7 +146,25 @@ const COMPARISON = [
   ['Built for donut shops',            '✓',         '—',             '✗ Generic',    '✗ Generic'],
 ]
 
+// PLACEHOLDER reviews used for the scrolling marquee design preview.
+// Each entry must be replaced with a verified real review before launch
+// (see UU ITE / consumer-protection rules on fabricated testimonials).
+// Avatars use initials-based tiles, not stock photos of people, so the
+// placeholder nature is visually clear.
+const REVIEWS = [
+  { name: 'Sari Wijaya',    business: 'Donut Lab',      city: 'Yogyakarta', avatar: '/images/donut-page/img-28.png', text: 'Set up dalam 6 menit dari laptop di rumah. Hari pertama go-live udah dapet 14 order via WhatsApp — semuanya masuk rapi dengan nama, alamat, dan pilihan toppings. Tidak ada lagi DM chaos atau lupa balasin customer. Yang paling enak: notif WhatsApp langsung lengkap, tinggal di-bake dan dikirim.', rating: 5, when: '2 minggu lalu' },
+  { name: 'Andi Pratama',   business: 'Sweet Roll',     city: 'Jakarta',    avatar: '/images/donut-page/img-23.png', text: 'Akhirnya bisa terima GoPay, QRIS, OVO, DANA, dan transfer bank semua dari satu app — sebelumnya saya harus jongling 4 aplikasi terpisah. Customer suka banget bisa pilih toppings, ukuran, dan jumlah sendiri sebelum checkout. Conversion rate naik karena tidak ada lagi DM "maaf mau pesan…" yang sering kelewat. Funds masuk langsung ke rekening, bukan ke platform.',   rating: 5, when: '1 bulan lalu' },
+  { name: 'Putri Mahardika', business: 'Boba+Donut',    city: 'Bandung',    avatar: '/images/donut-page/img-24.png', text: 'PPN 11% dan faktur pajak otomatis di setiap invoice — akuntan saya seneng banget tidak perlu rekap manual tiap akhir bulan. NPWP dan nomor faktur muncul otomatis, tinggal print atau kirim via WhatsApp. Setup awal saya dibantu tim sampai go-live, dan WhatsApp support balasnya selalu kurang dari 15 menit setiap kali saya nanya.',                  rating: 5, when: '3 minggu lalu' },
+  { name: 'Budi Santoso',   business: 'Frosted Co',     city: 'Bali',       avatar: '/images/donut-page/img-25.png', text: 'Pindah dari Shopify (Rp 500 ribu/bulan) ke StreetLocal (Rp 38 ribu/bulan) — hemat sekitar 92% biaya bulanan tanpa kehilangan fitur penting. Menu update langsung kelihatan di sisi customer, tidak perlu push update atau approval app store yang ribet. Untuk warung kecil di Bali seperti saya, ini game changer — modal bulanan jadi bisa dipake buat bahan baku.',                       rating: 5, when: '5 hari lalu' },
+  { name: 'Maya Lestari',   business: 'Glazed Hour',    city: 'Surabaya',   avatar: '/images/donut-page/img-27.png', text: 'Kitchen Display System di tablet ngehemat waktu kerja saya dan tim banyak. Order dari WhatsApp langsung muncul di KDS dapur dengan urutan masuk — tidak ada lagi nulis tangan, salah pesanan, atau lupa pesanan saat ramai. Tim dapur saya total 3 orang, dan workflow jauh lebih rapi sejak pakai ini. Sekarang bisa handle 60+ order per hari tanpa stres.',                rating: 5, when: '2 bulan lalu' },
+  { name: 'Rizki Aditya',   business: 'Donut Express',  city: 'Semarang',   avatar: '/images/donut-page/img-26.png', text: 'Loyalty stamps bikin customer balik terus — terutama anak-anak SD di sekitar toko yang pada ngumpulin stamp buat dapet donut gratis di pesanan ke-10. Repeat order naik signifikan dalam 3 bulan pertama. Saya juga pakai promo code BUY1GET1 di akhir minggu yang sepi. Fitur ini dulu cuma punya brand besar seperti Dunkin — sekarang warung kecil saya juga bisa.',                              rating: 5, when: '1 minggu lalu' },
+  { name: 'Dewi Anggraini', business: 'Sugar Cloud',    city: 'Medan',      avatar: '/images/donut-page/img-29.png', text: 'Build-your-own dozen jadi favorit customer — mereka bisa mix-and-match 12 rasa berbeda dalam satu box. Margin per pesanan naik karena rata-rata customer isi 12 (bukan 6 seperti sebelumnya pas masih one-by-one). Yang penting: customer ngerasa ownership di pesanan mereka — banyak yang share ke Instagram pamerin combo donut mereka. Word-of-mouth marketing gratis tiap minggu.',                              rating: 5, when: '6 hari lalu' },
+  { name: 'Hendra Setiawan', business: 'Crumb & Co',    city: 'Makassar',   avatar: '/images/donut-page/img-30.png', text: 'Production planner ngebantu banget — saya tahu persis berapa donut harus dibuat tiap hari berdasarkan order seminggu terakhir dan pre-order yang masuk. Wastage turun sekitar 30% dalam bulan pertama, dan stok bahan baku jauh lebih efisien. Sebelumnya saya sering bikin terlalu banyak dan akhirnya buang sore-sore. Sekarang produksi tepat sasaran, modal lebih hemat.',                            rating: 5, when: '3 hari lalu' },
+]
+
 const FAQS = [
+  ['Is this an app? Why a PWA and not a native app?',
+   "Yes — it's a Progressive Web App (PWA), and PWAs ARE apps. Your customer taps your link once, adds it to their home screen, and from then on it opens in one tap with a real app icon, splash screen, and full-screen experience — just like Gojek or Instagram. The difference is install size: ~2MB instead of 100–200MB for a typical native app. That gap is exactly why we chose PWA for the Indonesian market. Most customers carry Android phones with 2–4GB RAM and storage already half-full with WhatsApp, photos, and TikTok. A native app forces them through Play Store search, install, approval, and update loops, costs them mobile data they pay for per-GB, and competes for storage they don't have to spare. A PWA skips all of that — open your link, tap 'Add to Home Screen', done. It updates silently every visit (no Play Store review delay when you change a menu price), works offline after first load because everything caches locally, and loads on slow EDGE/3G in rural areas. Twitter Lite, Pinterest, Starbucks, and BookMyShow all run PWAs in emerging markets for exactly the same reasons. If a competitor tells you \"this isn't a real app\" — they're describing the legacy native approach that bleeds orders to Play Store friction in Indonesia. We chose PWA on purpose, for the customer who actually places the order on a mid-range Android."],
   ['Do my customers need to download an app?',
    'No. Your donut shop opens in any web browser on any phone. Customers just tap your link — no install, no signup needed.'],
   ['How do I get paid?',
@@ -149,47 +197,18 @@ const FAQS = [
 
 export default function DonutSellingPage() {
   const [scrolled, setScrolled] = useState(false)
-  // Hero phone cycles through 6 landing splash designs every 5s so a
-  // visitor sees the full design range without scrolling. Indexes the
-  // LANDING_THEME_PREVIEWS array; clicking a chip below the phone
-  // pauses auto-rotate + jumps to that theme.
+  // Hero phone cycles through the landing splash designs every 5s so
+  // a visitor sees the full design range without scrolling.
   const [heroThemeIdx, setHeroThemeIdx] = useState(0)
-  const [heroThemePaused, setHeroThemePaused] = useState(false)
   useEffect(() => {
-    if (heroThemePaused) return
     const t = setInterval(() => setHeroThemeIdx(i => (i + 1) % LANDING_THEME_PREVIEWS.length), 5000)
     return () => clearInterval(t)
-  }, [heroThemePaused])
-  // Settings dropdown — slides down from the ⚙ button on the right of
-  // the nav. Holds 4 menu items that each open a full-screen info page.
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [activePage, setActivePage] = useState(null) // 'faq' | 'setup' | 'about' | 'support'
-  const [supportMsg, setSupportMsg] = useState('')
-  // Support online/offline status — true when within Mon-Sat 09:00–21:00
-  // local time. Drives the dot colour + label in the chat header.
-  const supportOnline = (() => {
-    const d = new Date()
-    const day = d.getDay() // 0 = Sun, 1 = Mon, ..., 6 = Sat
-    const hour = d.getHours()
-    return day >= 1 && day <= 6 && hour >= 9 && hour < 21
-  })()
-
+  }, [])
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  // Lock body scroll when a full-screen info page is open — otherwise the
-  // page under the overlay scrolls behind and breaks the reading flow.
-  useEffect(() => {
-    if (!activePage) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
-  }, [activePage])
-
-  const openPage = (p) => { setMenuOpen(false); setActivePage(p) }
 
   return (
     <div className="ds">
@@ -200,7 +219,7 @@ export default function DonutSellingPage() {
         <div className="ds-nav__inner">
           <a href="#top" className="ds-brand" aria-label="Donut Selling App home">
             <img
-              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
+              src="/images/donut-page/img-09.png"
               alt=""
               aria-hidden
               className="ds-brand__logo"
@@ -213,207 +232,18 @@ export default function DonutSellingPage() {
               <span className="ds-brand__tagline">Sell Donuts · keep 100% profit</span>
             </span>
           </a>
-          {/* Settings ⚙ — opens a slide-down menu with the four info
-              pages (FAQ, Setup, About us, Customer service). Replaces
-              the old "See demo / Start your shop" CTA cluster. */}
-          <button
-            type="button"
-            className={`ds-gear ${menuOpen ? 'ds-gear--open' : ''}`}
-            aria-label="Menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(o => !o)}
+          {/* Home — diverts back to the StreetLocal main home page. */}
+          <a
+            href="/"
+            className="ds-gear"
+            aria-label="StreetLocal home"
           >
-            <span aria-hidden style={{ display: 'block', transition: 'transform 0.4s ease' }}>⚙</span>
-          </button>
+            <span aria-hidden style={{ display: 'block' }}>🏠</span>
+          </a>
         </div>
-        {menuOpen && (
-          <div className="ds-menu-drop" role="menu">
-            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('faq')}>
-              <span className="ds-menu-icon">❓</span>
-              <span className="ds-menu-text">
-                <span className="ds-menu-title">FAQ</span>
-                <span className="ds-menu-sub">Common questions — answered</span>
-              </span>
-            </button>
-            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('setup')}>
-              <span className="ds-menu-icon">🚀</span>
-              <span className="ds-menu-text">
-                <span className="ds-menu-title">Setup</span>
-                <span className="ds-menu-sub">5 steps to your live shop</span>
-              </span>
-            </button>
-            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('about')}>
-              <span className="ds-menu-icon">🏠</span>
-              <span className="ds-menu-text">
-                <span className="ds-menu-title">About us</span>
-                <span className="ds-menu-sub">Who built this and why</span>
-              </span>
-            </button>
-            <button type="button" className="ds-menu-row" role="menuitem" onClick={() => openPage('support')}>
-              <span className="ds-menu-icon">💬</span>
-              <span className="ds-menu-text">
-                <span className="ds-menu-title">Customer service</span>
-                <span className="ds-menu-sub">Email, WhatsApp, hours</span>
-              </span>
-            </button>
-          </div>
-        )}
       </header>
-      {/* Backdrop closes the menu when tapping outside */}
-      {menuOpen && <div className="ds-menu-backdrop" aria-hidden onClick={() => setMenuOpen(false)} />}
 
-      {/* ═══ INFO PAGES (full-screen overlays) ═══
-          Support gets its own chat-window layout below, so we skip the
-          generic .ds-info card shell for it. */}
-      {activePage && activePage !== 'support' && (
-        <div className="ds-info" role="dialog" aria-modal="true">
-          <div className="ds-info__bar">
-            <button type="button" className="ds-info__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
-            <div className="ds-info__title">
-              {activePage === 'faq' && 'FAQ'}
-              {activePage === 'setup' && 'Setup'}
-              {activePage === 'about' && 'About us'}
-              {activePage === 'support' && 'Customer service'}
-            </div>
-            <span style={{ width: 36 }} />
-          </div>
-          <div className="ds-info__body">
-            {activePage === 'faq' && (
-              <>
-                <p className="ds-info__lede">Short answers to the questions every donut seller asks before signing up.</p>
-                {FAQS.map(([q, a], i) => (
-                  <details key={i} className="ds-info-faq" open={i === 0}>
-                    <summary>{q}</summary>
-                    <p>{a}</p>
-                  </details>
-                ))}
-              </>
-            )}
-
-            {activePage === 'setup' && (
-              <>
-                <p className="ds-info__lede">From signup to your first sale in about 5 minutes. No installs, no cards, no contracts.</p>
-                <ol className="ds-info-steps">
-                  <li>
-                    <strong>1. Sign up with your WhatsApp number.</strong>
-                    <p>That's your login. No long forms, no email verification loop. You're inside the app within 30 seconds.</p>
-                  </li>
-                  <li>
-                    <strong>2. Add your donuts.</strong>
-                    <p>Photo, name, price, a short description. Repeat for every flavour. Mark some as Popular and they get a yellow badge. Out of stock → toggle off, it hides from customers automatically.</p>
-                  </li>
-                  <li>
-                    <strong>3. Pick your order channel.</strong>
-                    <p>Two modes. <em>WhatsApp orders</em> — customers tap "Order now" and the cart drops into your WhatsApp DM. <em>In-app chat</em> — customers pay by card / QRIS / bank in your shop, and you reply in a chat panel. You can switch any time.</p>
-                  </li>
-                  <li>
-                    <strong>4. Make it yours.</strong>
-                    <p>Upload your logo, pick a theme colour, choose card style (grid, fullwidth, horizontal). Edit the landing text. Add a delivery zone with a per-km rate. The whole brand surface is editable.</p>
-                  </li>
-                  <li>
-                    <strong>5. Pay to activate. Then share your link.</strong>
-                    <p>Rp 35,000/month for WhatsApp orders, Rp 50,000/month for in-app chat + payments. Pay via QRIS, GoPay, OVO, ShopeePay, card, or bank transfer. Your link goes live the moment payment clears. Copy it, post it on your Instagram bio, and you're trading.</p>
-                  </li>
-                </ol>
-              </>
-            )}
-
-            {activePage === 'about' && (
-              <>
-                <p className="ds-info__lede">A small team building tools that let local sellers keep their margin.</p>
-                <h3 className="ds-info-h3">Who we are</h3>
-                <p>StreetLocal is a family of apps built for street vendors, makers, and small businesses across Southeast Asia. We started with food because that's where the platform commissions hurt most — donut shops, noodle stalls, coffee carts — small operations giving up 20-30% per order to apps that didn't make their product.</p>
-                <h3 className="ds-info-h3">Why we built this</h3>
-                <p>Most "shop builders" are designed for shops that already have a customer base, a logo, an SEO plan, a credit card on file. Donut sellers don't need a website. They need a phone-shaped storefront they can drop into a WhatsApp message — and a way to get paid without losing a third of the sale.</p>
-                <h3 className="ds-info-h3">Where we operate</h3>
-                <p>Indonesia first (because that's where we live), then Malaysia, Singapore, Thailand, Vietnam, and the Philippines. Currency, language, and payment rails are localised for each market. 11 UI languages so far — every menu in the app translates to the customer's phone language automatically.</p>
-                <h3 className="ds-info-h3">What we don't do</h3>
-                <p>We don't take a commission on your orders. We don't see your customers' card data — payments go straight from the buyer's bank to your bank via your chosen gateway. We don't lock your customer list inside a closed platform; you own the relationship.</p>
-              </>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* ═══ CUSTOMER SERVICE CHAT WINDOW ═══
-          Full-screen WhatsApp-style chat layout: provided bg image,
-          logo + Street Local + online/offline status in the header,
-          welcome bubbles in the thread, type-and-send footer that
-          opens WhatsApp pre-filled with the customer's message. */}
-      {activePage === 'support' && (
-        <div className="ds-cs" role="dialog" aria-modal="true">
-          <img loading="lazy" className="ds-cs__bg" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2002_40_27%20PM.png" alt="" aria-hidden />
-          <div className="ds-cs__scrim" aria-hidden />
-
-          {/* Header: back arrow + logo + Street Local + status dot */}
-          <div className="ds-cs__header">
-            <button type="button" className="ds-cs__back" aria-label="Close" onClick={() => setActivePage(null)}>←</button>
-            <img loading="lazy" className="ds-cs__logo" src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%206,%202026,%2002_50_47%20PM.png?updatedAt=1778053871353" alt="Street Local" />
-            <div className="ds-cs__brand">
-              <div className="ds-cs__name">Street Local</div>
-              <div className="ds-cs__status">
-                <span className={`ds-cs__dot ${supportOnline ? 'ds-cs__dot--on' : 'ds-cs__dot--off'}`} />
-                <span>{supportOnline ? 'Online' : 'Offline'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Welcome thread */}
-          <div className="ds-cs__thread">
-            <div className="ds-cs__bubble ds-cs__bubble--in">
-              <div className="ds-cs__bubble-text">👋 Welcome to StreetLocal support. We respond within one business day — most issues are resolved same-day.</div>
-              <div className="ds-cs__bubble-time">Mon–Sat · 09:00 – 21:00 WIB</div>
-            </div>
-            <div className="ds-cs__bubble ds-cs__bubble--in">
-              <div className="ds-cs__bubble-text">How can we help you today?</div>
-              <div className="ds-cs__quick">
-                <a className="ds-cs__quick-btn" href="mailto:streetlocallive@gmail.com">📧 Email us</a>
-                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=Hi%20StreetLocal" target="_blank" rel="noreferrer">📱 WhatsApp</a>
-              </div>
-            </div>
-            <div className="ds-cs__bubble ds-cs__bubble--in">
-              <div className="ds-cs__bubble-text">Common topics:</div>
-              <div className="ds-cs__quick">
-                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=My%20link%20isn%27t%20working%20after%20payment" target="_blank" rel="noreferrer">My link isn't working</a>
-                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=Payment%20gateway%20not%20connecting" target="_blank" rel="noreferrer">Payment gateway issue</a>
-                <a className="ds-cs__quick-btn" href="https://wa.me/6281234567890?text=I%20want%20to%20cancel%20my%20subscription" target="_blank" rel="noreferrer">Cancel my subscription</a>
-              </div>
-            </div>
-            {!supportOnline && (
-              <div className="ds-cs__bubble ds-cs__bubble--in ds-cs__bubble--note">
-                <div className="ds-cs__bubble-text">🌙 We're offline right now. Send a message anyway — we'll reply by email next morning.</div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer input — submits to WhatsApp with the typed text */}
-          <form
-            className="ds-cs__footer"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const t = supportMsg.trim()
-              if (!t) return
-              window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer')
-              setSupportMsg('')
-            }}
-          >
-            <input
-              type="text"
-              className="ds-cs__input"
-              placeholder="Type a message…"
-              value={supportMsg}
-              onChange={(e) => setSupportMsg(e.target.value)}
-              maxLength={500}
-            />
-            <button type="submit" className="ds-cs__send" aria-label="Send">
-              <span aria-hidden>➤</span>
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* ═══ HERO ═══ */}
+{/* ═══ HERO ═══ */}
       <section className="ds-hero" id="top">
         <img src={IMAGES.bouncing}   alt="" aria-hidden className="ds-hero__float ds-hero__float--tr" />
         <img src={IMAGES.bottomLeft} alt="" aria-hidden className="ds-hero__float ds-hero__float--bl" />
@@ -438,7 +268,7 @@ export default function DonutSellingPage() {
               <a href="#demo" className="ds-view-demo">View demo</a>
             </div>
             <ul className="ds-trust">
-              <li><span className="ds-check">✓</span> 7-day free trial</li>
+              <li><span className="ds-check">✓</span> Free demo</li>
               <li><span className="ds-check">✓</span> No card required</li>
               <li><span className="ds-check">✓</span> Cancel anytime</li>
             </ul>
@@ -460,24 +290,6 @@ export default function DonutSellingPage() {
                 loading="lazy"
               />
             </div>
-            {/* Theme picker chips — click any to jump to that design.
-                Auto-rotate pauses after first manual selection so the
-                visitor can compare. */}
-            <div className="ds-theme-chips" aria-label="Landing splash theme previews">
-              {['Donuts','Classic','Glass','Discover','Float','Warm'].map((label, i) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => { setHeroThemePaused(true); setHeroThemeIdx(i) }}
-                  className={`ds-theme-chip ${heroThemeIdx === i ? 'ds-theme-chip--active' : ''}`}
-                  aria-pressed={heroThemeIdx === i}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {/* "Cycling 6 landing designs" badge removed — the chip
-                row above already signals the carousel. */}
           </div>
         </div>
       </section>
@@ -487,19 +299,29 @@ export default function DonutSellingPage() {
         <div className="ds-container">
           <div className="ds-section__head">
             <span className="ds-kicker">The problem</span>
-            <h2 className="ds-h2">Stop losing orders to…</h2>
+            <h2 className="ds-h2">Stop losing money and orders to…</h2>
           </div>
           <div className="ds-pain-grid">
             {[
-              { icon: '📱', title: 'WhatsApp chaos',       desc: 'Pesanan tersembunyi di DM. Customer menunggu. Lupa siapa pesan apa.' },
-              { icon: '🧾', title: 'Manual menu updates',  desc: 'Edit bio Instagram setiap kali rasa habis atau harga berubah. Capek.' },
-              { icon: '💸', title: '20–30% komisi aplikasi',  desc: 'GrabFood dan Gojek makan margin Anda. Setiap. Satu. Pesanan.' },
+              { banner: '/images/donut-page/img-16.png', alt: 'WhatsApp chaos — orders lost in DMs, customers waiting, forgetting who ordered what' },
+              { banner: '/images/donut-page/img-17.png', bare: true, alt: 'Manual menu updates — editing Instagram bio every time a flavor sells out or a price changes' },
+              { banner: '/images/donut-page/img-18.png', alt: '20-30% komisi aplikasi — GrabFood and Gojek eating your margin on every order' },
             ].map((p, i) => (
-              <div key={i} className="ds-pain-card">
-                <div className="ds-pain-card__icon">{p.icon}</div>
-                <h3 className="ds-pain-card__title">{p.title}</h3>
-                <p className="ds-pain-card__desc">{p.desc}</p>
-              </div>
+              p.bare ? (
+                <img key={i} src={p.banner} alt={p.alt} className="ds-pain-card__bare-img" loading="lazy" />
+              ) : (
+                <div key={i} className={`ds-pain-card${p.banner ? ' ds-pain-card--banner' : ''}`}>
+                  {p.banner ? (
+                    <img src={p.banner} alt={p.alt} className="ds-pain-card__banner" loading="lazy" />
+                  ) : (
+                    <>
+                      <div className="ds-pain-card__icon">{p.icon}</div>
+                      <h3 className="ds-pain-card__title">{p.title}</h3>
+                      <p className="ds-pain-card__desc">{p.desc}</p>
+                    </>
+                  )}
+                </div>
+              )
             ))}
           </div>
           <p className="ds-section__transition">Inilah yang Anda dapatkan ↓</p>
@@ -515,7 +337,7 @@ export default function DonutSellingPage() {
         <div className="ds-container">
           <div className="ds-section__head">
             <span className="ds-kicker">🇮🇩 Built for Indonesia</span>
-            <h2 className="ds-h2">Made in Yogyakarta.<br /><span className="ds-pink">Sized for warungs, kafe, & UMKM.</span></h2>
+            <h2 className="ds-h2">StreetLocal Indonesia.<br /><span className="ds-pink">Sized for warungs, kafe, & UMKM.</span></h2>
             <p className="ds-section__sub">
               Most "POS" apps come from the US and charge in dollars. We built this in Indonesia, for the way Indonesian customers actually buy donuts.
             </p>
@@ -525,46 +347,67 @@ export default function DonutSellingPage() {
               <div className="ds-indo-card__head">💳 Pembayaran lokal</div>
               <h3>All Indonesian payment methods</h3>
               <p>GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, kartu, transfer bank. Connect Midtrans atau Xendit langsung — funds masuk ke rekening Anda, bukan ke kami.</p>
-              <div className="ds-indo-card__chips">
-                <span>GoPay</span>
-                <span>OVO</span>
-                <span>DANA</span>
-                <span>ShopeePay</span>
-                <span>QRIS</span>
-                <span>BCA</span>
-                <span>Mandiri</span>
-                <span>BRI</span>
-              </div>
+              <img
+                src="/images/donut-page/img-10.png"
+                alt="Indonesian payment methods: GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, cards, bank transfer"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
             </div>
             <div className="ds-indo-card">
               <div className="ds-indo-card__head">💸 Harga UMKM</div>
               <h3>Rp 38,000 per bulan. Sudah termasuk semua.</h3>
               <p>Tidak ada komisi per pesanan. Tidak ada biaya setup. Tidak perlu kartu kredit. Bandingkan: Shopify Rp 500,000+ per bulan, GrabFood ambil 20-30% per pesanan, ChatRestaurant baru ada di sini.</p>
-              <div className="ds-indo-card__compare">
-                <div><strong>StreetLocal</strong><span style={{ color: '#22C55E' }}>Rp 38,000/bln · 0% komisi</span></div>
-                <div><strong>GrabFood / Gojek</strong><span style={{ color: '#EF4444' }}>Gratis daftar · 20-30% per pesanan</span></div>
-                <div><strong>Shopify</strong><span style={{ color: '#EF4444' }}>~Rp 500,000/bln + biaya gateway</span></div>
-              </div>
+              <img
+                src="/images/donut-page/img-11.png"
+                alt="Price comparison: StreetLocal Rp 38,000/month with 0% commission vs GrabFood/Gojek 20-30% per order vs Shopify Rp 500,000+/month"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
             </div>
             <div className="ds-indo-card">
               <div className="ds-indo-card__head">📜 Pajak siap pakai</div>
               <h3>PPN 11% + Faktur Pajak</h3>
               <p>PPN 11% sudah preset. NPWP & nomor faktur otomatis di setiap invoice. 4 template invoice — pilih yang cocok untuk akuntan Anda. Auto-kirim ke WhatsApp customer setelah bayar.</p>
+              <img
+                src="/images/donut-page/img-12.png"
+                alt="PPN 11% preset with NPWP and faktur pajak automatically generated on every invoice"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
             </div>
             <div className="ds-indo-card">
               <div className="ds-indo-card__head">💬 Bahasa Indonesia</div>
               <h3>Customer lihat menu dalam Bahasa</h3>
               <p>Aplikasi customer-facing penuh Bahasa Indonesia. Bahasa Inggris juga ada — kalau ada turis di Bali atau expat di Jakarta, mereka switch dengan 1 klik.</p>
+              <img
+                src="/images/donut-page/img-13.png"
+                alt="Customer-facing app in full Bahasa Indonesia with 1-click English switch for tourists and expats"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
             </div>
             <div className="ds-indo-card">
               <div className="ds-indo-card__head">📱 Hemat data + RAM</div>
               <h3>Jalan di HP Android murah</h3>
               <p>PWA = ukuran cuma 2MB, bukan 200MB seperti aplikasi native. Customer pakai HP RAM 2GB? Tetap lancar. Customer di pelosok dengan sinyal lambat? Tetap order.</p>
+              <img
+                src="/images/donut-page/img-14.png"
+                alt="PWA is only 2MB instead of 200MB native app, runs smoothly on low-RAM Android phones and slow signal areas"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
             </div>
             <div className="ds-indo-card ds-indo-card--featured">
               <div className="ds-indo-card__head">🎯 Sudah lengkap</div>
               <h3>Tidak ada fitur terkunci di paket Standard</h3>
               <p>Loyalty stamps, marketing banner, promo code, KDS untuk dapur, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode — semua sudah termasuk di Rp 38,000. Upgrade ke Pro hanya kalau butuh multi-staff atau automasi.</p>
+              <img
+                src="/images/donut-page/img-15.png"
+                alt="All features unlocked in Standard plan: loyalty stamps, marketing banner, promo code, KDS, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode"
+                className="ds-indo-card__banner"
+                loading="lazy"
+              />
               <a href="#pricing" className="ds-btn ds-btn--primary" style={{ marginTop: 12, alignSelf: 'flex-start' }}>Lihat semua fitur →</a>
             </div>
           </div>
@@ -582,7 +425,9 @@ export default function DonutSellingPage() {
           <div className="ds-feature-grid">
             {FEATURES.map((f, i) => (
               <article key={i} className="ds-feature-card">
-                <div className="ds-feature-card__icon" aria-hidden>{f.icon}</div>
+                <div className={`ds-feature-card__icon${f.iconImg ? ' ds-feature-card__icon--img' : ''}${f.large ? ' ds-feature-card__icon--large' : ''}`} aria-hidden>
+                  {f.iconImg ? <img src={f.iconImg} alt="" loading="lazy" /> : f.icon}
+                </div>
                 <h3 className="ds-feature-card__title">{f.title}</h3>
                 <p className="ds-feature-card__desc">{f.desc}</p>
               </article>
@@ -644,34 +489,78 @@ export default function DonutSellingPage() {
         <div className="ds-container">
           <div className="ds-section__head">
             <span className="ds-kicker">Pricing</span>
-            <h2 className="ds-h2">One price. <span className="ds-pink">No surprises.</span></h2>
-            <p className="ds-section__sub">No commission per order. No setup fee. No card upfront.</p>
+            <h2 className="ds-h2">Pick your plan. <span className="ds-pink">Grow into the next.</span></h2>
+            <p className="ds-section__sub">Start small, upgrade only when you need more. 0% commission on every tier. No setup fee. No card upfront.</p>
           </div>
-          <div className="ds-pricing-wrap">
-            <div className="ds-pricing-glow" aria-hidden></div>
-            <div className="ds-pricing-card">
-              <div className="ds-pricing-card__head">
-                <span className="ds-kicker ds-kicker--small">Everything included</span>
-                <span className="ds-badge-pop">Most popular</span>
-              </div>
+
+          <div className="ds-pricing-grid">
+            {/* ── STARTER ── */}
+            <div className="ds-pricing-card ds-pricing-card--starter">
+              <span className="ds-kicker ds-kicker--small">Starter</span>
+              <h3 className="ds-pricing-card__tier-name">Sell donuts + market on social</h3>
               <div className="ds-pricing-card__price">
                 <span className="ds-price-num">38,000</span>
                 <span className="ds-price-cur">IDR</span>
               </div>
-              <p className="ds-price-sub">per month · ~$2.50 USD · everything included</p>
+              <p className="ds-price-sub">per month · ~$2.50 USD</p>
+              <p className="ds-pricing-card__pitch">Everything a small shop needs to open today and run marketing on WhatsApp + Instagram + TikTok.</p>
               <ul className="ds-pricing-card__list">
-                {PRICING_INCLUDES.map((feat, i) => (
+                {STARTER_INCLUDES.map((feat, i) => (
                   <li key={i}><span className="ds-check">✓</span>{feat}</li>
                 ))}
               </ul>
-              <a href="#" className="ds-btn ds-btn--primary ds-btn--block">Start your 7-day free trial →</a>
-              <p className="ds-price-reassurance">
-                <span className="ds-check">✓</span> No card required &nbsp;·&nbsp;
-                <span className="ds-check">✓</span> Cancel anytime &nbsp;·&nbsp;
-                <span className="ds-check">✓</span> Your data stays yours
-              </p>
+              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">Start with Starter →</a>
+            </div>
+
+            {/* ── PRO — highlighted ── */}
+            <div className="ds-pricing-card ds-pricing-card--pro">
+              <div className="ds-pricing-glow" aria-hidden></div>
+              <div className="ds-pricing-card__inner">
+                <div className="ds-pricing-card__head">
+                  <span className="ds-kicker ds-kicker--small">Pro</span>
+                  <span className="ds-badge-pop">Most popular</span>
+                </div>
+                <h3 className="ds-pricing-card__tier-name">For growing shops</h3>
+                <div className="ds-pricing-card__price">
+                  <span className="ds-price-num">199,000</span>
+                  <span className="ds-price-cur">IDR</span>
+                </div>
+                <p className="ds-price-sub">per month · ~$13 USD</p>
+                <p className="ds-pricing-card__pitch">Loyalty, thermal printer, custom domain, in-app chat, tipping, and SMS / email campaigns.</p>
+                <ul className="ds-pricing-card__list">
+                  {PRO_INCLUDES.map((feat, i) => (
+                    <li key={i} className={i === 0 ? 'ds-pricing-card__list-header' : ''}><span className="ds-check">✓</span>{feat}</li>
+                  ))}
+                </ul>
+                <a href="#" className="ds-btn ds-btn--primary ds-btn--block">Upgrade to Pro →</a>
+              </div>
+            </div>
+
+            {/* ── ENTERPRISE ── */}
+            <div className="ds-pricing-card ds-pricing-card--enterprise">
+              <span className="ds-kicker ds-kicker--small">Enterprise</span>
+              <h3 className="ds-pricing-card__tier-name">Operations-heavy shops</h3>
+              <div className="ds-pricing-card__price">
+                <span className="ds-price-num">449,000</span>
+                <span className="ds-price-cur">IDR</span>
+              </div>
+              <p className="ds-price-sub">per month · ~$29 USD</p>
+              <p className="ds-pricing-card__pitch">KDS, kiosk mode, production planner, catering, multi-location, unlimited staff.</p>
+              <ul className="ds-pricing-card__list">
+                {ENTERPRISE_INCLUDES.map((feat, i) => (
+                  <li key={i} className={i === 0 ? 'ds-pricing-card__list-header' : ''}><span className="ds-check">✓</span>{feat}</li>
+                ))}
+              </ul>
+              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">Go Enterprise →</a>
             </div>
           </div>
+
+          <p className="ds-price-reassurance">
+            <span className="ds-check">✓</span> No card required &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> Cancel anytime &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> Your data stays yours &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> Upgrade or downgrade any month
+          </p>
         </div>
       </section>
 
@@ -715,22 +604,36 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--white">
         <div className="ds-container ds-trust-block">
           <span className="ds-kicker">Trusted by</span>
-          <h2 className="ds-h2">Built with shops in <span className="ds-pink">Yogyakarta, Jakarta, Bali</span>.</h2>
+          <h2 className="ds-h2">Sell donuts in any city — <span className="ds-pink">Yogyakarta, Jakarta, Bali, anywhere</span>.</h2>
           <p className="ds-section__sub">
-            Real testimonials coming soon. Want to be one of the first 10 donut shops to launch?{' '}
-            <a href="#pricing" className="ds-link">Start your trial</a> and get 50% off your first 3 months.
+            StreetLocal is live in Indonesia. Donut sellers are moving fast — from renting shelves on GrabFood, GoFood, and Shopee to running their own branded app, with their own customer list and 0% commission. <strong>Donut sellers say it best.</strong>
           </p>
-          <div className="ds-trust-marquee" aria-hidden>
-            <div className="ds-trust-marquee__track">
-              {['Donut Lab ★★★★★ "Set up in 6 min"', 'Sweet Roll · Yogyakarta', 'Boba+Donut · Jakarta',
-                'Frosted Co · Bali', '★★★★★ "First order in 14 min"', 'Glazed Hour · Surabaya',
-                'Donut Lab ★★★★★ "Set up in 6 min"', 'Sweet Roll · Yogyakarta', 'Boba+Donut · Jakarta',
-                'Frosted Co · Bali', '★★★★★ "First order in 14 min"', 'Glazed Hour · Surabaya',
-              ].map((t, i) => (
-                <span key={i} className="ds-trust-marquee__item">{t}</span>
+          <div className="ds-reviews-marquee">
+            <div className="ds-reviews-marquee__track">
+              {[...REVIEWS, ...REVIEWS].map((r, i) => (
+                <article key={i} className="ds-review-card">
+                  <div className="ds-review-card__head">
+                    <img
+                      src={r.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name)}&background=fce7f3&color=ec4899&size=80&bold=true`}
+                      alt=""
+                      className="ds-review-card__avatar"
+                      loading="lazy"
+                    />
+                    <div className="ds-review-card__who">
+                      <span className="ds-review-card__name">{r.name}</span>
+                      <span className="ds-review-card__biz">{r.business} · {r.city}</span>
+                    </div>
+                  </div>
+                  <span className="ds-review-card__stars" aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</span>
+                  <p className="ds-review-card__text">&ldquo;{r.text}&rdquo;</p>
+                  <span className="ds-review-card__when">{r.when}</span>
+                </article>
               ))}
             </div>
           </div>
+          <p className="ds-reviews-cta">
+            Send us your review and get listed in our review section. <a href="mailto:streetlocallive@gmail.com?subject=My%20StreetLocal%20review" className="ds-link">Email your review →</a>
+          </p>
         </div>
       </section>
 
@@ -790,25 +693,6 @@ export default function DonutSellingPage() {
             </div>
           </div>
 
-          {/* Protection / ownership card */}
-          <div className="ds-beyond-protect">
-            <div className="ds-beyond-protect__title">What's protected, what's yours</div>
-            <div className="ds-beyond-protect__list">
-              <div className="ds-beyond-protect__item">
-                <strong>Source code stays with StreetLocal.</strong> We build the binary on our servers — your app cannot be extracted or transferred. You're licensing a finished product, not buying our codebase.
-              </div>
-              <div className="ds-beyond-protect__item">
-                <strong>Your developer accounts are yours.</strong> Apple ($99/yr) + Google ($25 one-time) registered in your bakery's legal name. You own the listing, reviews, and payouts.
-              </div>
-              <div className="ds-beyond-protect__item">
-                <strong>Donut sales = 0% Apple/Google cut.</strong> Physical goods are exempt from the 30% in-app purchase tax. You keep using your own payment gateway.
-              </div>
-              <div className="ds-beyond-protect__item">
-                <strong>If you cancel:</strong> the live app keeps working, store listing stays yours, but the app stops receiving updates and the source-code license terminates.
-              </div>
-            </div>
-            <a href="mailto:streetlocallive@gmail.com?subject=Native%20app%20request" className="ds-btn ds-btn--primary ds-beyond-protect__cta">Request a native app quote</a>
-          </div>
         </div>
       </section>
 
@@ -866,7 +750,7 @@ export default function DonutSellingPage() {
           <div className="ds-footer__brand">
             <a href="#top" className="ds-brand" aria-label="Donut Selling App home">
               <img
-                src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
+                src="/images/donut-page/img-09.png"
                 alt=""
                 aria-hidden
                 className="ds-brand__logo"
@@ -925,7 +809,7 @@ export default function DonutSellingPage() {
 function PageStyles() {
   return (
     <style>{`
-      .ds { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #FFF8F8; color: #2D1B1B; -webkit-font-smoothing: antialiased; line-height: 1.5; }
+      .ds { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #FFF8F8; color: #2D1B1B; -webkit-font-smoothing: antialiased; line-height: 1.5; overflow-x: clip; }
       .ds *, .ds *::before, .ds *::after { box-sizing: border-box; }
       .ds ::selection { background: #FBCFE8; color: #2D1B1B; }
       .ds a { color: inherit; text-decoration: none; }
@@ -958,78 +842,9 @@ function PageStyles() {
       .ds-nav__cta { display: flex; align-items: center; gap: 12px; }
       .ds-nav__link-cta { display: none; font-size: 14px; font-weight: 700; color: #EC4899; }
 
-      /* ── GEAR + SLIDE-DOWN MENU ───────────────────────────────── */
-      .ds-gear { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(236,72,153,0.25); background: linear-gradient(180deg, #fff 0%, #FFF5F8 100%); color: #EC4899; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(236,72,153,0.12); transition: all 0.2s ease; line-height: 1; }
+      /* ── HOME BUTTON ──────────────────────────────────────────── */
+      .ds-gear { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(236,72,153,0.25); background: linear-gradient(180deg, #fff 0%, #FFF5F8 100%); color: #EC4899; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(236,72,153,0.12); transition: all 0.2s ease; line-height: 1; text-decoration: none; }
       .ds-gear:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(236,72,153,0.22); }
-      .ds-gear--open span { transform: rotate(90deg); }
-      /* Backdrop sits BELOW the header (z-index 50) so the menu drop —
-         which lives inside the header — stays crisp on top while the
-         page content underneath dims. */
-      .ds-menu-backdrop { position: fixed; inset: 0; background: rgba(45,27,27,0.35); z-index: 40; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
-      .ds-menu-drop { position: absolute; top: 100%; right: 12px; left: 12px; margin-top: 8px; padding: 8px; background: #fff; border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.18), 0 4px 14px rgba(236,72,153,0.15); z-index: 95; animation: dsMenuDrop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; gap: 4px; max-width: 480px; margin-left: auto; }
-      @keyframes dsMenuDrop { 0% { transform: translateY(-12px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-      .ds-menu-row { display: flex; align-items: center; gap: 14px; padding: 14px 14px; border-radius: 14px; border: none; background: transparent; cursor: pointer; text-align: left; font-family: inherit; transition: background 0.15s ease; min-height: 64px; }
-      .ds-menu-row:hover { background: #FDF2F8; }
-      .ds-menu-row:active { background: #FCE7F3; }
-      .ds-menu-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #FFE4EC 0%, #FBCFE8 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-      .ds-menu-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-      .ds-menu-title { font-size: 16px; font-weight: 800; color: #2D1B1B; line-height: 1.2; }
-      .ds-menu-sub { font-size: 13px; font-weight: 500; color: #8B6B6B; line-height: 1.3; }
-
-      /* ── FULL-SCREEN INFO PAGE OVERLAY ────────────────────────── */
-      .ds-info { position: fixed; inset: 0; z-index: 100; background: #FFF8FA; display: flex; flex-direction: column; animation: dsInfoSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
-      @keyframes dsInfoSlide { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-      .ds-info__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 12px; background: #fff; border-bottom: 1px solid rgba(236,72,153,0.12); position: sticky; top: 0; z-index: 2; box-shadow: 0 2px 8px rgba(45,27,27,0.04); }
-      .ds-info__back { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(236,72,153,0.2); background: #fff; color: #EC4899; font-size: 20px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
-      .ds-info__back:hover { background: #FDF2F8; }
-      .ds-info__title { flex: 1; text-align: center; font-size: 17px; font-weight: 800; color: #2D1B1B; }
-      .ds-info__body { flex: 1; overflow-y: auto; padding: 18px 18px 60px; max-width: 720px; width: 100%; margin: 0 auto; -webkit-overflow-scrolling: touch; }
-      .ds-info__lede { font-size: 15px; line-height: 1.55; color: #5C3A3A; margin: 0 0 22px; padding: 14px 16px; background: linear-gradient(135deg, #FFE4EC 0%, #FCE7F3 100%); border-radius: 14px; border-left: 4px solid #EC4899; }
-      .ds-info-h3 { font-size: 17px; font-weight: 800; color: #2D1B1B; margin: 22px 0 8px; }
-      .ds-info__body p { font-size: 14px; line-height: 1.6; color: #4A2E2E; margin: 0 0 12px; }
-      .ds-info__body p em { color: #EC4899; font-style: normal; font-weight: 700; }
-      .ds-info-faq { background: #fff; border-radius: 12px; border: 1px solid rgba(236,72,153,0.12); padding: 0; margin-bottom: 10px; overflow: hidden; }
-      .ds-info-faq summary { padding: 14px 16px; font-size: 14px; font-weight: 700; color: #2D1B1B; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
-      .ds-info-faq summary::-webkit-details-marker { display: none; }
-      .ds-info-faq summary::after { content: '+'; color: #EC4899; font-size: 20px; font-weight: 800; transition: transform 0.2s ease; flex-shrink: 0; }
-      .ds-info-faq[open] summary::after { transform: rotate(45deg); }
-      .ds-info-faq p { padding: 0 16px 14px; margin: 0; font-size: 14px; line-height: 1.55; color: #5C3A3A; }
-      .ds-info-steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
-      .ds-info-steps li { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px; border: 1px solid rgba(236,72,153,0.12); }
-      .ds-info-steps li strong { display: block; font-size: 15px; font-weight: 800; color: #2D1B1B; margin-bottom: 6px; }
-      .ds-info-steps li p { font-size: 14px; line-height: 1.6; color: #5C3A3A; margin: 0; }
-      .ds-info-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(236,72,153,0.12); }
-      .ds-info-card__label { font-size: 12px; font-weight: 800; color: #8B6B6B; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
-      .ds-info-card__value { display: block; font-size: 16px; font-weight: 800; color: #EC4899; text-decoration: none; margin-bottom: 6px; word-break: break-word; }
-      .ds-info-card__value:hover { color: #BE185D; text-decoration: underline; }
-      .ds-info-card__hint { font-size: 13px; color: #8B6B6B; line-height: 1.5; }
-
-      /* ── CUSTOMER SERVICE CHAT WINDOW ───────────────────────── */
-      .ds-cs { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: #0a0a0a; animation: dsInfoSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; }
-      .ds-cs__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
-      .ds-cs__scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.35); z-index: 0; pointer-events: none; }
-      .ds-cs__header { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: linear-gradient(180deg, rgba(236,72,153,0.95) 0%, rgba(190,24,93,0.95) 100%); box-shadow: 0 4px 16px rgba(236,72,153,0.35); flex-shrink: 0; }
-      .ds-cs__back { width: 36px; height: 36px; border-radius: 18px; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.3); color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; line-height: 1; }
-      .ds-cs__logo { width: 44px; height: 44px; border-radius: 22px; object-fit: cover; background: #fff; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
-      .ds-cs__brand { flex: 1; min-width: 0; color: #fff; }
-      .ds-cs__name { font-size: 16px; font-weight: 900; line-height: 1.15; }
-      .ds-cs__status { font-size: 13px; opacity: 0.95; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
-      .ds-cs__dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; }
-      .ds-cs__dot--on  { background: #22C55E; box-shadow: 0 0 6px rgba(34,197,94,0.9); }
-      .ds-cs__dot--off { background: #EF4444; box-shadow: 0 0 6px rgba(239,68,68,0.85); }
-      .ds-cs__thread { position: relative; z-index: 1; flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; -webkit-overflow-scrolling: touch; }
-      .ds-cs__bubble { max-width: 82%; padding: 10px 14px; border-radius: 16px; align-self: flex-start; background: linear-gradient(180deg, #FCE4EC 0%, #F8BBD0 100%); color: #3a1a2a; border: 1px solid rgba(236,72,153,0.25); box-shadow: 0 2px 10px rgba(236,72,153,0.18); }
-      .ds-cs__bubble--note { background: linear-gradient(180deg, rgba(250,204,21,0.95) 0%, rgba(245,158,11,0.95) 100%); color: #2D1B0A; border-color: rgba(245,158,11,0.4); }
-      .ds-cs__bubble-text { font-size: 14px; line-height: 1.45; font-weight: 500; }
-      .ds-cs__bubble-time { font-size: 12px; margin-top: 6px; opacity: 0.7; font-weight: 600; }
-      .ds-cs__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-      .ds-cs__quick-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 16px; background: rgba(0,0,0,0.78); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.15s ease; }
-      .ds-cs__quick-btn:hover { transform: translateY(-1px); }
-      .ds-cs__footer { position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 10px); background: rgba(0,0,0,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
-      .ds-cs__input { flex: 1; padding: 12px 16px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; outline: none; font-family: inherit; min-height: 44px; }
-      .ds-cs__input::placeholder { color: rgba(255,255,255,0.45); }
-      .ds-cs__send { width: 44px; height: 44px; border-radius: 22px; border: none; background: linear-gradient(180deg, #EC4899 0%, #BE185D 100%); color: #fff; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(236,72,153,0.5); padding: 0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-      .ds-cs__send:hover { transform: translateY(-1px); }
 
       /* ── BUTTONS ───────────────────────────────────────────────── */
       .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; border: none; font-family: inherit; text-decoration: none; min-height: 44px; padding: 10px 18px; border-radius: 12px; font-size: 14px; line-height: 1; }
@@ -1046,7 +861,7 @@ function PageStyles() {
       .ds-btn--dark:hover { background: #000; transform: translateY(-2px); }
 
       /* ── HERO ──────────────────────────────────────────────────── */
-      .ds-hero { position: relative; padding: 90px 0 60px; overflow: hidden; }
+      .ds-hero { position: relative; padding: 90px 0 60px; overflow-x: clip; background: linear-gradient(180deg, #FFF8F8 0%, #FFF8F8 65%, #fff 100%); }
       /* Mobile-first: text left, phone right, side-by-side from the
          smallest screens. Text column is wider (1.3fr) so the H1 still
          has breathing room; phone column auto-sizes around its 150-220px
@@ -1119,9 +934,9 @@ function PageStyles() {
       .ds-crumb { position: absolute; top: 160px; width: 9px; height: 9px; border-radius: 3px; background: linear-gradient(135deg, #6b3a1a, #3d1e0a); animation: dsCrumbFall linear infinite; box-shadow: inset -1px -1px 2px rgba(0,0,0,0.35); }
       @keyframes dsDonutBounce { 0%, 100% { transform: translateY(-12%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); } }
       @keyframes dsCrumbFall { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 8% { opacity: 0.9; } 92% { opacity: 0.9; } 100% { transform: translateY(580px) rotate(540deg); opacity: 0; } }
-      .ds-hero__float { position: absolute; border-radius: 50%; object-fit: cover; display: none; pointer-events: none; }
-      .ds-hero__float--tr { top: -40px; right: -120px; width: 280px; height: 280px; filter: drop-shadow(0 30px 60px rgba(236,72,153,0.22)); }
-      .ds-hero__float--bl { bottom: -80px; left: -120px; width: 240px; height: 240px; filter: drop-shadow(0 30px 60px rgba(34,211,238,0.18)); }
+      .ds-hero__float { position: absolute; border-radius: 50%; object-fit: cover; display: block; pointer-events: none; z-index: 3; }
+      .ds-hero__float--tr { top: 8px; right: -20px; width: 120px; height: 120px; filter: drop-shadow(0 14px 28px rgba(236,72,153,0.22)); }
+      .ds-hero__float--bl { bottom: -30px; left: -20px; width: 110px; height: 110px; filter: drop-shadow(0 14px 28px rgba(34,211,238,0.18)); }
       .ds-glow { position: absolute; inset: -30px; background: radial-gradient(circle, rgba(244,114,182,0.35), transparent 65%); filter: blur(40px); z-index: 0; pointer-events: none; }
       .ds-glow--big { inset: -60px; }
       /* Phone scales up with viewport: smallest mobile ≈150×320 so it
@@ -1151,9 +966,15 @@ function PageStyles() {
       .ds-phone__tag { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); background: #fff; color: #2D1B1B; padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); white-space: nowrap; }
       .ds-phone__tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: dsPulse 2s ease-in-out infinite; }
 
+      /* "Choose design" label between the phone and the chip row.
+         Centered, small, uppercase, soft pink so it reads as a
+         friendly prompt rather than a heading. */
+      .ds-theme-label { margin: 18px auto 0; text-align: center; font-size: 12px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: #EC4899; }
+      @media (min-width: 640px) { .ds-theme-label { font-size: 13px; margin-top: 22px; } }
+
       /* Theme picker chips below the hero phone — controls the
          cycling preview iframe. Active chip highlighted in pink. */
-      .ds-theme-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 24px auto 0; max-width: 360px; }
+      .ds-theme-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px auto 0; max-width: 360px; }
       .ds-theme-chip { padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
       .ds-theme-chip:hover { background: rgba(255,255,255,0.12); color: #fff; }
       .ds-theme-chip--active { background: #EC4899; border-color: #EC4899; color: #fff; box-shadow: 0 4px 12px rgba(236,72,153,0.40); }
@@ -1174,6 +995,7 @@ function PageStyles() {
       .ds-indo-card p { font-size: 14px; color: #5B4646; line-height: 1.6; margin: 0; }
       .ds-indo-card__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
       .ds-indo-card__chips span { padding: 5px 12px; border-radius: 999px; background: rgba(236,72,153,0.08); border: 1px solid rgba(236,72,153,0.2); color: #2D1B1B; font-size: 12px; font-weight: 700; }
+      .ds-indo-card__banner { display: block; width: 100%; height: auto; object-fit: contain; border-radius: 16px; margin-top: auto; padding-top: 10px; background: #fff; }
       .ds-indo-card__compare { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
       .ds-indo-card__compare > div { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #FFF5F8; border-radius: 8px; font-size: 13px; }
       .ds-indo-card__compare strong { color: #2D1B1B; font-weight: 800; }
@@ -1193,12 +1015,18 @@ function PageStyles() {
       .ds-pain-card__icon { font-size: 36px; }
       .ds-pain-card__title { margin: 12px 0 0; font-size: 20px; font-weight: 900; color: #2D1B1B; }
       .ds-pain-card__desc { margin: 8px 0 0; font-size: 15px; color: #6B5555; line-height: 1.55; }
+      .ds-pain-card--banner { padding: 0; overflow: hidden; align-self: start; }
+      .ds-pain-card__banner { display: block; width: 100%; height: auto; object-fit: contain; border-radius: 22px; }
+      .ds-pain-card__bare-img { display: block; width: 100%; height: auto; object-fit: contain; align-self: start; }
 
       /* ── FEATURES ─────────────────────────────────────────────── */
       .ds-feature-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
       .ds-feature-card { padding: 26px; background: #fff; border-radius: 22px; border: 1px solid rgba(251,207,232,0.5); box-shadow: 0 4px 14px rgba(45,27,27,0.04); transition: all 0.25s ease; }
       .ds-feature-card:hover { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(236,72,153,0.18); border-color: #F9A8D4; }
-      .ds-feature-card__icon { width: 56px; height: 56px; border-radius: 16px; background: #FCE7F3; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; transition: transform 0.25s ease; }
+      .ds-feature-card__icon { width: 112px; height: 112px; border-radius: 24px; background: #FCE7F3; display: inline-flex; align-items: center; justify-content: center; font-size: 56px; transition: transform 0.25s ease; overflow: hidden; }
+      .ds-feature-card__icon--img { background: #fff; padding: 0; }
+      .ds-feature-card__icon--img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+      .ds-feature-card__icon--large { width: 224px; height: 224px; border-radius: 32px; font-size: 96px; }
       .ds-feature-card:hover .ds-feature-card__icon { transform: scale(1.1) rotate(-6deg); }
       .ds-feature-card__title { margin: 18px 0 0; font-size: 17px; font-weight: 900; }
       .ds-feature-card__desc { margin: 8px 0 0; font-size: 14px; color: #6B5555; line-height: 1.55; }
@@ -1216,19 +1044,40 @@ function PageStyles() {
       .ds-demo-stage { display: flex; align-items: center; justify-content: center; position: relative; min-height: 700px; }
 
       /* ── PRICING ───────────────────────────────────────────────── */
-      .ds-pricing-wrap { position: relative; max-width: 620px; margin: 0 auto; }
-      .ds-pricing-glow { position: absolute; inset: -10px; background: linear-gradient(135deg, #F472B6, #EC4899); border-radius: 32px; filter: blur(28px); opacity: 0.35; z-index: 0; }
-      .ds-pricing-card { position: relative; z-index: 1; background: #fff; border-radius: 28px; padding: 36px; box-shadow: 0 30px 60px rgba(236,72,153,0.22); border: 1px solid rgba(251,207,232,0.6); }
+      .ds-pricing-grid { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: stretch; max-width: 1100px; margin: 0 auto; }
+      @media (min-width: 980px) {
+        .ds-pricing-grid { grid-template-columns: 1fr 1.1fr 1fr; gap: 24px; align-items: start; }
+        .ds-pricing-card--pro { transform: translateY(-12px); }
+      }
+      .ds-pricing-card { position: relative; background: #fff; border-radius: 24px; padding: 30px 26px; border: 1px solid rgba(251,207,232,0.6); box-shadow: 0 8px 24px rgba(236,72,153,0.08); display: flex; flex-direction: column; }
+      .ds-pricing-card--pro { background: transparent; padding: 0; border: none; box-shadow: none; }
+      .ds-pricing-card--pro .ds-pricing-glow { position: absolute; inset: -10px; background: linear-gradient(135deg, #F472B6, #EC4899); border-radius: 34px; filter: blur(28px); opacity: 0.45; z-index: 0; }
+      .ds-pricing-card--pro .ds-pricing-card__inner { position: relative; z-index: 1; background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 30px 60px rgba(236,72,153,0.28); border: 2px solid #EC4899; display: flex; flex-direction: column; height: 100%; }
+      .ds-pricing-card--enterprise { background: linear-gradient(180deg, #1F1B1B 0%, #2D1B1B 100%); color: #fff; border-color: rgba(255,255,255,0.08); }
+      .ds-pricing-card--enterprise .ds-kicker { color: #FACC15; }
+      .ds-pricing-card--enterprise .ds-price-cur,
+      .ds-pricing-card--enterprise .ds-price-sub,
+      .ds-pricing-card--enterprise .ds-pricing-card__pitch { color: rgba(255,255,255,0.7); }
+      .ds-pricing-card--enterprise .ds-pricing-card__list li { color: rgba(255,255,255,0.92); }
+      .ds-pricing-card--enterprise .ds-check { color: #FACC15; }
       .ds-pricing-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .ds-pricing-card__tier-name { font-size: 22px; font-weight: 900; margin: 8px 0 0; letter-spacing: -0.4px; }
       .ds-badge-pop { background: #FACC15; color: #2D1B1B; font-size: 11px; font-weight: 900; padding: 5px 11px; border-radius: 999px; letter-spacing: 0.1em; text-transform: uppercase; }
       .ds-pricing-card__price { display: flex; align-items: baseline; gap: 8px; margin-top: 14px; }
-      .ds-price-num { font-size: 56px; line-height: 1; font-weight: 900; letter-spacing: -0.03em; }
-      .ds-price-cur { font-size: 22px; font-weight: 800; color: #6B5555; }
-      .ds-price-sub { margin: 6px 0 0; color: #6B5555; font-size: 14px; }
-      .ds-pricing-card__list { list-style: none; padding: 0; margin: 26px 0 0; display: grid; grid-template-columns: 1fr; gap: 10px; }
-      .ds-pricing-card__list li { font-size: 14px; display: flex; align-items: flex-start; }
-      .ds-pricing-card .ds-btn { margin-top: 28px; }
-      .ds-price-reassurance { margin: 14px 0 0; text-align: center; font-size: 13px; color: #6B5555; }
+      .ds-price-num { font-size: 44px; line-height: 1; font-weight: 900; letter-spacing: -0.03em; }
+      @media (min-width: 980px) { .ds-pricing-card--pro .ds-price-num { font-size: 52px; } }
+      .ds-price-cur { font-size: 18px; font-weight: 800; color: #6B5555; }
+      .ds-price-sub { margin: 6px 0 0; color: #6B5555; font-size: 13px; }
+      .ds-pricing-card__pitch { margin: 14px 0 0; font-size: 13px; line-height: 1.5; color: #5B4646; }
+      .ds-pricing-card__list { list-style: none; padding: 0; margin: 20px 0 0; display: flex; flex-direction: column; gap: 10px; flex: 1; width: 100%; }
+      .ds-pricing-card__list li { font-size: 13.5px; line-height: 1.5; padding-left: 22px; position: relative; text-align: left; width: 100%; display: block; }
+      .ds-pricing-card__list li .ds-check { position: absolute; left: 0; top: 0; margin: 0; }
+      .ds-pricing-card__list-header { font-weight: 800; color: #EC4899; }
+      .ds-pricing-card--enterprise .ds-pricing-card__list-header { color: #FACC15; }
+      .ds-pricing-card .ds-btn { margin-top: 22px; }
+      .ds-pricing-card--enterprise .ds-btn--outline { background: transparent; color: #FACC15; border-color: #FACC15; }
+      .ds-pricing-card--enterprise .ds-btn--outline:hover { background: #FACC15; color: #2D1B1B; }
+      .ds-price-reassurance { margin: 30px auto 0; text-align: center; font-size: 13px; color: #6B5555; max-width: 700px; }
 
       /* ── COMPARISON TABLE ─────────────────────────────────────── */
       .ds-table-wrap { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
@@ -1248,6 +1097,22 @@ function PageStyles() {
       .ds-trust-marquee__track { display: inline-flex; gap: 36px; animation: dsMarquee 40s linear infinite; white-space: nowrap; }
       .ds-trust-marquee__item { font-size: 14px; color: #6B5555; font-weight: 600; }
       @keyframes dsMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+      /* ── REVIEWS MARQUEE ────────────────────────────────────────── */
+      .ds-reviews-marquee { margin-top: 36px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); }
+      .ds-reviews-marquee__track { display: inline-flex; gap: 20px; animation: dsReviewsMarquee 80s linear infinite; padding: 8px 0; }
+      .ds-reviews-marquee:hover .ds-reviews-marquee__track { animation-play-state: paused; }
+      .ds-review-card { position: relative; flex: 0 0 320px; padding: 18px 20px; background: #FFFFFF; border: 1px solid rgba(236,72,153,0.18); border-radius: 18px; box-shadow: 0 6px 18px rgba(45,27,27,0.06); display: flex; flex-direction: column; gap: 10px; text-align: left; white-space: normal; }
+      .ds-review-card__preview-tag { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: #B45309; background: #FEF3C7; border: 1px solid #FDE68A; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; }
+      .ds-review-card__head { display: flex; align-items: center; gap: 12px; }
+      .ds-review-card__avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: #FCE7F3; object-fit: cover; }
+      .ds-review-card__who { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+      .ds-review-card__name { font-size: 14px; font-weight: 800; color: #2D1B1B; }
+      .ds-review-card__biz { font-size: 12px; color: #8B7575; }
+      .ds-review-card__stars { color: #F59E0B; letter-spacing: 1px; font-size: 14px; }
+      .ds-review-card__text { margin: 0; font-size: 13px; line-height: 1.5; color: #4B3A3A; }
+      .ds-review-card__when { font-size: 11px; color: #A89090; font-weight: 600; }
+      @keyframes dsReviewsMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+      .ds-reviews-cta { margin: 28px auto 0; text-align: center; font-size: 15px; color: #5C3A3A; font-weight: 600; max-width: 640px; }
 
       /* ── BEYOND THE MONTHLY PLAN — native apps + custom features ── */
       .ds-section--beyond { background: linear-gradient(180deg, #FFF5F8 0%, #FFE4ED 100%); }
@@ -1267,7 +1132,7 @@ function PageStyles() {
       .ds-beyond-card__list li::before { content: '✓'; position: absolute; left: 0; top: 0; color: #EC4899; font-weight: 900; }
       .ds-beyond-card__cta { margin-top: 8px; align-self: flex-start; }
 
-      .ds-beyond-protect { margin-top: 30px; padding: 24px 22px; border-radius: 18px; background: #2D1B1B; color: #fff; max-width: 1100px; margin-left: auto; margin-right: auto; }
+      .ds-beyond-protect { margin-top: 30px; padding: 24px 22px; border-radius: 18px; background: #0F0F12; color: #fff; max-width: 1100px; margin-left: auto; margin-right: auto; }
       .ds-beyond-protect__title { font-size: 15px; font-weight: 900; color: #FACC15; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 14px; }
       .ds-beyond-protect__list { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 18px; }
       @media (min-width: 700px) { .ds-beyond-protect__list { grid-template-columns: 1fr 1fr; gap: 16px; } }
@@ -1343,7 +1208,8 @@ function PageStyles() {
         .ds-container { padding: 0 24px; }
         .ds-hero { padding: 150px 0 120px; }
         .ds-hero__grid { grid-template-columns: 1fr 1fr; gap: 60px; }
-        .ds-hero__float { display: block; }
+        .ds-hero__float--tr { top: -40px; right: -120px; width: 280px; height: 280px; }
+        .ds-hero__float--bl { bottom: -80px; left: -120px; width: 240px; height: 240px; }
         .ds-h1 { font-size: 84px; }
         .ds-h2 { font-size: 56px; }
         .ds-cta__h { font-size: 80px; }

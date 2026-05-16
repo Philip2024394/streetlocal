@@ -438,7 +438,6 @@ const FEATURE_LABELS = {
 }
 import { S } from '@shared/constants/styles'
 import { DEMO_MENU } from '@shared/data/foodDemoMenu'
-import AdminInboxFab from '@shared/chat/AdminInboxFab.jsx'
 import { haversineKm, adjustColor, fmt, loadJSON, saveJSON } from '@shared/utils/helpers'
 import { VENDOR_TYPES } from '@shared/data/foodVendorTypes'
 import { PLACEHOLDER_SM, PLACEHOLDER_LG, ACCENT_PALETTE, SHOP_LAT, SHOP_LON } from '@shared/constants/placeholders'
@@ -17459,18 +17458,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Vendor: admin inbox FAB (📨 with unread badge) — replaces wa.me-only contact path ── */}
-      {isVendor && !vendorDrawer && (
-        <AdminInboxFab
-          supabase={supabase}
-          vendorId={vendorId}
-          vendorName="StreetLocal Admin"
-          accent="#FFD600"
-          bottom={150}
-        />
-      )}
-
-      {/* ── Stock Image Library — browse the curated StreetLocal stock
+{/* ── Stock Image Library — browse the curated StreetLocal stock
             grouped by kind. Read-only browser; tapping an image opens
             the picker for that kind so the vendor can route it to a
             specific slot. Same dark-glass aesthetic as the picker. ── */}

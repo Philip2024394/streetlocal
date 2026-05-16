@@ -7,7 +7,7 @@
     "dev:foodlocal-pro": "cd foodlocal-pro && npm run dev -- --port 5174",
     "dev:products-local":"cd products-local && npm run dev -- --port 5178",
     "dev:services-local":"cd services-local && npm run dev -- --port 5183",
-    "dev": "npm run dev:landing & npm run dev:food-basic & npm run dev:foodlocal-pro & npm run dev:products-local & npm run dev:services-local",
+    "dev": "concurrently -n landing,food-basic,foodlocal-pro,products-local,services-local -c blue,magenta,cyan,green,yellow \"npm:dev:landing\" \"npm:dev:food-basic\" \"npm:dev:foodlocal-pro\" \"npm:dev:products-local\" \"npm:dev:services-local\"",
     "build:landing":       "cd landing && npm run build",
     "build:food-basic":    "cd food-basic && npm run build",
     "build:foodlocal-pro": "cd foodlocal-pro && npm run build",
@@ -20,7 +20,7 @@
     "@supabase/supabase-js": "^2.105.4"
   },
   "devDependencies": {
-    "concurrently": "^9.2.2",
+    "concurrently": "^9.2.1",
     "http-proxy": "^1.18.1"
   }
 }

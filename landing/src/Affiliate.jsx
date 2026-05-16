@@ -21,12 +21,23 @@ const COUNTRIES = [
 ]
 
 const APPS = [
-  // Both tiers now run on the same food-basic app (/food/chat/). The plan
-  // query param pre-selects the tier on the post-signup activation gate
-  // so the agent referral flow lands the vendor on the right plan.
-  { id: 'basic', name: 'FoodLocal', tier: 'Software 1', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: 'From street carts to restaurants — WhatsApp order channel', url: '/food/chat/?plan=whatsapp' },
-  { id: 'chat', name: 'FoodLocal Chat', tier: 'Software 1+', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: 'Same storefront with private in-app chat checkout + 16 payment gateways', url: '/food/chat/?plan=chat' },
-  { id: 'pro', name: 'FoodLocal Pro', tier: 'Software 2', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', url: '/food/pro/' },
+  // Affiliate now sells the 3 StreetLocal subscription tiers (Starter /
+  // Professional / Enterprise) — same tiers shown on /donut pricing.
+  // Commission is one-time bounty paid 30 days after the vendor's first
+  // successful monthly charge clears. No recurring — agent's job is
+  // acquisition, ours is retention. Higher tiers pay larger bounties
+  // so agents are incentivised to push premium, not just Starter.
+  //
+  // Schema fields used downstream:
+  //   - price          → what the vendor pays per month
+  //   - commission     → agent bounty (display value)
+  //   - commissionPct  → bounty as a % of first-month vendor price
+  //   - commissionNote → one-line copy for the 30-day hold rule
+  //   - color / icon   → visual differentiation
+  //   - url            → activation landing route
+  { id: 'starter',    name: 'Starter',      tier: 'Sell + market on social',         price: 'Rp 38.000',  commission: 'Rp 35.000',  commissionPct: '92%', commissionNote: 'Rp 35K per Starter referral · paid 30 days after vendor\'s first charge',           color: '#FACC15', icon: '🍩', desc: 'Premium PWA + WhatsApp checkout + marketing banners. Everything a small shop needs to open today and run social marketing.', url: '/food/chat/?plan=starter' },
+  { id: 'pro',        name: 'Professional', tier: 'For growing shops',               price: 'Rp 199.000', commission: 'Rp 80.000',  commissionPct: '40%', commissionNote: 'Rp 80K per Professional referral · paid 30 days after vendor\'s first charge',      color: '#EAB308', icon: '💬', desc: 'Loyalty stamps, thermal printer, in-app chat, tipping, custom domain, SMS + email campaigns. For shops ready to grow.',     url: '/food/chat/?plan=professional' },
+  { id: 'enterprise', name: 'Enterprise',   tier: 'Operations-heavy & multi-location', price: 'Rp 449.000', commission: 'Rp 180.000', commissionPct: '40%', commissionNote: 'Rp 180K per Enterprise referral · paid 30 days after vendor\'s first charge',     color: '#0A0A0A', icon: '🍽️', desc: 'KDS, kiosk, production planner, catering, multi-location, unlimited staff, white-label. The full StreetLocal stack.',     url: '/food/chat/?plan=enterprise' },
 ]
 
 const AGENT_FEE = '35.000'
@@ -52,7 +63,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
   ]
   const PLATFORMS = ['TikTok', 'Instagram', 'WhatsApp', 'Facebook', 'YouTube']
   const ICONS = { join: '👋', sale: '🎉', earn: '💰', click: '👆', share: '📲' }
-  const COLORS = { join: '#3B82F6', sale: '#22c55e', earn: '#FFD600', click: '#8B5CF6', share: '#FF6B35' }
+  const COLORS = { join: '#3B82F6', sale: '#22c55e', earn: '#FACC15', click: '#8B5CF6', share: '#FACC15' }
 
   function generateEvent() {
     const event = EVENTS[Math.floor(Math.random() * EVENTS.length)]
@@ -92,7 +103,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
 
   return (
     <div style={{ padding: 20 }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
       <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{locale === 'id' ? 'Komunitas Agents' : 'Agent Community'}</h3>
       <p style={{ fontSize: 12, color: '#888', marginBottom: 16 }}>{locale === 'id' ? 'Aktivitas agent secara real-time' : 'Real-time agent activity'}</p>
 
@@ -106,7 +117,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
       {/* Top Agents */}
       {leaderboard.length > 0 && (
         <div style={{ background: '#1a1a1a', borderRadius: 14, padding: 14, marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD600', marginBottom: 10 }}>{locale === 'id' ? '🏆 Top Agents Bulan Ini' : '🏆 Top Agents This Month'}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#FACC15', marginBottom: 10 }}>{locale === 'id' ? '🏆 Top Agents Bulan Ini' : '🏆 Top Agents This Month'}</div>
           {leaderboard.map((ag, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < leaderboard.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
               <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}</span>
@@ -156,7 +167,7 @@ function FAQItem({ q, a }) {
         style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
       >
         <span style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a', lineHeight: 1.4, flex: 1 }}>{q}</span>
-        <span style={{ fontSize: 18, color: '#FF6B35', fontWeight: 700, flexShrink: 0, transform: open ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>+</span>
+        <span style={{ fontSize: 18, color: '#FACC15', fontWeight: 700, flexShrink: 0, transform: open ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>+</span>
       </button>
       {open && (
         <div style={{ padding: '0 14px 14px', fontSize: 12, color: '#555', lineHeight: 1.6 }}>{a}</div>
@@ -281,7 +292,7 @@ function PromoCarousel({ promos, locale, agentCode, appName, appLink }) {
                   {promo.title && <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a' }}>{promo.title}</div>}
                   <div style={{ fontSize: 9, color: '#888', wordBreak: 'break-all', background: '#FAFAFA', padding: '4px 6px', borderRadius: 6 }}>{appLink}{agentCode ? '?ref=' + agentCode : ''}</div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={copyLink} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: '#FFD600', color: '#1a1a1a', fontSize: 11, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                    <button onClick={copyLink} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: '#FACC15', color: '#1a1a1a', fontSize: 11, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
                       {linkCopied ? (locale === 'id' ? 'Tersalin!' : 'Copied!') : (locale === 'id' ? 'Salin Link' : 'Copy Link')}
                     </button>
                     <button onClick={() => shareWa(promo)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: meta.color, color: '#fff', fontSize: 11, fontWeight: 800, border: 'none', cursor: 'pointer' }}>
@@ -576,8 +587,8 @@ export default function Affiliate({ onClose }) {
       <div style={s.page}>
         <div style={{ ...s.topBar, borderBottom: 'none' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
-            <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>Agent Programme</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#0A0A0A', letterSpacing: '-0.5px' }}>Streetlocal<span style={{ color: '#FACC15' }}>.live</span></div>
+            <div style={{ fontSize: 9, color: '#71717A', fontWeight: 600, letterSpacing: 0.5 }}>Agent Programme</div>
           </div>
           <button onClick={() => {
             const devAgent = { id: 'dev-admin', name: 'Admin (DEV)', country: 'ID', whatsapp: '0000000000', agent_code: 'agent0000', status: 'active', verification_status: 'verified', total_clicks: 42 }
@@ -599,11 +610,11 @@ export default function Affiliate({ onClose }) {
           {/* Limited Seats Banner */}
           <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Limited Seats — Act Now</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#FFD600' }}>{seatsRemaining.toLocaleString()}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#FACC15' }}>{seatsRemaining.toLocaleString()}</div>
             <div style={{ fontSize: 13, color: '#fff', fontWeight: 700, marginTop: 2 }}>seats remaining out of {maxSeats.toLocaleString()}</div>
             {/* Progress bar */}
             <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4, marginTop: 12, overflow: 'hidden' }}>
-              <div style={{ width: `${(seatsTaken / maxSeats) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #FF6B35, #FFD600)', borderRadius: 4, transition: 'width 0.5s' }} />
+              <div style={{ width: `${(seatsTaken / maxSeats) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #FACC15, #FACC15)', borderRadius: 4, transition: 'width 0.5s' }} />
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>Once all seats are filled, no new agents can join unless a cancellation opens up</div>
           </div>
@@ -631,7 +642,7 @@ export default function Affiliate({ onClose }) {
             {[
               {
                 icon: '🍜',
-                color: '#FF6B35',
+                color: '#FACC15',
                 title: 'Food',
                 desc: 'Street carts, warungs, cafés, restaurants',
                 variants: [
@@ -750,7 +761,7 @@ export default function Affiliate({ onClose }) {
                 {
                   name: 'WhatsApp',
                   price: 'Rp 35.000',
-                  color: '#FF6B35',
+                  color: '#FACC15',
                   features: ['Full FoodLocal storefront', 'Orders go to vendor\'s WhatsApp', 'Customer pays cash / bank / QRIS / connected gateway', 'All 25 themes + custom theme editor', 'PWA install on any phone'],
                 },
                 {
@@ -839,12 +850,12 @@ export default function Affiliate({ onClose }) {
 
                 {error && <div style={s.error}>{error}</div>}
 
-                <button type="submit" style={{ ...s.primaryBtn, background: '#FFD600', color: '#1a1a1a' }} disabled={loading}>
+                <button type="submit" style={{ ...s.primaryBtn, background: '#FACC15', color: '#1a1a1a' }} disabled={loading}>
                   {loading ? 'Processing...' : 'Continue to Payment'}
                 </button>
               </form>
 
-              <button onClick={() => { setLoginMode(true); setError('') }} style={{ ...s.linkBtn, color: '#FFD600' }}>
+              <button onClick={() => { setLoginMode(true); setError('') }} style={{ ...s.linkBtn, color: '#FACC15' }}>
                 Already an agent? Sign In
               </button>
             </>
@@ -861,12 +872,12 @@ export default function Affiliate({ onClose }) {
 
                 {error && <div style={s.error}>{error}</div>}
 
-                <button type="submit" style={{ ...s.primaryBtn, background: '#FFD600', color: '#1a1a1a' }} disabled={loading}>
+                <button type="submit" style={{ ...s.primaryBtn, background: '#FACC15', color: '#1a1a1a' }} disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
 
-              <button onClick={() => { setLoginMode(false); setError('') }} style={{ ...s.linkBtn, color: '#FFD600' }}>
+              <button onClick={() => { setLoginMode(false); setError('') }} style={{ ...s.linkBtn, color: '#FACC15' }}>
                 Don't have an account? Sign Up
               </button>
             </>
@@ -1035,7 +1046,7 @@ export default function Affiliate({ onClose }) {
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>💳</div>
             <h2 style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>Agent App Subscription</h2>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#FF6B35', marginBottom: 4 }}>Rp {AGENT_FEE}/mo</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#FACC15', marginBottom: 4 }}>Rp {AGENT_FEE}/mo</div>
             <p style={{ fontSize: 13, color: '#888' }}>Monthly payment to keep your agent app active</p>
           </div>
 
@@ -1056,7 +1067,7 @@ export default function Affiliate({ onClose }) {
             </div>
             <div style={{ ...s.paymentRow, borderBottom: 'none' }}>
               <span style={{ color: '#888', fontSize: 13 }}>Amount</span>
-              <span style={{ fontWeight: 900, fontSize: 16, color: '#FF6B35' }}>Rp {AGENT_FEE}</span>
+              <span style={{ fontWeight: 900, fontSize: 16, color: '#FACC15' }}>Rp {AGENT_FEE}</span>
             </div>
           </div>
 
@@ -1200,11 +1211,11 @@ export default function Affiliate({ onClose }) {
       id: 'food',
       name: locale === 'id' ? 'Makanan' : 'Food',
       icon: '🍜',
-      color: '#FF6B35',
+      color: '#FACC15',
       apps: [
-        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FF6B35', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — pemesanan via WhatsApp' : 'From street carts to restaurants — WhatsApp order channel', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=whatsapp' },
+        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FACC15', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — pemesanan via WhatsApp' : 'From street carts to restaurants — WhatsApp order channel', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=whatsapp' },
         { id: 'chat', name: 'FoodLocal Chat', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: locale === 'id' ? 'Storefront yang sama dengan checkout chat dalam aplikasi' : 'Same storefront with private in-app chat checkout + 16 payment gateways', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=chat' },
-        { id: 'pro', name: 'FoodLocal Pro', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FFD600', icon: '🍽️', desc: locale === 'id' ? 'Suite restoran lengkap: menu extras, deal, banner ads, analitik, verifikasi KTP. Order WhatsApp 100k/bln atau Chat dalam aplikasi 150k/bln.' : 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
+        { id: 'pro', name: 'FoodLocal Pro', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FACC15', icon: '🍽️', desc: locale === 'id' ? 'Suite restoran lengkap: menu extras, deal, banner ads, analitik, verifikasi KTP. Order WhatsApp 100k/bln atau Chat dalam aplikasi 150k/bln.' : 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
       ],
     },
     // Future categories will auto-appear here
@@ -1257,7 +1268,7 @@ export default function Affiliate({ onClose }) {
 
         {/* Back button row */}
         <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => setSelectedApp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '6px 0', color: '#FF6B35', fontSize: 13, fontWeight: 700 }}>
+          <button onClick={() => setSelectedApp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '6px 0', color: '#FACC15', fontSize: 13, fontWeight: 700 }}>
             <span style={{ fontSize: 18 }}>&#8592;</span> {locale === 'id' ? 'Kembali' : 'Back'}
           </button>
         </div>
@@ -1339,8 +1350,9 @@ export default function Affiliate({ onClose }) {
                         )}
                       </div>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#1a1a1a', marginTop: 6, textAlign: 'center' }}>{app.name}</div>
-                    <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, textAlign: 'center' }}>{app.commission}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#0A0A0A', marginTop: 6, textAlign: 'center' }}>{app.name}</div>
+                    <div style={{ fontSize: 11, color: '#15803D', fontWeight: 800, textAlign: 'center' }}>{app.commission} · {app.commissionPct}</div>
+                    <div style={{ fontSize: 10, color: '#71717A', fontWeight: 600, textAlign: 'center', marginTop: 1 }}>Owners pay {app.price}/mo</div>
                   </div>
                 ))}
               </div>
@@ -1444,10 +1456,14 @@ export default function Affiliate({ onClose }) {
               </div>
             </div>
             {/* App label */}
-            <div style={{ marginTop: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a' }}>{app.name}</div>
-              <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, marginTop: 2 }}>{L.youEarn}: {app.commission}</div>
-              <div style={{ fontSize: 10, color: '#aaa', marginTop: 1 }}>{app.price}{L.perMonth}</div>
+            <div style={{ marginTop: 10, textAlign: 'center' }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', letterSpacing: '-0.2px' }}>{app.name}</div>
+              <div style={{ fontSize: 10, color: '#71717A', fontWeight: 600, marginTop: 2 }}>{app.tier}</div>
+              <div style={{ display: 'inline-flex', gap: 4, alignItems: 'baseline', marginTop: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#15803D' }}>{app.commission}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e' }}>· {app.commissionPct}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#52525B', marginTop: 4, fontWeight: 600 }}>Owners pay {app.price}{L.perMonth}</div>
             </div>
           </div>
         ))}
@@ -1475,7 +1491,7 @@ export default function Affiliate({ onClose }) {
           { step: '4', title: L.step4, desc: L.step4d },
         ].map(st => (
           <div key={st.step} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 14, background: '#FF6B35', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{st.step}</div>
+            <div style={{ width: 28, height: 28, borderRadius: 14, background: '#FACC15', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{st.step}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a' }}>{st.title}</div>
               <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{st.desc}</div>
@@ -1531,7 +1547,7 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: LEADS TO CONTACT ── */}
             {drawerPage === 'leads' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 8 }}>{locale === 'id' ? 'Leads untuk Dihubungi' : 'Leads to Contact'}</h3>
                 <p style={{ fontSize: 12, color: '#666', marginBottom: 12, lineHeight: 1.5 }}>
                   {locale === 'id'
@@ -1609,15 +1625,15 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: LEADERBOARD ── */}
             {drawerPage === 'leaderboard' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>{locale === 'id' ? '🥇 Top Agent' : '🥇 Top Agents'}</h3>
-                <button onClick={async () => { if (!supabase) return; const { data } = await supabase.rpc('agent_leaderboard'); setAgentBoard(data || []) }} style={{ background: '#FFD600', color: '#1a1a1a', border: 'none', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer', marginBottom: 12 }}>🔄 {locale === 'id' ? 'Refresh' : 'Refresh'}</button>
+                <button onClick={async () => { if (!supabase) return; const { data } = await supabase.rpc('agent_leaderboard'); setAgentBoard(data || []) }} style={{ background: '#FACC15', color: '#1a1a1a', border: 'none', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer', marginBottom: 12 }}>🔄 {locale === 'id' ? 'Refresh' : 'Refresh'}</button>
                 {agentBoard.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: 20, color: '#aaa', fontSize: 12 }}>{locale === 'id' ? 'Klik Refresh' : 'Click Refresh'}</div>
                 ) : (
                   agentBoard.map((row, i) => (
-                    <div key={row.agent_id} style={{ padding: 12, background: i === 0 ? 'linear-gradient(135deg, #FFD60020, #FFD60005)' : '#FAFAFA', borderRadius: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 16, background: i === 0 ? '#FFD600' : i < 3 ? '#FFE4A0' : '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900 }}>{i + 1}</div>
+                    <div key={row.agent_id} style={{ padding: 12, background: i === 0 ? 'linear-gradient(135deg, #FACC1520, #FACC1505)' : '#FAFAFA', borderRadius: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 16, background: i === 0 ? '#FACC15' : i < 3 ? '#FFE4A0' : '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900 }}>{i + 1}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 800 }}>{row.agent_name}{row.agent_id === agent?.id ? ' (you)' : ''}</div>
                         <div style={{ fontSize: 10, color: '#888' }}>{row.signed} signed · {row.contacted} contacted · {row.leads_assigned} total</div>
@@ -1631,7 +1647,7 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: STATS ── */}
             {drawerPage === 'stats' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
 
                 {/* ── Headline metrics: views, signups, click-through rate ── */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
@@ -1684,7 +1700,7 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: EARNINGS ── */}
             {drawerPage === 'earnings' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 16 }}>{L.earnings}</h3>
                 <div style={{ background: '#F0FDF4', borderRadius: 14, padding: 16, marginBottom: 16 }}>
                   <div style={{ fontSize: 12, color: '#065F46' }}>{L.totalEarned}</div>
@@ -1707,7 +1723,7 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: VERIFY ── */}
             {drawerPage === 'verify' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>{L.verify}</h3>
                 <div style={{ padding: 12, borderRadius: 12, background: isVerified ? '#D1FAE5' : agent?.verification_status === 'submitted' ? '#DBEAFE' : '#FEF3C7', marginBottom: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: isVerified ? '#065F46' : agent?.verification_status === 'submitted' ? '#1E40AF' : '#92400E' }}>
@@ -1748,7 +1764,7 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: MARKETING TIPS ── */}
             {drawerPage === 'marketing' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{locale === 'id' ? 'Tips Marketing Gratis' : 'Free Marketing Tips'}</h3>
                 <p style={{ fontSize: 12, color: '#888', marginBottom: 8, lineHeight: 1.5 }}>{locale === 'id' ? 'Panduan lengkap untuk mendapatkan traffic gratis dan meningkatkan pendapatan Anda' : 'Complete guide to get free traffic and boost your earnings'}</p>
                 <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 10, marginBottom: 16 }}>
@@ -1810,7 +1826,7 @@ export default function Affiliate({ onClose }) {
                           <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>{item.name}</div>
                           <div style={{ fontSize: 11, color: '#888', marginTop: 2, lineHeight: 1.4 }}>{item.desc}</div>
                         </div>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: '#FF6B35', background: '#FFF7ED', padding: '3px 6px', borderRadius: 4, flexShrink: 0 }}>{item.type}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: '#FACC15', background: '#FFF7ED', padding: '3px 6px', borderRadius: 4, flexShrink: 0 }}>{item.type}</span>
                       </a>
                     ))}
                   </div>
@@ -1932,7 +1948,7 @@ export default function Affiliate({ onClose }) {
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>{strat.icon} {strat.title}</div>
                     {strat.tips.map((tip, ti) => (
                       <div key={ti} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: 10, color: '#FF6B35', marginTop: 3 }}>●</span>
+                        <span style={{ fontSize: 10, color: '#FACC15', marginTop: 3 }}>●</span>
                         <span style={{ fontSize: 12, color: '#444', lineHeight: 1.5 }}>{tip}</span>
                       </div>
                     ))}
@@ -1957,7 +1973,7 @@ export default function Affiliate({ onClose }) {
                     { time: '21.00', action: locale === 'id' ? 'Follow up leads di WhatsApp' : 'Follow up warm leads on WhatsApp' },
                   ].map((row, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: i < 9 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                      <span style={{ fontSize: 12, fontWeight: 900, color: '#FFD600', width: 40, flexShrink: 0 }}>{row.time}</span>
+                      <span style={{ fontSize: 12, fontWeight: 900, color: '#FACC15', width: 40, flexShrink: 0 }}>{row.time}</span>
                       <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.action}</span>
                     </div>
                   ))}
@@ -1982,7 +1998,7 @@ export default function Affiliate({ onClose }) {
                     '80% of sales happen after the 5th follow-up',
                   ]).map((p, i) => (
                     <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: 10, color: '#FF6B35', marginTop: 3 }}>★</span>
+                      <span style={{ fontSize: 10, color: '#FACC15', marginTop: 3 }}>★</span>
                       <span style={{ fontSize: 12, color: '#555', lineHeight: 1.5 }}>{p}</span>
                     </div>
                   ))}
@@ -1993,17 +2009,17 @@ export default function Affiliate({ onClose }) {
             {/* ── DRAWER: SETTINGS ── */}
             {drawerPage === 'settings' && (
               <div style={{ padding: 20 }}>
-                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FF6B35', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
+                <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 16 }}>{L.settings}</h3>
 
                 {/* Language toggle */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#555', marginBottom: 8 }}>{L.language}</div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setLocale('id')} style={{ flex: 1, padding: '12px', borderRadius: 12, border: locale === 'id' ? '2px solid #FF6B35' : '1px solid #e0e0e0', background: locale === 'id' ? '#FFF7ED' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#1a1a1a' }}>
+                    <button onClick={() => setLocale('id')} style={{ flex: 1, padding: '12px', borderRadius: 12, border: locale === 'id' ? '2px solid #FACC15' : '1px solid #e0e0e0', background: locale === 'id' ? '#FFF7ED' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#1a1a1a' }}>
                       🇮🇩 Bahasa
                     </button>
-                    <button onClick={() => setLocale('en')} style={{ flex: 1, padding: '12px', borderRadius: 12, border: locale === 'en' ? '2px solid #FF6B35' : '1px solid #e0e0e0', background: locale === 'en' ? '#FFF7ED' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#1a1a1a' }}>
+                    <button onClick={() => setLocale('en')} style={{ flex: 1, padding: '12px', borderRadius: 12, border: locale === 'en' ? '2px solid #FACC15' : '1px solid #e0e0e0', background: locale === 'en' ? '#FFF7ED' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#1a1a1a' }}>
                       🇬🇧 English
                     </button>
                   </div>
@@ -2031,22 +2047,29 @@ export default function Affiliate({ onClose }) {
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#ffffff',
-    color: '#1a1a1a',
+    background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(250,204,21,0.18) 0%, transparent 60%), #FFFFFF',
+    color: '#0A0A0A',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    maxWidth: 480,
+    width: '100%',
+    minWidth: 0,
     margin: '0 auto',
   },
   topBar: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '12px 16px',
-    borderBottom: '1px solid #f0f0f0',
+    padding: '14px clamp(16px, 4vw, 32px)',
+    borderBottom: '1px solid #E4E4E7',
     position: 'sticky',
     top: 0,
-    background: '#fff',
+    background: 'rgba(255,255,255,0.85)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
     zIndex: 10,
+    maxWidth: 1200,
+    margin: '0 auto',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   backBtn: {
     background: 'none',
@@ -2061,24 +2084,33 @@ const s = {
     color: '#1a1a1a',
   },
   content: {
-    padding: '16px 20px 30px',
+    padding: '16px clamp(16px, 4vw, 48px) 30px',
+    maxWidth: 1200,
+    margin: '0 auto',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   hero: {
     textAlign: 'center',
-    padding: '20px 0 24px',
+    padding: '60px 0 40px',
+    maxWidth: 760,
+    margin: '0 auto',
   },
   heroTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 900,
-    color: '#1a1a1a',
-    marginBottom: 8,
+    color: '#0A0A0A',
+    marginBottom: 10,
+    letterSpacing: '-0.8px',
+    lineHeight: 1.08,
   },
   heroSub: {
-    fontSize: 14,
-    color: '#888',
-    lineHeight: 1.5,
-    maxWidth: 280,
+    fontSize: 15,
+    color: '#52525B',
+    lineHeight: 1.55,
+    maxWidth: 320,
     margin: '0 auto',
+    fontWeight: 500,
   },
   benefitsGrid: {
     display: 'grid',
@@ -2165,12 +2197,14 @@ const s = {
     padding: '14px',
     borderRadius: 14,
     border: 'none',
-    background: '#FF6B35',
-    color: '#fff',
+    background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)',
+    color: '#0A0A0A',
     fontSize: 16,
-    fontWeight: 800,
+    fontWeight: 900,
     cursor: 'pointer',
     marginTop: 4,
+    boxShadow: '0 6px 22px rgba(250,204,21,0.45)',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
   },
   linkBtn: {
     display: 'block',
@@ -2178,12 +2212,16 @@ const s = {
     textAlign: 'center',
     background: 'none',
     border: 'none',
-    color: '#FF6B35',
+    color: '#0A0A0A',
     fontSize: 14,
     fontWeight: 700,
     cursor: 'pointer',
     padding: 12,
     marginBottom: 16,
+    textDecoration: 'underline',
+    textDecorationColor: '#FACC15',
+    textDecorationThickness: '2px',
+    textUnderlineOffset: '4px',
   },
   error: {
     fontSize: 13,
@@ -2255,7 +2293,7 @@ const s = {
     padding: '8px 12px',
   },
   copyBtn: {
-    background: '#FF6B35',
+    background: '#FACC15',
     color: '#fff',
     border: 'none',
     borderRadius: 8,
@@ -2339,7 +2377,7 @@ const s = {
     width: 32,
     height: 32,
     borderRadius: 16,
-    background: '#FF6B35',
+    background: '#FACC15',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',

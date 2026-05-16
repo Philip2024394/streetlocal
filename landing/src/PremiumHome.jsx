@@ -20,8 +20,8 @@ import React, { useEffect, useRef, useState } from 'react'
 //    To add a new selling page later: flip `live: true` + update
 //    `href` to its sales-page route. Single-line change per app.
 const VERTICALS = [
-  { id: 'donut',    label: 'Bakery & Donut Shops',     emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen printer, 0% commission.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'View selling page →' },
-  { id: 'food',     label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: false, cta: 'Try the demo →' },
+  { id: 'donut',    label: 'Donut App only',           emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen printer, 0% commission.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'View selling page →', showPhone: true },
+  { id: 'food',     label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: true,  cta: 'Open the app →' },
   { id: 'food-pro', label: 'Restaurant Pro (Full POS)',  emoji: '🍽️', desc: 'Table service, kitchen tickets, multi-staff roles, daily sales reports.', href: '/food/pro',      demoHref: '/food/pro',      live: false, cta: 'Try the demo →' },
   { id: 'products', label: 'Retail & Local Products',    emoji: '🛍️', desc: 'Catalog, stock, multi-image gallery, anything you sell physically.',     href: '/products/local', demoHref: '/products/local', live: false, cta: 'Try the demo →' },
   { id: 'services', label: 'Salons, Tattoo Studios & Bookings', emoji: '💇', desc: 'Time-slot bookings, service menu, deposit-on-book — any appointment trade.', href: '/services',       demoHref: '/services',       live: false, cta: 'Try the demo →' },
@@ -74,66 +74,69 @@ function resolvePlanPricing (cc) {
 const TIER_BULLETS = {
   starter: {
     label: 'Starter',
-    blurb: 'Powerful by default — everything a donut shop needs',
+    blurb: 'Sell + market on social — everything a small shop needs to open today',
     image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_06_01%20PM.png',
     bullets: [
-      'Premium PWA app + mobile install',
-      'Unlimited menu items, 11 languages, 15 currencies',
-      'In-app real-time chat + WhatsApp checkout',
-      'All 16 payment gateways (Stripe, Midtrans, Xendit, PayPal, …)',
-      'Bluetooth thermal printer (ESC/POS)',
-      'Scheduled pre-orders + date/time picker',
-      'Marketing banners + auto-post to chat',
-      'Promo codes (% / flat / first-order / expiry / cap)',
-      'Loyalty stamps + member card',
-      'Receipts + 4-template A4 invoices with letterhead',
-      'Tax / VAT (inclusive or exclusive)',
-      'Tipping at checkout (10/15/20/custom + staff split)',
-      'Production planner + wastage logger',
-      'Kitchen Display System (KDS) for tablets',
-      'Build-your-own dozen mix box',
+      'Premium PWA app — installable on any phone',
+      'Unlimited menu items',
+      'Unlimited orders / month',
+      'WhatsApp checkout — orders flow to your number',
+      'All 16 payment gateways (Midtrans · QRIS · GoPay · OVO · DANA · Stripe …)',
+      'Delivery + pickup zones with per-km pricing',
       'Customer accounts + order history',
-      'Catering orders + pre-order windows',
-      'End-of-day cash reconciliation Z-report',
-      'Self-serve kiosk mode',
-      'Allergen tags + recipe cost analysis',
-      'SMS notifications (Twilio)',
-      'Email campaigns (Resend free tier)',
-      'CSV sales export, backup & restore',
-      '1 staff account · 50 image library · shop subdomain',
+      'Marketing banners (landscape · square · story)',
+      'Auto-post banners to customer chat',
+      'Social-ready PNG export (Instagram · WhatsApp · Facebook · TikTok)',
+      'Promo codes (% off · flat off · expiry)',
+      'Receipts + tax / VAT',
+      'CSV sales export',
+      'Multi-language (Bahasa, English + 9 more)',
+      'Shop subdomain (yourshop.streetlocal.live)',
+      '1 staff account · 30 image library',
+      'WhatsApp support',
+      '0% commission · cancel anytime',
     ],
   },
   professional: {
     label: 'Professional',
-    blurb: 'For growing shops + managed marketing automation',
+    blurb: 'For growing shops — loyalty, custom domain, thermal printer, automation',
     featured: true,
     image: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2015,%202026,%2007_07_02%20PM.png',
     bullets: [
-      'Everything in Starter',
-      'Recurring orders cron ("every Tuesday for the office")',
-      'Re-engagement auto-broadcast cron',
-      'Gift cards (digital codes hosted by us)',
-      'Gateway live-ping monitoring',
-      'Advanced analytics dashboard (WoW, top customers, profit estimator)',
-      'AI menu descriptions (✨ powered by Claude)',
-      'Custom domain support — CNAME + auto-SSL',
-      'Affiliate referral payouts tracking',
-      'Up to 5 staff accounts · 500 image library',
+      'Everything in Starter, plus:',
+      'In-app real-time chat (no WhatsApp dependency)',
+      'Loyalty stamps + branded member card',
+      '4-template A4 invoices with your letterhead',
+      'Bluetooth thermal printer (ESC/POS)',
+      'Scheduled pre-orders + date/time picker',
+      'Advanced promos (BUY1GET1 · first-order · redemption caps)',
+      'Tipping at checkout (10/15/20/custom + staff split)',
+      'SMS notifications (Twilio)',
+      'Email campaigns (Resend)',
+      'Custom domain (mydonuts.com) — CNAME + auto-SSL',
+      '5 staff accounts · 200 image library',
+      'Priority WhatsApp support',
     ],
   },
   enterprise: {
     label: 'Enterprise',
-    blurb: 'Chains, premium brands, white-label',
+    blurb: 'Operations-heavy shops — KDS, kiosk, multi-location, white-label',
     image: 'https://ik.imagekit.io/nepgaxllc/Untitledasda-removebg-preview.png',
     bullets: [
-      'Everything in Professional',
-      'Multi-location management (separate inventory + staff)',
+      'Everything in Professional, plus:',
+      'Kitchen Display System (KDS) for tablets',
+      'Self-serve kiosk mode',
+      'Production planner + wastage logger',
+      'Build-your-own dozen mix box',
+      'Catering / wholesale orders + pre-order windows',
+      'End-of-day cash reconciliation Z-report',
+      'Allergen tags + recipe cost analysis',
+      'Multi-location support (separate inventory + staff per location)',
       'Centralised cross-location analytics',
-      'Full domain management (we register + renew + SSL)',
       'White-label branding (no "Powered by StreetLocal")',
-      'Unlimited staff + image library',
-      'Priority support',
-      'Early access to new features',
+      'Unlimited staff accounts · unlimited image library',
+      'Native app build option (paid add-on)',
+      'Dedicated account manager · daily encrypted backups',
     ],
   },
 }
@@ -305,6 +308,10 @@ export default function PremiumHome () {
         .sl-vert::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(250,204,21,0.08) 0%, transparent 50%); opacity: 0; transition: opacity 0.25s ease; pointer-events: none; }
         .sl-vert:hover::before { opacity: 1; }
         .sl-vert__emoji { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--sl-yellow) 0%, var(--sl-yellow-deep) 100%); display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; margin-bottom: 18px; box-shadow: 0 6px 18px rgba(250,204,21,0.4); }
+        .sl-vert--phone { padding-top: 26px; }
+        .sl-vert__phone { width: 160px; height: 320px; margin: 0 auto 22px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 28px; padding: 5px; position: relative; box-shadow: 0 18px 40px rgba(0,0,0,0.18), 0 6px 14px rgba(250,204,21,0.18); border: 2px solid #2a2a2a; overflow: hidden; }
+        .sl-vert__phone-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 60px; height: 14px; background: #000; border-radius: 10px; z-index: 3; }
+        .sl-vert__phone-screen { width: 100%; height: 100%; border-radius: 23px; overflow: hidden; background: #000; position: relative; }
         .sl-vert__badge { position: absolute; top: 18px; right: 18px; padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; }
         .sl-vert__badge--live { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
         .sl-vert__badge--soon { background: var(--sl-gray-100); color: var(--sl-gray-600); border: 1px solid var(--sl-gray-200); }
@@ -488,11 +495,20 @@ export default function PremiumHome () {
           </div>
           <div className="sl-vert-grid">
             {VERTICALS.map(v => (
-              <a key={v.id} href={v.href} className="sl-vert">
+              <a key={v.id} href={v.href} className={`sl-vert${v.showPhone ? ' sl-vert--phone' : ''}`}>
                 <span className={`sl-vert__badge ${v.live ? 'sl-vert__badge--live' : 'sl-vert__badge--soon'}`}>
                   {v.live ? 'LIVE' : 'SOON'}
                 </span>
-                <div className="sl-vert__emoji">{v.emoji}</div>
+                {v.showPhone ? (
+                  <div className="sl-vert__phone" aria-hidden>
+                    <div className="sl-vert__phone-notch" />
+                    <div className="sl-vert__phone-screen">
+                      <FitIframe src={v.demoHref} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="sl-vert__emoji">{v.emoji}</div>
+                )}
                 <div className="sl-vert__title">{v.label}</div>
                 <p className="sl-vert__desc">{v.desc}</p>
                 <span className={`sl-vert__cta ${!v.live ? 'sl-vert__cta--soon' : ''}`}>{v.cta}</span>

@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import DonutSellingPage from './DonutSellingPage.jsx'
 import PremiumHome from './PremiumHome.jsx'
-import PremiumSoftwareHomepage from './PremiumSoftwareHomepage.jsx'
 
 // Static StreetLocal pages — all share SLLayout for nav + footer.
 // These replace the legacy landing/src/App.jsx route handlers.
@@ -24,7 +23,6 @@ import Affiliate from './Affiliate.jsx'
 // Path switch — each surface lives alongside the others.
 //
 //   /                            → PremiumHome (StreetLocal brand landing)
-//   /theme                       → PremiumSoftwareHomepage (your original Tailwind file)
 //   /donut, /sell/donut          → DonutSellingPage
 //   /about                       → About
 //   /faq                         → Faq
@@ -44,7 +42,6 @@ const search = window.location.search
 const ROUTES = {
   '/':         <PremiumHome />,
   '/home':     <PremiumHome />,
-  '/theme':    <PremiumSoftwareHomepage />,
   '/donut':    <DonutSellingPage />,
   '/donut-shop': <DonutSellingPage />,
   '/sell/donut': <DonutSellingPage />,
