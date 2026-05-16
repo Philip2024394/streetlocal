@@ -476,12 +476,8 @@ export default function DonutSellingPage() {
                 </button>
               ))}
             </div>
-            <div className="ds-phone__tag">
-              <span className="ds-phone__tag-dot" aria-hidden></span>
-              {heroThemePaused
-                ? `${['Donuts','Classic','Glass','Discover','Float','Warm'][heroThemeIdx]} theme — tap a chip to switch`
-                : 'Cycling 6 landing designs · tap to pause'}
-            </div>
+            {/* "Cycling 6 landing designs" badge removed — the chip
+                row above already signals the carousel. */}
           </div>
         </div>
       </section>
@@ -1068,38 +1064,37 @@ function PageStyles() {
       .ds-lede { font-size: 13px; line-height: 1.5; color: #6B5555; margin: 14px 0 0; max-width: 540px; }
       .ds-cta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 
-      /* View demo — single-line link with a running shimmer-glow
-         that sweeps left-to-right every 2.4s. Uses background-clip:
-         text so the gradient masks to the letterforms. Falls back
-         to plain pink when -webkit-background-clip isn't supported. */
+      /* View demo — small solid-pink pill button. Subtle shine
+         sweeps across once every 2.4s so it draws the eye without
+         being noisy. Sized to fit comfortably beside other hero
+         elements at every breakpoint. */
       .ds-view-demo {
-        display: inline-block; padding: 4px 2px;
-        font-size: 15px; font-weight: 800; letter-spacing: 0.02em;
-        text-decoration: none; text-transform: uppercase;
-        color: #EC4899;
-        background: linear-gradient(90deg, #EC4899 0%, #EC4899 35%, #fff7fb 50%, #EC4899 65%, #EC4899 100%);
-        background-size: 220% 100%;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 999px;
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: #fff; font-size: 13px; font-weight: 800;
+        letter-spacing: 0.02em; text-decoration: none;
+        box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+        position: relative; overflow: hidden;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .ds-view-demo::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+        transform: translateX(-100%);
         animation: dsViewDemoShine 2.4s linear infinite;
-        position: relative;
+        pointer-events: none;
       }
       .ds-view-demo::after {
-        content: ' →';
-        -webkit-text-fill-color: #EC4899;
-        color: #EC4899;
-        transition: transform 0.2s ease;
-        display: inline-block;
-        margin-left: 2px;
+        content: '→'; transition: transform 0.2s ease;
       }
+      .ds-view-demo:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(236,72,153,0.45); }
       .ds-view-demo:hover::after { transform: translateX(3px); }
       @keyframes dsViewDemoShine {
-        0%   { background-position: 220% 0; }
-        100% { background-position: -120% 0; }
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
       }
-      @media (min-width: 640px) { .ds-view-demo { font-size: 16px; } }
-      @media (min-width: 980px) { .ds-view-demo { font-size: 17px; } }
+      @media (min-width: 640px) { .ds-view-demo { padding: 10px 18px; font-size: 14px; } }
       .ds-trust { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 12px; font-weight: 600; color: #705353; }
       .ds-trust li { display: inline-flex; align-items: center; }
       @media (min-width: 480px) {
