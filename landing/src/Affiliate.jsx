@@ -1943,13 +1943,16 @@ export default function Affiliate({ onClose }) {
   function buildShareTargets(link, captionEn, captionId) {
     const caption = locale === 'id' ? captionId : captionEn
     const text = `${caption}\n\nhttps://${link}`
+    // All share buttons use the StreetLocal yellow palette for a unified
+    // brand look. Hover state darkens to yellow-deep.
+    const YELLOW = '#FACC15'
     return [
-      { id: 'wa',  label: 'WhatsApp', color: '#25D366', icon: '💬', href: `https://wa.me/?text=${encodeURIComponent(text)}` },
-      { id: 'fb',  label: 'Facebook', color: '#1877F2', icon: 'f',  href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://' + link)}&quote=${encodeURIComponent(caption)}` },
-      { id: 'ig',  label: 'Instagram',color: '#E4405F', icon: '📷', copyOnly: true },
-      { id: 'tt',  label: 'TikTok',   color: '#000000', icon: '🎵', copyOnly: true },
-      { id: 'tg',  label: 'Telegram', color: '#229ED9', icon: '✈️', href: `https://t.me/share/url?url=${encodeURIComponent('https://' + link)}&text=${encodeURIComponent(caption)}` },
-      { id: 'em',  label: 'Email',    color: '#0A0A0A', icon: '✉️', href: `mailto:?subject=${encodeURIComponent(caption)}&body=${encodeURIComponent(text)}` },
+      { id: 'wa',  label: 'WhatsApp', color: YELLOW, icon: '💬', href: `https://wa.me/?text=${encodeURIComponent(text)}` },
+      { id: 'fb',  label: 'Facebook', color: YELLOW, icon: 'f',  href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://' + link)}&quote=${encodeURIComponent(caption)}` },
+      { id: 'ig',  label: 'Instagram',color: YELLOW, icon: '📷', copyOnly: true },
+      { id: 'tt',  label: 'TikTok',   color: YELLOW, icon: '🎵', copyOnly: true },
+      { id: 'tg',  label: 'Telegram', color: YELLOW, icon: '✈️', href: `https://t.me/share/url?url=${encodeURIComponent('https://' + link)}&text=${encodeURIComponent(caption)}` },
+      { id: 'em',  label: 'Email',    color: YELLOW, icon: '✉️', href: `mailto:?subject=${encodeURIComponent(caption)}&body=${encodeURIComponent(text)}` },
     ]
   }
 
@@ -2303,7 +2306,7 @@ export default function Affiliate({ onClose }) {
                     <button key={t.id} onClick={() => {
                       if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
                       window.open(t.href, '_blank', 'noopener')
-                    }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 4px', borderRadius: 12, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                    }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 4px', borderRadius: 12, border: 'none', background: t.color, color: '#0A0A0A', fontSize: 12, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44, boxShadow: '0 2px 8px rgba(250,204,21,0.35)' }}>
                       <span style={{ fontSize: 14 }}>{t.icon}</span>
                       <span style={{ display: 'inline-block' }}>{t.label}</span>
                     </button>
@@ -2433,7 +2436,7 @@ export default function Affiliate({ onClose }) {
                                         <button key={t.id} onClick={() => {
                                           if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
                                           window.open(t.href, '_blank', 'noopener')
-                                        }} title={t.label} style={{ flex: '1 1 0', minHeight: 32, padding: '6px 4px', borderRadius: 8, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                        }} title={t.label} style={{ flex: '1 1 0', minHeight: 32, padding: '6px 4px', borderRadius: 8, border: 'none', background: t.color, color: '#0A0A0A', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 6px rgba(250,204,21,0.3)' }}>
                                           {t.icon}
                                         </button>
                                       ))}
