@@ -201,6 +201,7 @@ export default function PremiumHome () {
   // we hold at US pricing — never default to Asia.
   const [market, setMarket] = useState('US')
   const [marketLoaded, setMarketLoaded] = useState(false)
+  const [navDrawerOpen, setNavDrawerOpen] = useState(false)
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -248,6 +249,8 @@ export default function PremiumHome () {
         .sl-brand__name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
         .sl-nav__links { display: none; gap: 26px; }
         @media (min-width: 768px) { .sl-nav__links { display: flex; } }
+        .sl-nav__menu { width: 42px; height: 42px; border-radius: 12px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #0A0A0A; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s ease; font-family: inherit; }
+        .sl-nav__menu:hover { background: #FFFBEB; border-color: #FACC15; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(250,204,21,0.2); }
         @media (min-width: 600px) { [data-sl-nav-signin] { display: inline-flex !important; } }
         .sl-nav__link { color: var(--sl-gray-600); text-decoration: none; font-size: 14px; font-weight: 600; }
         .sl-nav__link:hover { color: var(--sl-black); }
@@ -458,10 +461,48 @@ export default function PremiumHome () {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <a className="sl-nav__link" href="/food/chat/login" style={{ display: 'none' }} data-sl-nav-signin>Sign in</a>
-            <a href="#pricing" className="sl-btn sl-btn--primary">Start your app</a>
+            <button type="button" className="sl-nav__menu" aria-label="Open menu" onClick={() => setNavDrawerOpen(true)}>
+              <span aria-hidden style={{ display: 'block', fontSize: 22, lineHeight: 1 }}>⚙</span>
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* ─── MOBILE NAV DRAWER ─── */}
+      {navDrawerOpen && (
+        <>
+          <div onClick={() => setNavDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.45)', zIndex: 90, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
+          <aside style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '60vw', maxWidth: 360, background: '#FFFFFF', zIndex: 91, display: 'flex', flexDirection: 'column', boxShadow: '-12px 0 32px rgba(0,0,0,0.18)', animation: 'slDrawerIn 0.25s ease' }}>
+            <style>{`@keyframes slDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #E4E4E7' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Menu</span>
+              <button type="button" onClick={() => setNavDrawerOpen(false)} aria-label="Close menu" style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: '#FAFAFA', color: '#0A0A0A', fontSize: 22, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>×</button>
+            </div>
+            <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
+              {[
+                { id: 'apps',     label: 'Apps',          href: '#apps',     icon: '📱' },
+                { id: 'features', label: 'Features',      href: '#features', icon: '✨' },
+                { id: 'pricing',  label: 'Pricing',       href: '#pricing',  icon: '💰' },
+                { id: 'faq',      label: 'FAQ',           href: '#faq',      icon: '❓' },
+                { id: 'donut',    label: 'Donut & Bakery App', href: '/donut',   icon: '🍩' },
+                { id: 'food',     label: 'Food & Restaurant App', href: '/food/chat', icon: '🍜' },
+                { id: 'affiliate',label: 'Become an Agent', href: '/affiliate', icon: '🤝' },
+                { id: 'signin',   label: 'Sign in',       href: '/food/chat/login', icon: '🔑' },
+              ].map(item => (
+                <a key={item.id} href={item.href} onClick={() => setNavDrawerOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', color: '#0A0A0A', fontSize: 15, fontWeight: 700, textDecoration: 'none', borderLeft: '3px solid transparent', transition: 'background 0.15s ease, border-color 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.background = '#FFFBEB'; e.currentTarget.style.borderLeftColor = '#FACC15' }} onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.borderLeftColor = 'transparent' }}>
+                  <span style={{ fontSize: 20, width: 28, textAlign: 'center' }} aria-hidden>{item.icon}</span>
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </nav>
+            <div style={{ padding: 16, borderTop: '1px solid #E4E4E7' }}>
+              <a href="#pricing" onClick={() => setNavDrawerOpen(false)} style={{ display: 'block', textAlign: 'center', padding: '14px 18px', borderRadius: 12, background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 6px 18px rgba(250,204,21,0.4)' }}>
+                Start your app →
+              </a>
+            </div>
+          </aside>
+        </>
+      )}
 
       {/* ─── HERO ─── */}
       <section className="sl-hero">
