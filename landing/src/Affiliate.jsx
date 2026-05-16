@@ -173,7 +173,7 @@ function CommunityFeed({ locale, leaderboard, onBack }) {
   ]
   const PLATFORMS = ['TikTok', 'Instagram', 'WhatsApp', 'Facebook', 'YouTube']
   const ICONS = { join: '👋', sale: '🎉', earn: '💰', click: '👆', share: '📲' }
-  const COLORS = { join: '#3B82F6', sale: '#22c55e', earn: '#FACC15', click: '#8B5CF6', share: '#FACC15' }
+  const COLORS = { join: '#71717A', sale: '#22c55e', earn: '#FACC15', click: '#A1A1AA', share: '#EAB308' }
 
   function generateEvent() {
     const event = EVENTS[Math.floor(Math.random() * EVENTS.length)]
@@ -957,7 +957,7 @@ export default function Affiliate({ onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }} className="aff-apps-grid">
               {[
                 { icon: '🍜', tint: '#FACC15', tintBg: 'rgba(250,204,21,0.10)', title: 'Food',     blurb: 'Street carts, warungs, cafés, restaurants', detail: 'Donut shops, noodle stalls, bakeries, coffee carts, full-service restaurants — anyone selling prepared food.', variants: [{ tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Orders go to in-app chat' }] },
-                { icon: '🛍️', tint: '#8B5CF6', tintBg: 'rgba(139,92,246,0.10)', title: 'Products', blurb: 'Retail, fashion, electronics, anything physical',                                detail: 'Boutiques, electronics stores, hijab shops, accessories, beauty, household goods — physical product catalogs.', variants: [{ tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Orders go to in-app chat' }, { tag: 'Email', desc: 'Orders sent to vendor\'s email' }] },
+                { icon: '🛍️', tint: '#52525B', tintBg: 'rgba(82,82,91,0.10)', title: 'Products', blurb: 'Retail, fashion, electronics, anything physical',                                detail: 'Boutiques, electronics stores, hijab shops, accessories, beauty, household goods — physical product catalogs.', variants: [{ tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Orders go to in-app chat' }, { tag: 'Email', desc: 'Orders sent to vendor\'s email' }] },
                 { icon: '🛠️', tint: '#22C55E', tintBg: 'rgba(34,197,94,0.10)',  title: 'Services', blurb: '40+ trades — AC, plumber, electrician, hairdresser, tutor, mechanic…',          detail: 'Bookings + service menus + deposit-on-book for every appointment trade. Newest category, biggest demand gap.', badge: 'NEW 2026', variants: [{ tag: 'WhatsApp', desc: 'Bookings go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Bookings go to in-app chat' }, { tag: 'Email', desc: 'Bookings sent to vendor\'s email' }] },
               ].map((cat, i) => (
                 <article key={i} style={{ position: 'relative', background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: 22, padding: 28, transition: 'all 0.25s ease', display: 'flex', flexDirection: 'column', gap: 18, boxShadow: '0 2px 8px rgba(45,27,27,0.04)' }}>
@@ -1999,7 +1999,7 @@ export default function Affiliate({ onClose }) {
   const verifPill = (() => {
     const v = agent?.verification_status || 'none'
     if (v === 'verified') return { label: D.verified,    bg: '#D1FAE5', fg: '#065F46', dot: '#22c55e' }
-    if (v === 'submitted')return { label: D.submitted,   bg: '#DBEAFE', fg: '#1E40AF', dot: '#3B82F6' }
+    if (v === 'submitted')return { label: D.submitted,   bg: '#FEF3C7', fg: '#92400E', dot: '#F59E0B' }
     if (v === 'rejected') return { label: D.rejected,    bg: '#FEE2E2', fg: '#991B1B', dot: '#EF4444' }
     return { label: D.notSubmitted, bg: '#F4F4F5', fg: '#52525B', dot: '#A1A1AA' }
   })()
@@ -2007,7 +2007,7 @@ export default function Affiliate({ onClose }) {
   // Status pill for hero strip
   const statusPill = (() => {
     if (isPendingPayment)      return { label: D.pendingPayment, bg: '#FEF3C7', fg: '#92400E', dot: '#F59E0B' }
-    if (isPendingVerification) return { label: D.pendingVerification, bg: '#DBEAFE', fg: '#1E40AF', dot: '#3B82F6' }
+    if (isPendingVerification) return { label: D.pendingVerification, bg: '#FEF3C7', fg: '#92400E', dot: '#F59E0B' }
     if (isActive)              return { label: D.activeStatus, bg: '#D1FAE5', fg: '#065F46', dot: '#22c55e' }
     return { label: agent?.status || '', bg: '#F4F4F5', fg: '#52525B', dot: '#A1A1AA' }
   })()
@@ -2171,8 +2171,8 @@ export default function Affiliate({ onClose }) {
               {[
                 { label: D.monthEarn,       value: 'Rp ' + (stats.totalEarnings || 0).toLocaleString(), color: '#22c55e', icon: '💰' },
                 { label: D.pendingPayout,   value: 'Rp ' + (stats.pendingPayout || 0).toLocaleString(), color: '#F59E0B', icon: '⏳' },
-                { label: D.totalVendors,    value: String(stats.totalSignups || 0),                     color: '#8B5CF6', icon: '👥' },
-                { label: D.conversionRate,  value: convPct + '%',                                       color: '#3B82F6', icon: '📈' },
+                { label: D.totalVendors,    value: String(stats.totalSignups || 0),                     color: '#0A0A0A', icon: '👥' },
+                { label: D.conversionRate,  value: convPct + '%',                                       color: '#EAB308', icon: '📈' },
               ].map((kpi, i) => (
                 <div key={i} className="sl-card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
@@ -2452,7 +2452,7 @@ export default function Affiliate({ onClose }) {
                   {filteredRefs.map(r => {
                     const days = daysSinceCreated(r)
                     const bounty = r.commission_amount || tierBounty(r.app_tier)
-                    const sc = r.status === 'paid' ? '#22c55e' : r.status === 'approved' ? '#3B82F6' : r.status === 'cancelled' ? '#A1A1AA' : '#F59E0B'
+                    const sc = r.status === 'paid' ? '#22c55e' : r.status === 'approved' ? '#15803D' : r.status === 'cancelled' ? '#A1A1AA' : '#F59E0B'
                     return (
                       <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#FAFAFA', borderRadius: 14, border: '1px solid #F4F4F5' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -2534,7 +2534,7 @@ export default function Affiliate({ onClose }) {
                   {myLeads.map(l => {
                     const phone = (l.whatsapp || l.phone || '').replace(/[^0-9+]/g, '')
                     const wa = phone ? `https://wa.me/${phone.startsWith('+') ? phone.slice(1) : phone}?text=${encodeURIComponent(`Halo ${l.business_name?.split(' ')[0] || ''}! Saya dari StreetLocal — aplikasi pemesanan online untuk bisnis kamu. Tanpa komisi seperti GoFood. Order langsung ke WhatsApp. Mulai Rp 38.000/bulan. Mau lihat demonya?`)}` : null
-                    const statusColors = { queued: '#A1A1AA', contacted: '#3B82F6', responded: '#06B6D4', interested: '#22C55E', signed: '#15803D', not_interested: '#A1A1AA', dead: '#EF4444' }
+                    const statusColors = { queued: '#A1A1AA', contacted: '#71717A', responded: '#EAB308', interested: '#22C55E', signed: '#15803D', not_interested: '#A1A1AA', dead: '#EF4444' }
                     const sc = statusColors[l.status] || '#A1A1AA'
                     return (
                       <div key={l.id} style={{ padding: 12, background: '#FAFAFA', borderRadius: 12, borderLeft: `3px solid ${sc}`, border: '1px solid #F4F4F5' }}>
@@ -2910,12 +2910,12 @@ export default function Affiliate({ onClose }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                   <div style={{ background: '#EFF6FF', borderRadius: 14, padding: 12, textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: '#1e40af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{locale === 'id' ? 'Dilihat' : 'Views'}</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#3B82F6', marginTop: 4 }}>{stats.totalClicks}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#0A0A0A', marginTop: 4 }}>{stats.totalClicks}</div>
                     <div style={{ fontSize: 9, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Klik link Anda' : 'Link clicks'}</div>
                   </div>
                   <div style={{ background: '#FAF5FF', borderRadius: 14, padding: 12, textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: '#6d28d9', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{locale === 'id' ? 'Daftar' : 'Signups'}</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#8B5CF6', marginTop: 4 }}>{stats.totalSignups}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#EAB308', marginTop: 4 }}>{stats.totalSignups}</div>
                     <div style={{ fontSize: 9, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Vendor daftar' : 'Vendors joined'}</div>
                   </div>
                   <div style={{ background: '#F0FDF4', borderRadius: 14, padding: 12, textAlign: 'center' }}>
@@ -2982,8 +2982,8 @@ export default function Affiliate({ onClose }) {
               <div style={{ padding: 20 }}>
                 <button onClick={() => setDrawerPage(null)} style={{ background: 'none', border: 'none', fontSize: 14, color: '#FACC15', fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>&#8592; {locale === 'id' ? 'Kembali' : 'Back'}</button>
                 <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>{L.verify}</h3>
-                <div style={{ padding: 12, borderRadius: 12, background: isVerified ? '#D1FAE5' : agent?.verification_status === 'submitted' ? '#DBEAFE' : '#FEF3C7', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: isVerified ? '#065F46' : agent?.verification_status === 'submitted' ? '#1E40AF' : '#92400E' }}>
+                <div style={{ padding: 12, borderRadius: 12, background: isVerified ? '#D1FAE5' : '#FEF3C7', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: isVerified ? '#065F46' : '#92400E' }}>
                     {isVerified ? L.verified : agent?.verification_status === 'submitted' ? L.underReview : L.notVerified}
                   </div>
                 </div>
