@@ -22,9 +22,10 @@ import React, { useEffect, useRef, useState } from 'react'
 const VERTICALS = [
   { id: 'donut',     label: 'Donut & Bakery App',       emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen-printer integration, 0% commission on every sale.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'Explore →',           showPhone: true },
   { id: 'food',      label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: true,  cta: 'Open the app →' },
-  // City Rider — Next.js PWA deployed separately (Vercel). Update `href`
-  // to the production URL (cityrider.id or cityriders.vercel.app) once live.
-  { id: 'cityrider', label: 'City Rider — Bike Couriers', emoji: '🛵', desc: 'Independent motorcycle couriers set their own per-km rate, get a GPS marketplace listing, customers contact via WhatsApp. Rp 30K/month, 0% commission, no dispatch.', href: 'https://cityrider.id', demoHref: 'https://cityrider.id', live: true, cta: 'Open the app →', external: true },
+  // City Rider — selling page lives at /cityrider (CityRiderSellingPage).
+  // The actual app is a separate Next.js deployment (cityrider.id) — selling
+  // page's "Daftar" CTA opens that live app in a new tab.
+  { id: 'cityrider', label: 'City Rider — Bike Couriers', emoji: '🛵', desc: 'Independent motorcycle couriers set their own per-km rate, get a GPS marketplace listing, customers contact via WhatsApp. Rp 30K/month, 0% commission, no dispatch.', href: '/cityrider', demoHref: '/cityrider', live: true, cta: 'Explore →' },
   { id: 'food-pro',  label: 'Restaurant Pro (Full POS)',  emoji: '🍽️', desc: 'Table service, kitchen tickets, multi-staff roles, daily sales reports.', href: '/food/pro',      demoHref: '/food/pro',      live: false, cta: 'Try the demo →' },
   { id: 'products',  label: 'Retail & Local Products',    emoji: '🛍️', desc: 'Catalog, stock, multi-image gallery, anything you sell physically.',     href: '/products/local', demoHref: '/products/local', live: false, cta: 'Try the demo →' },
   { id: 'services',  label: 'Salons, Tattoo Studios & Bookings', emoji: '💇', desc: 'Time-slot bookings, service menu, deposit-on-book — any appointment trade.', href: '/services',       demoHref: '/services',       live: false, cta: 'Try the demo →' },
@@ -490,7 +491,7 @@ export default function PremiumHome () {
                 { id: 'faq',      label: 'FAQ',           href: '#faq',      icon: '❓' },
                 { id: 'donut',    label: 'Donut & Bakery App', href: '/donut',   icon: '🍩' },
                 { id: 'food',     label: 'Food & Restaurant App', href: '/food/chat', icon: '🍜' },
-                { id: 'cityrider',label: 'City Rider — Couriers', href: 'https://cityrider.id', icon: '🛵', external: true },
+                { id: 'cityrider',label: 'City Rider — Couriers', href: '/cityrider', icon: '🛵' },
                 { id: 'affiliate',label: 'Become an Agent', href: '/affiliate', icon: '🤝' },
                 { id: 'signin',   label: 'Sign in',       href: '/food/chat/login', icon: '🔑' },
               ].map(item => (

@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import DonutSellingPage from './DonutSellingPage.jsx'
+import CityRiderSellingPage from './CityRiderSellingPage.jsx'
 import PremiumHome from './PremiumHome.jsx'
 
 // Static StreetLocal pages — all share SLLayout for nav + footer.
@@ -45,6 +46,9 @@ const ROUTES = {
   '/donut':    <DonutSellingPage />,
   '/donut-shop': <DonutSellingPage />,
   '/sell/donut': <DonutSellingPage />,
+  '/cityrider':     <CityRiderSellingPage />,
+  '/city-rider':    <CityRiderSellingPage />,
+  '/sell/cityrider':<CityRiderSellingPage />,
   '/about':    <About />,
   '/faq':      <Faq />,
   '/terms':    <Terms />,
