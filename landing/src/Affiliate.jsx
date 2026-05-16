@@ -1503,21 +1503,58 @@ export default function Affiliate({ onClose }) {
     commissionDesc: 'You receive the full subscription amount for each new user\'s first month',
   }
 
-  // Categories with apps (data-driven — add more categories here as main app grows)
+  // Categories with apps. Currently donut-only — one product, three tiers.
+  // Each tier is its own 'app' in the library so agents can share tier-
+  // specific referral links and earn the matching bounty.
   const CATEGORIES = [
     {
-      id: 'food',
-      name: locale === 'id' ? 'Makanan' : 'Food',
-      icon: '🍜',
+      id: 'donut',
+      name: locale === 'id' ? 'Aplikasi Donut' : 'Donut App',
+      icon: '🍩',
       color: '#FACC15',
       apps: [
-        { id: 'basic', name: 'FoodLocal', price: 'Rp 35.000', commission: 'Rp 35.000', color: '#FACC15', icon: '🍜', desc: locale === 'id' ? 'Dari gerobak hingga restoran — pemesanan via WhatsApp' : 'From street carts to restaurants — WhatsApp order channel', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=whatsapp' },
-        { id: 'chat', name: 'FoodLocal Chat', price: 'Rp 50.000', commission: 'Rp 50.000', color: '#22C55E', icon: '💬', desc: locale === 'id' ? 'Storefront yang sama dengan checkout chat dalam aplikasi' : 'Same storefront with private in-app chat checkout + 16 payment gateways', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png', url: '/food/chat/?plan=chat' },
-        { id: 'pro', name: 'FoodLocal Pro', price: 'From Rp 100.000', commission: 'Rp 100.000', color: '#FACC15', icon: '🍽️', desc: locale === 'id' ? 'Suite restoran lengkap: menu extras, deal, banner ads, analitik, verifikasi KTP. Order WhatsApp 100k/bln atau Chat dalam aplikasi 150k/bln.' : 'Full restaurant suite: menu extras, deals, banner ads, analytics, KTP-verified. WhatsApp orders 100k/mo or in-app Chat orders 150k/mo.', screenshot: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png', url: '/food/pro/' },
+        {
+          id: 'starter',
+          name: locale === 'id' ? 'Donut App — Starter' : 'Donut App — Starter',
+          price: 'Rp 38.000',
+          commission: 'Rp 35.000',
+          commissionPct: '92%',
+          color: '#FACC15',
+          icon: '🍩',
+          desc: locale === 'id'
+            ? 'PWA premium + checkout WhatsApp + marketing banner. Semua yang dibutuhkan toko kecil untuk buka hari ini dan jalankan marketing di sosmed.'
+            : 'Premium PWA + WhatsApp checkout + marketing banners. Everything a small shop needs to open today and run social marketing.',
+          url: '/donut?plan=starter',
+        },
+        {
+          id: 'professional',
+          name: locale === 'id' ? 'Donut App — Professional' : 'Donut App — Professional',
+          price: 'Rp 199.000',
+          commission: 'Rp 80.000',
+          commissionPct: '40%',
+          color: '#EAB308',
+          icon: '💬',
+          desc: locale === 'id'
+            ? 'Loyalty stamps, printer thermal, custom domain, in-app chat, tipping, dan campaign SMS / email. Untuk toko yang sedang berkembang.'
+            : 'Loyalty stamps, thermal printer, in-app chat, tipping, custom domain, SMS + email campaigns. For shops ready to grow.',
+          url: '/donut?plan=professional',
+        },
+        {
+          id: 'enterprise',
+          name: locale === 'id' ? 'Donut App — Enterprise' : 'Donut App — Enterprise',
+          price: 'Rp 449.000',
+          commission: 'Rp 180.000',
+          commissionPct: '40%',
+          color: '#0A0A0A',
+          icon: '🍽️',
+          desc: locale === 'id'
+            ? 'KDS, kiosk mode, production planner, catering, multi-cabang, staff unlimited, white-label. Stack StreetLocal lengkap.'
+            : 'KDS, kiosk mode, production planner, catering, multi-location, unlimited staff, white-label. The full StreetLocal stack.',
+          url: '/donut?plan=enterprise',
+        },
       ],
     },
-    // Future categories will auto-appear here
-    // { id: 'property', name: 'Property', icon: '🏠', color: '#3B82F6', apps: [...] },
+    // Future categories (Products, Services, Property) will auto-appear here
   ]
 
   const allApps = CATEGORIES.flatMap(c => c.apps.map(a => ({ ...a, category: c.name, categoryIcon: c.icon, categoryId: c.id })))
@@ -1529,14 +1566,15 @@ export default function Affiliate({ onClose }) {
   }
 
   function getDemoUrl(app) {
+    // All 3 tiers live on the same donut selling page (/donut) which
+    // routes through to the food-basic app. Plan param tells the
+    // signup flow which subscription tier the agent is recommending.
+    const ref = agent?.agent_code || ''
     if (window.location.hostname === 'localhost') {
-      // Both basic and chat run on the same food-basic dev port (5177);
-      // the plan query param is what differentiates them.
-      if (app.id === 'basic') return `http://localhost:5177/food/chat/?ref=${agent?.agent_code || ''}&plan=whatsapp`
-      if (app.id === 'chat') return `http://localhost:5177/food/chat/?ref=${agent?.agent_code || ''}&plan=chat`
-      if (app.id === 'pro') return `http://localhost:5174/food/pro/?ref=${agent?.agent_code || ''}`
+      // landing dev server hosts /donut; donut app for live previews on 5177
+      return `http://localhost:5173/donut?ref=${ref}&plan=${app.id}`
     }
-    return `${app.url}?ref=${agent?.agent_code || ''}`
+    return `https://streetlocal.live${app.url}&ref=${ref}`
   }
 
   function copyAppLink(app) {
