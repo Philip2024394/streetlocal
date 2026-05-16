@@ -14,10 +14,18 @@
    ───────────────────────────────────────────────────────────── */
 import React, { useEffect, useState } from 'react'
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './lib/supabase'
+import { useAppLocale } from './i18n'
+
+// Lightweight email regex — same heuristic the rest of the app uses
+// (good enough to catch typos; full validation happens server-side).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // Match the donut app's vendor signup helper from App.jsx so we
 // can sign up without going through App's state setters.
-async function vendorSignup (phone, password, name) {
+// owner_* + city + province are nullable on vendor_accounts so we
+// pass through whatever the signup form collected — required ones
+// are validated client-side before this fires.
+async function vendorSignup (phone, password, name, extra = {}) {
   if (!supabase) return null
   const { data, error } = await supabase.from('vendor_accounts').insert({
     phone: phone.replace(/[^0-9]/g, ''),
@@ -26,6 +34,13 @@ async function vendorSignup (phone, password, name) {
     shop_phone: phone.replace(/[^0-9]/g, ''),
     slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').slice(0, 30),
     status: 'pending',
+    owner_name: extra.ownerName || null,
+    owner_email: extra.ownerEmail || null,
+    // Owner WhatsApp defaults to the signup phone when left blank —
+    // most solo vendors use the same number for shop + personal.
+    owner_whatsapp: (extra.ownerWhatsapp || '').replace(/[^0-9]/g, '') || phone.replace(/[^0-9]/g, '') || null,
+    city: extra.city || null,
+    province: extra.province || null,
   }).select().single()
   if (error) throw new Error(error.message)
   return data
@@ -56,6 +71,7 @@ const CATEGORIES = [
 ]
 
 export default function VendorLoginPage () {
+  const { t } = useAppLocale()
   const [mode, setMode] = useState(() => {
     if (typeof window === 'undefined') return 'login'
     const q = new URLSearchParams(window.location.search)
@@ -65,6 +81,14 @@ export default function VendorLoginPage () {
   const [password, setPassword] = useState('')
   const [shopName, setShopName] = useState('')
   const [category, setCategory] = useState('')
+  // Owner contact + location — written to vendor_accounts on signup.
+  // owner_whatsapp defaults to `phone` server-side when blank so solo
+  // vendors don't have to type the same number twice.
+  const [ownerName, setOwnerName] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [ownerWhatsapp, setOwnerWhatsapp] = useState('')
+  const [city, setCity] = useState('')
+  const [province, setProvince] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -107,9 +131,20 @@ export default function VendorLoginPage () {
     if (!phone.trim()) { setError('Enter WhatsApp number'); return }
     if (!password.trim()) { setError('Create a password'); return }
     if (password.length < 4) { setError('Password min 4 characters'); return }
+    // Owner contact: name + email required, WhatsApp optional.
+    if (!ownerName.trim()) { setError(t.errOwnerNameRequired || "Enter the owner's full name"); return }
+    if (!ownerEmail.trim()) { setError(t.errOwnerEmailRequired || "Enter the owner's email"); return }
+    if (!EMAIL_RE.test(ownerEmail.trim())) { setError(t.errOwnerEmailInvalid || 'Email format looks wrong'); return }
+    if (!city.trim()) { setError(t.errCityRequired || 'Enter your city'); return }
     setBusy(true)
     try {
-      await vendorSignup(phone, password, shopName)
+      await vendorSignup(phone, password, shopName, {
+        ownerName: ownerName.trim(),
+        ownerEmail: ownerEmail.trim(),
+        ownerWhatsapp: ownerWhatsapp.trim(),
+        city: city.trim(),
+        province: province.trim(),
+      })
       // After signup, immediately sign them in via the bridge so they
       // get a JWT session, then redirect.
       const res = await vendorLoginViaBridge(phone, password)
@@ -151,6 +186,21 @@ export default function VendorLoginPage () {
                 <option value="" style={{ color: '#000' }}>Pick your category…</option>
                 {CATEGORIES.map(c => <option key={c} value={c} style={{ color: '#000' }}>{c}</option>)}
               </select>
+              {/* Owner contact + location — required for ops, billing,
+                  and account recovery. These map 1:1 to vendor_accounts
+                  columns added by the 2026-05 migration. */}
+              <input type="text" value={ownerName} onChange={(e) => { setOwnerName(e.target.value); setError('') }} placeholder={t.ownerName ? `${t.ownerName} (${t.ownerNamePh})` : 'Owner full name (e.g. Joko Widodo)'} maxLength={80}
+                style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }} />
+              <input type="email" autoComplete="email" value={ownerEmail} onChange={(e) => { setOwnerEmail(e.target.value); setError('') }} placeholder={t.ownerEmail ? `${t.ownerEmail} (${t.ownerEmailPh})` : 'Owner email (owner@yourshop.com)'} maxLength={120}
+                style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }} />
+              <input type="tel" inputMode="numeric" value={ownerWhatsapp} onChange={(e) => { setOwnerWhatsapp(e.target.value); setError('') }} placeholder={t.ownerWhatsapp ? `${t.ownerWhatsapp} (${t.ownerWhatsappPh})` : 'Owner WhatsApp (optional — defaults to shop number)'} maxLength={20}
+                style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50, letterSpacing: 0.5 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="text" value={city} onChange={(e) => { setCity(e.target.value); setError('') }} placeholder={t.ownerCity || 'City'} maxLength={60}
+                  style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }} />
+                <input type="text" value={province} onChange={(e) => { setProvince(e.target.value); setError('') }} placeholder={t.ownerProvince || 'Province'} maxLength={60}
+                  style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 15, fontWeight: 600, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 50 }} />
+              </div>
             </>
           )}
 

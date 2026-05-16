@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDonutLocale, DONUT_LANGUAGES } from './donutI18n.js'
 
 /* ─────────────────────────────────────────────────────────────────────────
    Donut Shop · StreetLocal — selling page
@@ -54,14 +55,14 @@ const LANDING_THEME_PREVIEWS = (() => {
 })()
 
 const FEATURES = [
-  { iconImg: '/images/donut-page/img-07.png', title: 'Beautiful menu cards',   desc: 'Photos, descriptions, prices, allergens — customise card layout (grid / horizontal / full-width).' },
-  { iconImg: '/images/donut-page/img-08.png', title: 'WhatsApp ordering',       desc: 'Customers order through the WhatsApp number you already use. No new app to learn.' },
-  { iconImg: '/images/donut-page/img-19.png', title: 'Delivery + pickup',       desc: 'Zones, per-km rates, free-above thresholds, max-distance — all in your hands.' },
-  { iconImg: '/images/donut-page/img-31.png', title: 'Multiple payment methods', desc: 'Bank transfer, e-wallet (GoPay / OVO / Dana), or cash on delivery — you choose.' },
-  { iconImg: '/images/donut-page/img-32.png', large: true, title: 'Verified reviews',         desc: 'Only customers with a real order ref number can leave a review. No spam.' },
-  { iconImg: '/images/donut-page/img-34.png', title: 'Total brand control',     desc: 'Your logo, colours, fonts, hero text, custom landing splash. Edit live, see live.' },
-  { iconImg: '/images/donut-page/img-35.png', title: 'Multi-language',          desc: 'English + Indonesian out of the box. Vietnamese, Malay, Filipino coming Q3 2026.' },
-  { iconImg: '/images/donut-page/img-36.png', title: 'Promotions + deals',      desc: 'BUY1GET1, % off, time-limited, free-delivery thresholds, scrolling promo banners.' },
+  { id: 'menuCards',    iconImg: '/images/donut-page/img-07.png', title: 'Beautiful menu cards',    desc: 'Photos, descriptions, prices, allergens — customise card layout (grid / horizontal / full-width).' },
+  { id: 'whatsapp',     iconImg: '/images/donut-page/img-08.png', title: 'WhatsApp ordering',       desc: 'Customers order through the WhatsApp number you already use. No new app to learn.' },
+  { id: 'delivery',     iconImg: '/images/donut-page/img-19.png', title: 'Delivery + pickup',       desc: 'Zones, per-km rates, free-above thresholds, max-distance — all in your hands.' },
+  { id: 'payments',     iconImg: '/images/donut-page/img-31.png', title: 'Multiple payment methods', desc: 'Bank transfer, e-wallet (GoPay / OVO / Dana), or cash on delivery — you choose.' },
+  { id: 'reviews',      iconImg: '/images/donut-page/img-32.png', title: 'Verified reviews',         desc: 'Only customers with a real order ref number can leave a review. No spam.' },
+  { id: 'brand',        iconImg: '/images/donut-page/img-34.png', title: 'Total brand control',      desc: 'Your logo, colours, fonts, hero text, custom landing splash. Edit live, see live.' },
+  { id: 'multiLang',    iconImg: '/images/donut-page/img-35.png', title: 'Multi-language',           desc: 'English + Indonesian out of the box. Vietnamese, Malay, Filipino coming Q3 2026.' },
+  { id: 'promotions',   iconImg: '/images/donut-page/img-36.png', title: 'Promotions + deals',       desc: 'BUY1GET1, % off, time-limited, free-delivery thresholds, scrolling promo banners.' },
 ]
 
 const STEPS = [
@@ -197,6 +198,7 @@ const FAQS = [
 
 export default function DonutSellingPage() {
   const [scrolled, setScrolled] = useState(false)
+  const { locale, setLocale, tx } = useDonutLocale()
   // Hero phone cycles through the landing splash designs every 5s so
   // a visitor sees the full design range without scrolling.
   const [heroThemeIdx, setHeroThemeIdx] = useState(0)
@@ -228,18 +230,35 @@ export default function DonutSellingPage() {
               loading="eager"
             />
             <span className="ds-brand__text">
-              <span className="ds-brand__title">Donut Selling App</span>
-              <span className="ds-brand__tagline">Sell Donuts · keep 100% profit</span>
+              <span className="ds-brand__title">{tx('header.brandTitle', 'Donut Selling App')}</span>
+              <span className="ds-brand__tagline">{tx('header.brandTagline', 'Sell Donuts · keep 100% profit')}</span>
             </span>
           </a>
-          {/* Home — diverts back to the StreetLocal main home page. */}
-          <a
-            href="/"
-            className="ds-gear"
-            aria-label="StreetLocal home"
-          >
-            <span aria-hidden style={{ display: 'block' }}>🏠</span>
-          </a>
+          <div className="ds-nav__actions">
+            {/* Language toggle — EN | ID. Persists to localStorage. */}
+            <div className="ds-lang-toggle" role="tablist" aria-label="Language">
+              {DONUT_LANGUAGES.map(l => (
+                <button
+                  key={l.code}
+                  type="button"
+                  role="tab"
+                  aria-selected={locale === l.code}
+                  className={`ds-lang-toggle__btn ${locale === l.code ? 'ds-lang-toggle__btn--active' : ''}`}
+                  onClick={() => setLocale(l.code)}
+                >
+                  <span aria-hidden style={{ marginRight: 4 }}>{l.flag}</span>{l.label}
+                </button>
+              ))}
+            </div>
+            {/* Home — diverts back to the StreetLocal main home page. */}
+            <a
+              href="/"
+              className="ds-gear"
+              aria-label={tx('header.home', 'StreetLocal home')}
+            >
+              <span aria-hidden style={{ display: 'block' }}>🏠</span>
+            </a>
+          </div>
         </div>
       </header>
 
@@ -252,25 +271,25 @@ export default function DonutSellingPage() {
           <div className="ds-hero__copy">
             <span className="ds-eyebrow">
               <span className="ds-eyebrow__dot" aria-hidden></span>
-              Donut sellers · Indonesia
+              {tx('hero.eyebrow', 'Donut sellers · Indonesia')}
               <span className="ds-eyebrow__flag" aria-label="Indonesia">🇮🇩</span>
             </span>
             <h1 className="ds-h1">
-              Your donut shop.<br />
-              Online in <span className="ds-pink">5 minutes.</span>
+              {tx('hero.h1.line1', 'Your donut shop.')}<br />
+              {tx('hero.h1.line2', 'Online in')} <span className="ds-pink">{tx('hero.h1.minutes', '5 minutes.')}</span>
             </h1>
             <p className="ds-lede">
-              GoPay · OVO · DANA · ShopeePay · QRIS · Bank Transfer — all in one app, Rp 38,000/month. 0% commission. Customers order from WhatsApp, you keep 100% of what you sell.
+              {tx('hero.lede', 'GoPay · OVO · DANA · ShopeePay · QRIS · Bank Transfer — all in one app, Rp 38,000/month. 0% commission. Customers order from WhatsApp, you keep 100% of what you sell.')}
             </p>
             <div className="ds-cta-row">
               {/* Single soft "View demo" link with a moving text-glow
                   shimmer — replaces the older two-button row. */}
-              <a href="#demo" className="ds-view-demo">View demo</a>
+              <a href="#demo" className="ds-view-demo">{tx('hero.cta.viewDemo', 'View demo')}</a>
             </div>
             <ul className="ds-trust">
-              <li><span className="ds-check">✓</span> Free demo</li>
-              <li><span className="ds-check">✓</span> No card required</li>
-              <li><span className="ds-check">✓</span> Cancel anytime</li>
+              <li><span className="ds-check">✓</span> {tx('hero.trust.freeDemo', 'Free demo')}</li>
+              <li><span className="ds-check">✓</span> {tx('hero.trust.noCard', 'No card required')}</li>
+              <li><span className="ds-check">✓</span> {tx('hero.trust.cancel', 'Cancel anytime')}</li>
             </ul>
           </div>
 
@@ -298,17 +317,17 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--white">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">The problem</span>
-            <h2 className="ds-h2">Stop losing money and orders to…</h2>
+            <span className="ds-kicker">{tx('pain.kicker', 'The problem')}</span>
+            <h2 className="ds-h2">{tx('pain.h2', 'Stop losing money and orders to…')}</h2>
           </div>
           <div className="ds-pain-grid">
             {[
-              { banner: '/images/donut-page/img-16.png', alt: 'WhatsApp chaos — orders lost in DMs, customers waiting, forgetting who ordered what' },
+              { banner: '/images/donut-page/img-16.png', bare: true, alt: 'WhatsApp chaos — orders lost in DMs, customers waiting, forgetting who ordered what' },
               { banner: '/images/donut-page/img-17.png', bare: true, alt: 'Manual menu updates — editing Instagram bio every time a flavor sells out or a price changes' },
-              { banner: '/images/donut-page/img-18.png', alt: '20-30% komisi aplikasi — GrabFood and Gojek eating your margin on every order' },
+              { banner: '/images/donut-page/img-18.png', bare: true, widthPct: 95, alt: '20-30% komisi aplikasi — GrabFood and Gojek eating your margin on every order' },
             ].map((p, i) => (
               p.bare ? (
-                <img key={i} src={p.banner} alt={p.alt} className="ds-pain-card__bare-img" loading="lazy" />
+                <img key={i} src={p.banner} alt={p.alt} className="ds-pain-card__bare-img" loading="lazy" style={p.widthPct ? { width: `${p.widthPct}%`, margin: '0 auto' } : undefined} />
               ) : (
                 <div key={i} className={`ds-pain-card${p.banner ? ' ds-pain-card--banner' : ''}`}>
                   {p.banner ? (
@@ -324,7 +343,7 @@ export default function DonutSellingPage() {
               )
             ))}
           </div>
-          <p className="ds-section__transition">Inilah yang Anda dapatkan ↓</p>
+          <p className="ds-section__transition">{tx('pain.transition', 'Inilah yang Anda dapatkan ↓')}</p>
         </div>
       </section>
 
@@ -336,79 +355,47 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--indo" id="indonesia">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">🇮🇩 Built for Indonesia</span>
-            <h2 className="ds-h2">StreetLocal Indonesia.<br /><span className="ds-pink">Sized for warungs, kafe, & UMKM.</span></h2>
-            <p className="ds-section__sub">
-              Most "POS" apps come from the US and charge in dollars. We built this in Indonesia, for the way Indonesian customers actually buy donuts.
-            </p>
+            <span className="ds-kicker">{tx('indo.kicker', '🇮🇩 Built for Indonesia')}</span>
+            <h2 className="ds-h2">{tx('indo.h2.line1', 'StreetLocal Indonesia.')}<br /><span className="ds-pink">{tx('indo.h2.line2', 'Sized for warungs, kafe, & UMKM.')}</span></h2>
+            <p className="ds-section__sub">{tx('indo.sub', 'Most "POS" apps come from the US and charge in dollars. We built this in Indonesia, for the way Indonesian customers actually buy donuts.')}</p>
           </div>
           <div className="ds-indo-grid">
             <div className="ds-indo-card">
-              <div className="ds-indo-card__head">💳 Pembayaran lokal</div>
-              <h3>All Indonesian payment methods</h3>
-              <p>GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, kartu, transfer bank. Connect Midtrans atau Xendit langsung — funds masuk ke rekening Anda, bukan ke kami.</p>
-              <img
-                src="/images/donut-page/img-10.png"
-                alt="Indonesian payment methods: GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, cards, bank transfer"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
+              <div className="ds-indo-card__head">{tx('indo.payments.head', '💳 Pembayaran lokal')}</div>
+              <h3>{tx('indo.payments.title', 'All Indonesian payment methods')}</h3>
+              <p>{tx('indo.payments.desc', 'GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, kartu, transfer bank. Connect Midtrans atau Xendit langsung — funds masuk ke rekening Anda, bukan ke kami.')}</p>
+              <img src="/images/donut-page/img-10.png" alt="Indonesian payment methods: GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, cards, bank transfer" className="ds-indo-card__banner" loading="lazy" />
             </div>
             <div className="ds-indo-card">
-              <div className="ds-indo-card__head">💸 Harga UMKM</div>
-              <h3>Rp 38,000 per bulan. Sudah termasuk semua.</h3>
-              <p>Tidak ada komisi per pesanan. Tidak ada biaya setup. Tidak perlu kartu kredit. Bandingkan: Shopify Rp 500,000+ per bulan, GrabFood ambil 20-30% per pesanan, ChatRestaurant baru ada di sini.</p>
-              <img
-                src="/images/donut-page/img-11.png"
-                alt="Price comparison: StreetLocal Rp 38,000/month with 0% commission vs GrabFood/Gojek 20-30% per order vs Shopify Rp 500,000+/month"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
+              <div className="ds-indo-card__head">{tx('indo.price.head', '💸 Harga UMKM')}</div>
+              <h3>{tx('indo.price.title', 'Rp 38,000 per bulan. Sudah termasuk semua.')}</h3>
+              <p>{tx('indo.price.desc', 'Tidak ada komisi per pesanan. Tidak ada biaya setup. Tidak perlu kartu kredit. Bandingkan: Shopify Rp 500,000+ per bulan, GrabFood ambil 20-30% per pesanan, ChatRestaurant baru ada di sini.')}</p>
+              <img src="/images/donut-page/img-11.png" alt="Price comparison: StreetLocal Rp 38,000/month with 0% commission vs GrabFood/Gojek 20-30% per order vs Shopify Rp 500,000+/month" className="ds-indo-card__banner" loading="lazy" />
             </div>
             <div className="ds-indo-card">
-              <div className="ds-indo-card__head">📜 Pajak siap pakai</div>
-              <h3>PPN 11% + Faktur Pajak</h3>
-              <p>PPN 11% sudah preset. NPWP & nomor faktur otomatis di setiap invoice. 4 template invoice — pilih yang cocok untuk akuntan Anda. Auto-kirim ke WhatsApp customer setelah bayar.</p>
-              <img
-                src="/images/donut-page/img-12.png"
-                alt="PPN 11% preset with NPWP and faktur pajak automatically generated on every invoice"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
+              <div className="ds-indo-card__head">{tx('indo.tax.head', '📜 Pajak siap pakai')}</div>
+              <h3>{tx('indo.tax.title', 'PPN 11% + Faktur Pajak')}</h3>
+              <p>{tx('indo.tax.desc', 'PPN 11% sudah preset. NPWP & nomor faktur otomatis di setiap invoice. 4 template invoice — pilih yang cocok untuk akuntan Anda. Auto-kirim ke WhatsApp customer setelah bayar.')}</p>
+              <img src="/images/donut-page/img-12.png" alt="PPN 11% preset with NPWP and faktur pajak automatically generated on every invoice" className="ds-indo-card__banner" loading="lazy" />
             </div>
             <div className="ds-indo-card">
-              <div className="ds-indo-card__head">💬 Bahasa Indonesia</div>
-              <h3>Customer lihat menu dalam Bahasa</h3>
-              <p>Aplikasi customer-facing penuh Bahasa Indonesia. Bahasa Inggris juga ada — kalau ada turis di Bali atau expat di Jakarta, mereka switch dengan 1 klik.</p>
-              <img
-                src="/images/donut-page/img-13.png"
-                alt="Customer-facing app in full Bahasa Indonesia with 1-click English switch for tourists and expats"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
+              <div className="ds-indo-card__head">{tx('indo.lang.head', '💬 Bahasa Indonesia')}</div>
+              <h3>{tx('indo.lang.title', 'Customer lihat menu dalam Bahasa')}</h3>
+              <p>{tx('indo.lang.desc', 'Aplikasi customer-facing penuh Bahasa Indonesia. Bahasa Inggris juga ada — kalau ada turis di Bali atau expat di Jakarta, mereka switch dengan 1 klik.')}</p>
+              <img src="/images/donut-page/img-13.png" alt="Customer-facing app in full Bahasa Indonesia with 1-click English switch for tourists and expats" className="ds-indo-card__banner" loading="lazy" />
             </div>
             <div className="ds-indo-card">
-              <div className="ds-indo-card__head">📱 Hemat data + RAM</div>
-              <h3>Jalan di HP Android murah</h3>
-              <p>PWA = ukuran cuma 2MB, bukan 200MB seperti aplikasi native. Customer pakai HP RAM 2GB? Tetap lancar. Customer di pelosok dengan sinyal lambat? Tetap order.</p>
-              <img
-                src="/images/donut-page/img-14.png"
-                alt="PWA is only 2MB instead of 200MB native app, runs smoothly on low-RAM Android phones and slow signal areas"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
+              <div className="ds-indo-card__head">{tx('indo.data.head', '📱 Hemat data + RAM')}</div>
+              <h3>{tx('indo.data.title', 'Jalan di HP Android murah')}</h3>
+              <p>{tx('indo.data.desc', 'PWA = ukuran cuma 2MB, bukan 200MB seperti aplikasi native. Customer pakai HP RAM 2GB? Tetap lancar. Customer di pelosok dengan sinyal lambat? Tetap order.')}</p>
+              <img src="/images/donut-page/img-14.png" alt="PWA is only 2MB instead of 200MB native app, runs smoothly on low-RAM Android phones and slow signal areas" className="ds-indo-card__banner" loading="lazy" />
             </div>
             <div className="ds-indo-card ds-indo-card--featured">
-              <div className="ds-indo-card__head">🎯 Sudah lengkap</div>
-              <h3>Tidak ada fitur terkunci di paket Standard</h3>
-              <p>Loyalty stamps, marketing banner, promo code, KDS untuk dapur, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode — semua sudah termasuk di Rp 38,000. Upgrade ke Pro hanya kalau butuh multi-staff atau automasi.</p>
-              <img
-                src="/images/donut-page/img-15.png"
-                alt="All features unlocked in Standard plan: loyalty stamps, marketing banner, promo code, KDS, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode"
-                className="ds-indo-card__banner"
-                loading="lazy"
-              />
-              <a href="#pricing" className="ds-btn ds-btn--primary" style={{ marginTop: 12, alignSelf: 'flex-start' }}>Lihat semua fitur →</a>
+              <div className="ds-indo-card__head">{tx('indo.complete.head', '🎯 Sudah lengkap')}</div>
+              <h3>{tx('indo.complete.title', 'Tidak ada fitur terkunci di paket Standard')}</h3>
+              <p>{tx('indo.complete.desc', 'Loyalty stamps, marketing banner, promo code, KDS untuk dapur, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode — semua sudah termasuk di Rp 38,000. Upgrade ke Pro hanya kalau butuh multi-staff atau automasi.')}</p>
+              <img src="/images/donut-page/img-15.png" alt="All features unlocked in Standard plan: loyalty stamps, marketing banner, promo code, KDS, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode" className="ds-indo-card__banner" loading="lazy" />
+              <a href="#pricing" className="ds-btn ds-btn--primary" style={{ marginTop: 12, alignSelf: 'flex-start' }}>{tx('indo.complete.cta', 'Lihat semua fitur →')}</a>
             </div>
           </div>
         </div>
@@ -418,9 +405,9 @@ export default function DonutSellingPage() {
       <section className="ds-section" id="features">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">Features</span>
-            <h2 className="ds-h2">Everything you need.<br /><span className="ds-pink">Nothing you don't.</span></h2>
-            <p className="ds-section__sub">Built specifically for donut shops — not another generic e-commerce template.</p>
+            <span className="ds-kicker">{tx('features.kicker', 'Features')}</span>
+            <h2 className="ds-h2">{tx('features.h2.line1', 'Everything you need.')}<br /><span className="ds-pink">{tx('features.h2.line2', "Nothing you don't.")}</span></h2>
+            <p className="ds-section__sub">{tx('features.sub', 'Built specifically for donut shops — not another generic e-commerce template.')}</p>
           </div>
           <div className="ds-feature-grid">
             {FEATURES.map((f, i) => (
@@ -428,8 +415,8 @@ export default function DonutSellingPage() {
                 <div className={`ds-feature-card__icon${f.iconImg ? ' ds-feature-card__icon--img' : ''}${f.large ? ' ds-feature-card__icon--large' : ''}`} aria-hidden>
                   {f.iconImg ? <img src={f.iconImg} alt="" loading="lazy" /> : f.icon}
                 </div>
-                <h3 className="ds-feature-card__title">{f.title}</h3>
-                <p className="ds-feature-card__desc">{f.desc}</p>
+                <h3 className="ds-feature-card__title">{tx(`features.${f.id}.title`, f.title)}</h3>
+                <p className="ds-feature-card__desc">{tx(`features.${f.id}.desc`, f.desc)}</p>
               </article>
             ))}
           </div>
@@ -463,11 +450,9 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--demo" id="demo">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">Live demo</span>
-            <h2 className="ds-h2">Tap around. <span className="ds-pink">No sign-up needed.</span></h2>
-            <p className="ds-section__sub">
-              This is the actual product running in your browser. Place an order. Pick a donut. See how it feels from a customer's side.
-            </p>
+            <span className="ds-kicker">{tx('demo.kicker', 'Live demo')}</span>
+            <h2 className="ds-h2">{tx('demo.h2.line1', 'Tap around.')} <span className="ds-pink">{tx('demo.h2.line2', 'No sign-up needed.')}</span></h2>
+            <p className="ds-section__sub">{tx('demo.sub', "This is the actual product running in your browser. Place an order. Pick a donut. See how it feels from a customer's side.")}</p>
           </div>
           <div className="ds-demo-stage">
             <div className="ds-glow ds-glow--big" aria-hidden></div>
@@ -488,28 +473,28 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--white" id="pricing">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">Pricing</span>
-            <h2 className="ds-h2">Pick your plan. <span className="ds-pink">Grow into the next.</span></h2>
-            <p className="ds-section__sub">Start small, upgrade only when you need more. 0% commission on every tier. No setup fee. No card upfront.</p>
+            <span className="ds-kicker">{tx('pricing.kicker', 'Pricing')}</span>
+            <h2 className="ds-h2">{tx('pricing.h2.line1', 'Pick your plan.')} <span className="ds-pink">{tx('pricing.h2.line2', 'Grow into the next.')}</span></h2>
+            <p className="ds-section__sub">{tx('pricing.sub', 'Start small, upgrade only when you need more. 0% commission on every tier. No setup fee. No card upfront.')}</p>
           </div>
 
           <div className="ds-pricing-grid">
             {/* ── STARTER ── */}
             <div className="ds-pricing-card ds-pricing-card--starter">
-              <span className="ds-kicker ds-kicker--small">Starter</span>
-              <h3 className="ds-pricing-card__tier-name">Sell donuts + market on social</h3>
+              <span className="ds-kicker ds-kicker--small">{tx('pricing.starter.label', 'Starter')}</span>
+              <h3 className="ds-pricing-card__tier-name">{tx('pricing.starter.tierName', 'Sell donuts + market on social')}</h3>
               <div className="ds-pricing-card__price">
                 <span className="ds-price-num">38,000</span>
                 <span className="ds-price-cur">IDR</span>
               </div>
-              <p className="ds-price-sub">per month · ~$2.50 USD</p>
-              <p className="ds-pricing-card__pitch">Everything a small shop needs to open today and run marketing on WhatsApp + Instagram + TikTok.</p>
+              <p className="ds-price-sub">{tx('pricing.starter.priceSub', 'per month · ~$2.50 USD')}</p>
+              <p className="ds-pricing-card__pitch">{tx('pricing.starter.pitch', 'Everything a small shop needs to open today and run marketing on WhatsApp + Instagram + TikTok.')}</p>
               <ul className="ds-pricing-card__list">
-                {STARTER_INCLUDES.map((feat, i) => (
+                {(tx('pricing.starter.bullets', STARTER_INCLUDES) || STARTER_INCLUDES).map((feat, i) => (
                   <li key={i}><span className="ds-check">✓</span>{feat}</li>
                 ))}
               </ul>
-              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">Start with Starter →</a>
+              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">{tx('pricing.starter.cta', 'Start with Starter →')}</a>
             </div>
 
             {/* ── PRO — highlighted ── */}
@@ -517,49 +502,49 @@ export default function DonutSellingPage() {
               <div className="ds-pricing-glow" aria-hidden></div>
               <div className="ds-pricing-card__inner">
                 <div className="ds-pricing-card__head">
-                  <span className="ds-kicker ds-kicker--small">Pro</span>
-                  <span className="ds-badge-pop">Most popular</span>
+                  <span className="ds-kicker ds-kicker--small">{tx('pricing.pro.label', 'Pro')}</span>
+                  <span className="ds-badge-pop">{tx('pricing.mostPopular', 'Most popular')}</span>
                 </div>
-                <h3 className="ds-pricing-card__tier-name">For growing shops</h3>
+                <h3 className="ds-pricing-card__tier-name">{tx('pricing.pro.tierName', 'For growing shops')}</h3>
                 <div className="ds-pricing-card__price">
                   <span className="ds-price-num">199,000</span>
                   <span className="ds-price-cur">IDR</span>
                 </div>
-                <p className="ds-price-sub">per month · ~$13 USD</p>
-                <p className="ds-pricing-card__pitch">Loyalty, thermal printer, custom domain, in-app chat, tipping, and SMS / email campaigns.</p>
+                <p className="ds-price-sub">{tx('pricing.pro.priceSub', 'per month · ~$13 USD')}</p>
+                <p className="ds-pricing-card__pitch">{tx('pricing.pro.pitch', 'Loyalty, thermal printer, custom domain, in-app chat, tipping, and SMS / email campaigns.')}</p>
                 <ul className="ds-pricing-card__list">
-                  {PRO_INCLUDES.map((feat, i) => (
+                  {(tx('pricing.pro.bullets', PRO_INCLUDES) || PRO_INCLUDES).map((feat, i) => (
                     <li key={i} className={i === 0 ? 'ds-pricing-card__list-header' : ''}><span className="ds-check">✓</span>{feat}</li>
                   ))}
                 </ul>
-                <a href="#" className="ds-btn ds-btn--primary ds-btn--block">Upgrade to Pro →</a>
+                <a href="#" className="ds-btn ds-btn--primary ds-btn--block">{tx('pricing.pro.cta', 'Upgrade to Pro →')}</a>
               </div>
             </div>
 
             {/* ── ENTERPRISE ── */}
             <div className="ds-pricing-card ds-pricing-card--enterprise">
-              <span className="ds-kicker ds-kicker--small">Enterprise</span>
-              <h3 className="ds-pricing-card__tier-name">Operations-heavy shops</h3>
+              <span className="ds-kicker ds-kicker--small">{tx('pricing.enterprise.label', 'Enterprise')}</span>
+              <h3 className="ds-pricing-card__tier-name">{tx('pricing.enterprise.tierName', 'Operations-heavy shops')}</h3>
               <div className="ds-pricing-card__price">
                 <span className="ds-price-num">449,000</span>
                 <span className="ds-price-cur">IDR</span>
               </div>
-              <p className="ds-price-sub">per month · ~$29 USD</p>
-              <p className="ds-pricing-card__pitch">KDS, kiosk mode, production planner, catering, multi-location, unlimited staff.</p>
+              <p className="ds-price-sub">{tx('pricing.enterprise.priceSub', 'per month · ~$29 USD')}</p>
+              <p className="ds-pricing-card__pitch">{tx('pricing.enterprise.pitch', 'KDS, kiosk mode, production planner, catering, multi-location, unlimited staff.')}</p>
               <ul className="ds-pricing-card__list">
-                {ENTERPRISE_INCLUDES.map((feat, i) => (
+                {(tx('pricing.enterprise.bullets', ENTERPRISE_INCLUDES) || ENTERPRISE_INCLUDES).map((feat, i) => (
                   <li key={i} className={i === 0 ? 'ds-pricing-card__list-header' : ''}><span className="ds-check">✓</span>{feat}</li>
                 ))}
               </ul>
-              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">Go Enterprise →</a>
+              <a href="#" className="ds-btn ds-btn--outline ds-btn--block">{tx('pricing.enterprise.cta', 'Go Enterprise →')}</a>
             </div>
           </div>
 
           <p className="ds-price-reassurance">
-            <span className="ds-check">✓</span> No card required &nbsp;·&nbsp;
-            <span className="ds-check">✓</span> Cancel anytime &nbsp;·&nbsp;
-            <span className="ds-check">✓</span> Your data stays yours &nbsp;·&nbsp;
-            <span className="ds-check">✓</span> Upgrade or downgrade any month
+            <span className="ds-check">✓</span> {tx('pricing.reassure.noCard', 'No card required')} &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> {tx('pricing.reassure.cancel', 'Cancel anytime')} &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> {tx('pricing.reassure.dataYours', 'Your data stays yours')} &nbsp;·&nbsp;
+            <span className="ds-check">✓</span> {tx('pricing.reassure.upgrade', 'Upgrade or downgrade any month')}
           </p>
         </div>
       </section>
@@ -568,24 +553,24 @@ export default function DonutSellingPage() {
       <section className="ds-section" id="compare">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">Comparison</span>
-            <h2 className="ds-h2">Why donut sellers choose us.</h2>
+            <span className="ds-kicker">{tx('compare.kicker', 'Comparison')}</span>
+            <h2 className="ds-h2">{tx('compare.h2', 'Why donut sellers choose us.')}</h2>
           </div>
           <div className="ds-table-wrap">
             <table className="ds-table">
               <thead>
                 <tr>
-                  <th className="ds-table__col-feature">Feature</th>
+                  <th className="ds-table__col-feature">{tx('compare.col.feature', 'Feature')}</th>
                   <th className="ds-table__col-us">
-                    <span className="ds-table__chip">🍩 Fresh Donuts Baked Daily</span>
+                    <span className="ds-table__chip">{tx('compare.col.us', '🍩 Fresh Donuts Baked Daily')}</span>
                   </th>
-                  <th>WhatsApp DMs</th>
-                  <th>Shopify</th>
-                  <th>GrabFood / Gojek</th>
+                  <th>{tx('compare.col.whatsapp', 'WhatsApp DMs')}</th>
+                  <th>{tx('compare.col.shopify', 'Shopify')}</th>
+                  <th>{tx('compare.col.grabfood', 'GrabFood / Gojek')}</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON.map(([feat, ours, wa, shop, grab], i) => (
+                {(tx('compare.rows', COMPARISON) || COMPARISON).map(([feat, ours, wa, shop, grab], i) => (
                   <tr key={i}>
                     <td className="ds-table__feat">{feat}</td>
                     <td className="ds-table__us">{ours}</td>
@@ -603,10 +588,10 @@ export default function DonutSellingPage() {
       {/* ═══ TRUST / TESTIMONIAL placeholder ═══ */}
       <section className="ds-section ds-section--white">
         <div className="ds-container ds-trust-block">
-          <span className="ds-kicker">Trusted by</span>
-          <h2 className="ds-h2">Sell donuts in any city — <span className="ds-pink">Yogyakarta, Jakarta, Bali, anywhere</span>.</h2>
+          <span className="ds-kicker">{tx('trust.kicker', 'Trusted by')}</span>
+          <h2 className="ds-h2">{tx('trust.h2.line1', 'Sell donuts in any city —')} <span className="ds-pink">{tx('trust.h2.cities', 'Yogyakarta, Jakarta, Bali, anywhere')}</span>.</h2>
           <p className="ds-section__sub">
-            StreetLocal is live in Indonesia. Donut sellers are moving fast — from renting shelves on GrabFood, GoFood, and Shopee to running their own branded app, with their own customer list and 0% commission. <strong>Donut sellers say it best.</strong>
+            {tx('trust.sub.lead', 'StreetLocal is live in Indonesia. Donut sellers are moving fast — from renting shelves on GrabFood, GoFood, and Shopee to running their own branded app, with their own customer list and 0% commission.')} <strong>{tx('trust.sub.tagline', 'Donut sellers say it best.')}</strong>
           </p>
           <div className="ds-reviews-marquee">
             <div className="ds-reviews-marquee__track">
@@ -632,7 +617,7 @@ export default function DonutSellingPage() {
             </div>
           </div>
           <p className="ds-reviews-cta">
-            Send us your review and get listed in our review section. <a href="mailto:streetlocallive@gmail.com?subject=My%20StreetLocal%20review" className="ds-link">Email your review →</a>
+            {tx('reviews.cta.line', 'Send us your review and get listed in our review section.')} <a href="mailto:streetlocallive@gmail.com?subject=My%20StreetLocal%20review" className="ds-link">{tx('reviews.cta.link', 'Email your review →')}</a>
           </p>
         </div>
       </section>
@@ -646,50 +631,48 @@ export default function DonutSellingPage() {
       <section className="ds-section ds-section--beyond" id="extras">
         <div className="ds-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">Beyond the monthly plan</span>
-            <h2 className="ds-h2">Need more? We build it.<br /><span className="ds-pink">Apple App Store. Google Play. Custom features.</span></h2>
-            <p className="ds-section__sub">
-              The Rp 38,000 monthly plan gets your PWA live in minutes. When you're ready to grow — branded native app, custom integrations, NFC loyalty — we handle those as paid add-ons. Same StreetLocal team, beyond-the-subscription delivery.
-            </p>
+            <span className="ds-kicker">{tx('beyond.kicker', 'Beyond the monthly plan')}</span>
+            <h2 className="ds-h2">{tx('beyond.h2.line1', 'Need more? We build it.')}<br /><span className="ds-pink">{tx('beyond.h2.line2', 'Apple App Store. Google Play. Custom features.')}</span></h2>
+            <p className="ds-section__sub">{tx('beyond.sub', "The Rp 38,000 monthly plan gets your PWA live in minutes. When you're ready to grow — branded native app, custom integrations, NFC loyalty — we handle those as paid add-ons. Same StreetLocal team, beyond-the-subscription delivery.")}</p>
           </div>
 
           <div className="ds-beyond-grid">
             {/* Native app card */}
             <div className="ds-beyond-card ds-beyond-card--featured">
-              <div className="ds-beyond-card__pill">App Store + Play Store</div>
-              <h3 className="ds-beyond-card__title">Your bakery in the App Store</h3>
-              <p className="ds-beyond-card__desc">
-                We build your branded native app — your name, your logo, your colours — and submit it to Apple App Store and Google Play under your bakery's own developer account. You own the listing, reviews, and payouts. Customers find you in their phone's store.
-              </p>
+              <div className="ds-beyond-card__pill">{tx('beyond.native.pill', 'App Store + Play Store')}</div>
+              <h3 className="ds-beyond-card__title">{tx('beyond.native.title', 'Your bakery in the App Store')}</h3>
+              <p className="ds-beyond-card__desc">{tx('beyond.native.desc', "We build your branded native app — your name, your logo, your colours — and submit it to Apple App Store and Google Play under your bakery's own developer account. You own the listing, reviews, and payouts. Customers find you in their phone's store.")}</p>
               <div className="ds-beyond-card__price">
-                <span className="ds-beyond-card__price-from">From</span>
+                <span className="ds-beyond-card__price-from">{tx('beyond.native.priceFrom', 'From')}</span>
                 <span className="ds-beyond-card__price-amount">Rp 2,500,000</span>
-                <span className="ds-beyond-card__price-sub">one-time + Rp 350k/month maintenance</span>
+                <span className="ds-beyond-card__price-sub">{tx('beyond.native.priceSub', 'one-time + Rp 350k/month maintenance')}</span>
               </div>
               <ul className="ds-beyond-card__list">
-                <li>Branded build with your logo + splash screen</li>
-                <li>App icons, screenshots, store listing copy</li>
-                <li>Submission to Apple + Google on your behalf</li>
-                <li>Push notifications + over-the-air updates</li>
-                <li>Apple Developer ($99/yr) + Google Play ($25 one-time) paid directly to them, in your name</li>
+                {(tx('beyond.native.bullets', [
+                  'Branded build with your logo + splash screen',
+                  'App icons, screenshots, store listing copy',
+                  'Submission to Apple + Google on your behalf',
+                  'Push notifications + over-the-air updates',
+                  'Apple Developer ($99/yr) + Google Play ($25 one-time) paid directly to them, in your name',
+                ])).map((b, i) => <li key={i}>{b}</li>)}
               </ul>
             </div>
 
             {/* Custom features card */}
             <div className="ds-beyond-card">
-              <div className="ds-beyond-card__pill">Custom work · quote per project</div>
-              <h3 className="ds-beyond-card__title">Build what you need</h3>
-              <p className="ds-beyond-card__desc">
-                If your shop has a specific workflow — wholesale catering portal, accounting export, NFC tap-to-stamp loyalty, beacon promos near your door — we build it as a custom engagement. Same StreetLocal codebase under the hood, your specific business logic on top.
-              </p>
+              <div className="ds-beyond-card__pill">{tx('beyond.custom.pill', 'Custom work · quote per project')}</div>
+              <h3 className="ds-beyond-card__title">{tx('beyond.custom.title', 'Build what you need')}</h3>
+              <p className="ds-beyond-card__desc">{tx('beyond.custom.desc', 'If your shop has a specific workflow — wholesale catering portal, accounting export, NFC tap-to-stamp loyalty, beacon promos near your door — we build it as a custom engagement. Same StreetLocal codebase under the hood, your specific business logic on top.')}</p>
               <ul className="ds-beyond-card__list">
-                <li>NFC loyalty taps (no app open needed for stamps)</li>
-                <li>Beacon-triggered offers when customers walk past</li>
-                <li>Accounting / inventory software bridges</li>
-                <li>Custom delivery integrations</li>
-                <li>Multi-app management for chains with 5+ locations</li>
+                {(tx('beyond.custom.bullets', [
+                  'NFC loyalty taps (no app open needed for stamps)',
+                  'Beacon-triggered offers when customers walk past',
+                  'Accounting / inventory software bridges',
+                  'Custom delivery integrations',
+                  'Multi-app management for chains with 5+ locations',
+                ])).map((b, i) => <li key={i}>{b}</li>)}
               </ul>
-              <a href="mailto:streetlocallive@gmail.com?subject=Custom%20feature%20request" className="ds-btn ds-btn--ghost ds-beyond-card__cta">Email us with your idea →</a>
+              <a href="mailto:streetlocallive@gmail.com?subject=Custom%20feature%20request" className="ds-btn ds-btn--ghost ds-beyond-card__cta">{tx('beyond.custom.cta', 'Email us with your idea →')}</a>
             </div>
           </div>
 
@@ -700,11 +683,11 @@ export default function DonutSellingPage() {
       <section className="ds-section" id="faq">
         <div className="ds-container ds-faq-container">
           <div className="ds-section__head">
-            <span className="ds-kicker">FAQ</span>
-            <h2 className="ds-h2">Common questions.</h2>
+            <span className="ds-kicker">{tx('faq.kicker', 'FAQ')}</span>
+            <h2 className="ds-h2">{tx('faq.h2', 'Common questions.')}</h2>
           </div>
           <div className="ds-faq-list">
-            {FAQS.map(([q, a], i) => (
+            {(tx('faq.list', FAQS) || FAQS).map(([q, a], i) => (
               <details key={i} className="ds-faq-item">
                 <summary className="ds-faq-summary">
                   <span className="ds-faq-q">{q}</span>
@@ -725,22 +708,15 @@ export default function DonutSellingPage() {
         <img loading="lazy" src={IMAGES.chocolate} alt="" aria-hidden className="ds-cta__donut ds-cta__donut--bl" />
         <div className="ds-container ds-cta__inner">
           <h2 className="ds-cta__h">
-            Your donut shop.<br />
-            Live in <span className="ds-cta__highlight">5 minutes.</span>
+            {tx('finalCta.h2.line1', 'Your donut shop.')}<br />
+            {tx('finalCta.h2.line2', 'Live in')} <span className="ds-cta__highlight">{tx('finalCta.h2.minutes', '5 minutes.')}</span>
           </h2>
-          <p className="ds-cta__sub">
-            Stop renting space on someone else's app. Build your own — keep 100% of every sale.
-          </p>
+          <p className="ds-cta__sub">{tx('finalCta.sub', "Stop renting space on someone else's app. Build your own — keep 100% of every sale.")}</p>
           <div className="ds-cta__buttons">
-            {/* "Start your shop" lives here now — moved out of the hero
-                so the page tells the value story first, then asks
-                for the click at the bottom. */}
-            <a href="#pricing" className="ds-btn ds-btn--white ds-btn--lg">Start your shop →</a>
-            <a href="#demo" className="ds-btn ds-btn--dark ds-btn--lg">▶ See live demo</a>
+            <a href="#pricing" className="ds-btn ds-btn--white ds-btn--lg">{tx('finalCta.start', 'Start your shop →')}</a>
+            <a href="#demo" className="ds-btn ds-btn--dark ds-btn--lg">{tx('finalCta.demo', '▶ See live demo')}</a>
           </div>
-          <p className="ds-cta__reassurance">
-            7-day free trial · No card required · Cancel anytime
-          </p>
+          <p className="ds-cta__reassurance">{tx('finalCta.reassure', 'Free demo · No card required · Cancel anytime')}</p>
         </div>
       </section>
 
@@ -759,45 +735,43 @@ export default function DonutSellingPage() {
                 loading="lazy"
               />
               <span className="ds-brand__text ds-brand__text--light">
-                <span className="ds-brand__title">Donut Selling App</span>
-                <span className="ds-brand__tagline ds-brand__tagline--light">Sell Donuts · keep 100% profit</span>
+                <span className="ds-brand__title">{tx('header.brandTitle', 'Donut Selling App')}</span>
+                <span className="ds-brand__tagline ds-brand__tagline--light">{tx('header.brandTagline', 'Sell Donuts · keep 100% profit')}</span>
               </span>
             </a>
             <p className="ds-footer__about">
-              Part of <a href="https://streetlocal.live" className="ds-footer__link-pink">StreetLocal</a> — a family of apps for street vendors, makers, and small businesses across Southeast Asia.
+              {tx('footer.about.partOf', 'Part of')} <a href="https://streetlocal.live" className="ds-footer__link-pink">StreetLocal</a> — {tx('footer.about.tail', 'a family of apps for street vendors, makers, and small businesses across Southeast Asia.')}
             </p>
-            <p className="ds-footer__coming">
-              Coming soon: Products · Services · Properties · Rentals · More.
-            </p>
+            <p className="ds-footer__coming">{tx('footer.coming', 'Coming soon: Products · Services · Properties · Rentals · More.')}</p>
           </div>
           <div>
-            <h4 className="ds-footer__h">Product</h4>
+            <h4 className="ds-footer__h">{tx('footer.product', 'Product')}</h4>
             <ul className="ds-footer__list">
-              <li><a href="#features">Features</a></li>
-              <li><a href="#pricing">Pricing</a></li>
-              <li><a href="#demo">Live demo</a></li>
-              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#features">{tx('footer.product.features', 'Features')}</a></li>
+              <li><a href="#pricing">{tx('footer.product.pricing', 'Pricing')}</a></li>
+              <li><a href="#demo">{tx('footer.product.demo', 'Live demo')}</a></li>
+              <li><a href="#faq">{tx('footer.product.faq', 'FAQ')}</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="ds-footer__h">Company</h4>
+            <h4 className="ds-footer__h">{tx('footer.company', 'Company')}</h4>
             <ul className="ds-footer__list">
-              <li><a href="#">About StreetLocal</a></li>
-              <li><a href="#">Contact</a></li>
-              <li><a href="#">Privacy</a></li>
-              <li><a href="#">Terms</a></li>
+              <li><a href="#">{tx('footer.company.about', 'About StreetLocal')}</a></li>
+              <li><a href="#">{tx('footer.company.contact', 'Contact')}</a></li>
+              <li><a href="#">{tx('footer.company.privacy', 'Privacy')}</a></li>
+              <li><a href="#">{tx('footer.company.terms', 'Terms')}</a></li>
             </ul>
           </div>
         </div>
         <div className="ds-container ds-footer__bottom">
-          <span>© 2026 StreetLocal. All rights reserved.</span>
-          <span>Made with 🍩 in Yogyakarta</span>
+          <span>{tx('footer.copyright', '© 2026 StreetLocal. All rights reserved.')}</span>
+          <span>{tx('footer.madeIn', 'Made with 🍩 in Yogyakarta')}</span>
         </div>
       </footer>
 
       {/* Sticky mobile CTA */}
       <div className="ds-mobile-cta">
-        <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--block">Start free trial →</a>
+        <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--block">{tx('mobileCta.start', 'Start free trial →')}</a>
       </div>
     </div>
   )
@@ -842,9 +816,14 @@ function PageStyles() {
       .ds-nav__cta { display: flex; align-items: center; gap: 12px; }
       .ds-nav__link-cta { display: none; font-size: 14px; font-weight: 700; color: #EC4899; }
 
-      /* ── HOME BUTTON ──────────────────────────────────────────── */
+      /* ── HOME BUTTON + LANGUAGE TOGGLE ────────────────────────── */
+      .ds-nav__actions { display: flex; align-items: center; gap: 10px; }
       .ds-gear { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(236,72,153,0.25); background: linear-gradient(180deg, #fff 0%, #FFF5F8 100%); color: #EC4899; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 8px rgba(236,72,153,0.12); transition: all 0.2s ease; line-height: 1; text-decoration: none; }
       .ds-gear:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(236,72,153,0.22); }
+      .ds-lang-toggle { display: inline-flex; align-items: center; gap: 0; padding: 3px; border-radius: 999px; background: #FFF5F8; border: 1px solid rgba(236,72,153,0.18); box-shadow: inset 0 1px 2px rgba(45,27,27,0.04); }
+      .ds-lang-toggle__btn { padding: 6px 11px; border-radius: 999px; border: none; background: transparent; color: #8B6B6B; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; font-family: inherit; letter-spacing: 0.3px; }
+      .ds-lang-toggle__btn--active { background: #EC4899; color: #fff; box-shadow: 0 2px 8px rgba(236,72,153,0.35); }
+      .ds-lang-toggle__btn:not(.ds-lang-toggle__btn--active):hover { color: #EC4899; }
 
       /* ── BUTTONS ───────────────────────────────────────────────── */
       .ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; border: none; font-family: inherit; text-decoration: none; min-height: 44px; padding: 10px 18px; border-radius: 12px; font-size: 14px; line-height: 1; }
@@ -1021,15 +1000,14 @@ function PageStyles() {
 
       /* ── FEATURES ─────────────────────────────────────────────── */
       .ds-feature-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-      .ds-feature-card { padding: 26px; background: #fff; border-radius: 22px; border: 1px solid rgba(251,207,232,0.5); box-shadow: 0 4px 14px rgba(45,27,27,0.04); transition: all 0.25s ease; }
+      .ds-feature-card { padding: 28px 24px; background: #fff; border-radius: 22px; border: 1px solid rgba(251,207,232,0.5); box-shadow: 0 4px 14px rgba(45,27,27,0.04); transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; text-align: center; }
       .ds-feature-card:hover { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(236,72,153,0.18); border-color: #F9A8D4; }
-      .ds-feature-card__icon { width: 112px; height: 112px; border-radius: 24px; background: #FCE7F3; display: inline-flex; align-items: center; justify-content: center; font-size: 56px; transition: transform 0.25s ease; overflow: hidden; }
-      .ds-feature-card__icon--img { background: #fff; padding: 0; }
+      .ds-feature-card__icon { width: 112px; height: 112px; border-radius: 24px; background: #FCE7F3; display: inline-flex; align-items: center; justify-content: center; font-size: 56px; transition: transform 0.25s ease; overflow: hidden; flex-shrink: 0; }
+      .ds-feature-card__icon--img { background: transparent; padding: 0; box-shadow: none; }
       .ds-feature-card__icon--img img { width: 100%; height: 100%; object-fit: contain; display: block; }
-      .ds-feature-card__icon--large { width: 224px; height: 224px; border-radius: 32px; font-size: 96px; }
-      .ds-feature-card:hover .ds-feature-card__icon { transform: scale(1.1) rotate(-6deg); }
-      .ds-feature-card__title { margin: 18px 0 0; font-size: 17px; font-weight: 900; }
-      .ds-feature-card__desc { margin: 8px 0 0; font-size: 14px; color: #6B5555; line-height: 1.55; }
+      .ds-feature-card:hover .ds-feature-card__icon { transform: scale(1.06); }
+      .ds-feature-card__title { margin: 22px 0 0; font-size: 17px; font-weight: 900; line-height: 1.25; }
+      .ds-feature-card__desc { margin: 10px 0 0; font-size: 14px; color: #6B5555; line-height: 1.55; }
 
       /* ── STEPS ─────────────────────────────────────────────────── */
       .ds-step-grid { display: grid; grid-template-columns: 1fr; gap: 36px; max-width: 920px; margin: 0 auto; }

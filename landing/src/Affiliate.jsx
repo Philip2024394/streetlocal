@@ -20,6 +20,116 @@ const COUNTRIES = [
   { code: 'FR', flag: '🇫🇷', name: 'France', prefix: '+33' },
 ]
 
+// Full ISO 3166-1 alpha-2 country list, used by the dashboard Profile section
+// so an agent can pick any home country (not just the 16 supported at signup).
+// Sorted alphabetically by display name. Flags are emoji regional-indicator pairs.
+const ISO_COUNTRIES = [
+  { code: 'AF', name: 'Afghanistan', flag: '🇦🇫' }, { code: 'AL', name: 'Albania', flag: '🇦🇱' },
+  { code: 'DZ', name: 'Algeria', flag: '🇩🇿' }, { code: 'AS', name: 'American Samoa', flag: '🇦🇸' },
+  { code: 'AD', name: 'Andorra', flag: '🇦🇩' }, { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+  { code: 'AI', name: 'Anguilla', flag: '🇦🇮' }, { code: 'AG', name: 'Antigua & Barbuda', flag: '🇦🇬' },
+  { code: 'AR', name: 'Argentina', flag: '🇦🇷' }, { code: 'AM', name: 'Armenia', flag: '🇦🇲' },
+  { code: 'AW', name: 'Aruba', flag: '🇦🇼' }, { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+  { code: 'AT', name: 'Austria', flag: '🇦🇹' }, { code: 'AZ', name: 'Azerbaijan', flag: '🇦🇿' },
+  { code: 'BS', name: 'Bahamas', flag: '🇧🇸' }, { code: 'BH', name: 'Bahrain', flag: '🇧🇭' },
+  { code: 'BD', name: 'Bangladesh', flag: '🇧🇩' }, { code: 'BB', name: 'Barbados', flag: '🇧🇧' },
+  { code: 'BY', name: 'Belarus', flag: '🇧🇾' }, { code: 'BE', name: 'Belgium', flag: '🇧🇪' },
+  { code: 'BZ', name: 'Belize', flag: '🇧🇿' }, { code: 'BJ', name: 'Benin', flag: '🇧🇯' },
+  { code: 'BM', name: 'Bermuda', flag: '🇧🇲' }, { code: 'BT', name: 'Bhutan', flag: '🇧🇹' },
+  { code: 'BO', name: 'Bolivia', flag: '🇧🇴' }, { code: 'BA', name: 'Bosnia & Herzegovina', flag: '🇧🇦' },
+  { code: 'BW', name: 'Botswana', flag: '🇧🇼' }, { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+  { code: 'BN', name: 'Brunei', flag: '🇧🇳' }, { code: 'BG', name: 'Bulgaria', flag: '🇧🇬' },
+  { code: 'BF', name: 'Burkina Faso', flag: '🇧🇫' }, { code: 'BI', name: 'Burundi', flag: '🇧🇮' },
+  { code: 'KH', name: 'Cambodia', flag: '🇰🇭' }, { code: 'CM', name: 'Cameroon', flag: '🇨🇲' },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦' }, { code: 'CV', name: 'Cape Verde', flag: '🇨🇻' },
+  { code: 'KY', name: 'Cayman Islands', flag: '🇰🇾' }, { code: 'CF', name: 'Central African Republic', flag: '🇨🇫' },
+  { code: 'TD', name: 'Chad', flag: '🇹🇩' }, { code: 'CL', name: 'Chile', flag: '🇨🇱' },
+  { code: 'CN', name: 'China', flag: '🇨🇳' }, { code: 'CO', name: 'Colombia', flag: '🇨🇴' },
+  { code: 'KM', name: 'Comoros', flag: '🇰🇲' }, { code: 'CG', name: 'Congo', flag: '🇨🇬' },
+  { code: 'CD', name: 'Congo (DRC)', flag: '🇨🇩' }, { code: 'CK', name: 'Cook Islands', flag: '🇨🇰' },
+  { code: 'CR', name: 'Costa Rica', flag: '🇨🇷' }, { code: 'CI', name: "Côte d'Ivoire", flag: '🇨🇮' },
+  { code: 'HR', name: 'Croatia', flag: '🇭🇷' }, { code: 'CU', name: 'Cuba', flag: '🇨🇺' },
+  { code: 'CY', name: 'Cyprus', flag: '🇨🇾' }, { code: 'CZ', name: 'Czech Republic', flag: '🇨🇿' },
+  { code: 'DK', name: 'Denmark', flag: '🇩🇰' }, { code: 'DJ', name: 'Djibouti', flag: '🇩🇯' },
+  { code: 'DM', name: 'Dominica', flag: '🇩🇲' }, { code: 'DO', name: 'Dominican Republic', flag: '🇩🇴' },
+  { code: 'EC', name: 'Ecuador', flag: '🇪🇨' }, { code: 'EG', name: 'Egypt', flag: '🇪🇬' },
+  { code: 'SV', name: 'El Salvador', flag: '🇸🇻' }, { code: 'GQ', name: 'Equatorial Guinea', flag: '🇬🇶' },
+  { code: 'ER', name: 'Eritrea', flag: '🇪🇷' }, { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
+  { code: 'SZ', name: 'Eswatini', flag: '🇸🇿' }, { code: 'ET', name: 'Ethiopia', flag: '🇪🇹' },
+  { code: 'FJ', name: 'Fiji', flag: '🇫🇯' }, { code: 'FI', name: 'Finland', flag: '🇫🇮' },
+  { code: 'FR', name: 'France', flag: '🇫🇷' }, { code: 'GA', name: 'Gabon', flag: '🇬🇦' },
+  { code: 'GM', name: 'Gambia', flag: '🇬🇲' }, { code: 'GE', name: 'Georgia', flag: '🇬🇪' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' }, { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
+  { code: 'GI', name: 'Gibraltar', flag: '🇬🇮' }, { code: 'GR', name: 'Greece', flag: '🇬🇷' },
+  { code: 'GL', name: 'Greenland', flag: '🇬🇱' }, { code: 'GD', name: 'Grenada', flag: '🇬🇩' },
+  { code: 'GU', name: 'Guam', flag: '🇬🇺' }, { code: 'GT', name: 'Guatemala', flag: '🇬🇹' },
+  { code: 'GN', name: 'Guinea', flag: '🇬🇳' }, { code: 'GW', name: 'Guinea-Bissau', flag: '🇬🇼' },
+  { code: 'GY', name: 'Guyana', flag: '🇬🇾' }, { code: 'HT', name: 'Haiti', flag: '🇭🇹' },
+  { code: 'HN', name: 'Honduras', flag: '🇭🇳' }, { code: 'HK', name: 'Hong Kong', flag: '🇭🇰' },
+  { code: 'HU', name: 'Hungary', flag: '🇭🇺' }, { code: 'IS', name: 'Iceland', flag: '🇮🇸' },
+  { code: 'IN', name: 'India', flag: '🇮🇳' }, { code: 'ID', name: 'Indonesia', flag: '🇮🇩' },
+  { code: 'IR', name: 'Iran', flag: '🇮🇷' }, { code: 'IQ', name: 'Iraq', flag: '🇮🇶' },
+  { code: 'IE', name: 'Ireland', flag: '🇮🇪' }, { code: 'IL', name: 'Israel', flag: '🇮🇱' },
+  { code: 'IT', name: 'Italy', flag: '🇮🇹' }, { code: 'JM', name: 'Jamaica', flag: '🇯🇲' },
+  { code: 'JP', name: 'Japan', flag: '🇯🇵' }, { code: 'JO', name: 'Jordan', flag: '🇯🇴' },
+  { code: 'KZ', name: 'Kazakhstan', flag: '🇰🇿' }, { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+  { code: 'KI', name: 'Kiribati', flag: '🇰🇮' }, { code: 'KW', name: 'Kuwait', flag: '🇰🇼' },
+  { code: 'KG', name: 'Kyrgyzstan', flag: '🇰🇬' }, { code: 'LA', name: 'Laos', flag: '🇱🇦' },
+  { code: 'LV', name: 'Latvia', flag: '🇱🇻' }, { code: 'LB', name: 'Lebanon', flag: '🇱🇧' },
+  { code: 'LS', name: 'Lesotho', flag: '🇱🇸' }, { code: 'LR', name: 'Liberia', flag: '🇱🇷' },
+  { code: 'LY', name: 'Libya', flag: '🇱🇾' }, { code: 'LI', name: 'Liechtenstein', flag: '🇱🇮' },
+  { code: 'LT', name: 'Lithuania', flag: '🇱🇹' }, { code: 'LU', name: 'Luxembourg', flag: '🇱🇺' },
+  { code: 'MO', name: 'Macao', flag: '🇲🇴' }, { code: 'MG', name: 'Madagascar', flag: '🇲🇬' },
+  { code: 'MW', name: 'Malawi', flag: '🇲🇼' }, { code: 'MY', name: 'Malaysia', flag: '🇲🇾' },
+  { code: 'MV', name: 'Maldives', flag: '🇲🇻' }, { code: 'ML', name: 'Mali', flag: '🇲🇱' },
+  { code: 'MT', name: 'Malta', flag: '🇲🇹' }, { code: 'MH', name: 'Marshall Islands', flag: '🇲🇭' },
+  { code: 'MR', name: 'Mauritania', flag: '🇲🇷' }, { code: 'MU', name: 'Mauritius', flag: '🇲🇺' },
+  { code: 'MX', name: 'Mexico', flag: '🇲🇽' }, { code: 'FM', name: 'Micronesia', flag: '🇫🇲' },
+  { code: 'MD', name: 'Moldova', flag: '🇲🇩' }, { code: 'MC', name: 'Monaco', flag: '🇲🇨' },
+  { code: 'MN', name: 'Mongolia', flag: '🇲🇳' }, { code: 'ME', name: 'Montenegro', flag: '🇲🇪' },
+  { code: 'MS', name: 'Montserrat', flag: '🇲🇸' }, { code: 'MA', name: 'Morocco', flag: '🇲🇦' },
+  { code: 'MZ', name: 'Mozambique', flag: '🇲🇿' }, { code: 'MM', name: 'Myanmar', flag: '🇲🇲' },
+  { code: 'NA', name: 'Namibia', flag: '🇳🇦' }, { code: 'NR', name: 'Nauru', flag: '🇳🇷' },
+  { code: 'NP', name: 'Nepal', flag: '🇳🇵' }, { code: 'NL', name: 'Netherlands', flag: '🇳🇱' },
+  { code: 'NC', name: 'New Caledonia', flag: '🇳🇨' }, { code: 'NZ', name: 'New Zealand', flag: '🇳🇿' },
+  { code: 'NI', name: 'Nicaragua', flag: '🇳🇮' }, { code: 'NE', name: 'Niger', flag: '🇳🇪' },
+  { code: 'NG', name: 'Nigeria', flag: '🇳🇬' }, { code: 'KP', name: 'North Korea', flag: '🇰🇵' },
+  { code: 'MK', name: 'North Macedonia', flag: '🇲🇰' }, { code: 'NO', name: 'Norway', flag: '🇳🇴' },
+  { code: 'OM', name: 'Oman', flag: '🇴🇲' }, { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
+  { code: 'PW', name: 'Palau', flag: '🇵🇼' }, { code: 'PS', name: 'Palestine', flag: '🇵🇸' },
+  { code: 'PA', name: 'Panama', flag: '🇵🇦' }, { code: 'PG', name: 'Papua New Guinea', flag: '🇵🇬' },
+  { code: 'PY', name: 'Paraguay', flag: '🇵🇾' }, { code: 'PE', name: 'Peru', flag: '🇵🇪' },
+  { code: 'PH', name: 'Philippines', flag: '🇵🇭' }, { code: 'PL', name: 'Poland', flag: '🇵🇱' },
+  { code: 'PT', name: 'Portugal', flag: '🇵🇹' }, { code: 'PR', name: 'Puerto Rico', flag: '🇵🇷' },
+  { code: 'QA', name: 'Qatar', flag: '🇶🇦' }, { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+  { code: 'RU', name: 'Russia', flag: '🇷🇺' }, { code: 'RW', name: 'Rwanda', flag: '🇷🇼' },
+  { code: 'WS', name: 'Samoa', flag: '🇼🇸' }, { code: 'SM', name: 'San Marino', flag: '🇸🇲' },
+  { code: 'ST', name: 'São Tomé & Príncipe', flag: '🇸🇹' }, { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: 'SN', name: 'Senegal', flag: '🇸🇳' }, { code: 'RS', name: 'Serbia', flag: '🇷🇸' },
+  { code: 'SC', name: 'Seychelles', flag: '🇸🇨' }, { code: 'SL', name: 'Sierra Leone', flag: '🇸🇱' },
+  { code: 'SG', name: 'Singapore', flag: '🇸🇬' }, { code: 'SK', name: 'Slovakia', flag: '🇸🇰' },
+  { code: 'SI', name: 'Slovenia', flag: '🇸🇮' }, { code: 'SB', name: 'Solomon Islands', flag: '🇸🇧' },
+  { code: 'SO', name: 'Somalia', flag: '🇸🇴' }, { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+  { code: 'KR', name: 'South Korea', flag: '🇰🇷' }, { code: 'SS', name: 'South Sudan', flag: '🇸🇸' },
+  { code: 'ES', name: 'Spain', flag: '🇪🇸' }, { code: 'LK', name: 'Sri Lanka', flag: '🇱🇰' },
+  { code: 'SD', name: 'Sudan', flag: '🇸🇩' }, { code: 'SR', name: 'Suriname', flag: '🇸🇷' },
+  { code: 'SE', name: 'Sweden', flag: '🇸🇪' }, { code: 'CH', name: 'Switzerland', flag: '🇨🇭' },
+  { code: 'SY', name: 'Syria', flag: '🇸🇾' }, { code: 'TW', name: 'Taiwan', flag: '🇹🇼' },
+  { code: 'TJ', name: 'Tajikistan', flag: '🇹🇯' }, { code: 'TZ', name: 'Tanzania', flag: '🇹🇿' },
+  { code: 'TH', name: 'Thailand', flag: '🇹🇭' }, { code: 'TL', name: 'Timor-Leste', flag: '🇹🇱' },
+  { code: 'TG', name: 'Togo', flag: '🇹🇬' }, { code: 'TO', name: 'Tonga', flag: '🇹🇴' },
+  { code: 'TT', name: 'Trinidad & Tobago', flag: '🇹🇹' }, { code: 'TN', name: 'Tunisia', flag: '🇹🇳' },
+  { code: 'TR', name: 'Turkey', flag: '🇹🇷' }, { code: 'TM', name: 'Turkmenistan', flag: '🇹🇲' },
+  { code: 'TV', name: 'Tuvalu', flag: '🇹🇻' }, { code: 'UG', name: 'Uganda', flag: '🇺🇬' },
+  { code: 'UA', name: 'Ukraine', flag: '🇺🇦' }, { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' }, { code: 'US', name: 'United States', flag: '🇺🇸' },
+  { code: 'UY', name: 'Uruguay', flag: '🇺🇾' }, { code: 'UZ', name: 'Uzbekistan', flag: '🇺🇿' },
+  { code: 'VU', name: 'Vanuatu', flag: '🇻🇺' }, { code: 'VA', name: 'Vatican City', flag: '🇻🇦' },
+  { code: 'VE', name: 'Venezuela', flag: '🇻🇪' }, { code: 'VN', name: 'Vietnam', flag: '🇻🇳' },
+  { code: 'YE', name: 'Yemen', flag: '🇾🇪' }, { code: 'ZM', name: 'Zambia', flag: '🇿🇲' },
+  { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼' },
+]
+
 const APPS = [
   // Affiliate now sells the 3 StreetLocal subscription tiers (Starter /
   // Professional / Enterprise) — same tiers shown on /donut pricing.
@@ -349,6 +459,42 @@ export default function Affiliate({ onClose }) {
   const [verifySaving, setVerifySaving] = useState(false)
   const [verifySaved, setVerifySaved] = useState(false)
 
+  // Extended profile fields used by the new dashboard.
+  //
+  // ── DB migration note ──────────────────────────────────────────
+  // The agent table currently has: name, country, whatsapp, agent_code,
+  // status, total_clicks, bank_name, bank_account, bank_holder, ktp_url,
+  // verification_status. The following extra columns are referenced by
+  // the Profile section below — add them to the schema before going
+  // live (none of these writes will succeed without the columns):
+  //
+  //   ALTER TABLE affiliate_agents
+  //     ADD COLUMN email     TEXT,
+  //     ADD COLUMN photo_url TEXT,
+  //     ADD COLUMN city      TEXT,
+  //     ADD COLUMN npwp      TEXT;
+  //
+  // Until the migration runs, the UI gracefully falls back to local
+  // state (the values just don't persist server-side).
+  const [profEmail, setProfEmail] = useState(agent?.email || '')
+  const [profCity, setProfCity] = useState(agent?.city || '')
+  const [profCountry, setProfCountry] = useState(agent?.country || '')
+  const [profPhotoFile, setProfPhotoFile] = useState(null)
+  const [profPhotoUrl, setProfPhotoUrl] = useState(agent?.photo_url || '')
+  const [profNpwp, setProfNpwp] = useState(agent?.npwp || '')
+  const [profSaving, setProfSaving] = useState(false)
+  const [profSaved, setProfSaved] = useState(false)
+
+  // Dashboard nav / UI state
+  const [dashSection, setDashSection] = useState('home') // home | tools | banners | earnings | referrals | leads | profile | resources
+  const [refFilter, setRefFilter] = useState('all') // all | pending | approved | paid | cancelled
+  const [toast, setToast] = useState('')
+  function showToast(msg) {
+    setToast(msg)
+    clearTimeout(showToast._t)
+    showToast._t = setTimeout(() => setToast(''), 2400)
+  }
+
   // Login
   const [loginMode, setLoginMode] = useState(false)
   const [loginWhatsapp, setLoginWhatsapp] = useState('')
@@ -398,6 +544,12 @@ export default function Affiliate({ onClose }) {
             setBankName(data.bank_name || '')
             setBankAccount(data.bank_account || '')
             setBankHolder(data.bank_holder || '')
+            // Extended profile fields (only present once migration is applied)
+            if (data.email !== undefined) setProfEmail(data.email || '')
+            if (data.city !== undefined) setProfCity(data.city || '')
+            if (data.photo_url !== undefined) setProfPhotoUrl(data.photo_url || '')
+            if (data.npwp !== undefined) setProfNpwp(data.npwp || '')
+            if (data.country) setProfCountry(data.country)
           }
         })
       }
@@ -568,6 +720,57 @@ export default function Affiliate({ onClose }) {
     navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
   }
 
+  // ── Profile save (email / city / country / photo / npwp) ──
+  // Writes to `affiliate_agents`. Each field is sent only if its column
+  // exists in the schema (the migration in `affiliate_agents` declaration
+  // adds: email, photo_url, city, npwp). If the DB rejects an unknown
+  // column the call falls back to writing only the always-present
+  // `country` field so the rest of the UI still works.
+  async function handleProfileSave() {
+    if (!supabase || !agent?.id || String(agent.id).startsWith('dev') || String(agent.id).startsWith('local')) {
+      // Local-only update for dev/local agents
+      const updated = { ...agent, email: profEmail, city: profCity, country: profCountry, photo_url: profPhotoUrl, npwp: profNpwp }
+      setAgent(updated)
+      localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+      setProfSaved(true); setTimeout(() => setProfSaved(false), 2400)
+      return
+    }
+    setProfSaving(true)
+    try {
+      let photoUrl = profPhotoUrl
+      if (profPhotoFile) {
+        const ext = profPhotoFile.name.split('.').pop()
+        const path = `affiliate-photos/${agent.id}/${Date.now()}.${ext}`
+        const { error: upErr } = await supabase.storage.from('assets').upload(path, profPhotoFile, { contentType: profPhotoFile.type, upsert: true })
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from('assets').getPublicUrl(path)
+          photoUrl = urlData?.publicUrl
+          setProfPhotoUrl(photoUrl)
+        }
+      }
+      const payload = {
+        country: profCountry || agent.country,
+        email: profEmail || null,
+        city: profCity || null,
+        photo_url: photoUrl || null,
+        npwp: profNpwp || null,
+      }
+      let { error: dbErr } = await supabase.from('affiliate_agents').update(payload).eq('id', agent.id)
+      if (dbErr) {
+        // Column missing — retry with only the columns that definitely exist
+        await supabase.from('affiliate_agents').update({ country: payload.country }).eq('id', agent.id)
+      }
+      const updated = { ...agent, ...payload, photo_url: photoUrl }
+      setAgent(updated)
+      localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+      setProfSaved(true); setTimeout(() => setProfSaved(false), 2400)
+      setProfPhotoFile(null)
+    } catch (e) {
+      setError(e.message || 'Failed to save profile')
+    }
+    setProfSaving(false)
+  }
+
   function logout() {
     localStorage.removeItem('sl_affiliate_agent')
     setAgent(null)
@@ -584,7 +787,12 @@ export default function Affiliate({ onClose }) {
   /* ─── SIGNUP ─── */
   if (step === 'signup') {
     return (
-      <div style={s.page}>
+      <div style={s.page} id="top">
+        <style>{`
+          @media (min-width: 900px) {
+            .aff-hero { grid-template-columns: 1.15fr 1fr !important; gap: 60px !important; padding: 60px 0 48px !important; align-items: center !important; }
+          }
+        `}</style>
         <div style={{ ...s.topBar, borderBottom: 'none' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#0A0A0A', letterSpacing: '-0.5px' }}>Streetlocal<span style={{ color: '#FACC15' }}>.live</span></div>
@@ -600,12 +808,112 @@ export default function Affiliate({ onClose }) {
         </div>
 
         <div style={s.content}>
-          {/* Hero */}
-          <div style={s.hero}>
-            <img src="https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfffddfsdfsd-removebg-preview.png" alt="Become an Agent" style={{ width: 180, height: 'auto', marginBottom: 12 }} />
-            <h1 style={s.heroTitle}>Become an Agent</h1>
-            <p style={s.heroSub}>Earn 100% commission on every first-month subscription you refer</p>
-          </div>
+          {/* ── PREMIUM HERO — side-by-side pitch + signup card ── */}
+          <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 36, padding: '40px 0 32px', alignItems: 'start' }} className="aff-hero">
+            {/* LEFT — value pitch */}
+            <div style={{ maxWidth: 560 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 999, background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(234,179,8,0.5)', color: '#854D0E', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>
+                <span style={{ width: 7, height: 7, borderRadius: 4, background: '#EAB308', boxShadow: '0 0 10px rgba(250,204,21,0.9)' }} />
+                🇮🇩 StreetLocal Agent Programme
+              </span>
+              <h1 style={{ fontSize: 'clamp(34px, 5vw, 52px)', fontWeight: 900, lineHeight: 1.04, letterSpacing: '-1.2px', color: '#0A0A0A', margin: '0 0 22px' }}>
+                Become a StreetLocal Agent.<br />
+                <span style={{ background: 'linear-gradient(120deg, #EAB308 0%, #FACC15 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Earn Rp 35K–180K per signup.</span>
+              </h1>
+              <p style={{ fontSize: 17, lineHeight: 1.55, color: '#52525B', margin: '0 0 26px', fontWeight: 500, maxWidth: 480 }}>
+                Refer Indonesian donut shops to StreetLocal. Earn a one-time bounty on every paying vendor — paid 30 days after their first subscription clears. No recurring fees on you, no commission cap.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { strong: 'Rp 35K bounty on Starter (Rp 38K vendor)', tail: '· 92% of first month' },
+                  { strong: 'Rp 80K bounty on Professional', tail: '· Rp 180K on Enterprise' },
+                  { strong: 'Paid 30 days after first charge', tail: '· bank transfer in IDR, no card fee' },
+                ].map((b, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 15, color: '#3F3F46', lineHeight: 1.5 }}>
+                    <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 11, background: '#FACC15', color: '#0A0A0A', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13, marginTop: 1 }}>✓</span>
+                    <span><strong style={{ color: '#0A0A0A', fontWeight: 800 }}>{b.strong}</strong> <span style={{ color: '#71717A' }}>{b.tail}</span></span>
+                  </li>
+                ))}
+              </ul>
+              <a href="#programme-details" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0A0A0A', fontWeight: 800, fontSize: 14, textDecoration: 'underline', textDecorationColor: '#FACC15', textDecorationThickness: 2, textUnderlineOffset: 4 }}>
+                See full programme details ↓
+              </a>
+            </div>
+
+            {/* RIGHT — signup / login card */}
+            <div style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: -10, background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', borderRadius: 28, filter: 'blur(28px)', opacity: 0.32, zIndex: 0 }} />
+              <div style={{ position: 'relative', zIndex: 1, background: '#FFFFFF', borderRadius: 22, padding: 28, border: '1px solid rgba(234,179,8,0.25)', boxShadow: '0 24px 60px rgba(250,204,21,0.18), 0 4px 14px rgba(45,27,27,0.08)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#EAB308', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>{loginMode ? 'Agent sign in' : 'Activate your dashboard'}</div>
+                <h2 style={{ fontSize: 22, fontWeight: 900, color: '#0A0A0A', margin: '0 0 6px', letterSpacing: '-0.4px' }}>{loginMode ? 'Welcome back' : 'Get your agent link in 30 seconds'}</h2>
+                <p style={{ fontSize: 13, color: '#71717A', margin: '0 0 20px', lineHeight: 1.5 }}>{loginMode ? 'Sign in with your WhatsApp + agent code.' : 'Sign up and your agent dashboard is live immediately. No card required.'}</p>
+
+                {!loginMode ? (
+                  <form onSubmit={handleSignup}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#52525B', marginBottom: 6, display: 'block' }}>Full name</label>
+                    <input style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#FAFAFA', color: '#0A0A0A', fontSize: 15, outline: 'none', marginBottom: 14, boxSizing: 'border-box', fontFamily: 'inherit' }} placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
+
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#52525B', marginBottom: 6, display: 'block' }}>Country</label>
+                    <select style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#FAFAFA', color: '#0A0A0A', fontSize: 15, outline: 'none', marginBottom: 14, boxSizing: 'border-box', appearance: 'none', fontFamily: 'inherit' }} value={country} onChange={e => setCountry(e.target.value)}>
+                      <option value="">Select country</option>
+                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}
+                    </select>
+
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#52525B', marginBottom: 6, display: 'block' }}>WhatsApp number</label>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                      <span style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#F4F4F5', fontSize: 14, fontWeight: 700, color: '#52525B', display: 'flex', alignItems: 'center', minWidth: 64, justifyContent: 'center' }}>{COUNTRIES.find(c => c.code === country)?.prefix || '+00'}</span>
+                      <input style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#FAFAFA', color: '#0A0A0A', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} type="tel" placeholder="812 3456 7890" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} />
+                    </div>
+
+                    {whatsapp && (
+                      <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '10px 12px', marginBottom: 14 }}>
+                        <div style={{ fontSize: 11, color: '#15803D', fontWeight: 700, marginBottom: 2 }}>Your agent link will be:</div>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A', wordBreak: 'break-all' }}>streetlocal.live/a/agent{whatsapp.replace(/[^0-9]/g, '').slice(-4) || '0000'}</div>
+                      </div>
+                    )}
+
+                    {error && <div style={{ fontSize: 13, color: '#B91C1C', background: '#FEF2F2', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontWeight: 600, border: '1px solid #FECACA' }}>{error}</div>}
+
+                    <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 16, fontWeight: 900, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 6px 22px rgba(250,204,21,0.45)', opacity: loading ? 0.7 : 1, fontFamily: 'inherit' }}>
+                      {loading ? 'Activating…' : 'Activate Dashboard →'}
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, fontSize: 12, color: '#71717A' }}>
+                      <button type="button" onClick={() => { setLoginMode(true); setError('') }} style={{ background: 'none', border: 'none', color: '#0A0A0A', fontWeight: 800, cursor: 'pointer', padding: 0, textDecoration: 'underline', textDecorationColor: '#FACC15', textDecorationThickness: 2, textUnderlineOffset: 4, fontFamily: 'inherit' }}>
+                        Already an agent? Sign in
+                      </button>
+                      <span>{seatsRemaining.toLocaleString()} seats left</span>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleLogin}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#52525B', marginBottom: 6, display: 'block' }}>WhatsApp number</label>
+                    <input style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#FAFAFA', color: '#0A0A0A', fontSize: 15, outline: 'none', marginBottom: 14, boxSizing: 'border-box', fontFamily: 'inherit' }} type="tel" placeholder="e.g. 6281234567890" value={loginWhatsapp} onChange={e => setLoginWhatsapp(e.target.value)} />
+
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#52525B', marginBottom: 6, display: 'block' }}>Agent code</label>
+                    <input style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E4E4E7', background: '#FAFAFA', color: '#0A0A0A', fontSize: 15, outline: 'none', marginBottom: 14, boxSizing: 'border-box', fontFamily: 'inherit' }} placeholder="e.g. agent2345" value={loginCode} onChange={e => setLoginCode(e.target.value)} />
+
+                    {error && <div style={{ fontSize: 13, color: '#B91C1C', background: '#FEF2F2', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontWeight: 600, border: '1px solid #FECACA' }}>{error}</div>}
+
+                    <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 16, fontWeight: 900, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 6px 22px rgba(250,204,21,0.45)', opacity: loading ? 0.7 : 1, fontFamily: 'inherit' }}>
+                      {loading ? 'Signing in…' : 'Sign in →'}
+                    </button>
+
+                    <button type="button" onClick={() => { setLoginMode(false); setError('') }} style={{ width: '100%', padding: 10, marginTop: 12, background: 'none', border: 'none', color: '#0A0A0A', fontSize: 13, fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', textDecorationColor: '#FACC15', textDecorationThickness: 2, textUnderlineOffset: 4, fontFamily: 'inherit' }}>
+                      Don't have an account? Sign up
+                    </button>
+                  </form>
+                )}
+
+                <p style={{ fontSize: 11, color: '#A1A1AA', textAlign: 'center', marginTop: 14, marginBottom: 0 }}>
+                  By {loginMode ? 'signing in' : 'signing up'} you agree to our <button onClick={() => setStep('terms')} style={{ background: 'none', border: 'none', color: '#0A0A0A', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: 11, fontFamily: 'inherit', fontWeight: 700 }}>Agent Terms & Conditions</button>.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Anchor for the "See full details ↓" link in the hero */}
+          <div id="programme-details" style={{ scrollMarginTop: 80 }}>
 
           {/* Limited Seats Banner */}
           <div style={{ background: '#1a1a1a', borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center' }}>
@@ -622,7 +930,7 @@ export default function Affiliate({ onClose }) {
           {/* Benefits */}
           <div style={s.benefitsGrid}>
             {[
-              { icon: '💰', title: '100% First Month', desc: 'Keep the full subscription fee for every user you bring in' },
+              { icon: '💰', title: 'Up to Rp 180K per signup', desc: 'One-time bounty per vendor — Starter Rp 35K, Pro Rp 80K, Enterprise Rp 180K' },
               { icon: '🔗', title: 'Your Number = Your Link', desc: 'Your agent link includes your WhatsApp number' },
               { icon: '📊', title: 'Live Dashboard', desc: 'Monitor signups, earnings, and payouts in real-time' },
               { icon: '📱', title: 'Agent App', desc: 'Your own agent storefront app for just Rp 35.000/month' },
@@ -635,100 +943,95 @@ export default function Affiliate({ onClose }) {
             ))}
           </div>
 
-          {/* What apps you can sell */}
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>What apps you can sell</h2>
-            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Three categories. Vendor picks WhatsApp, Chat, or Email at signup — you earn commission on any of them.</p>
-            {[
-              {
-                icon: '🍜',
-                color: '#FACC15',
-                title: 'Food',
-                desc: 'Street carts, warungs, cafés, restaurants',
-                variants: [
-                  { tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' },
-                  { tag: 'Chat', desc: 'Orders go to in-app chat' },
-                ],
-              },
-              {
-                icon: '🛍️',
-                color: '#8B5CF6',
-                title: 'Products',
-                desc: 'Retail, fashion, electronics, anything physical',
-                variants: [
-                  { tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' },
-                  { tag: 'Chat', desc: 'Orders go to in-app chat' },
-                  { tag: 'Email', desc: 'Orders sent to vendor\'s email' },
-                ],
-              },
-              {
-                icon: '🛠️',
-                color: '#22C55E',
-                title: 'Services',
-                desc: 'AC, plumber, electrician, painter, hairdresser, tutor, mechanic — 40+ trades',
-                badge: 'NEW 2026',
-                variants: [
-                  { tag: 'WhatsApp', desc: 'Bookings go to vendor\'s WhatsApp' },
-                  { tag: 'Chat', desc: 'Bookings go to in-app chat' },
-                  { tag: 'Email', desc: 'Bookings sent to vendor\'s email' },
-                ],
-              },
-            ].map((cat, i) => (
-              <div key={i} style={{ background: '#FAFAFA', borderRadius: 14, padding: 14, border: '1px solid #f0f0f0', marginBottom: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: cat.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{cat.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{cat.title}</div>
-                      {cat.badge && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#22C55E', padding: '2px 6px', borderRadius: 4, letterSpacing: 0.5 }}>{cat.badge}</span>}
+          {/* ── WHAT APPS YOU CAN SELL — premium 3-column grid ── */}
+          <section style={{ marginBottom: 36 }}>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <span style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 999, background: '#0A0A0A', color: '#FACC15', fontSize: 12, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 14 }}>Full catalog</span>
+              <h2 style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 900, color: '#0A0A0A', margin: '0 0 12px', letterSpacing: '-0.6px', lineHeight: 1.1 }}>
+                What you can sell as an agent
+              </h2>
+              <p style={{ fontSize: 16, color: '#52525B', maxWidth: 580, margin: '0 auto', lineHeight: 1.55, fontWeight: 500 }}>
+                <strong style={{ color: '#0A0A0A' }}>All StreetLocal apps are covered</strong> under the agent reseller programme — three verticals, three order channels, one commission you earn on every signup.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }} className="aff-apps-grid">
+              {[
+                { icon: '🍜', tint: '#FACC15', tintBg: 'rgba(250,204,21,0.10)', title: 'Food',     blurb: 'Street carts, warungs, cafés, restaurants', detail: 'Donut shops, noodle stalls, bakeries, coffee carts, full-service restaurants — anyone selling prepared food.', variants: [{ tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Orders go to in-app chat' }] },
+                { icon: '🛍️', tint: '#8B5CF6', tintBg: 'rgba(139,92,246,0.10)', title: 'Products', blurb: 'Retail, fashion, electronics, anything physical',                                detail: 'Boutiques, electronics stores, hijab shops, accessories, beauty, household goods — physical product catalogs.', variants: [{ tag: 'WhatsApp', desc: 'Orders go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Orders go to in-app chat' }, { tag: 'Email', desc: 'Orders sent to vendor\'s email' }] },
+                { icon: '🛠️', tint: '#22C55E', tintBg: 'rgba(34,197,94,0.10)',  title: 'Services', blurb: '40+ trades — AC, plumber, electrician, hairdresser, tutor, mechanic…',          detail: 'Bookings + service menus + deposit-on-book for every appointment trade. Newest category, biggest demand gap.', badge: 'NEW 2026', variants: [{ tag: 'WhatsApp', desc: 'Bookings go to vendor\'s WhatsApp' }, { tag: 'Chat', desc: 'Bookings go to in-app chat' }, { tag: 'Email', desc: 'Bookings sent to vendor\'s email' }] },
+              ].map((cat, i) => (
+                <article key={i} style={{ position: 'relative', background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: 22, padding: 28, transition: 'all 0.25s ease', display: 'flex', flexDirection: 'column', gap: 18, boxShadow: '0 2px 8px rgba(45,27,27,0.04)' }}>
+                  {/* Top: icon tile + title row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 16, background: cat.tintBg, border: `1.5px solid ${cat.tint}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0, boxShadow: `0 4px 14px ${cat.tint}25` }}>{cat.icon}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                        <h3 style={{ fontSize: 20, fontWeight: 900, color: '#0A0A0A', margin: 0, letterSpacing: '-0.3px' }}>{cat.title}</h3>
+                        {cat.badge && <span style={{ fontSize: 10, fontWeight: 900, color: '#fff', background: cat.tint, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.6px' }}>{cat.badge}</span>}
+                      </div>
+                      <p style={{ fontSize: 13, color: '#52525B', margin: 0, lineHeight: 1.5, fontWeight: 600 }}>{cat.blurb}</p>
                     </div>
-                    <div style={{ fontSize: 11, color: '#888', marginTop: 2, lineHeight: 1.4 }}>{cat.desc}</div>
                   </div>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {cat.variants.map((v, j) => (
-                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid #f0f0f0', borderRadius: 8, padding: '6px 10px' }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: cat.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>{v.tag}</span>
-                      <span style={{ fontSize: 11, color: '#666' }}>{v.desc}</span>
+                  {/* Detail copy */}
+                  <p style={{ fontSize: 13, color: '#71717A', margin: 0, lineHeight: 1.6 }}>{cat.detail}</p>
+                  {/* Variant chips */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Order channels</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {cat.variants.map((v, j) => (
+                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#FAFAFA', border: '1px solid #E4E4E7', borderRadius: 12, padding: '10px 12px' }}>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: cat.tint, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 70, padding: '2px 8px', borderRadius: 6, background: cat.tintBg, textAlign: 'center' }}>{v.tag}</span>
+                          <span style={{ fontSize: 12, color: '#52525B', lineHeight: 1.4 }}>{v.desc}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+                  </div>
+                  {/* Footer: commission reminder */}
+                  <div style={{ marginTop: 4, paddingTop: 14, borderTop: '1px dashed #E4E4E7', fontSize: 12, color: '#15803D', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 14 }}>💰</span> Same agent bounty applies — Starter / Pro / Enterprise tiers
+                  </div>
+                </article>
+              ))}
+            </div>
+            <style>{`
+              @media (min-width: 900px) {
+                .aff-apps-grid { grid-template-columns: 1fr 1fr 1fr !important; }
+              }
+            `}</style>
+          </section>
 
           {/* FAQ */}
           <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>Frequently asked questions</h2>
-            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>What new agents ask before signing up</p>
+            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0A0A0A', marginBottom: 4 }}>Frequently asked questions</h2>
+            <p style={{ fontSize: 12, color: '#71717A', marginBottom: 12 }}>What new agents ask before signing up</p>
             {[
               {
                 q: 'How many app types can I sign vendors up for?',
-                a: 'All three — Food, Products, and Services. Each has WhatsApp, Chat, or Email order-channel variants. Vendor picks at signup; affiliate gets commission regardless of which.',
+                a: 'All three verticals — Food, Products, and Services — are open to agents from day one. There\'s no waiting period, no category restriction, no separate application. Each vertical has its own order-channel variants: Food supports WhatsApp + in-app Chat checkout. Products and Services both add Email as a third channel. The vendor chooses their preferred channel during signup based on how they want to receive orders. From your side as an agent the experience is identical — same dashboard, same referral link format, same commission structure. Your bounty depends on the SUBSCRIPTION TIER the vendor picks (Starter / Professional / Enterprise), not on which vertical or channel they choose. A Services Enterprise signup pays the same Rp 180K bounty as a Food Enterprise signup.',
               },
               {
                 q: 'Do I get commission on Services apps too?',
-                a: 'Yes — same commission rate as Food and Products. Services is the newest category (launched 2026), so demand from agents/cleaners/photographers is wide open.',
+                a: 'Yes — Services is fully covered with the same tier-based bounty structure as Food and Products. Starter pays Rp 35K, Professional pays Rp 80K, Enterprise pays Rp 180K — regardless of which vertical the vendor picks. Services launched in 2026 and is our newest category, which makes it a high-opportunity space for agents right now. We support 40+ trades: AC technicians, plumbers, electricians, hairdressers, tattoo studios, tutors, mechanics, photographers, cleaners, contractors, beauty therapists, and more. Most of these trades currently have no professional-grade booking platform in Indonesia. If you have connections in any of these trades, expect lower competition than the Food vertical where shops are already saturated with platform options. Independent service workers often respond faster than restaurants because the value proposition (a real booking system vs WhatsApp DMs) is much sharper for them.',
               },
               {
-                q: 'What if my vendor wants to switch tiers later (WhatsApp ⇄ Chat)?',
-                a: 'At the next renewal the vendor picks their tier again from the plan picker — they can switch direction at any monthly boundary. Your first-month commission was paid on whatever they originally chose; switches at renewal are routine vendor admin and don\'t generate additional commission.',
+                q: 'What if my vendor wants to switch tiers later (Starter ⇄ Pro ⇄ Enterprise)?',
+                a: 'Tier changes happen at the monthly renewal boundary. Your vendor can upgrade from Starter to Pro to Enterprise (or downgrade) any month from their dashboard — no contract lock-in, no penalty. Your first-month commission was paid on whatever tier the vendor originally chose at signup; upgrades or downgrades at renewal don\'t generate additional commission for you. This is by design: agents are rewarded for acquisition (getting the vendor in the door), not for the vendor\'s lifetime value progression — that\'s the platform\'s job. If you want to maximize earnings, push the highest tier you can credibly recommend at signup — closing a Pro signup pays Rp 80K vs Starter\'s Rp 35K, and closing Enterprise pays Rp 180K. A serious bakery, multi-location restaurant, or established service business genuinely benefits from Pro/Enterprise features (KDS, custom domain, loyalty programs, multi-staff), so recommending those tiers isn\'t aggressive selling — it\'s matching the vendor to the right product for their business size.',
               },
               {
                 q: 'How do I get paid?',
-                a: 'Direct bank transfer for Indonesia affiliates (no processing fees). International affiliates via Stripe (fees deducted from commission — see pricing section).',
+                a: 'Indonesian agents are paid via direct bank transfer (BCA, Mandiri, BRI, BNI, CIMB, Permata, and other major banks). No card processing fees, no Stripe fees — you receive the full Rp 35K / 80K / 180K bounty for each referred vendor that completes their 30-day verification window. Payouts run weekly: every Monday, we batch all referrals whose 30-day window closed during the previous week and transfer the total to your bank on file. You\'ll receive a WhatsApp notification when the transfer lands. International agents (signing up vendors in US / AU / EU / SG / TH / VN / PH / MY) are paid via Stripe Connect — Stripe deducts its processing fee (~2-3% depending on country) from your bounty, and the net amount lands in your local bank within 2-5 business days. There\'s no minimum payout threshold for either route — even a single Rp 35K bounty triggers a transfer once the 30-day window closes. You can view all pending and paid commissions in real-time from the "Earnings" tab in your dashboard.',
               },
               {
                 q: 'Can I sign up vendors in countries outside Indonesia?',
-                a: 'Yes — US, AU, EU, SG, TH, VN, PH, MY have local pricing. Use the lead-grab system to claim leads in any country.',
+                a: 'Yes — agents can sign up vendors in any country where StreetLocal operates: Indonesia (primary market), Malaysia, Singapore, Thailand, Vietnam, Philippines, Australia, US, UK, EU. Each market has localized pricing in its own currency — for example, the US Starter tier is $19/month, the UK is £15/month, Singapore is S$25/month, Australia is A$29/month. Your bounty is paid in the local currency of the vendor (or its IDR equivalent if you\'re an Indonesian agent), and currency conversion uses the daily mid-market rate. International signups still go through the same dashboard and the same 30-day verification window. Note: if you\'re targeting a country you don\'t live in, you\'ll need to find leads yourself — the shared lead pool primarily contains Indonesian leads collected through our Indonesian marketing channels.',
               },
               {
                 q: 'How do I claim leads from the shared pool?',
-                a: 'Use the "🎯 Leads to Contact" tab in your dashboard. Click "Grab Leads" — the system atomically assigns 5 leads to you. They\'re yours to work for 30 days.',
+                a: 'Open the "🎯 Leads to Contact" tab in your agent dashboard after signup. Click "Grab Leads" and the system atomically assigns you 5 leads from the shared pool. These are real shop owners who have expressed interest (via the public "Get notified" form on the StreetLocal landing pages or by visiting the donut selling page) but haven\'t signed up yet. Each lead includes their business name, WhatsApp number, city, and what type of business they run — enough context to send a personalized first message rather than a cold blast. They\'re locked to you for 30 days — no other agent can claim or contact them during that window. The "grab 5 at a time" design prevents any single agent from hoarding the entire pool, and the 30-day window forces accountability — if you can\'t close a lead in a month, it returns to circulation for someone else to try. You can grab another batch of 5 as soon as you\'ve finished working through your current set.',
               },
               {
                 q: 'What happens if I don\'t contact a grabbed lead?',
-                a: 'After 30 days idle, leads return to the pool for other agents.',
+                a: 'After 30 days of inactivity (no logged contact attempt, no signup), grabbed leads automatically return to the shared pool and become available for other agents to claim. This is enforced by the system — there\'s no manual review or warning email. We track "last contact" through a simple button in your dashboard: each time you message a lead via WhatsApp, you tick a "contacted" checkbox which resets their 30-day window. As long as you log at least one contact attempt per month, the lead stays yours. If you let leads expire without contact, you\'ll see them disappear from your dashboard at the 30-day mark — no penalty beyond losing those specific leads. Your agent account stays active and you can grab fresh batches anytime. We do flag agents who repeatedly grab-and-abandon (more than 50% expiry rate over a 90-day window) for a follow-up conversation, since that pattern means leads are sitting locked instead of converting — and we\'d rather see them in circulation for other agents who will actually work them.',
               },
             ].map((item, i) => (
               <FAQItem key={i} q={item.q} a={item.a} />
@@ -748,45 +1051,57 @@ export default function Affiliate({ onClose }) {
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 18 }}>🇮🇩</span>
-              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a', margin: 0 }}>Indonesia pricing tiers</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0A0A0A', margin: 0 }}>Indonesia pricing tiers</h2>
             </div>
-            <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
-              Vendors pick a tier at signup. Your first-month commission matches whichever they choose.
+            <p style={{ fontSize: 12, color: '#71717A', marginBottom: 12 }}>
+              Vendors pick a tier at signup. Higher tiers pay larger bounties — bigger reward, same effort.
             </p>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                // FoodLocal actually ships two plan tiers, not three.
-                // Both run on the same food-basic app; the only difference
-                // is how customer orders reach the vendor.
                 {
-                  name: 'WhatsApp',
-                  price: 'Rp 35.000',
+                  name: 'Starter',
+                  vendorPays: 'Rp 38.000',
+                  bounty: 'Rp 35.000',
+                  bountyPct: '92%',
                   color: '#FACC15',
-                  features: ['Full FoodLocal storefront', 'Orders go to vendor\'s WhatsApp', 'Customer pays cash / bank / QRIS / connected gateway', 'All 25 themes + custom theme editor', 'PWA install on any phone'],
+                  features: ['Premium PWA + WhatsApp checkout', 'Marketing banners + auto-post to chat', 'Promo codes + receipts + PPN 11%', 'All 16 payment gateways built-in', '1 staff account · 0% commission'],
                 },
                 {
-                  name: 'Chat',
-                  price: 'Rp 50.000',
-                  color: '#22C55E',
-                  features: ['Everything in WhatsApp tier', 'Orders go to private in-app chat (vendor\'s phone stays hidden)', 'Real-time customer chat thread per order', 'Built-in checkout via 16 payment gateways', 'In-thread refund + escrow controls', 'Multi-staff vendor login'],
+                  name: 'Professional',
+                  vendorPays: 'Rp 199.000',
+                  bounty: 'Rp 80.000',
+                  bountyPct: '40%',
+                  color: '#EAB308',
+                  features: ['Everything in Starter, plus:', 'In-app chat + thermal printer + loyalty stamps', 'Custom domain + tipping + advanced promos', 'SMS (Twilio) + email (Resend) campaigns', '5 staff accounts · priority WhatsApp support'],
                   popular: true,
                 },
+                {
+                  name: 'Enterprise',
+                  vendorPays: 'Rp 449.000',
+                  bounty: 'Rp 180.000',
+                  bountyPct: '40%',
+                  color: '#0A0A0A',
+                  features: ['Everything in Pro, plus:', 'KDS for tablets + self-serve kiosk mode', 'Production planner + catering + multi-location', 'White-label branding + dedicated account manager', 'Unlimited staff + native app option'],
+                },
               ].map(tier => (
-                <div key={tier.name} style={{ background: '#FAFAFA', border: `1px solid ${tier.popular ? tier.color : '#f0f0f0'}`, borderRadius: 14, padding: 14, position: 'relative' }}>
+                <div key={tier.name} style={{ background: '#FAFAFA', border: `1px solid ${tier.popular ? tier.color : '#E4E4E7'}`, borderRadius: 14, padding: 14, position: 'relative' }}>
                   {tier.popular && (
                     <div style={{ position: 'absolute', top: -8, right: 12, background: tier.color, color: '#fff', fontSize: 9, fontWeight: 900, padding: '2px 8px', borderRadius: 8, letterSpacing: 0.5 }}>POPULAR</div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, gap: 12 }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 900, color: tier.color }}>{tier.name}</div>
-                      <div style={{ fontSize: 10, color: '#888', marginTop: 1 }}>per vendor / month</div>
+                      <div style={{ fontSize: 10, color: '#71717A', marginTop: 1 }}>Vendor pays {tier.vendorPays}/month</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: '#1a1a1a' }}>{tier.price}</div>
-                      <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>You earn: {tier.price}</div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 5, padding: '4px 10px', borderRadius: 999, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                        <span style={{ fontSize: 13, fontWeight: 900, color: '#15803D' }}>{tier.bounty}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e' }}>· {tier.bountyPct}</span>
+                      </div>
+                      <div style={{ fontSize: 9, color: '#71717A', marginTop: 4, fontWeight: 600 }}>one-time, paid day 30</div>
                     </div>
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11, color: '#555', lineHeight: 1.6 }}>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11, color: '#52525B', lineHeight: 1.6 }}>
                     {tier.features.map(f => <li key={f}>{f}</li>)}
                   </ul>
                 </div>
@@ -801,7 +1116,7 @@ export default function Affiliate({ onClose }) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E', marginBottom: 4 }}>How your commission is calculated</div>
                 <div style={{ fontSize: 11, color: '#78350F', lineHeight: 1.5 }}>
-                  Vendors can pay their subscription via Midtrans Snap (QRIS / GoPay / OVO / card, ~2.5% processing fee) or via manual bank transfer using an SL-XXXXXX activation code (no processing fee). When the vendor pays via Midtrans, the gateway fee comes out of the affiliate commission, not StreetLocal's share — your real take-home reflects the net amount received. Bank transfer signups pay zero fees so you keep the full Rp 35.000 or Rp 50.000.
+                  Vendors can pay their subscription via Midtrans Snap (QRIS / GoPay / OVO / card, ~2.5% processing fee) or via manual bank transfer using an SL-XXXXXX activation code (no processing fee). When the vendor pays via Midtrans, the gateway fee comes out of the affiliate commission, not StreetLocal's share — your real take-home reflects the net amount received. Bank transfer signups pay zero fees so you keep the full Rp 35K (Starter) / Rp 80K (Professional) / Rp 180K (Enterprise) bounty.
                 </div>
               </div>
             </div>
@@ -814,80 +1129,28 @@ export default function Affiliate({ onClose }) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#065F46', marginBottom: 4 }}>Bank-transfer route: zero processing fees</div>
                 <div style={{ fontSize: 11, color: '#065F46', lineHeight: 1.5 }}>
-                  When a vendor activates via an SL-XXXXXX bank-transfer code (instead of Midtrans), <strong>there are no Stripe / card / gateway fees, no deductions</strong> on their subscription. You keep the full Rp 35.000 or Rp 50.000 on every first-month signup paid this way.
+                  When a vendor activates via an SL-XXXXXX bank-transfer code (instead of Midtrans), <strong>there are no Stripe / card / gateway fees, no deductions</strong> on their subscription. You keep the full Rp 35K / Rp 80K / Rp 180K bounty (depending on the tier the vendor picked) on every signup paid this way.
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Link preview */}
-          {whatsapp && (
-            <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, marginBottom: 16, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#065F46', fontWeight: 600, marginBottom: 4 }}>Your agent link will be:</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a' }}>streetlocal.live/a/agent{whatsapp.replace(/[^0-9]/g, '').slice(-4) || '0000'}</div>
+          </div>{/* /programme-details */}
+
+          {/* Bottom anchor — sends visitors back up to the activation card */}
+          <div style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', border: '1px solid #FCD34D', borderRadius: 18, padding: '28px 24px', textAlign: 'center', margin: '32px 0' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8 }}>Ready to start?</div>
+            <h3 style={{ fontSize: 24, fontWeight: 900, color: '#0A0A0A', margin: '0 0 12px', letterSpacing: '-0.4px' }}>Activate your dashboard now</h3>
+            <p style={{ fontSize: 14, color: '#52525B', margin: '0 0 20px', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.55 }}>
+              Your agent code + referral link go live the moment you sign up. No card, no waiting, no approval delay.
+            </p>
+            <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 26px', borderRadius: 14, background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 6px 22px rgba(250,204,21,0.45)', cursor: 'pointer' }}>
+              ↑ Activate Dashboard
+            </a>
+            <div style={{ marginTop: 16, fontSize: 12, color: '#71717A' }}>
+              <button onClick={() => setStep('terms')} style={{ background: 'none', border: 'none', color: '#0A0A0A', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: 12, fontFamily: 'inherit', fontWeight: 700 }}>📋 View Terms & Conditions</button>
             </div>
-          )}
-
-          {!loginMode ? (
-            <>
-              {/* Signup Form */}
-              <form onSubmit={handleSignup} style={{ ...s.form, background: 'rgba(0,0,0,0.9)', borderRadius: 16, padding: 20 }}>
-                <h2 style={{ ...s.formTitle, color: '#fff' }}>Sign Up</h2>
-                <label style={{ ...s.label, color: 'rgba(255,255,255,0.7)' }}>Full Name</label>
-                <input style={{ ...s.input, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
-
-                <label style={{ ...s.label, color: 'rgba(255,255,255,0.7)' }}>Country</label>
-                <select style={{ ...s.select, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} value={country} onChange={e => setCountry(e.target.value)}>
-                  <option value="">Select country</option>
-                  {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}
-                </select>
-
-                <label style={{ ...s.label, color: 'rgba(255,255,255,0.7)' }}>WhatsApp Number</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span style={{ ...s.prefix, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>{COUNTRIES.find(c => c.code === country)?.prefix || '+00'}</span>
-                  <input style={{ ...s.input, flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} type="tel" placeholder="812 3456 7890" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} />
-                </div>
-
-                {error && <div style={s.error}>{error}</div>}
-
-                <button type="submit" style={{ ...s.primaryBtn, background: '#FACC15', color: '#1a1a1a' }} disabled={loading}>
-                  {loading ? 'Processing...' : 'Continue to Payment'}
-                </button>
-              </form>
-
-              <button onClick={() => { setLoginMode(true); setError('') }} style={{ ...s.linkBtn, color: '#FACC15' }}>
-                Already an agent? Sign In
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Login Form */}
-              <form onSubmit={handleLogin} style={{ ...s.form, background: 'rgba(0,0,0,0.9)', borderRadius: 16, padding: 20 }}>
-                <h2 style={{ ...s.formTitle, color: '#fff' }}>Agent Sign In</h2>
-                <label style={{ ...s.label, color: 'rgba(255,255,255,0.7)' }}>WhatsApp Number</label>
-                <input style={{ ...s.input, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} type="tel" placeholder="e.g. 6281234567890" value={loginWhatsapp} onChange={e => setLoginWhatsapp(e.target.value)} />
-
-                <label style={{ ...s.label, color: 'rgba(255,255,255,0.7)' }}>Agent Code</label>
-                <input style={{ ...s.input, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} placeholder="e.g. agent2345" value={loginCode} onChange={e => setLoginCode(e.target.value)} />
-
-                {error && <div style={s.error}>{error}</div>}
-
-                <button type="submit" style={{ ...s.primaryBtn, background: '#FACC15', color: '#1a1a1a' }} disabled={loading}>
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </button>
-              </form>
-
-              <button onClick={() => { setLoginMode(false); setError('') }} style={{ ...s.linkBtn, color: '#FACC15' }}>
-                Don't have an account? Sign Up
-              </button>
-            </>
-          )}
-
-          {/* T&C Link */}
-          <button onClick={() => setStep('terms')} style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #e0e0e0', background: '#fff', fontSize: 13, fontWeight: 700, color: '#555', cursor: 'pointer', marginTop: 8 }}>
-            📋 View Terms & Conditions
-          </button>
-          <p style={{ fontSize: 10, color: '#aaa', textAlign: 'center', marginTop: 8 }}>By signing up you agree to our Agent Terms & Conditions</p>
+          </div>
         </div>
       </div>
     )
@@ -981,7 +1244,7 @@ export default function Affiliate({ onClose }) {
           {/* 8. Commission */}
           <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>8. Commission & Payments</h3>
           <ul style={{ fontSize: 13, color: '#444', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
-            <li>Agents earn 100% commission on the first month's subscription of each referred user only</li>
+            <li>Agents earn a one-time bounty on each referred vendor's first-month subscription: Rp 35K (Starter, 92%), Rp 80K (Professional, 40%), Rp 180K (Enterprise, 40%). No recurring commission on subsequent months.</li>
             <li>After the first month, all subscription revenue belongs to StreetLocal.live</li>
             <li>Agents pay Rp 35.000/month for the Agent App subscription</li>
             <li>Agent app is deactivated immediately if monthly payment is not received</li>
@@ -1363,149 +1626,1143 @@ export default function Affiliate({ onClose }) {
     )
   }
 
-  /* ── Main Agent App ── */
+  /* ─────────────────────────────────────────────────────────────
+     ── Main Agent App / Dashboard (step === 'dashboard') ──
+     A premium single-page dashboard. Sidebar nav on desktop,
+     bottom tab bar on mobile. Sections scroll-anchored.
+     ───────────────────────────────────────────────────────────── */
+
+  // Bilingual dashboard strings — idiomatic Indonesian, not literal
+  const D = locale === 'id' ? {
+    greet: 'Halo',
+    activeStatus: 'Aktif',
+    pendingVerification: 'Menunggu Verifikasi',
+    pendingPayment: 'Menunggu Pembayaran',
+    monthEarn: 'Pendapatan bulan ini',
+    pendingPayout: 'Menunggu dicairkan',
+    totalVendors: 'Vendor terbawa',
+    conversionRate: 'Konversi (klik → daftar)',
+    quickTools: 'Alat Cepat',
+    yourLink: 'Link referral kamu',
+    copy: 'Salin',
+    copied: 'Tersalin!',
+    qrTitle: 'Kode QR',
+    qrDesc: 'Cetak atau pasang di flyer offline',
+    downloadPng: 'Unduh PNG',
+    share: 'Bagikan',
+    sharePack: 'Unduh share pack',
+    sharePackDesc: 'Semua banner siap-pakai untuk sosmed',
+    bannerStudio: 'Studio Banner',
+    bannerStudioDesc: 'Banner resmi siap-pakai. Tambahkan caption pribadimu saat memposting.',
+    earningsTitle: 'Pendapatan',
+    last4Months: '4 bulan terakhir',
+    nextPayoutDate: 'Pembayaran berikutnya',
+    pending30Day: 'Menunggu (30 hari kerja)',
+    paidHistory: 'Riwayat pembayaran',
+    downloadCsv: 'Unduh CSV',
+    referralsTitle: 'Referral Saya',
+    filterAll: 'Semua',
+    filterPending: 'Menunggu',
+    filterApproved: 'Disetujui',
+    filterPaid: 'Dibayar',
+    filterCancelled: 'Dibatalkan',
+    noReferralsTitle: 'Belum ada referral',
+    leadPoolTitle: 'Lead Pool',
+    leadPoolDesc: 'Ambil 25 lead segar dari pool publik. Eksklusif untukmu selama 30 hari.',
+    profileTitle: 'Profil & KYC',
+    personalInfo: 'Info Pribadi',
+    fullName: 'Nama lengkap',
+    email: 'Email',
+    whatsapp: 'WhatsApp',
+    profilePhoto: 'Foto profil',
+    uploadPhoto: 'Pilih foto',
+    location: 'Lokasi',
+    country: 'Negara',
+    city: 'Kota',
+    bankInfo: 'Detail Bank',
+    bankName: 'Nama Bank',
+    accountNumber: 'Nomor Rekening',
+    accountHolder: 'Nama Pemegang Rekening',
+    ibanSwift: 'IBAN / SWIFT (internasional)',
+    ktpId: 'Foto KTP / ID',
+    npwp: 'NPWP (opsional)',
+    taxNotice: 'Pajak penghasilan adalah tanggung jawab kamu sendiri. StreetLocal tidak memotong pajak.',
+    verifStatus: 'Status verifikasi',
+    notSubmitted: 'Belum diajukan',
+    submitted: 'Diajukan',
+    verified: 'Terverifikasi',
+    rejected: 'Ditolak',
+    saveProfile: 'Simpan profil',
+    saved: 'Tersimpan!',
+    submitVerify: 'Ajukan Verifikasi',
+    resourcesTitle: 'Bantuan & FAQ',
+    waSupport: 'Hubungi via WhatsApp',
+    viewTerms: 'Lihat Syarat & Ketentuan',
+    logout: 'Keluar',
+    navHome: 'Beranda',
+    navTools: 'Alat',
+    navEarn: 'Pendapatan',
+    navProfile: 'Profil',
+    navBanners: 'Banner',
+    navRefs: 'Referral',
+    navLeads: 'Lead',
+    navMore: 'Lainnya',
+    more: 'Lainnya',
+    backToHome: 'Kembali ke beranda',
+    chooseCountry: 'Pilih negara',
+    landscape: 'Landscape 1200×630',
+    square: 'Square 1080×1080',
+    story: 'Story 1080×1920',
+    downloadShareKit: 'Unduh semua banner (.zip akan dikemas)',
+    awaitingPayment: 'Pembayaran belum diterima — selesaikan dulu untuk mengaktifkan',
+    payNow: 'Bayar Sekarang',
+    day: 'Hari',
+    of30: 'dari 30',
+    perMonth: '/bulan',
+    leaderboard: 'Papan Peringkat',
+    marketingTips: 'Tips Marketing',
+    community: 'Komunitas',
+    appLibrary: 'Koleksi Aplikasi',
+    appLibraryDesc: 'Ketuk untuk melihat detail & ambil link per-app',
+    payoutSchedule: 'Pembayaran setiap Senin. Komisi dilepas 30 hari setelah vendor membayar bulan pertamanya.',
+    sharePackNote: 'Kit berisi banner Landscape, Square, dan Story dalam bahasa ID & EN.',
+    devSeedData: 'Data tampilan menggunakan contoh hingga referral asli masuk.',
+    faqs: [
+      { q: 'Kapan saya dibayar?', a: 'Pembayaran berjalan setiap Senin. Komisi dilepas tepat 30 hari setelah vendor membayar bulan pertama mereka — ini melindungi kamu dari fraud sambil tetap cepat.' },
+      { q: 'Berapa komisi per signup?', a: 'Rp 35K untuk Starter (92% dari biaya bulan pertama vendor), Rp 80K untuk Professional (40%), Rp 180K untuk Enterprise (40%). One-time bounty — tidak ada commission berulang.' },
+      { q: 'Bagaimana cara mendapat lead?', a: 'Bagikan link referralmu di sosmed atau klaim 25 lead dari pool publik setiap kali pool diisi ulang. Lead bersifat eksklusif untukmu selama 30 hari.' },
+      { q: 'Apakah saya wajib bayar bulanan?', a: 'Tidak. Tidak ada biaya bulanan untuk menjadi agen. Kamu hanya membayar pajak penghasilan dari komisi yang kamu terima — itu sudah tanggung jawab pribadi.' },
+      { q: 'Bisakah saya membuat banner sendiri?', a: 'Tidak. Gunakan hanya banner resmi dari Studio Banner. Kamu boleh menambahkan caption/teks pribadi saat memposting, tetapi tidak boleh memodifikasi banner.' },
+      { q: 'Bagaimana KTP saya disimpan?', a: 'KTP disimpan terenkripsi di Supabase Storage dan hanya dapat dilihat oleh tim verifikasi StreetLocal. Tidak dibagikan ke pihak ketiga.' },
+    ],
+  } : {
+    greet: 'Hi',
+    activeStatus: 'Active',
+    pendingVerification: 'Pending verification',
+    pendingPayment: 'Pending payment',
+    monthEarn: 'This month earnings',
+    pendingPayout: 'Pending payout',
+    totalVendors: 'Total vendors referred',
+    conversionRate: 'Conversion (clicks → signups)',
+    quickTools: 'Quick Tools',
+    yourLink: 'Your referral link',
+    copy: 'Copy',
+    copied: 'Copied!',
+    qrTitle: 'QR code',
+    qrDesc: 'Print or paste on offline flyers',
+    downloadPng: 'Download PNG',
+    share: 'Share',
+    sharePack: 'Download share pack',
+    sharePackDesc: 'All ready-to-use social banners',
+    bannerStudio: 'Banner Studio',
+    bannerStudioDesc: 'Official banners ready to share. Add your own caption when posting.',
+    earningsTitle: 'Earnings',
+    last4Months: 'Last 4 months',
+    nextPayoutDate: 'Next payout',
+    pending30Day: 'Pending (30-day hold)',
+    paidHistory: 'Payout history',
+    downloadCsv: 'Download CSV',
+    referralsTitle: 'My Referrals',
+    filterAll: 'All',
+    filterPending: 'Pending',
+    filterApproved: 'Verified',
+    filterPaid: 'Paid',
+    filterCancelled: 'Cancelled',
+    noReferralsTitle: 'No referrals yet',
+    leadPoolTitle: 'Lead Pool',
+    leadPoolDesc: 'Grab 25 fresh leads from the shared pool. Locked to you for 30 days.',
+    profileTitle: 'Profile & KYC',
+    personalInfo: 'Personal info',
+    fullName: 'Full name',
+    email: 'Email',
+    whatsapp: 'WhatsApp',
+    profilePhoto: 'Profile photo',
+    uploadPhoto: 'Choose photo',
+    location: 'Location',
+    country: 'Country',
+    city: 'City',
+    bankInfo: 'Bank details',
+    bankName: 'Bank name',
+    accountNumber: 'Account number',
+    accountHolder: 'Account holder',
+    ibanSwift: 'IBAN / SWIFT (international)',
+    ktpId: 'KTP / ID upload',
+    npwp: 'NPWP (optional)',
+    taxNotice: 'You are responsible for your own income tax. StreetLocal does not withhold.',
+    verifStatus: 'Verification status',
+    notSubmitted: 'Not submitted',
+    submitted: 'Submitted',
+    verified: 'Verified',
+    rejected: 'Rejected',
+    saveProfile: 'Save profile',
+    saved: 'Saved!',
+    submitVerify: 'Submit verification',
+    resourcesTitle: 'Help & FAQ',
+    waSupport: 'Contact us on WhatsApp',
+    viewTerms: 'View Terms & Conditions',
+    logout: 'Log out',
+    navHome: 'Home',
+    navTools: 'Tools',
+    navEarn: 'Earnings',
+    navProfile: 'Profile',
+    navBanners: 'Banners',
+    navRefs: 'Referrals',
+    navLeads: 'Leads',
+    navMore: 'More',
+    more: 'More',
+    backToHome: 'Back to home',
+    chooseCountry: 'Choose country',
+    landscape: 'Landscape 1200×630',
+    square: 'Square 1080×1080',
+    story: 'Story 1080×1920',
+    downloadShareKit: 'Download all banners (.zip will be assembled)',
+    awaitingPayment: 'Payment not received — finish that first to activate',
+    payNow: 'Pay now',
+    day: 'Day',
+    of30: 'of 30',
+    perMonth: '/mo',
+    leaderboard: 'Leaderboard',
+    marketingTips: 'Marketing tips',
+    community: 'Community',
+    appLibrary: 'App library',
+    appLibraryDesc: 'Tap an app to see details & grab per-app links',
+    payoutSchedule: 'Payouts every Monday. Commission released 30 days after the vendor pays their first month.',
+    sharePackNote: 'Kit includes Landscape, Square, and Story banners in EN & ID.',
+    devSeedData: 'Showing seed data until real referrals come in.',
+    faqs: [
+      { q: 'When do I get paid?', a: 'Payouts run every Monday. Commission is released exactly 30 days after the vendor pays their first month — protects you from fraud while still being fast.' },
+      { q: 'How much do I earn per signup?', a: 'Rp 35K for Starter (92% of vendor first-month fee), Rp 80K for Professional (40%), Rp 180K for Enterprise (40%). One-time bounty — no recurring commission.' },
+      { q: 'How do I get leads?', a: 'Share your referral link on social, or grab 25 leads from the public pool every time it refills. Leads are exclusive to you for 30 days.' },
+      { q: 'Do I have to pay a monthly fee?', a: 'No. There is no monthly fee to be an agent. You are only responsible for income tax on commissions you receive — that is your personal duty.' },
+      { q: 'Can I make my own banners?', a: 'No. Use only official banners from the Banner Studio. You may add your own captions when posting, but you may not modify the banners.' },
+      { q: 'How is my KTP stored?', a: 'KTP is stored encrypted in Supabase Storage and is only viewable by StreetLocal\'s verification team. Never shared with third parties.' },
+    ],
+  }
+
+  // Build a comprehensive set of share targets driven off the agent link.
+  // Used by the Quick Tools card + the Banner Studio cards.
+  function buildShareTargets(link, captionEn, captionId) {
+    const caption = locale === 'id' ? captionId : captionEn
+    const text = `${caption}\n\nhttps://${link}`
+    return [
+      { id: 'wa',  label: 'WhatsApp', color: '#25D366', icon: '💬', href: `https://wa.me/?text=${encodeURIComponent(text)}` },
+      { id: 'fb',  label: 'Facebook', color: '#1877F2', icon: 'f',  href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://' + link)}&quote=${encodeURIComponent(caption)}` },
+      { id: 'ig',  label: 'Instagram',color: '#E4405F', icon: '📷', copyOnly: true },
+      { id: 'tt',  label: 'TikTok',   color: '#000000', icon: '🎵', copyOnly: true },
+      { id: 'tg',  label: 'Telegram', color: '#229ED9', icon: '✈️', href: `https://t.me/share/url?url=${encodeURIComponent('https://' + link)}&text=${encodeURIComponent(caption)}` },
+      { id: 'em',  label: 'Email',    color: '#0A0A0A', icon: '✉️', href: `mailto:?subject=${encodeURIComponent(caption)}&body=${encodeURIComponent(text)}` },
+    ]
+  }
+
+  const agentLastFour = (agent?.whatsapp || '').replace(/[^0-9]/g, '').slice(-4) || '0000'
+  const fullAgentLink = `streetlocal.live/a/${agent?.agent_code || 'agent' + agentLastFour}`
+  const fullAgentUrl = `https://${fullAgentLink}`
+
+  // ── Inline QR generator ──
+  // We have no QR library installed in landing/package.json. To avoid
+  // a dependency, we use the free api.qrserver.com PNG service as the
+  // image source. The PNG can be saved/downloaded directly. If the user
+  // adds `qrcode` as a dep later, swap this for a true inline canvas.
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(fullAgentUrl)}`
+
+  function copyToClipboard(value, msg) {
+    navigator.clipboard.writeText(value).then(() => showToast(msg || (locale === 'id' ? 'Tersalin!' : 'Copied!')))
+  }
+
+  function downloadQR() {
+    const a = document.createElement('a')
+    a.href = qrSrc
+    a.download = `streetlocal-${agent?.agent_code || 'agent'}-qr.png`
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  // ── Banner studio data ──
+  // Pulls live promo materials from Supabase if present; otherwise renders
+  // a curated set of placeholder banners grouped by format. Each banner
+  // has an EN + ID copy variant baked in.
+  const fallbackBanners = [
+    { id: 'fb1', format: 'landscape', en: 'Get your shop online in 5 minutes', id: 'Toko online dalam 5 menit', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+    { id: 'fb2', format: 'landscape', en: 'Stop paying 30% commission to delivery apps', id: 'Berhenti bayar komisi 30% ke aplikasi delivery', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png' },
+    { id: 'fb3', format: 'landscape', en: 'WhatsApp checkout · all 16 gateways · 0% commission', id: 'Checkout via WhatsApp · 16 gateway · 0% komisi', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+    { id: 'ig1', format: 'square', en: 'Your shop. Your link. Zero commission.', id: 'Toko kamu. Link kamu. 0% komisi.', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+    { id: 'ig2', format: 'square', en: 'Loyalty stamps · custom domain · KDS', id: 'Loyalty · domain custom · KDS', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png' },
+    { id: 'ig3', format: 'square', en: 'Try the demo — no sign up required', id: 'Coba demo — tanpa daftar', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+    { id: 'st1', format: 'story', en: 'Tap link in bio to start free', id: 'Klik link di bio untuk mulai gratis', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+    { id: 'st2', format: 'story', en: 'From Rp 38K/month — full PWA + WA', id: 'Mulai Rp 38K/bulan — PWA lengkap + WA', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitledfsdfsdfsssss.png' },
+    { id: 'st3', format: 'story', en: 'Why I stopped using GoFood', id: 'Kenapa saya berhenti pakai GoFood', img: 'https://fjvafjkzvygkhiwjuvla.supabase.co/storage/v1/object/public/assets/untitleddssaaa.png' },
+  ]
+  const liveBanners = (promoMaterials || []).map(p => ({
+    id: p.id,
+    format: (String(p.title || '').toLowerCase().includes('instagram') || String(p.title || '').toLowerCase().includes('square')) ? 'square'
+          : (String(p.title || '').toLowerCase().includes('story') ? 'story' : 'landscape'),
+    en: p.title || 'StreetLocal',
+    id: p.title || 'StreetLocal',
+    img: p.url,
+    isVideo: p.type === 'video',
+  }))
+  const allBanners = liveBanners.length > 0 ? liveBanners : fallbackBanners
+  const bannersByFormat = {
+    landscape: allBanners.filter(b => b.format === 'landscape'),
+    square:    allBanners.filter(b => b.format === 'square'),
+    story:     allBanners.filter(b => b.format === 'story'),
+  }
+
+  // ── Earnings calculations ──
+  // We synthesize the last 4 months of earnings from `referrals` if any
+  // exist; otherwise we render a flat baseline so the chart isn't empty.
+  function calcMonthlyEarnings() {
+    const months = []
+    const now = new Date()
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const label = d.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'short' })
+      const total = (referrals || [])
+        .filter(r => r.status === 'paid' && r.paid_at && new Date(r.paid_at).getMonth() === d.getMonth() && new Date(r.paid_at).getFullYear() === d.getFullYear())
+        .reduce((sum, r) => sum + (r.commission_amount || 0), 0)
+      months.push({ label, value: total })
+    }
+    // If everything is zero, show seed shape to make the chart readable
+    const sum = months.reduce((s, m) => s + m.value, 0)
+    if (sum === 0) {
+      return [
+        { label: months[0].label, value: 0 },
+        { label: months[1].label, value: 0 },
+        { label: months[2].label, value: 0 },
+        { label: months[3].label, value: 0 },
+      ]
+    }
+    return months
+  }
+  const monthly = calcMonthlyEarnings()
+  const maxMonthly = Math.max(1, ...monthly.map(m => m.value))
+
+  function tierBounty(tier) {
+    const t = String(tier || '').toLowerCase()
+    if (t.includes('enter')) return 180000
+    if (t.includes('pro'))   return 80000
+    return 35000
+  }
+
+  // Next payout = next Monday (or today if today is Monday)
+  function nextMondayLabel() {
+    const today = new Date()
+    const d = new Date(today)
+    const dow = d.getDay() // 0=Sun..6=Sat
+    const offset = dow === 1 ? 0 : (1 - dow + 7) % 7
+    d.setDate(today.getDate() + offset)
+    return d.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })
+  }
+
+  // Conversion rate (clicks vs signups)
+  const convPct = stats.totalClicks > 0 ? ((stats.totalSignups / stats.totalClicks) * 100).toFixed(1) : '0.0'
+
+  // CSV download for paid history
+  function downloadStatementCsv() {
+    const rows = [['Date', 'Vendor', 'Tier', 'Amount IDR', 'Status', 'Reference']]
+    ;(referrals || []).forEach(r => {
+      rows.push([
+        r.paid_at ? new Date(r.paid_at).toISOString().slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10),
+        r.customer_name || '',
+        r.app_tier || '',
+        String(r.commission_amount || tierBounty(r.app_tier)),
+        r.status || '',
+        r.id ? r.id.slice(0, 8) : '',
+      ])
+    })
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `streetlocal-statement-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Filtered referral rows
+  const filteredRefs = (referrals || []).filter(r => {
+    if (refFilter === 'all') return true
+    return r.status === refFilter
+  })
+
+  // Day-30 countdown for a referral
+  function daysSinceCreated(r) {
+    if (!r.created_at) return 0
+    const ms = Date.now() - new Date(r.created_at).getTime()
+    return Math.max(0, Math.min(30, Math.floor(ms / (1000 * 60 * 60 * 24))))
+  }
+
+  // Verification pill
+  const verifPill = (() => {
+    const v = agent?.verification_status || 'none'
+    if (v === 'verified') return { label: D.verified,    bg: '#D1FAE5', fg: '#065F46', dot: '#22c55e' }
+    if (v === 'submitted')return { label: D.submitted,   bg: '#DBEAFE', fg: '#1E40AF', dot: '#3B82F6' }
+    if (v === 'rejected') return { label: D.rejected,    bg: '#FEE2E2', fg: '#991B1B', dot: '#EF4444' }
+    return { label: D.notSubmitted, bg: '#F4F4F5', fg: '#52525B', dot: '#A1A1AA' }
+  })()
+
+  // Status pill for hero strip
+  const statusPill = (() => {
+    if (isPendingPayment)      return { label: D.pendingPayment, bg: '#FEF3C7', fg: '#92400E', dot: '#F59E0B' }
+    if (isPendingVerification) return { label: D.pendingVerification, bg: '#DBEAFE', fg: '#1E40AF', dot: '#3B82F6' }
+    if (isActive)              return { label: D.activeStatus, bg: '#D1FAE5', fg: '#065F46', dot: '#22c55e' }
+    return { label: agent?.status || '', bg: '#F4F4F5', fg: '#52525B', dot: '#A1A1AA' }
+  })()
+
+  // ── Sidebar items (desktop) / bottom tabs (mobile) ──
+  const navItems = [
+    { id: 'home',      label: D.navHome,    icon: '🏠' },
+    { id: 'tools',     label: D.navTools,   icon: '🔗' },
+    { id: 'banners',   label: D.navBanners, icon: '🎨' },
+    { id: 'earnings',  label: D.navEarn,    icon: '💰' },
+    { id: 'referrals', label: D.navRefs,    icon: '👥' },
+    { id: 'leads',     label: D.navLeads,   icon: '🎯' },
+    { id: 'profile',   label: D.navProfile, icon: '👤' },
+  ]
+
+  // Bottom-tab condensed set (mobile)
+  const mobileTabs = [
+    { id: 'home',     label: D.navHome,    icon: '🏠' },
+    { id: 'tools',    label: D.navTools,   icon: '🔗' },
+    { id: 'earnings', label: D.navEarn,    icon: '💰' },
+    { id: 'profile',  label: D.navProfile, icon: '👤' },
+  ]
+
+  function navigateTo(id) {
+    setDashSection(id)
+    // Scroll the matching section into view
+    setTimeout(() => {
+      const el = document.getElementById(`dash-${id}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 30)
+  }
+
   return (
     <div style={s.page}>
-      {/* Header */}
-      <div style={{ ...s.topBar, borderBottom: 'none' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
-          <div style={{ fontSize: 9, color: '#888', fontWeight: 600, letterSpacing: 0.5 }}>{L.agentHub}</div>
+      {/* ── Sticky glass nav ── */}
+      <div style={{ ...s.topBar, borderBottom: '1px solid #E4E4E7' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #FACC15, #EAB308)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontWeight: 900, color: '#0A0A0A' }}>S</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', letterSpacing: '-0.3px' }}>Streetlocal<span style={{ color: '#FACC15' }}>.live</span></div>
+            <div style={{ fontSize: 9, color: '#71717A', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Agent Dashboard</div>
+          </div>
         </div>
-        <button onClick={() => setDrawer(true)} style={{ ...s.backBtn, fontSize: 22 }}>☰</button>
+        {/* EN | ID pill toggle */}
+        <div style={{ display: 'inline-flex', background: '#F4F4F5', borderRadius: 999, padding: 3, marginRight: 10, border: '1px solid #E4E4E7' }}>
+          <button onClick={() => setLocale('id')} style={{ padding: '6px 12px', fontSize: 11, fontWeight: 900, border: 'none', borderRadius: 999, background: locale === 'id' ? '#0A0A0A' : 'transparent', color: locale === 'id' ? '#FACC15' : '#52525B', cursor: 'pointer', letterSpacing: '0.5px', minWidth: 36 }}>ID</button>
+          <button onClick={() => setLocale('en')} style={{ padding: '6px 12px', fontSize: 11, fontWeight: 900, border: 'none', borderRadius: 999, background: locale === 'en' ? '#0A0A0A' : 'transparent', color: locale === 'en' ? '#FACC15' : '#52525B', cursor: 'pointer', letterSpacing: '0.5px', minWidth: 36 }}>EN</button>
+        </div>
+        <button onClick={() => setDrawer(true)} title={D.more} style={{ ...s.backBtn, fontSize: 20, marginRight: 4, color: '#52525B' }}>⋯</button>
+        <button onClick={logout} title={D.logout} style={{ ...s.backBtn, fontSize: 16, color: '#52525B' }}>⎋</button>
       </div>
 
-      {/* Status Banner */}
+      {/* ── Pending payment banner ── */}
       {isPendingPayment && (
-        <div style={{ ...s.statusBanner, background: '#FEF3C7', color: '#92400E' }}>
-          {locale === 'id' ? 'Menunggu pembayaran' : 'Awaiting payment'} — <button onClick={() => setStep('payment')} style={{ background: 'none', border: 'none', color: '#92400E', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }}>{locale === 'id' ? 'Bayar Sekarang' : 'Pay Now'}</button>
+        <div style={{ background: '#FEF3C7', color: '#92400E', textAlign: 'center', padding: '10px 16px', fontSize: 13, fontWeight: 700, borderBottom: '1px solid #FCD34D' }}>
+          {D.awaitingPayment} — <button onClick={() => setStep('payment')} style={{ background: 'none', border: 'none', color: '#92400E', fontWeight: 900, textDecoration: 'underline', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>{D.payNow}</button>
         </div>
       )}
 
-      {/* Mini stats ribbon */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 16px', background: '#FAFAFA', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#22c55e' }}>Rp {stats.totalEarnings.toLocaleString()}</div>
-          <div style={{ fontSize: 10, color: '#888', fontWeight: 600 }}>{L.earnings}</div>
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: '#0A0A0A', color: '#FACC15', padding: '12px 20px', borderRadius: 14, fontSize: 13, fontWeight: 800, boxShadow: '0 12px 30px rgba(0,0,0,0.25)', maxWidth: '92vw', textAlign: 'center' }}>
+          {toast}
         </div>
-        <div style={{ width: 1, background: '#e0e0e0' }} />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#8B5CF6' }}>{stats.totalSignups}</div>
-          <div style={{ fontSize: 10, color: '#888', fontWeight: 600 }}>{L.referrals}</div>
-        </div>
-        <div style={{ width: 1, background: '#e0e0e0' }} />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#3B82F6' }}>{stats.totalClicks}</div>
-          <div style={{ fontSize: 10, color: '#888', fontWeight: 600 }}>Clicks</div>
-        </div>
-      </div>
+      )}
 
-      {/* Agent Link Bar */}
-      <div style={{ padding: '12px 16px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F5F5F5', borderRadius: 12, padding: '10px 12px' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{agentLink}</span>
-          <button onClick={copyLink} style={{ ...s.copyBtn, fontSize: 11, padding: '5px 12px' }}>
-            {copied ? L.copied : L.copyLink}
-          </button>
-        </div>
-      </div>
+      {/* ── Layout: sidebar + main on desktop, single column + bottom-tab on mobile ── */}
+      <style>{`
+        .sl-dash-wrap { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 1200px; margin: 0 auto; padding: 0 clamp(12px, 3vw, 28px); box-sizing: border-box; }
+        .sl-dash-side { display: none; }
+        .sl-dash-bottom-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: rgba(255,255,255,0.96); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid #E4E4E7; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); display: flex; gap: 2px; box-shadow: 0 -6px 18px rgba(0,0,0,0.04); }
+        .sl-dash-main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+        .sl-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .sl-tools-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        .sl-banner-grid-landscape { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .sl-banner-grid-square { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sl-banner-grid-story { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sl-profile-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        @media (min-width: 900px) {
+          .sl-dash-wrap { grid-template-columns: 240px 1fr; gap: 32px; padding: 24px clamp(16px, 4vw, 40px); align-items: start; }
+          .sl-dash-side { display: block; position: sticky; top: 88px; align-self: start; }
+          .sl-dash-bottom-tabs { display: none; }
+          .sl-dash-main { padding-bottom: 60px; }
+          .sl-stat-row { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+          .sl-tools-grid { grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
+          .sl-banner-grid-landscape { grid-template-columns: 1fr 1fr; }
+          .sl-banner-grid-square { grid-template-columns: repeat(3, 1fr); }
+          .sl-banner-grid-story { grid-template-columns: repeat(3, 1fr); }
+          .sl-profile-grid { grid-template-columns: 1fr 1fr; gap: 18px; }
+        }
+        .sl-card { background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 20px; padding: 18px; box-shadow: 0 2px 8px rgba(45,27,27,0.04); box-sizing: border-box; }
+        @media (min-width: 900px) { .sl-card { padding: 22px; } }
+        .sl-section-h { font-size: 18px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.3px; margin: 0 0 4px; }
+        .sl-section-sub { font-size: 13px; color: #71717A; margin: 0 0 14px; line-height: 1.5; }
+        .sl-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #E4E4E7; background: #FAFAFA; color: #0A0A0A; font-size: 14px; outline: none; box-sizing: border-box; font-family: inherit; }
+        .sl-input:focus { border-color: #FACC15; background: #FFFFFF; }
+        .sl-label { font-size: 12px; font-weight: 700; color: #52525B; margin-bottom: 6px; display: block; }
+        .sl-btn-primary { padding: 12px 18px; border-radius: 12px; border: none; background: linear-gradient(135deg, #FACC15 0%, #EAB308 100%); color: #0A0A0A; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(250,204,21,0.35); font-family: inherit; min-height: 44px; }
+        .sl-btn-ghost { padding: 10px 14px; border-radius: 12px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #0A0A0A; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 44px; }
+        .sl-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+      `}</style>
 
-      {/* Category Pills */}
-      <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 8, overflowX: 'auto' }}>
-        <button
-          onClick={() => setSelectedCategory('all')}
-          style={{ ...s.catPill, ...(selectedCategory === 'all' ? s.catPillActive : {}) }}
-        >
-          {L.allCategories}
-        </button>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
-            style={{ ...s.catPill, ...(selectedCategory === cat.id ? s.catPillActive : {}) }}
-          >
-            {cat.icon} {cat.name}
-          </button>
-        ))}
-      </div>
+      <div className="sl-dash-wrap">
+        {/* ── DESKTOP SIDEBAR ── */}
+        <aside className="sl-dash-side">
+          <div className="sl-card" style={{ padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid #F4F4F5' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 22, background: profPhotoUrl ? `url(${profPhotoUrl}) center/cover` : 'linear-gradient(135deg,#FACC15,#EAB308)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#0A0A0A', flexShrink: 0 }}>
+                {!profPhotoUrl && (agent?.name || 'A').charAt(0).toUpperCase()}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agent?.name || 'Agent'}</div>
+                <div style={{ fontSize: 11, color: '#71717A', fontWeight: 700 }}>{agent?.agent_code}</div>
+              </div>
+            </div>
+            {navItems.map(n => (
+              <button key={n.id} onClick={() => navigateTo(n.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10,
+                border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, textAlign: 'left', marginBottom: 2, minHeight: 44,
+                background: dashSection === n.id ? '#FFFBEB' : 'transparent',
+                color: dashSection === n.id ? '#0A0A0A' : '#52525B',
+                fontFamily: 'inherit',
+              }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{n.icon}</span>
+                <span>{n.label}</span>
+              </button>
+            ))}
+            <div style={{ borderTop: '1px solid #F4F4F5', marginTop: 10, paddingTop: 10 }}>
+              <button onClick={() => setDrawer(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', color: '#71717A', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>⋯</span>
+                <span>{D.more}</span>
+              </button>
+              <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', color: '#EF4444', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>⎋</span>
+                <span>{D.logout}</span>
+              </button>
+            </div>
+          </div>
+        </aside>
 
-      {/* App Library Title */}
-      <div style={{ padding: '8px 16px 4px' }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>{L.appLibrary}</div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{locale === 'id' ? 'Ketuk untuk melihat detail & bagikan' : 'Tap to view details & share'}</div>
-      </div>
+        {/* ── MAIN CONTENT ── */}
+        <main className="sl-dash-main" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 14 }}>
 
-      {/* Phone Frame Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 16px 24px' }}>
-        {filteredApps.map(app => (
-          <div key={app.id} onClick={() => setSelectedApp(app)} style={{ cursor: 'pointer' }}>
-            {/* Mini phone frame */}
-            <div style={{ width: '100%', aspectRatio: '9/16', borderRadius: 22, background: '#1a1a1a', padding: 3, position: 'relative', boxShadow: `0 8px 24px ${app.color}15, 0 4px 12px rgba(0,0,0,0.1)`, border: '2px solid #eee' }}>
-              <div style={{ width: '100%', height: '100%', borderRadius: 19, overflow: 'hidden', background: '#000', position: 'relative' }}>
-                {/* Dynamic island */}
-                <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 36, height: 11, background: '#000', borderRadius: 10, zIndex: 3 }} />
-                {app.screenshot ? (
-                  <img src={app.screenshot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+          {/* ─── 1. HERO STRIP ─── */}
+          <section id="dash-home" style={{ scrollMarginTop: 80 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: '#71717A', fontWeight: 700 }}>{D.greet},</div>
+              <h1 style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 900, color: '#0A0A0A', margin: 0, letterSpacing: '-0.5px', lineHeight: 1.1 }}>{agent?.name || 'Agent'}</h1>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                <span className="sl-pill" style={{ background: '#0A0A0A', color: '#FACC15' }}>
+                  {agent?.agent_code}
+                </span>
+                <span className="sl-pill" style={{ background: statusPill.bg, color: statusPill.fg }}>
+                  <span style={{ width: 7, height: 7, borderRadius: 4, background: statusPill.dot }} />
+                  {statusPill.label}
+                </span>
+              </div>
+            </div>
+
+            <div className="sl-stat-row">
+              {[
+                { label: D.monthEarn,       value: 'Rp ' + (stats.totalEarnings || 0).toLocaleString(), color: '#22c55e', icon: '💰' },
+                { label: D.pendingPayout,   value: 'Rp ' + (stats.pendingPayout || 0).toLocaleString(), color: '#F59E0B', icon: '⏳' },
+                { label: D.totalVendors,    value: String(stats.totalSignups || 0),                     color: '#8B5CF6', icon: '👥' },
+                { label: D.conversionRate,  value: convPct + '%',                                       color: '#3B82F6', icon: '📈' },
+              ].map((kpi, i) => (
+                <div key={i} className="sl-card" style={{ padding: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{kpi.label}</span>
+                    <span style={{ fontSize: 16, opacity: 0.5 }}>{kpi.icon}</span>
+                  </div>
+                  <div style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 900, color: kpi.color, letterSpacing: '-0.4px' }}>{kpi.value}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ─── 2. QUICK TOOLS ─── */}
+          <section id="dash-tools" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-tools-grid">
+              {/* Link + share buttons */}
+              <div className="sl-card">
+                <h2 className="sl-section-h">{D.quickTools}</h2>
+                <p className="sl-section-sub">{D.yourLink}</p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FAFAFA', border: '1px solid #E4E4E7', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{fullAgentLink}</span>
+                  <button onClick={() => copyToClipboard(fullAgentUrl, D.copied)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#0A0A0A', color: '#FACC15', fontSize: 12, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, minHeight: 36 }}>{D.copy}</button>
+                </div>
+
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#52525B', marginBottom: 10 }}>{D.share}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
+                  {buildShareTargets(fullAgentLink, 'Open your shop in 5 minutes with StreetLocal — premium PWA + WhatsApp checkout + 0% commission.', 'Buka toko online dalam 5 menit — PWA premium + checkout WA + 0% komisi.').map(t => (
+                    <button key={t.id} onClick={() => {
+                      if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
+                      window.open(t.href, '_blank', 'noopener')
+                    }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 4px', borderRadius: 12, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                      <span style={{ fontSize: 14 }}>{t.icon}</span>
+                      <span style={{ display: 'inline-block' }}>{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <button onClick={() => {
+                  // No bundled .zip without a server endpoint — instead we trigger
+                  // sequential downloads of every banner image. The browser will
+                  // queue them. Note: many browsers prompt the user once for
+                  // multi-download permission.
+                  allBanners.forEach((b, i) => setTimeout(() => {
+                    const a = document.createElement('a')
+                    a.href = b.img
+                    a.download = `streetlocal-banner-${b.format}-${b.id}.png`
+                    a.target = '_blank'
+                    a.rel = 'noopener'
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+                  }, i * 250))
+                  showToast(locale === 'id' ? 'Mengunduh ' + allBanners.length + ' banner…' : 'Downloading ' + allBanners.length + ' banners…')
+                }} className="sl-btn-ghost" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#FFFBEB', borderColor: '#FCD34D' }}>
+                  <span style={{ fontSize: 16 }}>📦</span> {D.sharePack}
+                </button>
+                <div style={{ fontSize: 11, color: '#A1A1AA', marginTop: 6, lineHeight: 1.4 }}>{D.sharePackNote}</div>
+              </div>
+
+              {/* QR card */}
+              <div className="sl-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <h2 className="sl-section-h" style={{ alignSelf: 'flex-start' }}>{D.qrTitle}</h2>
+                <p className="sl-section-sub" style={{ alignSelf: 'flex-start' }}>{D.qrDesc}</p>
+                <div style={{ background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: 16, padding: 12, marginBottom: 14 }}>
+                  <img src={qrSrc} alt="Agent QR code" width={200} height={200} style={{ display: 'block', width: 200, height: 200 }} />
+                </div>
+                <button onClick={downloadQR} className="sl-btn-primary" style={{ width: '100%' }}>
+                  {D.downloadPng}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* ─── 3. BANNER STUDIO ─── */}
+          <section id="dash-banners" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <h2 className="sl-section-h">{D.bannerStudio}</h2>
+              <p className="sl-section-sub">{D.bannerStudioDesc}</p>
+
+              {[
+                { key: 'landscape', label: D.landscape, list: bannersByFormat.landscape, grid: 'sl-banner-grid-landscape', ratio: '1200/630' },
+                { key: 'square',    label: D.square,    list: bannersByFormat.square,    grid: 'sl-banner-grid-square',    ratio: '1/1' },
+                { key: 'story',     label: D.story,     list: bannersByFormat.story,     grid: 'sl-banner-grid-story',     ratio: '9/16' },
+              ].map(group => {
+                if (!group.list || group.list.length === 0) return null
+                return (
+                  <div key={group.key} style={{ marginBottom: 22 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: 3, background: '#FACC15' }} />
+                      <span style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{group.label}</span>
+                      <span style={{ fontSize: 11, color: '#A1A1AA', fontWeight: 700 }}>· {group.list.length}</span>
+                    </div>
+                    <div className={group.grid}>
+                      {group.list.map(b => {
+                        const caption = locale === 'id' ? b.id : b.en
+                        return (
+                          <div key={b.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#FAFAFA', borderRadius: 14, padding: 10, border: '1px solid #F4F4F5' }}>
+                            <div style={{ width: '100%', aspectRatio: group.ratio, borderRadius: 10, overflow: 'hidden', background: '#0A0A0A' }}>
+                              {b.isVideo ? (
+                                <video src={b.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                              ) : (
+                                <img src={b.img} alt={caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#3F3F46', lineHeight: 1.35, minHeight: 28 }}>{caption}</div>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                              {buildShareTargets(fullAgentLink, b.en, b.id).slice(0, 3).map(t => (
+                                <button key={t.id} onClick={() => {
+                                  if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
+                                  window.open(t.href, '_blank', 'noopener')
+                                }} title={t.label} style={{ flex: '1 1 0', minHeight: 32, padding: '6px 4px', borderRadius: 8, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                  {t.icon}
+                                </button>
+                              ))}
+                            </div>
+                            <button onClick={() => {
+                              const a = document.createElement('a')
+                              a.href = b.img
+                              a.download = `streetlocal-${b.format}-${b.id}.png`
+                              a.target = '_blank'
+                              a.rel = 'noopener'
+                              document.body.appendChild(a); a.click(); document.body.removeChild(a)
+                            }} style={{ padding: '8px', borderRadius: 8, border: '1px solid #E4E4E7', background: '#FFFFFF', color: '#0A0A0A', fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>
+                              ↓ {D.downloadPng}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+
+          {/* ─── 4. EARNINGS ─── */}
+          <section id="dash-earnings" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+                <div>
+                  <h2 className="sl-section-h">{D.earningsTitle}</h2>
+                  <p className="sl-section-sub" style={{ margin: 0 }}>{D.last4Months}</p>
+                </div>
+                <button onClick={downloadStatementCsv} className="sl-btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 14 }}>↓</span> {D.downloadCsv}
+                </button>
+              </div>
+
+              {/* Inline SVG line graph */}
+              <div style={{ background: '#FAFAFA', borderRadius: 14, padding: 16, marginBottom: 18 }}>
+                <svg viewBox="0 0 320 130" preserveAspectRatio="none" style={{ width: '100%', height: 140, display: 'block' }}>
+                  {/* Grid */}
+                  {[0, 1, 2, 3].map(i => (
+                    <line key={i} x1="32" x2="320" y1={20 + i * 28} y2={20 + i * 28} stroke="#E4E4E7" strokeWidth="1" />
+                  ))}
+                  {/* Path */}
+                  {(() => {
+                    const xs = monthly.map((_, i) => 32 + i * ((320 - 40) / 3))
+                    const ys = monthly.map(m => 120 - (m.value / maxMonthly) * 92)
+                    const pts = xs.map((x, i) => `${x},${ys[i]}`).join(' ')
+                    const areaPts = `32,120 ${pts} 320,120`
+                    return (
+                      <>
+                        <polygon points={areaPts} fill="url(#sl-area)" opacity="0.35" />
+                        <polyline points={pts} fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                        {xs.map((x, i) => (
+                          <g key={i}>
+                            <circle cx={x} cy={ys[i]} r="4" fill="#FACC15" stroke="#0A0A0A" strokeWidth="1.5" />
+                            <text x={x} y="128" fontSize="10" fill="#71717A" textAnchor="middle" fontWeight="700">{monthly[i].label}</text>
+                          </g>
+                        ))}
+                        <defs>
+                          <linearGradient id="sl-area" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stopColor="#FACC15" />
+                            <stop offset="100%" stopColor="#FACC15" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                      </>
+                    )
+                  })()}
+                </svg>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 8 }}>
+                  {monthly.map((m, i) => (
+                    <div key={i} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>Rp {(m.value || 0).toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Next payout */}
+              <div style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', border: '1px solid #FCD34D', borderRadius: 14, padding: 14, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: '#FACC15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🗓️</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{D.nextPayoutDate}</div>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: '#0A0A0A' }}>{nextMondayLabel()}</div>
+                  <div style={{ fontSize: 11, color: '#71717A', marginTop: 2, lineHeight: 1.4 }}>{D.payoutSchedule}</div>
+                </div>
+              </div>
+
+              {/* Pending payouts table */}
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A', marginBottom: 8 }}>{D.pending30Day}</div>
+                {referrals.filter(r => r.status === 'approved' || r.status === 'pending').length === 0 ? (
+                  <div style={{ fontSize: 12, color: '#A1A1AA', padding: 16, background: '#FAFAFA', borderRadius: 10, textAlign: 'center' }}>{locale === 'id' ? 'Belum ada referral menunggu.' : 'No pending referrals yet.'}</div>
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${app.color}20, ${app.color}05)` }}>
-                    <span style={{ fontSize: 32, opacity: 0.4 }}>{app.icon}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {referrals.filter(r => r.status === 'approved' || r.status === 'pending').map(r => {
+                      const days = daysSinceCreated(r)
+                      const bounty = r.commission_amount || tierBounty(r.app_tier)
+                      return (
+                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: '#FAFAFA', borderRadius: 12, border: '1px solid #F4F4F5' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.customer_name || 'Vendor'}</div>
+                            <div style={{ fontSize: 11, color: '#71717A', marginTop: 2 }}>{r.app_tier || '—'} · {D.day} {days} {D.of30}</div>
+                            <div style={{ width: '100%', height: 4, background: '#E4E4E7', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                              <div style={{ width: `${(days / 30) * 100}%`, height: '100%', background: '#FACC15' }} />
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 900, color: '#15803D', flexShrink: 0 }}>Rp {bounty.toLocaleString()}</div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
-                {/* Home indicator */}
-                <div style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 40, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.3)' }} />
+              </div>
+
+              {/* Paid history */}
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A', marginBottom: 8 }}>{D.paidHistory}</div>
+                {referrals.filter(r => r.status === 'paid').length === 0 ? (
+                  <div style={{ fontSize: 12, color: '#A1A1AA', padding: 16, background: '#FAFAFA', borderRadius: 10, textAlign: 'center' }}>{locale === 'id' ? 'Belum ada pembayaran tercatat.' : 'No payouts recorded yet.'}</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {referrals.filter(r => r.status === 'paid').map(r => (
+                      <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: '#F0FDF4', borderRadius: 10, border: '1px solid #BBF7D0' }}>
+                        <span style={{ fontSize: 11, color: '#15803D', fontWeight: 700, width: 80, flexShrink: 0 }}>{r.paid_at ? new Date(r.paid_at).toLocaleDateString() : '—'}</span>
+                        <span style={{ flex: 1, fontSize: 12, fontWeight: 800, color: '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.customer_name || 'Vendor'}</span>
+                        <span style={{ fontSize: 12, fontWeight: 900, color: '#15803D' }}>Rp {(r.commission_amount || 0).toLocaleString()}</span>
+                        <span style={{ fontSize: 10, color: '#71717A', fontFamily: 'monospace' }}>#{(r.id || '').slice(0, 6)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            {/* App label */}
-            <div style={{ marginTop: 10, textAlign: 'center' }}>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', letterSpacing: '-0.2px' }}>{app.name}</div>
-              <div style={{ fontSize: 10, color: '#71717A', fontWeight: 600, marginTop: 2 }}>{app.tier}</div>
-              <div style={{ display: 'inline-flex', gap: 4, alignItems: 'baseline', marginTop: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#15803D' }}>{app.commission}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e' }}>· {app.commissionPct}</span>
+          </section>
+
+          {/* ─── 5. MY REFERRALS ─── */}
+          <section id="dash-referrals" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <h2 className="sl-section-h">{D.referralsTitle}</h2>
+              <p className="sl-section-sub">{stats.totalSignups || 0} total · {convPct}% conversion</p>
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14, overflowX: 'auto' }}>
+                {[
+                  { id: 'all',       label: D.filterAll,       count: referrals.length },
+                  { id: 'pending',   label: D.filterPending,   count: referrals.filter(r => r.status === 'pending').length },
+                  { id: 'approved',  label: D.filterApproved,  count: referrals.filter(r => r.status === 'approved').length },
+                  { id: 'paid',      label: D.filterPaid,      count: referrals.filter(r => r.status === 'paid').length },
+                  { id: 'cancelled', label: D.filterCancelled, count: referrals.filter(r => r.status === 'cancelled').length },
+                ].map(f => (
+                  <button key={f.id} onClick={() => setRefFilter(f.id)} style={{
+                    padding: '8px 12px', borderRadius: 999, border: '1px solid', borderColor: refFilter === f.id ? '#0A0A0A' : '#E4E4E7',
+                    background: refFilter === f.id ? '#0A0A0A' : '#FFFFFF', color: refFilter === f.id ? '#FACC15' : '#52525B',
+                    fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', minHeight: 36,
+                  }}>{f.label} · {f.count}</button>
+                ))}
               </div>
-              <div style={{ fontSize: 11, color: '#52525B', marginTop: 4, fontWeight: 600 }}>Owners pay {app.price}{L.perMonth}</div>
-            </div>
-          </div>
-        ))}
 
-        {/* Coming soon placeholders */}
-        {filteredApps.length < 4 && [...Array(4 - filteredApps.length)].map((_, i) => (
-          <div key={`soon-${i}`} style={{ opacity: 0.3 }}>
-            <div style={{ width: '100%', aspectRatio: '9/16', borderRadius: 22, background: '#f0f0f0', border: '2px dashed #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 24 }}>🔜</span>
+              {filteredRefs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 16px', background: '#FAFAFA', borderRadius: 14 }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>📭</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#52525B' }}>{D.noReferralsTitle}</div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {filteredRefs.map(r => {
+                    const days = daysSinceCreated(r)
+                    const bounty = r.commission_amount || tierBounty(r.app_tier)
+                    const sc = r.status === 'paid' ? '#22c55e' : r.status === 'approved' ? '#3B82F6' : r.status === 'cancelled' ? '#A1A1AA' : '#F59E0B'
+                    return (
+                      <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#FAFAFA', borderRadius: 14, border: '1px solid #F4F4F5' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                            <span style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{r.customer_name || 'Vendor'}</span>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: sc, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.status}</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#71717A' }}>{r.app_tier || '—'}{r.city ? ' · ' + r.city : ''}</div>
+                          {r.status !== 'paid' && r.status !== 'cancelled' && (
+                            <div style={{ width: '100%', maxWidth: 200, height: 4, background: '#E4E4E7', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                              <div style={{ width: `${(days / 30) * 100}%`, height: '100%', background: '#FACC15' }} />
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 900, color: r.status === 'paid' ? '#15803D' : '#0A0A0A' }}>Rp {bounty.toLocaleString()}</div>
+                          {r.status !== 'paid' && r.status !== 'cancelled' && (
+                            <div style={{ fontSize: 10, color: '#71717A', marginTop: 2 }}>{D.day} {days} {D.of30}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {(referrals.length === 0) && (
+                <div style={{ fontSize: 11, color: '#A1A1AA', marginTop: 8, textAlign: 'center', fontStyle: 'italic' }}>{D.devSeedData}</div>
+              )}
             </div>
-            <div style={{ marginTop: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#ccc' }}>{locale === 'id' ? 'Segera Hadir' : 'Coming Soon'}</div>
+          </section>
+
+          {/* ─── 6. LEAD POOL ─── */}
+          <section id="dash-leads" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <h2 className="sl-section-h">🎯 {D.leadPoolTitle}</h2>
+              <p className="sl-section-sub">{D.leadPoolDesc}</p>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button
+                  disabled={leadsLoading}
+                  onClick={async () => {
+                    if (!agent?.id || !supabase) return
+                    setLeadsLoading(true); setLeadsMessage('')
+                    try {
+                      const { data, error } = await supabase.rpc('grab_leads', { p_agent_id: agent.id, p_count: 25 })
+                      if (error) setLeadsMessage('⚠️ ' + error.message)
+                      else setLeadsMessage((locale === 'id' ? '✓ Ditambahkan ' : '✓ Added ') + (data || []).length + (locale === 'id' ? ' leads ke daftar kamu' : ' leads to your list'))
+                      const { data: mine } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                      setMyLeads(mine || [])
+                    } catch (e) { setLeadsMessage('⚠️ ' + e.message) }
+                    setLeadsLoading(false)
+                  }}
+                  className="sl-btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  {leadsLoading ? '⏳ …' : (locale === 'id' ? '🎯 Ambil 25 Leads' : '🎯 Grab 25 Leads')}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!agent?.id || !supabase) return
+                    setLeadsLoading(true)
+                    const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                    setMyLeads(data || []); setLeadsLoading(false)
+                  }}
+                  className="sl-btn-ghost"
+                  title="Refresh"
+                >🔄</button>
+              </div>
+              {leadsMessage && <div style={{ padding: 10, background: leadsMessage.includes('⚠️') ? '#FEE2E2' : '#D1FAE5', color: leadsMessage.includes('⚠️') ? '#991B1B' : '#065F46', borderRadius: 10, fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{leadsMessage}</div>}
+
+              {myLeads.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 16px', background: '#FAFAFA', borderRadius: 14 }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>🎯</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#52525B' }}>{locale === 'id' ? 'Belum ada lead. Klik tombol di atas.' : 'No leads yet. Click the button above.'}</div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 460, overflowY: 'auto' }}>
+                  {myLeads.map(l => {
+                    const phone = (l.whatsapp || l.phone || '').replace(/[^0-9+]/g, '')
+                    const wa = phone ? `https://wa.me/${phone.startsWith('+') ? phone.slice(1) : phone}?text=${encodeURIComponent(`Halo ${l.business_name?.split(' ')[0] || ''}! Saya dari StreetLocal — aplikasi pemesanan online untuk bisnis kamu. Tanpa komisi seperti GoFood. Order langsung ke WhatsApp. Mulai Rp 38.000/bulan. Mau lihat demonya?`)}` : null
+                    const statusColors = { queued: '#A1A1AA', contacted: '#3B82F6', responded: '#06B6D4', interested: '#22C55E', signed: '#15803D', not_interested: '#A1A1AA', dead: '#EF4444' }
+                    const sc = statusColors[l.status] || '#A1A1AA'
+                    return (
+                      <div key={l.id} style={{ padding: 12, background: '#FAFAFA', borderRadius: 12, borderLeft: `3px solid ${sc}`, border: '1px solid #F4F4F5' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{l.business_name}</div>
+                            <div style={{ fontSize: 11, color: '#71717A', marginTop: 2 }}>{l.business_type} · {l.city}</div>
+                            {phone && <div style={{ fontSize: 11, color: '#52525B', marginTop: 2 }}>📞 {l.whatsapp || l.phone}</div>}
+                          </div>
+                          <span style={{ fontSize: 9, fontWeight: 900, color: '#fff', background: sc, padding: '3px 6px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{l.status}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
+                          {wa && <a href={wa} target="_blank" rel="noopener noreferrer" onClick={async () => { if (supabase) await supabase.rpc('agent_update_lead_status', { p_agent_id: agent.id, p_lead_id: l.id, p_status: 'contacted' }); setTimeout(async () => { const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200); setMyLeads(data || []) }, 500) }} style={{ background: '#25D366', color: '#fff', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 800, minHeight: 32, display: 'inline-flex', alignItems: 'center' }}>💬 WA</a>}
+                          {['contacted','responded','interested','dead'].map(st => (
+                            <button key={st} onClick={async () => {
+                              if (!supabase) return
+                              const { error: rpcErr } = await supabase.rpc('agent_update_lead_status', { p_agent_id: agent.id, p_lead_id: l.id, p_status: st })
+                              if (rpcErr) { alert(rpcErr.message); return }
+                              const { data } = await supabase.from('outreach_leads').select('id,business_name,business_type,city,phone,whatsapp,address,status,target_app').eq('agent_id', agent.id).order('status').order('created_at', { ascending: false }).limit(200)
+                              setMyLeads(data || [])
+                            }} style={{ background: st === 'dead' ? '#EF4444' : st === 'interested' ? '#22C55E' : '#71717A', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>{st.replace('_', ' ')}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          </section>
+
+          {/* ─── 7. PROFILE & KYC ─── */}
+          <section id="dash-profile" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
+                <h2 className="sl-section-h">{D.profileTitle}</h2>
+                <span className="sl-pill" style={{ background: verifPill.bg, color: verifPill.fg, fontSize: 12, padding: '6px 12px' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 4, background: verifPill.dot }} />
+                  {D.verifStatus}: {verifPill.label}
+                </span>
+              </div>
+              <p className="sl-section-sub">{D.personalInfo}</p>
+
+              {/* Tax notice */}
+              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 12, padding: '10px 14px', marginBottom: 18, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
+                <div style={{ fontSize: 12, color: '#78350F', fontWeight: 600, lineHeight: 1.45 }}>{D.taxNotice}</div>
+              </div>
+
+              <div className="sl-profile-grid">
+                {/* Personal info card */}
+                <div>
+                  <label className="sl-label">{D.fullName}</label>
+                  <input className="sl-input" disabled value={agent?.name || ''} style={{ marginBottom: 12, opacity: 0.7, cursor: 'not-allowed' }} />
+
+                  <label className="sl-label">{D.email}</label>
+                  <input className="sl-input" type="email" value={profEmail} onChange={e => setProfEmail(e.target.value)} placeholder="you@example.com" style={{ marginBottom: 12 }} />
+
+                  <label className="sl-label">{D.whatsapp}</label>
+                  <input className="sl-input" disabled value={agent?.whatsapp || ''} style={{ marginBottom: 12, opacity: 0.7, cursor: 'not-allowed' }} />
+
+                  <label className="sl-label">{D.profilePhoto}</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: 12, border: '1px dashed #E4E4E7', background: '#FAFAFA', cursor: 'pointer', marginBottom: 12 }}>
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setProfPhotoFile(e.target.files[0])} />
+                    <div style={{ width: 44, height: 44, borderRadius: 22, background: profPhotoUrl ? `url(${profPhotoUrl}) center/cover` : '#E4E4E7', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                      {!profPhotoUrl && '📷'}
+                    </div>
+                    <div style={{ flex: 1, fontSize: 12, color: '#52525B', fontWeight: 700 }}>
+                      {profPhotoFile ? profPhotoFile.name : (profPhotoUrl ? (locale === 'id' ? 'Foto sudah diunggah — klik untuk ganti' : 'Photo uploaded — click to change') : D.uploadPhoto)}
+                    </div>
+                  </label>
+                </div>
+
+                {/* Location card */}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', marginBottom: 10 }}>📍 {D.location}</div>
+                  <label className="sl-label">{D.country}</label>
+                  <select className="sl-input" value={profCountry} onChange={e => setProfCountry(e.target.value)} style={{ marginBottom: 12, appearance: 'none' }}>
+                    <option value="">{D.chooseCountry}</option>
+                    {ISO_COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}
+                  </select>
+
+                  <label className="sl-label">{D.city}</label>
+                  <input className="sl-input" placeholder={locale === 'id' ? 'Jakarta, Surabaya, …' : 'Jakarta, Surabaya, …'} value={profCity} onChange={e => setProfCity(e.target.value)} style={{ marginBottom: 12 }} />
+
+                  {profCountry === 'ID' && (
+                    <>
+                      <label className="sl-label">{D.npwp}</label>
+                      <input className="sl-input" placeholder="00.000.000.0-000.000" value={profNpwp} onChange={e => setProfNpwp(e.target.value)} style={{ marginBottom: 12 }} />
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Bank details */}
+              <div style={{ marginTop: 18 }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', marginBottom: 10 }}>🏦 {D.bankInfo}</div>
+                <form onSubmit={handleVerification}>
+                  <div className="sl-profile-grid">
+                    <div>
+                      <label className="sl-label">{D.bankName}</label>
+                      <input className="sl-input" placeholder="BCA, Mandiri, BNI, …" value={bankName} onChange={e => setBankName(e.target.value)} disabled={isVerified} style={{ marginBottom: 12 }} />
+
+                      <label className="sl-label">{D.accountHolder}</label>
+                      <input className="sl-input" placeholder={locale === 'id' ? 'Sesuai KTP' : 'Must match KTP / ID'} value={bankHolder} onChange={e => setBankHolder(e.target.value)} disabled={isVerified} style={{ marginBottom: 12 }} />
+                    </div>
+                    <div>
+                      <label className="sl-label">{D.accountNumber}</label>
+                      <input className="sl-input" placeholder="1234567890" value={bankAccount} onChange={e => setBankAccount(e.target.value)} disabled={isVerified} style={{ marginBottom: 12 }} />
+
+                      <label className="sl-label">{D.ibanSwift}</label>
+                      <input className="sl-input" placeholder={locale === 'id' ? 'Untuk pencairan internasional (opsional)' : 'For international payouts (optional)'} disabled={isVerified} style={{ marginBottom: 12 }} />
+                    </div>
+                  </div>
+
+                  {/* KTP upload */}
+                  <label className="sl-label" style={{ marginTop: 4 }}>{D.ktpId}</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, border: '2px dashed #E4E4E7', background: '#FAFAFA', cursor: isVerified ? 'not-allowed' : 'pointer', opacity: isVerified ? 0.5 : 1, marginBottom: 12 }}>
+                    <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} disabled={isVerified} onChange={e => setKtpFile(e.target.files[0])} />
+                    <div style={{ fontSize: 24 }}>{agent?.ktp_url || ktpFile ? '✅' : '🪪'}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: agent?.ktp_url || ktpFile ? '#15803D' : '#0A0A0A' }}>{ktpFile ? ktpFile.name : agent?.ktp_url ? (locale === 'id' ? 'KTP sudah diunggah' : 'ID uploaded') : (locale === 'id' ? 'Klik untuk unggah KTP / ID' : 'Click to upload KTP / ID')}</div>
+                      <div style={{ fontSize: 11, color: '#71717A', marginTop: 2 }}>{locale === 'id' ? 'PDF atau gambar — disimpan terenkripsi' : 'PDF or image — stored encrypted'}</div>
+                    </div>
+                  </label>
+
+                  {error && <div style={{ ...s.error, marginTop: 8 }}>{error}</div>}
+                  {(verifySaved || profSaved) && <div style={{ background: '#D1FAE5', color: '#065F46', padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, marginTop: 8 }}>{D.saved}</div>}
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={handleProfileSave} className="sl-btn-primary" disabled={profSaving} style={{ flex: '1 1 200px' }}>
+                      {profSaving ? '…' : D.saveProfile}
+                    </button>
+                    {!isVerified && (
+                      <button type="submit" className="sl-btn-ghost" disabled={verifySaving} style={{ flex: '1 1 200px', background: '#0A0A0A', color: '#FACC15', borderColor: '#0A0A0A' }}>
+                        {verifySaving ? '…' : D.submitVerify}
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          {/* ─── 9. RESOURCES / FAQ ─── */}
+          <section id="dash-resources" style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <h2 className="sl-section-h">{D.resourcesTitle}</h2>
+              <p className="sl-section-sub">{locale === 'id' ? 'Jawaban cepat untuk pertanyaan umum.' : 'Quick answers for common questions.'}</p>
+
+              <div style={{ marginBottom: 16 }}>
+                {D.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                <a href={`https://wa.me/6281234567890?text=${encodeURIComponent(locale === 'id' ? 'Halo StreetLocal — saya agen ' + (agent?.agent_code || '') + ' butuh bantuan' : 'Hi StreetLocal — I am agent ' + (agent?.agent_code || '') + ' and need help')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#25D366', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 13, fontWeight: 800, minHeight: 44 }}>
+                  <span style={{ fontSize: 18 }}>💬</span> {D.waSupport}
+                </a>
+                <button onClick={() => setStep('terms')} className="sl-btn-ghost" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-start' }}>
+                  <span style={{ fontSize: 16 }}>📋</span> {D.viewTerms}
+                </button>
+                <button onClick={() => setDrawer(true)} className="sl-btn-ghost" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-start' }}>
+                  <span style={{ fontSize: 16 }}>🚀</span> {D.marketingTips} · {D.leaderboard} · {D.community}
+                </button>
+              </div>
+
+              {/* Footer brand */}
+              <div style={{ textAlign: 'center', marginTop: 24, paddingTop: 18, borderTop: '1px solid #F4F4F5' }}>
+                <div style={{ fontSize: 11, color: '#A1A1AA', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Powered by</div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#0A0A0A', marginTop: 2 }}>Streetlocal<span style={{ color: '#FACC15' }}>.live</span></div>
+                <div style={{ fontSize: 10, color: '#A1A1AA', marginTop: 4 }}>{agent?.agent_code}</div>
+              </div>
+            </div>
+          </section>
+
+          {/* App Library — kept accessible from old flow (apps modal still works) */}
+          <section style={{ scrollMarginTop: 80 }}>
+            <div className="sl-card">
+              <h2 className="sl-section-h">{D.appLibrary}</h2>
+              <p className="sl-section-sub">{D.appLibraryDesc}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
+                {filteredApps.map(app => (
+                  <div key={app.id} onClick={() => setSelectedApp(app)} style={{ cursor: 'pointer' }}>
+                    <div style={{ width: '100%', aspectRatio: '9/16', borderRadius: 18, background: '#0A0A0A', padding: 3, position: 'relative', boxShadow: `0 6px 18px ${app.color}20`, border: '1px solid #E4E4E7' }}>
+                      <div style={{ width: '100%', height: '100%', borderRadius: 15, overflow: 'hidden', background: '#000' }}>
+                        {app.screenshot ? (
+                          <img src={app.screenshot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${app.color}20, ${app.color}05)` }}>
+                            <span style={{ fontSize: 28, opacity: 0.4 }}>{app.icon}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 8, textAlign: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{app.name}</div>
+                      <div style={{ fontSize: 11, color: '#15803D', fontWeight: 800, marginTop: 2 }}>{app.commission}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
 
-      {/* How it works section */}
-      <div style={{ padding: '0 16px 24px' }}>
-        <div style={{ fontSize: 14, fontWeight: 900, color: '#1a1a1a', marginBottom: 12 }}>{L.howItWorks}</div>
-        {[
-          { step: '1', title: L.step1, desc: L.step1d },
-          { step: '2', title: L.step2, desc: L.step2d },
-          { step: '3', title: L.step3, desc: L.step3d },
-          { step: '4', title: L.step4, desc: L.step4d },
-        ].map(st => (
-          <div key={st.step} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 14, background: '#FACC15', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{st.step}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a1a' }}>{st.title}</div>
-              <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{st.desc}</div>
-            </div>
-          </div>
+      {/* ── BOTTOM TAB BAR (mobile only) ── */}
+      <nav className="sl-dash-bottom-tabs">
+        {mobileTabs.map(t => (
+          <button key={t.id} onClick={() => navigateTo(t.id)} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 4px',
+            color: dashSection === t.id ? '#0A0A0A' : '#A1A1AA',
+            fontFamily: 'inherit', minHeight: 44,
+          }}>
+            <span style={{ fontSize: 18 }}>{t.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.3px' }}>{t.label}</span>
+          </button>
         ))}
-      </div>
-
-      {/* Footer */}
-      <div style={{ textAlign: 'center', padding: '12px 0 30px', borderTop: '1px solid #f0f0f0' }}>
-        <div style={{ fontSize: 10, color: '#ccc' }}>Powered by</div>
-        <div style={{ fontSize: 13, fontWeight: 900, color: '#1a1a1a' }}>StreetLocal</div>
-        <div style={{ fontSize: 10, color: '#aaa', marginTop: 4 }}>{agent?.agent_code}</div>
-      </div>
+        <button onClick={() => setDrawer(true)} style={{
+          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+          background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 4px',
+          color: '#A1A1AA', fontFamily: 'inherit', minHeight: 44,
+        }}>
+          <span style={{ fontSize: 18 }}>⋯</span>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.3px' }}>{D.more}</span>
+        </button>
+      </nav>
 
       {/* ── DRAWER ── */}
       {drawer && (

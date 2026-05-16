@@ -217,5 +217,22 @@
   "fundsEscrow": "Dana ditahan di escrow",
   "themeEditorTitle": "Editor Tema",
   "saveTheme": "Simpan Tema",
-  "pickColor": "Pilih Warna"
+  "pickColor": "Pilih Warna",
+  "ownerName": "Nama pemilik",
+  "ownerNamePh": "cth. Joko Widodo",
+  "ownerEmail": "Email pemilik",
+  "ownerEmailPh": "pemilik@tokoanda.com",
+  "ownerWhatsapp": "WhatsApp pemilik",
+  "ownerWhatsappPh": "WhatsApp pribadi (opsional)",
+  "ownerCity": "Kota",
+  "ownerCityPh": "cth. Yogyakarta",
+  "ownerProvince": "Provinsi",
+  "ownerProvincePh": "cth. DI Yogyakarta",
+  "contactLocation": "Kontak & lokasi",
+  "contactLocationDesc": "Detail kontak pemilik — tidak ditampilkan ke pelanggan.",
+  "errOwnerNameRequired": "Isi nama lengkap pemilik",
+  "errOwnerEmailRequired": "Isi email pemilik",
+  "errOwnerEmailInvalid": "Format email tidak valid",
+  "errCityRequired": "Isi kota Anda",
+  "saved": "Tersimpan"
 }

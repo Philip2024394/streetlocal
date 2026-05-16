@@ -217,5 +217,22 @@
   "fundsEscrow": "Funds held in escrow",
   "themeEditorTitle": "Theme Editor",
   "saveTheme": "Save Theme",
-  "pickColor": "Pick Color"
+  "pickColor": "Pick Color",
+  "ownerName": "Owner full name",
+  "ownerNamePh": "e.g. Joko Widodo",
+  "ownerEmail": "Owner email",
+  "ownerEmailPh": "owner@yourshop.com",
+  "ownerWhatsapp": "Owner WhatsApp",
+  "ownerWhatsappPh": "Personal WhatsApp (optional)",
+  "ownerCity": "City",
+  "ownerCityPh": "e.g. Yogyakarta",
+  "ownerProvince": "Province",
+  "ownerProvincePh": "e.g. DI Yogyakarta",
+  "contactLocation": "Contact & location",
+  "contactLocationDesc": "Owner contact details — never shown to customers.",
+  "errOwnerNameRequired": "Enter the owner's full name",
+  "errOwnerEmailRequired": "Enter the owner's email",
+  "errOwnerEmailInvalid": "Email format looks wrong",
+  "errCityRequired": "Enter your city",
+  "saved": "Saved"
 }

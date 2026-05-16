@@ -4,6 +4,10 @@ import imgError from './imgFallback'
 
 const CITIES = ['Yogyakarta', 'Solo', 'Semarang', 'Jakarta', 'Bali', 'Surabaya', 'Bandung', 'Malang', 'Medan', 'Makassar']
 
+// Light email regex — same one used in VendorLoginPage. Keeps the
+// activation portal self-contained without pulling in a validator dep.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 /* ─── Styles ─── */
 const S = {
   page: { background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' },
@@ -26,6 +30,13 @@ export default function ActivatePage() {
   const [city, setCity] = useState('Yogyakarta')
   const [activationCode, setActivationCode] = useState('')
   const [salesPerson, setSalesPerson] = useState('')
+  // Owner contact fields — sales team captures these at activation time
+  // so we always have a real human to email / call. Map directly to the
+  // owner_* + province columns on vendor_accounts.
+  const [ownerName, setOwnerName] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [ownerWhatsapp, setOwnerWhatsapp] = useState('')
+  const [province, setProvince] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
@@ -39,6 +50,12 @@ export default function ActivatePage() {
     if (!password.trim() || password.length < 4) { setError('Password must be at least 4 characters'); return }
     if (!activationCode.trim()) { setError('Enter activation code'); return }
     if (!salesPerson.trim()) { setError('Enter sales person name'); return }
+    // Owner contact — required so we have a real human on file beyond the
+    // shop's WhatsApp. Email format is checked; WhatsApp + province optional.
+    if (!ownerName.trim()) { setError("Enter the owner's full name"); return }
+    if (!ownerEmail.trim()) { setError("Enter the owner's email"); return }
+    if (!EMAIL_RE.test(ownerEmail.trim())) { setError('Email format looks wrong'); return }
+    if (!city.trim()) { setError('Enter the city'); return }
 
     setLoading(true)
 
@@ -66,6 +83,7 @@ export default function ActivatePage() {
         // plan_tier comes from the activation_code (whatsapp = 35k, chat = 50k,
         // both = picker for the customer). The price isn't stored on the
         // vendor row — it's only on payment_records for audit purposes.
+        const ownerPhone = (ownerWhatsapp || '').replace(/[^0-9]/g, '')
         const { data: vendor, error: vendorErr } = await supabase.from('vendor_accounts').insert({
           phone,
           password_hash: password,
@@ -79,6 +97,12 @@ export default function ActivatePage() {
           activated_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           activated_by: salesPerson.trim(),
+          // Owner contact + province — captured by the sales rep during
+          // activation. WhatsApp falls back to the shop number when blank.
+          owner_name: ownerName.trim(),
+          owner_email: ownerEmail.trim(),
+          owner_whatsapp: ownerPhone || phone || null,
+          province: province.trim() || null,
         }).select().single()
 
         if (vendorErr) {
@@ -141,6 +165,10 @@ export default function ActivatePage() {
     setCity('Yogyakarta')
     setActivationCode('')
     setSalesPerson('')
+    setOwnerName('')
+    setOwnerEmail('')
+    setOwnerWhatsapp('')
+    setProvince('')
     setError('')
     setResult(null)
   }
@@ -180,20 +208,52 @@ export default function ActivatePage() {
               <input style={S.input} placeholder="Min 4 characters" type="password" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
 
-            {/* Step 4: City */}
+            {/* Step 4: Owner full name */}
             <div style={{ marginBottom: 16 }}>
               <label style={S.label}>
-                <span style={S.stepNum}>4</span>City
+                <span style={S.stepNum}>4</span>Owner Full Name
+              </label>
+              <input style={S.input} placeholder="e.g. Joko Widodo" value={ownerName} onChange={e => setOwnerName(e.target.value)} />
+            </div>
+
+            {/* Step 5: Owner email */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={S.label}>
+                <span style={S.stepNum}>5</span>Owner Email
+              </label>
+              <input style={S.input} type="email" placeholder="owner@yourshop.com" value={ownerEmail} onChange={e => setOwnerEmail(e.target.value)} />
+            </div>
+
+            {/* Step 6: Owner WhatsApp (optional — defaults to shop WhatsApp) */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={S.label}>
+                <span style={S.stepNum}>6</span>Owner WhatsApp <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>(optional)</span>
+              </label>
+              <input style={S.input} type="tel" inputMode="numeric" placeholder="Defaults to shop number" value={ownerWhatsapp} onChange={e => setOwnerWhatsapp(e.target.value)} />
+            </div>
+
+            {/* Step 7: City */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={S.label}>
+                <span style={S.stepNum}>7</span>City
               </label>
               <select style={S.select} value={city} onChange={e => setCity(e.target.value)}>
                 {CITIES.map(c => <option key={c} value={c} style={{ background: '#1a1a1a' }}>{c}</option>)}
               </select>
             </div>
 
-            {/* Step 5: Activation Code */}
+            {/* Step 8: Province (free-text — e.g. "DI Yogyakarta", "Bali") */}
             <div style={{ marginBottom: 16 }}>
               <label style={S.label}>
-                <span style={S.stepNum}>5</span>Activation Code
+                <span style={S.stepNum}>8</span>Province / State
+              </label>
+              <input style={S.input} placeholder="e.g. DI Yogyakarta" value={province} onChange={e => setProvince(e.target.value)} />
+            </div>
+
+            {/* Step 9: Activation Code */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={S.label}>
+                <span style={S.stepNum}>9</span>Activation Code
               </label>
               <input
                 style={{ ...S.input, fontFamily: 'monospace', fontSize: 18, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' }}
@@ -203,10 +263,10 @@ export default function ActivatePage() {
               />
             </div>
 
-            {/* Step 6: Sales Person */}
+            {/* Step 10: Sales Person */}
             <div style={{ marginBottom: 16 }}>
               <label style={S.label}>
-                <span style={S.stepNum}>6</span>Sales Person Name
+                <span style={S.stepNum}>10</span>Sales Person Name
               </label>
               <input style={S.input} placeholder="Your name" value={salesPerson} onChange={e => setSalesPerson(e.target.value)} />
             </div>

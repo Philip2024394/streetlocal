@@ -3085,6 +3085,19 @@ export default function App() {
   const [shopCountry, setShopCountry] = useState(() => localStorage.getItem('foodlocalchat_shopCountry') || '')
   const [countrySuggestions, setCountrySuggestions] = useState([])
   const [shopFoodType, setShopFoodType] = useState(() => localStorage.getItem('foodlocalchat_shopFoodType') || 'Indonesian Street Food')
+  // Owner contact + location — separate from the public shop_* fields.
+  // These are the vendor_accounts.owner_name / owner_email / owner_whatsapp
+  // / city / province columns. Never shown to customers; used for billing,
+  // account recovery, and operational comms. Hydrated from Supabase on
+  // vendor login (see effect ~line 5050) and saved via the "Contact &
+  // location" card in shopConfig.
+  const [ownerName, setOwnerName] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [ownerWhatsapp, setOwnerWhatsapp] = useState('')
+  const [ownerCity, setOwnerCity] = useState('')
+  const [ownerProvince, setOwnerProvince] = useState('')
+  const [ownerSavedFlash, setOwnerSavedFlash] = useState(false)
+  const [ownerSaveError, setOwnerSaveError] = useState('')
 
   /* ─── Customization Features (all optional) ─── */
   const [btnShape, setBtnShape] = useState(() => localStorage.getItem('foodlocalchat_btnShape') || 'rounded')
@@ -5128,6 +5141,13 @@ export default function App() {
       if (data.preorder_enabled !== undefined && data.preorder_enabled !== null) setPreorderEnabled(!!data.preorder_enabled)
       if (data.shop_food_type) setShopFoodType(data.shop_food_type)
       if (data.shop_open !== undefined) setShopOpen(data.shop_open)
+      // Owner contact + location — added 2026-05. All nullable so older
+      // vendor rows simply fall through to empty strings.
+      if (data.owner_name != null) setOwnerName(data.owner_name || '')
+      if (data.owner_email != null) setOwnerEmail(data.owner_email || '')
+      if (data.owner_whatsapp != null) setOwnerWhatsapp(data.owner_whatsapp || '')
+      if (data.city != null) setOwnerCity(data.city || '')
+      if (data.province != null) setOwnerProvince(data.province || '')
       if (data.landing_theme_id) {
         setLandingThemeId(data.landing_theme_id)
         try { localStorage.setItem('foodlocalchat_landing_theme_id', data.landing_theme_id) } catch {}
@@ -13054,6 +13074,105 @@ export default function App() {
             </div>
             <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>Google Maps Link</label>
             <input style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} value={shopMapsLink} onChange={(e) => setShopMapsLink(e.target.value)} placeholder="Paste Google Maps link" />
+          </div>
+
+          {/* Contact & location card — owner_*, city, province columns
+              on vendor_accounts. Never shown to customers; used by ops
+              + billing + account recovery. Independent from the public
+              "Location" card above which targets customer-facing fields. */}
+          <div style={{ margin: '0 14px 12px', background: 'rgba(0,0,0,0.65)', borderRadius: 16, padding: 16, border: isCustomAccent ? `1px solid ${accent}30` : '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{t.contactLocation || 'Contact & location'}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>{t.contactLocationDesc || 'Owner contact details — never shown to customers.'}</div>
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.ownerName || 'Owner full name'}</label>
+            <input
+              style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              value={ownerName}
+              maxLength={80}
+              onChange={(e) => { setOwnerName(e.target.value); setOwnerSaveError(''); setOwnerSavedFlash(false) }}
+              placeholder={t.ownerNamePh || 'e.g. Joko Widodo'}
+            />
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.ownerEmail || 'Owner email'}</label>
+            <input
+              style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              type="email"
+              autoComplete="email"
+              value={ownerEmail}
+              maxLength={120}
+              onChange={(e) => { setOwnerEmail(e.target.value); setOwnerSaveError(''); setOwnerSavedFlash(false) }}
+              placeholder={t.ownerEmailPh || 'owner@yourshop.com'}
+            />
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.ownerWhatsapp || 'Owner WhatsApp'}</label>
+            <input
+              style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              type="tel"
+              inputMode="numeric"
+              value={ownerWhatsapp}
+              maxLength={20}
+              onChange={(e) => { setOwnerWhatsapp(e.target.value); setOwnerSaveError(''); setOwnerSavedFlash(false) }}
+              placeholder={t.ownerWhatsappPh || 'Personal WhatsApp (optional)'}
+            />
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.ownerCity || 'City'}</label>
+                <input
+                  style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  value={ownerCity}
+                  maxLength={60}
+                  onChange={(e) => { setOwnerCity(e.target.value); setOwnerSaveError(''); setOwnerSavedFlash(false) }}
+                  placeholder={t.ownerCityPh || 'e.g. Yogyakarta'}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4, display: 'block' }}>{t.ownerProvince || 'Province'}</label>
+                <input
+                  style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  value={ownerProvince}
+                  maxLength={60}
+                  onChange={(e) => { setOwnerProvince(e.target.value); setOwnerSaveError(''); setOwnerSavedFlash(false) }}
+                  placeholder={t.ownerProvincePh || 'e.g. DI Yogyakarta'}
+                />
+              </div>
+            </div>
+
+            {ownerSaveError && (
+              <div role="alert" style={{ marginTop: 10, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', fontSize: 13, fontWeight: 600 }}>{ownerSaveError}</div>
+            )}
+
+            <button
+              type="button"
+              onClick={async () => {
+                // Client-side validation mirrors the signup flow: name +
+                // email + city required, email format checked. WhatsApp +
+                // province optional.
+                setOwnerSavedFlash(false)
+                setOwnerSaveError('')
+                if (!ownerName.trim()) { setOwnerSaveError(t.errOwnerNameRequired || "Enter the owner's full name"); return }
+                if (!ownerEmail.trim()) { setOwnerSaveError(t.errOwnerEmailRequired || "Enter the owner's email"); return }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim())) { setOwnerSaveError(t.errOwnerEmailInvalid || 'Email format looks wrong'); return }
+                if (!ownerCity.trim()) { setOwnerSaveError(t.errCityRequired || 'Enter your city'); return }
+                if (!vendorId) { setOwnerSaveError('No vendor session'); return }
+                try {
+                  await updateVendorConfig(vendorId, {
+                    owner_name: ownerName.trim(),
+                    owner_email: ownerEmail.trim(),
+                    owner_whatsapp: ownerWhatsapp.replace(/[^0-9]/g, '') || null,
+                    city: ownerCity.trim(),
+                    province: ownerProvince.trim() || null,
+                  })
+                  setOwnerSavedFlash(true)
+                  setTimeout(() => setOwnerSavedFlash(false), 2500)
+                } catch (e) {
+                  setOwnerSaveError(e?.message || 'Save failed')
+                }
+              }}
+              style={{ marginTop: 12, width: '100%', padding: '12px 16px', borderRadius: 10, border: 'none', background: ownerSavedFlash ? '#22C55E' : accent, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 44, transition: 'background 0.2s' }}
+            >
+              {ownerSavedFlash ? `✓ ${t.saved || 'Saved'}` : (t.saveChanges || 'Save Changes')}
+            </button>
           </div>
 
           {/* Hours card */}
