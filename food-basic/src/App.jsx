@@ -2868,7 +2868,18 @@ export default function App() {
   const urlThemeParam = new URLSearchParams(window.location.search).get('theme')
   const urlThemePreset = urlThemeParam ? THEME_PRESETS.find(t => t.id === urlThemeParam) : null
   // Demo is locked to noodle (red) regardless of URL params. New vendors also start on noodle.
-  const [shopTheme, setShopTheme] = useState(() => isDemo ? 'noodle' : urlThemePreset ? urlThemePreset.id : isPreview ? 'noodle' : (localStorage.getItem('foodlocalchat_theme') || 'noodle'))
+  const [shopTheme, setShopTheme] = useState(() => {
+    // `?landing=<id>` is the donut-selling-page iframe preview signal —
+    // force donut theme so the splash render path at line ~6571 fires
+    // and shows the chosen landing design. Otherwise shopTheme defaults
+    // to 'noodle' and the iframe shows the generic noodle splash.
+    const qsLanding = new URLSearchParams(window.location.search).get('landing')
+    if (qsLanding) return 'donut'
+    if (isDemo) return 'noodle'
+    if (urlThemePreset) return urlThemePreset.id
+    if (isPreview) return 'noodle'
+    return localStorage.getItem('foodlocalchat_theme') || 'noodle'
+  })
   const [shopAccentColor, setShopAccentColor] = useState(() => isDemo ? '#8B0000' : urlThemePreset ? urlThemePreset.accent : isPreview ? '#8B0000' : (localStorage.getItem('foodlocalchat_accentColor') || '#8B0000'))
   // CASCADE — on donut theme, keep the app accent + saved accent in
   // lock-step with the master pink from Landing Page Edit. Every section
