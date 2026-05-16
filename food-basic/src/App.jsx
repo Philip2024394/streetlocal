@@ -2177,9 +2177,15 @@ export default function App() {
   }, [landingEnabled])
   const [showLanding, setShowLanding] = useState(() => {
     if (isDemo) return demoPage === 'landing'
+    // `?landing=<id>` is the iframe-preview signal used by the donut
+    // selling page's cycling hero phone. ALWAYS show the splash when
+    // present so the cycling carousel actually shows the design we
+    // asked for, not the customer menu underneath.
+    const qsParams = new URLSearchParams(window.location.search)
+    if (qsParams.get('landing')) return true
     // vendorbasic_vendorId fallback preserves state for users migrating from
     // the retired /food/whatsapp app (which used that localStorage key).
-    const id = new URLSearchParams(window.location.search).get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
+    const id = qsParams.get('vendor') || localStorage.getItem('foodlocalchat_vendorId') || localStorage.getItem('vendorbasic_vendorId') || localStorage.getItem('indoo_vendor_id')
     // Honour the landing-disabled toggle: customers land on the menu directly
     // when the vendor has switched the landing splash off.
     const landingOn = (localStorage.getItem('foodlocalchat_landing_enabled') !== 'false')
