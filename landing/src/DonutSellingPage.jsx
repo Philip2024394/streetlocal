@@ -422,7 +422,8 @@ export default function DonutSellingPage() {
           <div className="ds-hero__copy">
             <span className="ds-eyebrow">
               <span className="ds-eyebrow__dot" aria-hidden></span>
-              Donut sellers
+              Donut sellers · Indonesia
+              <span className="ds-eyebrow__flag" aria-label="Indonesia">🇮🇩</span>
             </span>
             <h1 className="ds-h1">
               Your donut shop.<br />
@@ -432,10 +433,9 @@ export default function DonutSellingPage() {
               GoPay · OVO · DANA · ShopeePay · QRIS · Bank Transfer — all in one app, Rp 38,000/month. 0% commission. Customers order from WhatsApp, you keep 100% of what you sell.
             </p>
             <div className="ds-cta-row">
-              {/* "Start your shop" CTA lives in the footer now — the hero
-                  keeps only the soft "see demo" link so visitors scroll
-                  through the value props first. */}
-              <a href="#demo" className="ds-btn ds-btn--outline ds-btn--lg">▶ See live demo</a>
+              {/* Single soft "View demo" link with a moving text-glow
+                  shimmer — replaces the older two-button row. */}
+              <a href="#demo" className="ds-view-demo">View demo</a>
             </div>
             <ul className="ds-trust">
               <li><span className="ds-check">✓</span> 7-day free trial</li>
@@ -1059,6 +1059,7 @@ function PageStyles() {
       .ds-hero__copy { position: relative; z-index: 2; }
       .ds-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #FCE7F3; color: #DB2777; padding: 6px 11px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; }
       .ds-eyebrow__dot { width: 6px; height: 6px; border-radius: 50%; background: #EC4899; animation: dsPulse 2s ease-in-out infinite; }
+      .ds-eyebrow__flag { font-size: 13px; line-height: 1; margin-left: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15)); }
       @keyframes dsPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
       /* H1 + lede scaled down on smallest mobile so the side-by-side
          layout doesn't overflow. They grow back at ≥480px and again
@@ -1066,6 +1067,39 @@ function PageStyles() {
       .ds-h1 { font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 900; margin: 16px 0 0; color: #2D1B1B; }
       .ds-lede { font-size: 13px; line-height: 1.5; color: #6B5555; margin: 14px 0 0; max-width: 540px; }
       .ds-cta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+
+      /* View demo — single-line link with a running shimmer-glow
+         that sweeps left-to-right every 2.4s. Uses background-clip:
+         text so the gradient masks to the letterforms. Falls back
+         to plain pink when -webkit-background-clip isn't supported. */
+      .ds-view-demo {
+        display: inline-block; padding: 4px 2px;
+        font-size: 15px; font-weight: 800; letter-spacing: 0.02em;
+        text-decoration: none; text-transform: uppercase;
+        color: #EC4899;
+        background: linear-gradient(90deg, #EC4899 0%, #EC4899 35%, #fff7fb 50%, #EC4899 65%, #EC4899 100%);
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: dsViewDemoShine 2.4s linear infinite;
+        position: relative;
+      }
+      .ds-view-demo::after {
+        content: ' →';
+        -webkit-text-fill-color: #EC4899;
+        color: #EC4899;
+        transition: transform 0.2s ease;
+        display: inline-block;
+        margin-left: 2px;
+      }
+      .ds-view-demo:hover::after { transform: translateX(3px); }
+      @keyframes dsViewDemoShine {
+        0%   { background-position: 220% 0; }
+        100% { background-position: -120% 0; }
+      }
+      @media (min-width: 640px) { .ds-view-demo { font-size: 16px; } }
+      @media (min-width: 980px) { .ds-view-demo { font-size: 17px; } }
       .ds-trust { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 12px; font-weight: 600; color: #705353; }
       .ds-trust li { display: inline-flex; align-items: center; }
       @media (min-width: 480px) {
