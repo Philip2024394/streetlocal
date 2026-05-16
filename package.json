@@ -7,14 +7,16 @@
     "dev:foodlocal-pro": "cd foodlocal-pro && npm run dev -- --port 5174",
     "dev:products-local":"cd products-local && npm run dev -- --port 5178",
     "dev:services-local":"cd services-local && npm run dev -- --port 5183",
-    "dev": "concurrently -n landing,food-basic,foodlocal-pro,products-local,services-local -c blue,magenta,cyan,green,yellow \"npm:dev:landing\" \"npm:dev:food-basic\" \"npm:dev:foodlocal-pro\" \"npm:dev:products-local\" \"npm:dev:services-local\"",
+    "dev:cityriders":    "cd cityriders && npm run dev -- --port 5186",
+    "dev": "concurrently -n landing,food-basic,foodlocal-pro,products-local,services-local,cityriders -c blue,magenta,cyan,green,yellow,red \"npm:dev:landing\" \"npm:dev:food-basic\" \"npm:dev:foodlocal-pro\" \"npm:dev:products-local\" \"npm:dev:services-local\" \"npm:dev:cityriders\"",
     "build:landing":       "cd landing && npm run build",
     "build:food-basic":    "cd food-basic && npm run build",
     "build:foodlocal-pro": "cd foodlocal-pro && npm run build",
     "build:products-local":"cd products-local && npm run build",
     "build:services-local":"cd services-local && npm run build",
-    "build": "npm run build:landing && npm run build:food-basic && npm run build:foodlocal-pro && npm run build:products-local && npm run build:services-local",
-    "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../foodlocal-pro && npm install && cd ../products-local && npm install && cd ../services-local && npm install"
+    "build:cityriders":    "cd cityriders && npm run build",
+    "build": "npm run build:landing && npm run build:food-basic && npm run build:foodlocal-pro && npm run build:products-local && npm run build:services-local && npm run build:cityriders",
+    "install:all": "cd landing && npm install && cd ../food-basic && npm install && cd ../foodlocal-pro && npm install && cd ../products-local && npm install && cd ../services-local && npm install && cd ../cityriders && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4"

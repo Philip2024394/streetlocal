@@ -20,11 +20,14 @@ import React, { useEffect, useRef, useState } from 'react'
 //    To add a new selling page later: flip `live: true` + update
 //    `href` to its sales-page route. Single-line change per app.
 const VERTICALS = [
-  { id: 'donut',    label: 'Donut & Bakery App',       emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen-printer integration, 0% commission on every sale.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'Explore →',           showPhone: true },
-  { id: 'food',     label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: true,  cta: 'Open the app →' },
-  { id: 'food-pro', label: 'Restaurant Pro (Full POS)',  emoji: '🍽️', desc: 'Table service, kitchen tickets, multi-staff roles, daily sales reports.', href: '/food/pro',      demoHref: '/food/pro',      live: false, cta: 'Try the demo →' },
-  { id: 'products', label: 'Retail & Local Products',    emoji: '🛍️', desc: 'Catalog, stock, multi-image gallery, anything you sell physically.',     href: '/products/local', demoHref: '/products/local', live: false, cta: 'Try the demo →' },
-  { id: 'services', label: 'Salons, Tattoo Studios & Bookings', emoji: '💇', desc: 'Time-slot bookings, service menu, deposit-on-book — any appointment trade.', href: '/services',       demoHref: '/services',       live: false, cta: 'Try the demo →' },
+  { id: 'donut',     label: 'Donut & Bakery App',       emoji: '🍩', desc: 'Pre-orders, loyalty stamps, in-app chat, kitchen-printer integration, 0% commission on every sale.', href: '/donut',          demoHref: '/food/chat/?vendor=00000000-0000-0000-0000-00000000d0c0', live: true,  cta: 'Explore →',           showPhone: true },
+  { id: 'food',      label: 'Restaurant & Food Delivery', emoji: '🍜', desc: 'WhatsApp orders, delivery zones, multi-currency checkout, marketing.', href: '/food/chat',     demoHref: '/food/chat',     live: true,  cta: 'Open the app →' },
+  // City Rider — Next.js PWA deployed separately (Vercel). Update `href`
+  // to the production URL (cityrider.id or cityriders.vercel.app) once live.
+  { id: 'cityrider', label: 'City Rider — Bike Couriers', emoji: '🛵', desc: 'Independent motorcycle couriers set their own per-km rate, get a GPS marketplace listing, customers contact via WhatsApp. Rp 30K/month, 0% commission, no dispatch.', href: 'https://cityrider.id', demoHref: 'https://cityrider.id', live: true, cta: 'Open the app →', external: true },
+  { id: 'food-pro',  label: 'Restaurant Pro (Full POS)',  emoji: '🍽️', desc: 'Table service, kitchen tickets, multi-staff roles, daily sales reports.', href: '/food/pro',      demoHref: '/food/pro',      live: false, cta: 'Try the demo →' },
+  { id: 'products',  label: 'Retail & Local Products',    emoji: '🛍️', desc: 'Catalog, stock, multi-image gallery, anything you sell physically.',     href: '/products/local', demoHref: '/products/local', live: false, cta: 'Try the demo →' },
+  { id: 'services',  label: 'Salons, Tattoo Studios & Bookings', emoji: '💇', desc: 'Time-slot bookings, service menu, deposit-on-book — any appointment trade.', href: '/services',       demoHref: '/services',       live: false, cta: 'Try the demo →' },
 ]
 
 // ── Country × tier pricing matrix.
@@ -487,10 +490,11 @@ export default function PremiumHome () {
                 { id: 'faq',      label: 'FAQ',           href: '#faq',      icon: '❓' },
                 { id: 'donut',    label: 'Donut & Bakery App', href: '/donut',   icon: '🍩' },
                 { id: 'food',     label: 'Food & Restaurant App', href: '/food/chat', icon: '🍜' },
+                { id: 'cityrider',label: 'City Rider — Couriers', href: 'https://cityrider.id', icon: '🛵', external: true },
                 { id: 'affiliate',label: 'Become an Agent', href: '/affiliate', icon: '🤝' },
                 { id: 'signin',   label: 'Sign in',       href: '/food/chat/login', icon: '🔑' },
               ].map(item => (
-                <a key={item.id} href={item.href} onClick={() => setNavDrawerOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', color: '#0A0A0A', fontSize: 15, fontWeight: 700, textDecoration: 'none', borderLeft: '3px solid transparent', transition: 'background 0.15s ease, border-color 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.background = '#FFFBEB'; e.currentTarget.style.borderLeftColor = '#FACC15' }} onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.borderLeftColor = 'transparent' }}>
+                <a key={item.id} href={item.href} {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => setNavDrawerOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', color: '#0A0A0A', fontSize: 15, fontWeight: 700, textDecoration: 'none', borderLeft: '3px solid transparent', transition: 'background 0.15s ease, border-color 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.background = '#FFFBEB'; e.currentTarget.style.borderLeftColor = '#FACC15' }} onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.borderLeftColor = 'transparent' }}>
                   <span style={{ fontSize: 20, width: 28, textAlign: 'center' }} aria-hidden>{item.icon}</span>
                   <span>{item.label}</span>
                 </a>
@@ -551,7 +555,12 @@ export default function PremiumHome () {
           </div>
           <div className="sl-vert-grid">
             {VERTICALS.map(v => (
-              <a key={v.id} href={v.href} className={`sl-vert${v.showPhone ? ' sl-vert--phone' : ''}`}>
+              <a
+                key={v.id}
+                href={v.href}
+                {...(v.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className={`sl-vert${v.showPhone ? ' sl-vert--phone' : ''}`}
+              >
                 <span className={`sl-vert__badge ${v.live ? 'sl-vert__badge--live' : 'sl-vert__badge--soon'}`}>
                   {v.live ? 'LIVE' : 'SOON'}
                 </span>
