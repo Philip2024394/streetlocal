@@ -135,12 +135,9 @@ export default function CityRiderSellingPage() {
         <div className="cr-hero__bg" />
         <div className="cr-hero__inner">
           <div className="cr-hero__left">
-            <span className="cr-kicker">
-              <span className="cr-pulse" />
-              Platform rider motor — Indonesia
-            </span>
             <h1 className="cr-h1">
-              Punya motor? Jadi <span className="cr-grad">kurir mandiri</span><br /> dengan City Rider.
+              Punya motor?<br />
+              Jadi <span className="cr-grad">kurir mandiri</span> dengan City Rider.
             </h1>
             <p className="cr-hero__lede">
               Marketplace untuk rider motor independen. Atur harga sendiri, simpan 100% pendapatan,
@@ -532,9 +529,14 @@ function PageStyles() {
       .cr-h3 { font-size: clamp(22px, 3vw, 28px); font-weight: 900; line-height: 1.15; margin: 12px 0 12px; }
       .cr-dot { width: 8px; height: 8px; border-radius: 50%; background: #FACC15; }
 
-      /* ── HERO ── */
+      /* ── HERO ──
+         Mobile-first: text left, phone right, side-by-side from the
+         smallest screens (matches DonutSellingPage pattern). Text column
+         is wider (1.25fr) so H1 has breathing room; phone column
+         auto-sizes around its 130-280px width. Reverts to looser
+         1.15fr 1fr at desktop. */
       .cr-hero {
-        position: relative; padding: 80px 0 90px; overflow: hidden;
+        position: relative; padding: 56px 0 64px; overflow: hidden;
       }
       .cr-hero__bg {
         position: absolute; inset: 0; pointer-events: none; z-index: 0;
@@ -544,43 +546,71 @@ function PageStyles() {
       }
       .cr-hero__inner {
         position: relative; z-index: 1;
-        max-width: 1180px; margin: 0 auto; padding: 0 24px;
-        display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center;
+        max-width: 1180px; margin: 0 auto; padding: 0 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+        gap: 18px; align-items: center;
+      }
+      .cr-hero__left { min-width: 0; }
+      .cr-h1 {
+        font-size: 28px; line-height: 1.05; letter-spacing: -0.02em;
+        font-weight: 900; margin: 4px 0 0;
       }
       .cr-hero__lede {
-        font-size: 17px; line-height: 1.7; color: rgba(255,255,255,0.65);
-        max-width: 540px; margin-bottom: 28px;
+        font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.65);
+        max-width: 540px; margin: 12px 0 0;
       }
-      .cr-hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+      .cr-hero__cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
       .cr-hero__pill {
         display: inline-flex; align-items: center; gap: 8px;
-        font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7);
+        font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.7);
         background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-        padding: 8px 14px; border-radius: 9999px;
+        padding: 6px 12px; border-radius: 9999px;
+        margin-top: 12px;
       }
+      .cr-hero__right { display: flex; justify-content: center; min-width: 0; }
       .cr-phone {
-        position: relative; width: 100%; max-width: 320px; margin: 0 auto;
+        position: relative; width: 100%; max-width: 220px;
         aspect-ratio: 9/19;
-        background: #1A1A1A; border-radius: 36px;
+        background: #1A1A1A; border-radius: 28px;
         border: 2px solid rgba(255,255,255,0.08);
-        padding: 8px; overflow: hidden;
-        box-shadow: 0 30px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(250,204,21,0.06);
+        padding: 6px; overflow: hidden;
+        box-shadow: 0 24px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(250,204,21,0.06);
       }
       .cr-phone__notch {
-        position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-        width: 90px; height: 22px; background: #0A0A0A; border-radius: 14px; z-index: 2;
+        position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+        width: 68px; height: 18px; background: #0A0A0A; border-radius: 12px; z-index: 2;
       }
       .cr-phone__screen {
-        position: absolute; inset: 8px; border-radius: 28px; overflow: hidden;
+        position: absolute; inset: 6px; border-radius: 22px; overflow: hidden;
         background: #0A0A0A;
       }
       .cr-phone__screen iframe {
         width: 100%; height: 100%; border: 0; display: block;
       }
-      @media (max-width: 860px) {
-        .cr-hero { padding: 56px 0 64px; }
-        .cr-hero__inner { grid-template-columns: 1fr; gap: 36px; }
-        .cr-hero__right { display: flex; justify-content: center; }
+      /* ≥480px: H1 + lede grow back, phone scales up slightly */
+      @media (min-width: 480px) {
+        .cr-h1        { font-size: 34px; }
+        .cr-hero__lede{ font-size: 14px; }
+        .cr-phone     { max-width: 240px; border-radius: 30px; }
+      }
+      /* ≥768px: tablet — more breathing room */
+      @media (min-width: 768px) {
+        .cr-hero { padding: 80px 0 90px; }
+        .cr-hero__inner { gap: 40px; padding: 0 24px; }
+        .cr-h1 { font-size: clamp(38px, 5vw, 52px); }
+        .cr-hero__lede { font-size: 16px; line-height: 1.7; }
+        .cr-hero__cta { gap: 12px; margin-top: 24px; }
+        .cr-hero__pill { font-size: 13px; padding: 8px 14px; margin-top: 18px; }
+        .cr-phone { max-width: 280px; border-radius: 34px; padding: 8px; }
+        .cr-phone__notch { width: 84px; height: 20px; top: 14px; }
+        .cr-phone__screen { inset: 8px; border-radius: 26px; }
+      }
+      /* ≥1024px: desktop — full hero proportions */
+      @media (min-width: 1024px) {
+        .cr-hero__inner { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; }
+        .cr-h1 { font-size: 60px; line-height: 1.05; }
+        .cr-phone { max-width: 320px; }
       }
 
       /* ── STATS ── */
