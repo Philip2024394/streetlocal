@@ -432,7 +432,9 @@ export default function DonutSellingPage() {
               GoPay · OVO · DANA · ShopeePay · QRIS · Bank Transfer — all in one app, Rp 38,000/month. 0% commission. Customers order from WhatsApp, you keep 100% of what you sell.
             </p>
             <div className="ds-cta-row">
-              <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--lg">Start your shop →</a>
+              {/* "Start your shop" CTA lives in the footer now — the hero
+                  keeps only the soft "see demo" link so visitors scroll
+                  through the value props first. */}
               <a href="#demo" className="ds-btn ds-btn--outline ds-btn--lg">▶ See live demo</a>
             </div>
             <ul className="ds-trust">
@@ -444,28 +446,10 @@ export default function DonutSellingPage() {
 
           <div className="ds-hero__phone-wrap">
             <div className="ds-glow" aria-hidden></div>
-            {/* Dancing donut sits BEHIND the phone (z-index 0) and bounces
-                in place. Chocolate-coloured crumbs spawn from around its
-                base and fall past the phone for a continuous shower. */}
-            <img
-              className="ds-dance-donut"
-              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2014,%202026,%2004_26_20%20AM.png?updatedAt=1778707604129"
-              alt=""
-              aria-hidden
-            />
-            <div className="ds-crumbs" aria-hidden>
-              {Array.from({ length: 14 }).map((_, i) => (
-                <span
-                  key={i}
-                  className="ds-crumb"
-                  style={{
-                    left: `${(i / 14) * 100}%`,
-                    animationDelay: `${(i * 0.37) % 5}s`,
-                    animationDuration: `${4 + (i % 4)}s`,
-                  }}
-                />
-              ))}
-            </div>
+            {/* Dancing donut + chocolate-crumb shower removed per user
+                request — the phone cycling through landing themes is
+                the hero's visual focus now. Clean backdrop reads
+                better at mobile sizes too. */}
             <div className="ds-phone">
               <div className="ds-phone__notch" aria-hidden></div>
               <iframe
@@ -868,7 +852,10 @@ export default function DonutSellingPage() {
             Stop renting space on someone else's app. Build your own — keep 100% of every sale.
           </p>
           <div className="ds-cta__buttons">
-            <a href="#pricing" className="ds-btn ds-btn--white ds-btn--lg">Start free trial →</a>
+            {/* "Start your shop" lives here now — moved out of the hero
+                so the page tells the value story first, then asks
+                for the click at the bottom. */}
+            <a href="#pricing" className="ds-btn ds-btn--white ds-btn--lg">Start your shop →</a>
             <a href="#demo" className="ds-btn ds-btn--dark ds-btn--lg">▶ See live demo</a>
           </div>
           <p className="ds-cta__reassurance">
