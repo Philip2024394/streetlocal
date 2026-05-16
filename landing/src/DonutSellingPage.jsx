@@ -1061,7 +1061,7 @@ function PageStyles() {
       .ds-trust { list-style: none; padding: 0; margin: 26px 0 0; display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; font-weight: 600; color: #705353; }
       .ds-trust li { display: inline-flex; align-items: center; }
 
-      .ds-hero__phone-wrap { position: relative; display: flex; align-items: center; justify-content: center; min-height: 520px; }
+      .ds-hero__phone-wrap { position: relative; display: flex; align-items: center; justify-content: center; min-height: 460px; flex-direction: column; }
       /* Dancing donut + chocolate crumb shower — sit behind the phone
          (z-index 0) so they decorate without blocking interaction. */
       .ds-dance-donut { position: absolute; top: 30px; right: 8%; width: 180px; height: 180px; border-radius: 50%; object-fit: cover; z-index: 0; animation: dsDonutBounce 1.2s ease-in-out infinite; filter: drop-shadow(0 14px 30px rgba(91,48,23,0.45)); will-change: transform; pointer-events: none; }
@@ -1074,16 +1074,18 @@ function PageStyles() {
       .ds-hero__float--bl { bottom: -80px; left: -120px; width: 240px; height: 240px; filter: drop-shadow(0 30px 60px rgba(34,211,238,0.18)); }
       .ds-glow { position: absolute; inset: -30px; background: radial-gradient(circle, rgba(244,114,182,0.35), transparent 65%); filter: blur(40px); z-index: 0; pointer-events: none; }
       .ds-glow--big { inset: -60px; }
-      .ds-phone { position: relative; z-index: 1; width: 280px; height: 590px; background: #000; border-radius: 44px; padding: 6px; box-shadow: 0 30px 70px rgba(236,72,153,0.32), 0 8px 20px rgba(0,0,0,0.25); border: 2px solid #2a2a2a; overflow: hidden; }
+      .ds-phone { position: relative; z-index: 1; width: 220px; height: 460px; background: #000; border-radius: 34px; padding: 5px; box-shadow: 0 22px 54px rgba(236,72,153,0.32), 0 6px 16px rgba(0,0,0,0.25); border: 2px solid #2a2a2a; overflow: hidden; }
+      @media (min-width: 980px) { .ds-phone { width: 240px; height: 500px; border-radius: 38px; } }
       .ds-phone--big { width: 320px; height: 670px; border-radius: 50px; padding: 7px; box-shadow: 0 40px 100px rgba(236,72,153,0.4), 0 10px 30px rgba(0,0,0,0.3); }
-      .ds-phone__notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 110px; height: 22px; background: #000; border-radius: 14px; z-index: 5; }
+      .ds-phone__notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 86px; height: 18px; background: #000; border-radius: 12px; z-index: 5; }
       .ds-phone__notch--big { width: 130px; height: 26px; top: 14px; }
       /* Render iframe at native phone-design viewport (390x844) and
          scale it down with CSS to fit the phone shell. Without this,
          donuts.html lays out at the shell's pixel width (~268px) and
          elements get cramped or break — the scale-transform makes the
          page believe it's on a real ~390px phone. */
-      .ds-phone__frame { width: 390px; height: 844px; border: 0; border-radius: 38px; background: #000; display: block; transform-origin: top left; transform: scale(0.687); }
+      .ds-phone__frame { width: 390px; height: 844px; border: 0; border-radius: 30px; background: #000; display: block; transform-origin: top left; transform: scale(0.539); }
+      @media (min-width: 980px) { .ds-phone__frame { border-radius: 34px; transform: scale(0.59); } }
       .ds-phone--big .ds-phone__frame { border-radius: 44px; transform: scale(0.785); }
       .ds-phone__tag { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); background: #fff; color: #2D1B1B; padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); white-space: nowrap; }
       .ds-phone__tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: dsPulse 2s ease-in-out infinite; }
