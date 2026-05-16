@@ -1345,7 +1345,6 @@ function EmailCampaigns ({ vendorId, supabase, pink, labelStyle, inputStyle }) {
         <label style={labelStyle}>Segment: customers who ordered in the last N days</label>
         <input style={{ ...inputStyle, marginBottom: 10 }} type="number" min={1} value={segLastDays} onChange={(e) => setSegLastDays(parseInt(e.target.value, 10) || 30)} />
         <button onClick={create} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: pink, color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>Save draft</button>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Send via the order-receipt-autosend Resend integration. We'll wire batch send in a follow-up.</div>
       </div>
       <div style={{ padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 }}>Drafts ({rows.length})</div>
@@ -1388,19 +1387,42 @@ function AffiliatePayouts ({ supabase, pink, fmt }) {
     await supabase.from('affiliate_payouts').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', id)
     refresh()
   }
-  if (rows.length === 0) return <div style={{ padding: 16, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No payouts pending. New referrals appear here after the referred vendor pays their first month.</div>
-  return rows.map(p => (
-    <div key={p.id} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{p.affiliate_code}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{fmt(p.amount)} {p.currency} · {p.period_start} → {p.period_end}</div>
+  // Summary aggregates — sum of pending amounts (schema column is `amount`,
+  // alias `commission_amount` supported for forward-compat) and count of
+  // pending rows. Formatted in IDR locale per project preference.
+  const pendingRows = rows.filter(r => r.status === 'pending')
+  const pendingTotal = pendingRows.reduce((s, r) => s + (Number(r.commission_amount ?? r.amount) || 0), 0)
+  const pendingCount = pendingRows.length
+  const summary = (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+      <div style={{ flex: '1 1 160px', minWidth: 0, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 6 }}>Total pending</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: '#FACC15', letterSpacing: -0.4 }}>Rp {pendingTotal.toLocaleString('id-ID')}</div>
       </div>
-      {p.status === 'pending'
-        ? <button onClick={() => markPaid(p.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: pink, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Mark paid</button>
-        : <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', fontSize: 11, fontWeight: 800 }}>PAID</span>
-      }
+      <div style={{ flex: '1 1 160px', minWidth: 0, padding: 14, borderRadius: 14, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 6 }}>Pending count</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: '#FACC15', letterSpacing: -0.4 }}>{pendingCount}</div>
+      </div>
     </div>
-  ))
+  )
+  if (rows.length === 0) return <>{summary}<div style={{ padding: 16, textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>No payouts pending. New referrals appear here after the referred vendor pays their first month.</div></>
+  return (
+    <>
+      {summary}
+      {rows.map(p => (
+        <div key={p.id} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', alignItems: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>{p.affiliate_code}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{fmt(p.amount)} {p.currency} · {p.period_start} → {p.period_end}</div>
+          </div>
+          {p.status === 'pending'
+            ? <button onClick={() => markPaid(p.id)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: pink, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Mark paid</button>
+            : <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', fontSize: 11, fontWeight: 800 }}>PAID</span>
+          }
+        </div>
+      ))}
+    </>
+  )
 }
 
 function PreorderBanner ({ vendorId, supabase, pink }) {
@@ -2743,6 +2765,11 @@ export default function App() {
   // 🥇 KDS
   const [kdsPageOpen, setKdsPageOpen] = useState(false)
   const [kdsToken, setKdsToken] = useState('') // populated from server on load
+  // Combined "Tablet modes" page — single drawer entry that wraps both
+  // the KDS install card and the Kiosk URL card. Original kdsPageOpen
+  // and kioskPageOpen render blocks below remain intact for legacy
+  // deep-links and as a quick restore path.
+  const [tabletModesPageOpen, setTabletModesPageOpen] = useState(false)
 
   // 🥈 Customer accounts
   const [customersPageOpen, setCustomersPageOpen] = useState(false)
@@ -2794,6 +2821,20 @@ export default function App() {
   useEffect(() => { localStorage.setItem('foodlocalchat_sms_account_sid', smsAccountSid) }, [smsAccountSid])
   useEffect(() => { localStorage.setItem('foodlocalchat_sms_auth_token', smsAuthToken) }, [smsAuthToken])
   useEffect(() => { localStorage.setItem('foodlocalchat_sms_from_number', smsFromNumber) }, [smsFromNumber])
+  // Send-test-SMS UX state — drives "Sending…" / success / failure pill on the SMS settings page.
+  const [smsTestSending, setSmsTestSending] = useState(false)
+  const [smsTestResult, setSmsTestResult] = useState('')
+
+  // Shared "✓ Saved" toast — pages that auto-save via debounced
+  // useEffect call flashSaved() after a successful upsert so the
+  // vendor sees confirmation. Stored on window so successive flashes
+  // collapse cleanly without stacking timers.
+  const [savedToast, setSavedToast] = useState('')
+  function flashSaved (msg = '✓ Saved') {
+    setSavedToast(msg)
+    clearTimeout(window.__savedToastT)
+    window.__savedToastT = setTimeout(() => setSavedToast(''), 2200)
+  }
 
   // 🥉 Email campaigns
   const [emailCampaignsPageOpen, setEmailCampaignsPageOpen] = useState(false)
@@ -4004,7 +4045,7 @@ export default function App() {
         shop_tax_rate: Math.max(0, Math.min(100, parseFloat(taxRate) || 0)),
         shop_tax_label: (taxLabel || 'Tax').slice(0, 20),
         shop_tax_inclusive: !!taxInclusive,
-      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+      }).eq('id', vendorId).then(() => { flashSaved() }).catch?.(() => {})
     }, 600)
     return () => clearTimeout(t)
   }, [taxRate, taxLabel, taxInclusive, isVendor, vendorId])
@@ -4016,7 +4057,7 @@ export default function App() {
       supabase.from('vendor_accounts').update({
         receipt_autosend_chat: !!receiptAutosendChat,
         receipt_autosend_email: !!receiptAutosendEmail,
-      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+      }).eq('id', vendorId).then(() => { flashSaved() }).catch?.(() => {})
     }, 600)
     return () => clearTimeout(t)
   }, [receiptAutosendChat, receiptAutosendEmail, isVendor, vendorId])
@@ -4039,7 +4080,7 @@ export default function App() {
         invoice_number_prefix: invoiceNumberPrefix || 'INV-',
         invoice_autosend_chat: !!invoiceAutosendChat,
         invoice_autosend_email: !!invoiceAutosendEmail,
-      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+      }).eq('id', vendorId).then(() => { flashSaved() }).catch?.(() => {})
     }, 700)
     return () => clearTimeout(t)
   }, [invoiceTemplateId, invoiceLetterheadUrl, invoiceLegalName, invoiceTaxId, invoiceRegNumber, invoiceBankDetails, invoiceSignatureUrl, invoicePaymentTerms, invoiceFooterNote, invoiceNumberPrefix, invoiceAutosendChat, invoiceAutosendEmail, isVendor, vendorId])
@@ -4071,10 +4112,63 @@ export default function App() {
         gift_cards_enabled: !!giftcardsEnabled,
         gift_card_denominations: Array.isArray(giftcardDenominations) ? giftcardDenominations.map(Number) : [50, 100, 200, 500],
         preorder_enabled: !!preorderEnabled,
-      }).eq('id', vendorId).then(() => {}).catch?.(() => {})
+      }).eq('id', vendorId).then(() => { flashSaved() }).catch?.(() => {})
     }, 800)
     return () => clearTimeout(t)
   }, [mixboxEnabled, mixboxSize, mixboxPrice, mixboxLabel, tipEnabled, tipPresets, tipSplitEnabled, cateringEnabled, cateringLeadHours, cateringMinSize, cateringContactEmail, kioskEnabled, smsEnabled, smsAccountSid, smsAuthToken, smsFromNumber, recurringEnabled, giftcardsEnabled, giftcardDenominations, preorderEnabled, isVendor, vendorId])
+
+  // ── DESIGN CONFIG WRITE-BACK ────────────────────────────────────
+  // Persists every vendor-customisable design field (donut landing
+  // hero, menu-card style/colour, add-to-cart button styling, and
+  // marketing-banner activation flags) into the vendor_accounts.
+  // design_config JSONB column. Without this, customisations live
+  // ONLY in browser localStorage so customers (different device, no
+  // localStorage) keep seeing default settings and the vendor loses
+  // their work on a fresh device or dev-server restart.
+  //
+  // 800ms debounce matches the feature-sweep block so rapid input
+  // (colour pickers, font-size sliders) collapses into one round-trip.
+  // Skips the demo + local-vendor IDs (matches the guard pattern used
+  // by every other write-back useEffect in this file).
+  // hydration-on-login lives in the loadVendor effect further down.
+  // Error surfaces via setDesignConfigSaveError + console; localStorage
+  // saves above stay intact as the offline fallback.
+  const [designConfigSaveError, setDesignConfigSaveError] = useState(null)
+  useEffect(() => {
+    if (!supabase || !isVendor || !vendorId || String(vendorId).startsWith('local')) return
+    if (!isUuid(vendorId)) return
+    const t = setTimeout(() => {
+      const bundle = {
+        donutLanding,
+        donutCardStyle,
+        donutCardColor,
+        donutCardImage,
+        donutFrameColor,
+        donutPromoColor,
+        donutAddBtnShape,
+        donutAddBtnColor,
+        donutAddBtnTextColor,
+        donutAddBtnText,
+        marketingActiveBannerId,
+        marketingRandomLandscape,
+      }
+      supabase.from('vendor_accounts').update({ design_config: bundle }).eq('id', vendorId)
+        .then(({ error } = {}) => {
+          if (error) {
+            console.error('[design_config save]', error)
+            setDesignConfigSaveError(error.message || 'Could not save design changes to the server.')
+            return
+          }
+          setDesignConfigSaveError(null)
+          flashSaved()
+        })
+        .catch?.((err) => {
+          console.error('[design_config save]', err)
+          setDesignConfigSaveError(String(err?.message || err) || 'Could not save design changes to the server.')
+        })
+    }, 800)
+    return () => clearTimeout(t)
+  }, [donutLanding, donutCardStyle, donutCardColor, donutCardImage, donutFrameColor, donutPromoColor, donutAddBtnShape, donutAddBtnColor, donutAddBtnTextColor, donutAddBtnText, marketingActiveBannerId, marketingRandomLandscape, isVendor, vendorId])
 
   const [vendorStatus, setVendorStatus] = useState(null) // 'active' | 'expired' | 'pending'
   // Auto-sign-in for the demo vendor. Runs once on mount. If a real
@@ -4092,7 +4186,7 @@ export default function App() {
   // vendorId declaration) so the dep array doesn't TDZ.
   useEffect(() => {
     if (!isVendor || !supabase || !vendorId || !isUuid(vendorId)) return
-    supabase.from('vendor_accounts').update({ loyalty_card_image: loyaltyCardImage || null }).eq('id', vendorId).then(() => {})
+    supabase.from('vendor_accounts').update({ loyalty_card_image: loyaltyCardImage || null }).eq('id', vendorId).then(() => { flashSaved() })
   }, [loyaltyCardImage, isVendor, vendorId])
   // Vendor: fetch all conversations for the shop when the chat-list panel
   // is opened. Each row carries `unread_vendor_count` which drives the
@@ -5176,6 +5270,34 @@ export default function App() {
       setVendorPlanTier(data.plan_tier || null)
       // plan_level drives feature gating (Starter / Pro / Enterprise).
       if (data.plan_level) setVendorPlanLevel(data.plan_level)
+      // ── DESIGN CONFIG HYDRATION ─────────────────────────────────
+      // Server-authoritative source of truth for every donut design
+      // customisation. Spreads the saved JSONB bundle back into each
+      // piece of state so the customer-facing storefront (different
+      // device, no localStorage) renders the vendor's customisations.
+      // Falls through silently when design_config is empty/missing so
+      // localStorage values stay in place during the migration window.
+      const dc = data.design_config
+      if (dc && typeof dc === 'object' && Object.keys(dc).length > 0) {
+        if (dc.donutLanding && typeof dc.donutLanding === 'object') {
+          setDonutLanding({ ...DONUT_LANDING_DEFAULTS, ...dc.donutLanding })
+        }
+        if (typeof dc.donutCardStyle === 'string')      setDonutCardStyle(dc.donutCardStyle)
+        if (typeof dc.donutCardColor === 'string')      setDonutCardColor(dc.donutCardColor)
+        if (typeof dc.donutCardImage === 'string')      setDonutCardImage(dc.donutCardImage)
+        if (typeof dc.donutFrameColor === 'string')     setDonutFrameColor(dc.donutFrameColor)
+        if (typeof dc.donutPromoColor === 'string')     setDonutPromoColor(dc.donutPromoColor)
+        if (typeof dc.donutAddBtnShape === 'string')    setDonutAddBtnShape(dc.donutAddBtnShape)
+        if (typeof dc.donutAddBtnColor === 'string')    setDonutAddBtnColor(dc.donutAddBtnColor)
+        if (typeof dc.donutAddBtnTextColor === 'string') setDonutAddBtnTextColor(dc.donutAddBtnTextColor)
+        if (typeof dc.donutAddBtnText === 'string')     setDonutAddBtnText(dc.donutAddBtnText)
+        if (dc.marketingActiveBannerId === null || typeof dc.marketingActiveBannerId === 'string') {
+          setMarketingActiveBannerId(dc.marketingActiveBannerId)
+        }
+        if (typeof dc.marketingRandomLandscape === 'boolean') {
+          setMarketingRandomLandscape(dc.marketingRandomLandscape)
+        }
+      }
     })
   }, [vendorId])
 
@@ -13525,11 +13647,10 @@ export default function App() {
           { icon: '🍩', label: 'Build-your-own Dozen', desc: 'Let customers pick a custom box of donuts', onClick: () => setMixboxPageOpen(true) },
           { icon: '💸', label: 'Tipping', desc: 'Enable 10/15/20/custom tips at checkout', onClick: () => setTipPageOpen(true) },
           { icon: '📋', label: 'Production Planner', desc: 'Daily bake plan from 7-day averages + wastage log', onClick: () => setProductionPageOpen(true) },
-          { icon: '🍳', label: 'Kitchen Display (KDS)', desc: 'Live orders on a tablet — QR-code install', onClick: () => setKdsPageOpen(true) },
+          { icon: '📱', label: 'Tablet modes / Mode Tablet', desc: 'Kitchen Display (KDS) + Self-serve kiosk URLs', onClick: () => setTabletModesPageOpen(true) },
           { icon: '👥', label: 'Customer accounts', desc: 'Order history, 1-tap reorder, tax-exempt flag', onClick: () => setCustomersPageOpen(true) },
           { icon: '🥡', label: 'Catering / Wholesale', desc: 'Lead-time orders, minimum size, separate inbox', onClick: () => setCateringPageOpen(true) },
           { icon: '💰', label: 'End-of-day Z-report', desc: 'Cash counted vs expected, variance', onClick: () => setCashReconPageOpen(true) },
-          { icon: '📺', label: 'Self-serve kiosk', desc: 'Locked /kiosk URL for in-store tablet', onClick: () => setKioskPageOpen(true) },
           { icon: '📱', label: 'SMS notifications', desc: 'Twilio — order ready / dispatch SMS', onClick: () => setSmsPageOpen(true) },
           { icon: '🎉', label: 'Pre-order windows', desc: "Mother's Day / Valentine's lead-time orders", onClick: () => setPreorderPageOpen(true) },
           // Pro/Enterprise — hidden from Starter view:
@@ -17868,7 +17989,7 @@ export default function App() {
 
       {/* Shared style helpers for these pages — defined inline so each
           page can stay self-contained. */}
-      {(mixboxPageOpen || tipPageOpen || productionPageOpen || kdsPageOpen || customersPageOpen || cateringPageOpen || recurringPageOpen || giftcardsPageOpen || cashReconPageOpen || kioskPageOpen || smsPageOpen || emailCampaignsPageOpen || affiliatePayoutsPageOpen || preorderPageOpen || gatewayHealthPageOpen) && (() => {
+      {(mixboxPageOpen || tipPageOpen || productionPageOpen || kdsPageOpen || customersPageOpen || cateringPageOpen || recurringPageOpen || giftcardsPageOpen || cashReconPageOpen || kioskPageOpen || tabletModesPageOpen || smsPageOpen || emailCampaignsPageOpen || affiliatePayoutsPageOpen || preorderPageOpen || gatewayHealthPageOpen) && (() => {
         const pink = donutLanding.pink || accent
         const labelStyle = { fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 4, display: 'block' }
         const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
@@ -18073,6 +18194,51 @@ export default function App() {
               </Card>}
             </PageShell>
 
+            {/* 📱 TABLET MODES — combined KDS + Kiosk page.
+                  Single drawer entry; renders both sections so vendors
+                  configure tablet-only flows in one place. The original
+                  kdsPageOpen / kioskPageOpen render blocks above stay
+                  intact for legacy deep-links and one-line restoration. */}
+            <PageShell open={tabletModesPageOpen} onClose={() => setTabletModesPageOpen(false)} title="📱 Tablet modes / Mode Tablet" subtitle="Kitchen Display (KDS) + Self-serve kiosk on dedicated tablets">
+              <Card title="🍳 Kitchen Display (KDS) — install on a tablet">
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.55, marginBottom: 12 }}>
+                  Open a Chrome tab on your kitchen tablet. Paste the URL below. The page shows live confirmed orders with big buttons. Leave it open — it auto-updates as orders come in. No login needed; the URL contains a secret token unique to your shop.
+                </div>
+                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'monospace', fontSize: 12, color: '#86EFAC', wordBreak: 'break-all', marginBottom: 10 }}>
+                  {window.location.origin}/food/chat/?kds={kdsToken || 'loading…'}
+                </div>
+                <button onClick={() => {
+                  const url = `${window.location.origin}/food/chat/?kds=${kdsToken}`
+                  navigator.clipboard?.writeText(url)
+                  alert('Copied. Paste into the tablet browser.')
+                }} style={{ padding: '10px 16px', borderRadius: 10, background: pink, color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 13, marginRight: 8 }}>Copy KDS URL</button>
+                <button onClick={async () => {
+                  if (!supabase || !vendorId) return
+                  if (!window.confirm('Rotate the KDS token? All open tablets stop working until they get the new URL.')) return
+                  const newToken = crypto.randomUUID()
+                  await supabase.from('vendor_accounts').update({ kds_token: newToken }).eq('id', vendorId)
+                  setKdsToken(newToken)
+                  alert('Token rotated. Re-share the new URL.')
+                }} style={{ padding: '10px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.18)', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.4)', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Rotate token</button>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10, lineHeight: 1.5 }}>The token in the URL is the only auth. Treat it like a password — don't share it. Rotate if a tablet is lost or stolen.</div>
+              </Card>
+              <div style={{ height: 8 }} />
+              <Card title="📺 Self-serve kiosk — counter tablet">
+                <Toggle checked={kioskEnabled} onChange={setKioskEnabled} label="Enable kiosk mode" sub="Opens a customer-only view that auto-resets after each order and hides navigation. Mount a tablet on your counter and customers can self-order." />
+                {kioskEnabled && (
+                  <>
+                    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'monospace', fontSize: 12, color: '#86EFAC', wordBreak: 'break-all', marginTop: 12, marginBottom: 10 }}>
+                      {window.location.origin}/food/chat/?vendor={vendorId}&kiosk=1
+                    </div>
+                    <button onClick={() => {
+                      navigator.clipboard?.writeText(`${window.location.origin}/food/chat/?vendor=${vendorId}&kiosk=1`)
+                      alert('Copied. Open on the kiosk tablet.')
+                    }} style={{ padding: '10px 16px', borderRadius: 10, background: pink, color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>Copy kiosk URL</button>
+                  </>
+                )}
+              </Card>
+            </PageShell>
+
             {/* 🥉 SMS notifications (Twilio) */}
             <PageShell open={smsPageOpen} onClose={() => setSmsPageOpen(false)} title="📱 SMS notifications" subtitle="Send order ready / dispatch via Twilio">
               <Card>
@@ -18086,6 +18252,52 @@ export default function App() {
                 <label style={labelStyle}>From number (E.164 format)</label>
                 <input style={inputStyle} value={smsFromNumber} onChange={(e) => setSmsFromNumber(e.target.value)} placeholder="+14155551234" />
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10, lineHeight: 1.5 }}>Get credentials from console.twilio.com. Free trial credit ~$15. Sandbox numbers work for testing; for production buy a real number (~$1/mo).</div>
+                {/* Test-send button — invokes `sms-test-send` Edge Function with the vendor's
+                    credentials + their own shopPhone as the target. Status pill below the
+                    button reflects idle / sending / sent / failed. */}
+                <button
+                  type="button"
+                  disabled={smsTestSending || !smsAccountSid || !smsAuthToken || !smsFromNumber}
+                  onClick={async () => {
+                    setSmsTestSending(true)
+                    setSmsTestResult('')
+                    const targetRaw = String(shopPhone || '').replace(/[^0-9+]/g, '')
+                    const target = targetRaw.startsWith('+') ? targetRaw : `+${targetRaw}`
+                    try {
+                      const { data, error } = await supabase.functions.invoke('sms-test-send', {
+                        body: {
+                          vendor_id: vendorId,
+                          account_sid: smsAccountSid,
+                          auth_token: smsAuthToken,
+                          from_number: smsFromNumber,
+                          to_number: target,
+                          shop_name: shopName,
+                        },
+                      })
+                      if (error || data?.ok === false) {
+                        setSmsTestResult('fail:' + (data?.error || error?.message || 'unknown error'))
+                      } else {
+                        setSmsTestResult('ok:' + target)
+                      }
+                    } catch (e) {
+                      setSmsTestResult('fail:' + (e?.message || String(e)))
+                    } finally {
+                      setSmsTestSending(false)
+                    }
+                  }}
+                  style={{ marginTop: 14, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: pink, color: '#fff', fontSize: 14, fontWeight: 900, cursor: smsTestSending ? 'wait' : 'pointer', opacity: (!smsAccountSid || !smsAuthToken || !smsFromNumber) ? 0.5 : 1 }}>
+                  {smsTestSending ? 'Sending…' : 'Send test SMS to my number'}
+                </button>
+                {smsTestResult && smsTestResult.startsWith('ok:') && (
+                  <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.18)', color: '#86EFAC', fontSize: 12, fontWeight: 800, display: 'inline-block' }}>
+                    ✓ Sent to {smsTestResult.slice(3)}
+                  </div>
+                )}
+                {smsTestResult && smsTestResult.startsWith('fail:') && (
+                  <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.18)', color: '#FCA5A5', fontSize: 12, fontWeight: 800, display: 'inline-block' }}>
+                    ✗ Failed: {smsTestResult.slice(5)}
+                  </div>
+                )}
               </Card>}
             </PageShell>
 
@@ -18281,6 +18493,16 @@ export default function App() {
         onPick={(url) => { if (typeof picker.onPick === 'function') picker.onPick(url) }}
         onUpload={async (file, kind) => uploadMenuImage(vendorId, file, kind)}
       />
+
+      {/* Shared "✓ Saved" toast — flashSaved() from any debounced
+          save effect triggers this. Fixed bottom-right, auto-clears
+          after 2.2s. Z-index sits above PageShell (600) and modals. */}
+      <style>{`@keyframes slToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      {savedToast && (
+        <div role="status" aria-live="polite" style={{ position: 'fixed', bottom: 24, right: 24, background: '#0A0A0A', color: '#FACC15', padding: '12px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800, boxShadow: '0 10px 30px rgba(0,0,0,0.25)', zIndex: 999, fontFamily: 'inherit', animation: 'slToastIn 0.2s ease' }}>
+          {savedToast}
+        </div>
+      )}
     </div>
   )
 }
