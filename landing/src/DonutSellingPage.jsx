@@ -184,7 +184,7 @@ export default function DonutSellingPage() {
       {/* ═══ NAVIGATION ═══ */}
       <header className={`ds-nav ${scrolled ? 'ds-nav--scrolled' : ''}`}>
         <div className="ds-nav__inner">
-          <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
+          <a href="#top" className="ds-brand" aria-label="Donut Selling App home">
             <img
               src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
               alt=""
@@ -195,7 +195,8 @@ export default function DonutSellingPage() {
               loading="eager"
             />
             <span className="ds-brand__text">
-              Fresh Donuts Baked Daily<span className="ds-brand__suffix"> · StreetLocal</span>
+              <span className="ds-brand__title">Donut Selling App</span>
+              <span className="ds-brand__tagline">Sell Donuts · keep 100% profit</span>
             </span>
           </a>
           {/* Settings ⚙ — opens a slide-down menu with the four info
@@ -866,7 +867,7 @@ export default function DonutSellingPage() {
       <footer className="ds-footer">
         <div className="ds-container ds-footer__grid">
           <div className="ds-footer__brand">
-            <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
+            <a href="#top" className="ds-brand" aria-label="Donut Selling App home">
               <img
                 src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
                 alt=""
@@ -877,7 +878,8 @@ export default function DonutSellingPage() {
                 loading="lazy"
               />
               <span className="ds-brand__text ds-brand__text--light">
-                Fresh Donuts Baked Daily<span className="ds-brand__suffix ds-brand__suffix--light"> · StreetLocal</span>
+                <span className="ds-brand__title">Donut Selling App</span>
+                <span className="ds-brand__tagline ds-brand__tagline--light">Sell Donuts · keep 100% profit</span>
               </span>
             </a>
             <p className="ds-footer__about">
@@ -944,7 +946,13 @@ function PageStyles() {
       .ds-brand__bubble { width: 36px; height: 36px; border-radius: 50%; background: #EC4899; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,0.35); }
       .ds-brand__logo { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
       @media (min-width: 600px) { .ds-brand__logo { width: 48px; height: 48px; } }
-      .ds-brand__text { font-size: 16px; letter-spacing: -0.02em; }
+      .ds-brand__text { font-size: 16px; letter-spacing: -0.02em; display: inline-flex; flex-direction: column; gap: 0; line-height: 1.15; }
+      .ds-brand__title { font-size: 16px; font-weight: 900; color: #2D1B1B; letter-spacing: -0.3px; }
+      .ds-brand__text--light .ds-brand__title { color: #fff; }
+      .ds-brand__tagline { font-size: 11px; font-weight: 700; color: #EC4899; letter-spacing: 0.2px; margin-top: 2px; }
+      .ds-brand__tagline--light { color: #F9A8D4; }
+      @media (min-width: 600px) { .ds-brand__title { font-size: 17px; } .ds-brand__tagline { font-size: 12px; } }
+      /* Kept for backwards-compat with any unedited brand row elsewhere */
       .ds-brand__suffix { color: #EC4899; font-weight: 800; }
       .ds-brand__text--light { color: #fff; }
       .ds-brand__suffix--light { color: #F9A8D4; }
