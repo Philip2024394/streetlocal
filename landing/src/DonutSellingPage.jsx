@@ -77,14 +77,17 @@ const PRICING_INCLUDES = [
 ]
 
 const COMPARISON = [
-  ['Setup time',                   '5 min',  'Already chaos', '1–2 days',  'Days/weeks'],
-  ['Monthly cost',                 '38K IDR', 'Free',         '500K+ IDR', 'Free'],
-  ['Commission per order',         '0%',     '0%',            '0–5%',      '20–30%'],
-  ['Branded landing page',         '✓',      '✗',             '✓',         '✗'],
-  ['One-tap customer ordering',    '✓',      '✗',             '✓',         '✓'],
-  ['Reviews tied to real orders',  '✓',      '✗',             '✗',         'Theirs'],
-  ['You own your customer list',   '✓',      '✓',             '✓',         '✗ Locked'],
-  ['Built for donut shops',        '✓',      '—',             '✗ Generic', '✗ Generic'],
+  ['Setup time',                       '5 min',     'Sudah chaos',   '1–2 days',     'Days/weeks'],
+  ['Biaya bulanan',                    'Rp 38K',    'Gratis',        'Rp 500K+',     'Gratis'],
+  ['Komisi per pesanan',               '0%',        '0%',            '0–5%',         '20–30%'],
+  ['GoPay / OVO / DANA / QRIS',        '✓ Built-in', 'Manual',        'Plugin extra', '✓ (mereka pegang)'],
+  ['Faktur Pajak / PPN 11%',           '✓',         '✗',             '⚠ Setup sendiri','✗'],
+  ['Bahasa Indonesia',                 '✓',         '—',             '⚠ Translate',  '✓'],
+  ['Branded landing page',             '✓',         '✗',             '✓',            '✗'],
+  ['One-tap customer ordering',        '✓',         '✗',             '✓',            '✓'],
+  ['Reviews tied to real orders',      '✓',         '✗',             '✗',            'Punya mereka'],
+  ['You own customer list',            '✓',         '✓',             '✓',            '✗ Locked'],
+  ['Built for donut shops',            '✓',         '—',             '✗ Generic',    '✗ Generic'],
 ]
 
 const FAQS = [
@@ -373,14 +376,14 @@ export default function DonutSellingPage() {
           <div className="ds-hero__copy">
             <span className="ds-eyebrow">
               <span className="ds-eyebrow__dot" aria-hidden></span>
-              Donut sellers
+              🇮🇩 Built in Yogyakarta · for donut sellers worldwide
             </span>
             <h1 className="ds-h1">
               Your donut shop.<br />
               Online in <span className="ds-pink">5 minutes.</span>
             </h1>
             <p className="ds-lede">
-              Take WhatsApp orders, manage your menu, accept payments — without writing a single line of code, and with 0% commission. You keep 100% of what you earn.
+              GoPay · OVO · DANA · ShopeePay · QRIS · Bank Transfer — all in one app, Rp 38,000/month. 0% commission. Customers order from WhatsApp, you keep 100% of what you sell.
             </p>
             <div className="ds-cta-row">
               <a href="#pricing" className="ds-btn ds-btn--primary ds-btn--lg">Start your shop →</a>
@@ -443,9 +446,9 @@ export default function DonutSellingPage() {
           </div>
           <div className="ds-pain-grid">
             {[
-              { icon: '📱', title: 'WhatsApp chaos',       desc: 'Orders buried in DMs. Customers waiting. You forgetting who ordered what.' },
-              { icon: '🧾', title: 'Manual menu updates',  desc: 'Editing your Instagram bio every time a flavour sells out or a price changes.' },
-              { icon: '💸', title: '30% app commissions',  desc: 'GrabFood and Gojek eat into your profit margin. Every. Single. Order.' },
+              { icon: '📱', title: 'WhatsApp chaos',       desc: 'Pesanan tersembunyi di DM. Customer menunggu. Lupa siapa pesan apa.' },
+              { icon: '🧾', title: 'Manual menu updates',  desc: 'Edit bio Instagram setiap kali rasa habis atau harga berubah. Capek.' },
+              { icon: '💸', title: '20–30% komisi aplikasi',  desc: 'GrabFood dan Gojek makan margin Anda. Setiap. Satu. Pesanan.' },
             ].map((p, i) => (
               <div key={i} className="ds-pain-card">
                 <div className="ds-pain-card__icon">{p.icon}</div>
@@ -454,7 +457,72 @@ export default function DonutSellingPage() {
               </div>
             ))}
           </div>
-          <p className="ds-section__transition">Here's what you get instead ↓</p>
+          <p className="ds-section__transition">Inilah yang Anda dapatkan ↓</p>
+        </div>
+      </section>
+
+      {/* ═══ BUILT FOR INDONESIA ═══
+            The page's strongest differentiator — payment rails, tax
+            compliance, language support and pricing all sized for the
+            Indonesian SME donut shop. Western competitors (Square /
+            Toast / Shopify) cannot match this on any single point. */}
+      <section className="ds-section ds-section--indo" id="indonesia">
+        <div className="ds-container">
+          <div className="ds-section__head">
+            <span className="ds-kicker">🇮🇩 Built for Indonesia</span>
+            <h2 className="ds-h2">Made in Yogyakarta.<br /><span className="ds-pink">Sized for warungs, kafe, & UMKM.</span></h2>
+            <p className="ds-section__sub">
+              Most "POS" apps come from the US and charge in dollars. We built this in Indonesia, for the way Indonesian customers actually buy donuts.
+            </p>
+          </div>
+          <div className="ds-indo-grid">
+            <div className="ds-indo-card">
+              <div className="ds-indo-card__head">💳 Pembayaran lokal</div>
+              <h3>All Indonesian payment methods</h3>
+              <p>GoPay, OVO, DANA, ShopeePay, QRIS, virtual account, kartu, transfer bank. Connect Midtrans atau Xendit langsung — funds masuk ke rekening Anda, bukan ke kami.</p>
+              <div className="ds-indo-card__chips">
+                <span>GoPay</span>
+                <span>OVO</span>
+                <span>DANA</span>
+                <span>ShopeePay</span>
+                <span>QRIS</span>
+                <span>BCA</span>
+                <span>Mandiri</span>
+                <span>BRI</span>
+              </div>
+            </div>
+            <div className="ds-indo-card">
+              <div className="ds-indo-card__head">💸 Harga UMKM</div>
+              <h3>Rp 38,000 per bulan. Sudah termasuk semua.</h3>
+              <p>Tidak ada komisi per pesanan. Tidak ada biaya setup. Tidak perlu kartu kredit. Bandingkan: Shopify Rp 500,000+ per bulan, GrabFood ambil 20-30% per pesanan, ChatRestaurant baru ada di sini.</p>
+              <div className="ds-indo-card__compare">
+                <div><strong>StreetLocal</strong><span style={{ color: '#22C55E' }}>Rp 38,000/bln · 0% komisi</span></div>
+                <div><strong>GrabFood / Gojek</strong><span style={{ color: '#EF4444' }}>Gratis daftar · 20-30% per pesanan</span></div>
+                <div><strong>Shopify</strong><span style={{ color: '#EF4444' }}>~Rp 500,000/bln + biaya gateway</span></div>
+              </div>
+            </div>
+            <div className="ds-indo-card">
+              <div className="ds-indo-card__head">📜 Pajak siap pakai</div>
+              <h3>PPN 11% + Faktur Pajak</h3>
+              <p>PPN 11% sudah preset. NPWP & nomor faktur otomatis di setiap invoice. 4 template invoice — pilih yang cocok untuk akuntan Anda. Auto-kirim ke WhatsApp customer setelah bayar.</p>
+            </div>
+            <div className="ds-indo-card">
+              <div className="ds-indo-card__head">💬 Bahasa Indonesia</div>
+              <h3>Customer lihat menu dalam Bahasa</h3>
+              <p>Aplikasi customer-facing penuh Bahasa Indonesia. Bahasa Inggris juga ada — kalau ada turis di Bali atau expat di Jakarta, mereka switch dengan 1 klik.</p>
+            </div>
+            <div className="ds-indo-card">
+              <div className="ds-indo-card__head">📱 Hemat data + RAM</div>
+              <h3>Jalan di HP Android murah</h3>
+              <p>PWA = ukuran cuma 2MB, bukan 200MB seperti aplikasi native. Customer pakai HP RAM 2GB? Tetap lancar. Customer di pelosok dengan sinyal lambat? Tetap order.</p>
+            </div>
+            <div className="ds-indo-card ds-indo-card--featured">
+              <div className="ds-indo-card__head">🎯 Sudah lengkap</div>
+              <h3>Tidak ada fitur terkunci di paket Standard</h3>
+              <p>Loyalty stamps, marketing banner, promo code, KDS untuk dapur, invoice A4, tip handling, mix-and-match dozen, customer accounts, kiosk mode — semua sudah termasuk di Rp 38,000. Upgrade ke Pro hanya kalau butuh multi-staff atau automasi.</p>
+              <a href="#pricing" className="ds-btn ds-btn--primary" style={{ marginTop: 12, alignSelf: 'flex-start' }}>Lihat semua fitur →</a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -955,6 +1023,24 @@ function PageStyles() {
       /* ── SECTION GENERICS ─────────────────────────────────────── */
       .ds-section { padding: 80px 0; }
       .ds-section--white { background: #fff; }
+
+      /* ── BUILT FOR INDONESIA section ── */
+      .ds-section--indo { background: linear-gradient(180deg, #FFF5F8 0%, #FFE4ED 100%); }
+      .ds-indo-grid { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 1100px; margin: 40px auto 0; }
+      @media (min-width: 760px) { .ds-indo-grid { grid-template-columns: 1fr 1fr; gap: 20px; } }
+      .ds-indo-card { background: #fff; border-radius: 20px; padding: 24px 22px; border: 1px solid rgba(236,72,153,0.18); box-shadow: 0 8px 22px rgba(236,72,153,0.08); display: flex; flex-direction: column; gap: 8px; }
+      .ds-indo-card--featured { border: 2px solid #EC4899; box-shadow: 0 10px 28px rgba(236,72,153,0.22); }
+      @media (min-width: 760px) { .ds-indo-card--featured { grid-column: 1 / -1; } }
+      .ds-indo-card__head { display: inline-block; align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #EC4899; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+      .ds-indo-card h3 { font-size: 20px; font-weight: 900; color: #2D1B1B; margin: 4px 0 4px; letter-spacing: -0.4px; line-height: 1.2; }
+      .ds-indo-card p { font-size: 14px; color: #5B4646; line-height: 1.6; margin: 0; }
+      .ds-indo-card__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .ds-indo-card__chips span { padding: 5px 12px; border-radius: 999px; background: rgba(236,72,153,0.08); border: 1px solid rgba(236,72,153,0.2); color: #2D1B1B; font-size: 12px; font-weight: 700; }
+      .ds-indo-card__compare { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+      .ds-indo-card__compare > div { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #FFF5F8; border-radius: 8px; font-size: 13px; }
+      .ds-indo-card__compare strong { color: #2D1B1B; font-weight: 800; }
+      .ds-indo-card__compare span { font-weight: 700; }
+
       .ds-section--demo { background: linear-gradient(180deg, #FCE7F3 0%, #FFF8F8 100%); }
       .ds-section__head { text-align: center; max-width: 640px; margin: 0 auto 50px; }
       .ds-kicker { display: inline-block; color: #EC4899; font-weight: 800; letter-spacing: 0.32em; text-transform: uppercase; font-size: 13px; }
