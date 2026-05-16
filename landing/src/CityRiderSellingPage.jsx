@@ -157,6 +157,10 @@ export default function CityRiderSellingPage() {
             </div>
           </div>
           <div className="cr-hero__right">
+            <div className="cr-hero__phone-tag">
+              <span className="cr-pulse" />
+              Aplikasi langsung — tap untuk coba
+            </div>
             <div className="cr-phone">
               <div className="cr-phone__notch" />
               <div className="cr-phone__screen">
@@ -536,7 +540,7 @@ function PageStyles() {
          auto-sizes around its 130-280px width. Reverts to looser
          1.15fr 1fr at desktop. */
       .cr-hero {
-        position: relative; padding: 56px 0 64px; overflow: hidden;
+        position: relative; padding: 24px 0 56px; overflow: hidden;
       }
       .cr-hero__bg {
         position: absolute; inset: 0; pointer-events: none; z-index: 0;
@@ -549,9 +553,20 @@ function PageStyles() {
         max-width: 1180px; margin: 0 auto; padding: 0 20px;
         display: grid;
         grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-        gap: 18px; align-items: center;
+        gap: 18px; align-items: start;
       }
-      .cr-hero__left { min-width: 0; }
+      .cr-hero__left  { min-width: 0; padding-top: 4px; }
+      .cr-hero__right { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+      /* Floating tag under the header, sits directly above the phone. */
+      .cr-hero__phone-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
+        color: #FACC15;
+        background: rgba(250,204,21,0.10);
+        border: 1px solid rgba(250,204,21,0.25);
+        padding: 5px 11px; border-radius: 9999px;
+        white-space: nowrap;
+      }
       .cr-h1 {
         font-size: 28px; line-height: 1.05; letter-spacing: -0.02em;
         font-weight: 900; margin: 4px 0 0;
@@ -568,7 +583,6 @@ function PageStyles() {
         padding: 6px 12px; border-radius: 9999px;
         margin-top: 12px;
       }
-      .cr-hero__right { display: flex; justify-content: center; min-width: 0; }
       .cr-phone {
         position: relative; width: 100%; max-width: 220px;
         aspect-ratio: 9/19;
@@ -596,8 +610,9 @@ function PageStyles() {
       }
       /* ≥768px: tablet — more breathing room */
       @media (min-width: 768px) {
-        .cr-hero { padding: 80px 0 90px; }
+        .cr-hero { padding: 36px 0 80px; }
         .cr-hero__inner { gap: 40px; padding: 0 24px; }
+        .cr-hero__phone-tag { font-size: 13px; padding: 6px 13px; }
         .cr-h1 { font-size: clamp(38px, 5vw, 52px); }
         .cr-hero__lede { font-size: 16px; line-height: 1.7; }
         .cr-hero__cta { gap: 12px; margin-top: 24px; }
