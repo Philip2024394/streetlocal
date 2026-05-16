@@ -487,6 +487,8 @@ export default function Affiliate({ onClose }) {
 
   // Dashboard nav / UI state
   const [dashSection, setDashSection] = useState('home') // home | tools | banners | earnings | referrals | leads | profile | resources
+  const [bannerExpanded, setBannerExpanded] = useState(false) // banner studio collapsed by default
+  const [bannerApp, setBannerApp] = useState('donut')          // donut | food (food coming soon)
   const [refFilter, setRefFilter] = useState('all') // all | pending | approved | paid | cancelled
   const [toast, setToast] = useState('')
   function showToast(msg) {
@@ -2342,65 +2344,121 @@ export default function Affiliate({ onClose }) {
             </div>
           </section>
 
-          {/* ─── 3. BANNER STUDIO ─── */}
+          {/* ─── 3. BANNER STUDIO — collapsed by default, app-tab switchable ─── */}
           <section id="dash-banners" style={{ scrollMarginTop: 80 }}>
             <div className="sl-card">
-              <h2 className="sl-section-h">{D.bannerStudio}</h2>
-              <p className="sl-section-sub">{D.bannerStudioDesc}</p>
+              {/* Compact header — always visible */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 240px' }}>
+                  <h2 className="sl-section-h" style={{ marginBottom: 4 }}>🎨 {D.bannerStudio}</h2>
+                  <p className="sl-section-sub" style={{ margin: 0 }}>
+                    {bannerExpanded
+                      ? D.bannerStudioDesc
+                      : `${(bannersByFormat.landscape?.length || 0) + (bannersByFormat.square?.length || 0) + (bannersByFormat.story?.length || 0)} ${locale === 'id' ? 'banner tersedia · klik untuk membuka' : 'banners ready · click to expand'}`}
+                  </p>
+                </div>
+                <button onClick={() => setBannerExpanded(b => !b)} style={{ padding: '10px 18px', borderRadius: 10, border: '2px solid #FACC15', background: bannerExpanded ? '#FACC15' : '#FFFFFF', color: '#0A0A0A', fontSize: 13, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {bannerExpanded ? (locale === 'id' ? 'Tutup ▲' : 'Hide ▲') : (locale === 'id' ? 'Buka ▼' : 'Open ▼')}
+                </button>
+              </div>
 
-              {[
-                { key: 'landscape', label: D.landscape, list: bannersByFormat.landscape, grid: 'sl-banner-grid-landscape', ratio: '1200/630' },
-                { key: 'square',    label: D.square,    list: bannersByFormat.square,    grid: 'sl-banner-grid-square',    ratio: '1/1' },
-                { key: 'story',     label: D.story,     list: bannersByFormat.story,     grid: 'sl-banner-grid-story',     ratio: '9/16' },
-              ].map(group => {
-                if (!group.list || group.list.length === 0) return null
-                return (
-                  <div key={group.key} style={{ marginBottom: 22 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: 3, background: '#FACC15' }} />
-                      <span style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{group.label}</span>
-                      <span style={{ fontSize: 11, color: '#A1A1AA', fontWeight: 700 }}>· {group.list.length}</span>
+              {/* App selector tabs — visible only when expanded */}
+              {bannerExpanded && (
+                <>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 16, marginBottom: 6, borderBottom: '1px solid #E4E4E7', paddingBottom: 8 }}>
+                    {[
+                      { id: 'donut', label: locale === 'id' ? '🍩 Donut App' : '🍩 Donut App', live: true },
+                      { id: 'food',  label: locale === 'id' ? '🍜 Food App' : '🍜 Food App',  live: false },
+                    ].map(a => (
+                      <button
+                        key={a.id}
+                        onClick={() => { if (a.live) setBannerApp(a.id) }}
+                        disabled={!a.live}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: bannerApp === a.id && a.live ? '#0A0A0A' : 'transparent',
+                          color: bannerApp === a.id && a.live ? '#FACC15' : a.live ? '#52525B' : '#A1A1AA',
+                          fontSize: 13,
+                          fontWeight: 800,
+                          cursor: a.live ? 'pointer' : 'not-allowed',
+                          fontFamily: 'inherit',
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          opacity: a.live ? 1 : 0.6,
+                        }}
+                      >
+                        {a.label}
+                        {!a.live && <span style={{ fontSize: 9, fontWeight: 900, color: '#92400E', background: '#FEF3C7', padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px' }}>{locale === 'id' ? 'SEGERA' : 'SOON'}</span>}
+                      </button>
+                    ))}
+                  </div>
+
+                  {bannerApp === 'food' ? (
+                    <div style={{ padding: '40px 20px', textAlign: 'center', background: '#FAFAFA', borderRadius: 12, marginTop: 12 }}>
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>🍜</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: '#0A0A0A', marginBottom: 6 }}>{locale === 'id' ? 'Banner Food App segera hadir' : 'Food App banners coming soon'}</div>
+                      <div style={{ fontSize: 13, color: '#71717A' }}>{locale === 'id' ? 'Saat ini fokus di Donut App. Beralih kembali untuk lihat banner Donut.' : 'Currently focused on Donut App. Switch back to see Donut banners.'}</div>
                     </div>
-                    <div className={group.grid}>
-                      {group.list.map(b => {
-                        const caption = locale === 'id' ? b.id : b.en
+                  ) : (
+                    <div style={{ marginTop: 12 }}>
+                      {[
+                        { key: 'landscape', label: D.landscape, list: bannersByFormat.landscape, grid: 'sl-banner-grid-landscape', ratio: '1200/630' },
+                        { key: 'square',    label: D.square,    list: bannersByFormat.square,    grid: 'sl-banner-grid-square',    ratio: '1/1' },
+                        { key: 'story',     label: D.story,     list: bannersByFormat.story,     grid: 'sl-banner-grid-story',     ratio: '9/16' },
+                      ].map(group => {
+                        if (!group.list || group.list.length === 0) return null
                         return (
-                          <div key={b.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#FAFAFA', borderRadius: 14, padding: 10, border: '1px solid #F4F4F5' }}>
-                            <div style={{ width: '100%', aspectRatio: group.ratio, borderRadius: 10, overflow: 'hidden', background: '#0A0A0A' }}>
-                              {b.isVideo ? (
-                                <video src={b.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
-                              ) : (
-                                <img src={b.img} alt={caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                              )}
+                          <div key={group.key} style={{ marginBottom: 22 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: 3, background: '#FACC15' }} />
+                              <span style={{ fontSize: 13, fontWeight: 900, color: '#0A0A0A' }}>{group.label}</span>
+                              <span style={{ fontSize: 11, color: '#A1A1AA', fontWeight: 700 }}>· {group.list.length}</span>
                             </div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: '#3F3F46', lineHeight: 1.35, minHeight: 28 }}>{caption}</div>
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                              {buildShareTargets(fullAgentLink, b.en, b.id).slice(0, 3).map(t => (
-                                <button key={t.id} onClick={() => {
-                                  if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
-                                  window.open(t.href, '_blank', 'noopener')
-                                }} title={t.label} style={{ flex: '1 1 0', minHeight: 32, padding: '6px 4px', borderRadius: 8, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
-                                  {t.icon}
-                                </button>
-                              ))}
+                            <div className={group.grid}>
+                              {group.list.map(b => {
+                                const caption = locale === 'id' ? b.id : b.en
+                                return (
+                                  <div key={b.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#FAFAFA', borderRadius: 14, padding: 10, border: '1px solid #F4F4F5' }}>
+                                    <div style={{ width: '100%', aspectRatio: group.ratio, borderRadius: 10, overflow: 'hidden', background: '#0A0A0A' }}>
+                                      {b.isVideo ? (
+                                        <video src={b.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                                      ) : (
+                                        <img src={b.img} alt={caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                      )}
+                                    </div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: '#3F3F46', lineHeight: 1.35, minHeight: 28 }}>{caption}</div>
+                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                      {buildShareTargets(fullAgentLink, b.en, b.id).slice(0, 3).map(t => (
+                                        <button key={t.id} onClick={() => {
+                                          if (t.copyOnly) { copyToClipboard(fullAgentUrl, locale === 'id' ? `Link disalin — tempel di ${t.label}` : `Link copied — paste in ${t.label}`); return }
+                                          window.open(t.href, '_blank', 'noopener')
+                                        }} title={t.label} style={{ flex: '1 1 0', minHeight: 32, padding: '6px 4px', borderRadius: 8, border: 'none', background: t.color, color: t.id === 'tt' || t.id === 'em' ? '#FACC15' : '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                          {t.icon}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <button onClick={() => {
+                                      const a = document.createElement('a')
+                                      a.href = b.img
+                                      a.download = `streetlocal-${b.format}-${b.id}.png`
+                                      a.target = '_blank'
+                                      a.rel = 'noopener'
+                                      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+                                    }} style={{ padding: '8px', borderRadius: 8, border: '1px solid #E4E4E7', background: '#FFFFFF', color: '#0A0A0A', fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>
+                                      ↓ {D.downloadPng}
+                                    </button>
+                                  </div>
+                                )
+                              })}
                             </div>
-                            <button onClick={() => {
-                              const a = document.createElement('a')
-                              a.href = b.img
-                              a.download = `streetlocal-${b.format}-${b.id}.png`
-                              a.target = '_blank'
-                              a.rel = 'noopener'
-                              document.body.appendChild(a); a.click(); document.body.removeChild(a)
-                            }} style={{ padding: '8px', borderRadius: 8, border: '1px solid #E4E4E7', background: '#FFFFFF', color: '#0A0A0A', fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>
-                              ↓ {D.downloadPng}
-                            </button>
                           </div>
                         )
                       })}
                     </div>
-                  </div>
-                )
-              })}
+                  )}
+                </>
+              )}
             </div>
           </section>
 
