@@ -162,7 +162,15 @@ export default function DonutSellingPage() {
       <header className={`ds-nav ${scrolled ? 'ds-nav--scrolled' : ''}`}>
         <div className="ds-nav__inner">
           <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
-            <span className="ds-brand__bubble" aria-hidden>🍩</span>
+            <img
+              src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
+              alt=""
+              aria-hidden
+              className="ds-brand__logo"
+              width="44"
+              height="44"
+              loading="eager"
+            />
             <span className="ds-brand__text">
               Fresh Donuts Baked Daily<span className="ds-brand__suffix"> · StreetLocal</span>
             </span>
@@ -817,7 +825,15 @@ export default function DonutSellingPage() {
         <div className="ds-container ds-footer__grid">
           <div className="ds-footer__brand">
             <a href="#top" className="ds-brand" aria-label="Fresh Donuts Baked Daily home">
-              <span className="ds-brand__bubble" aria-hidden>🍩</span>
+              <img
+                src="https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2016,%202026,%2003_24_01%20PM.png"
+                alt=""
+                aria-hidden
+                className="ds-brand__logo"
+                width="44"
+                height="44"
+                loading="lazy"
+              />
               <span className="ds-brand__text ds-brand__text--light">
                 Fresh Donuts Baked Daily<span className="ds-brand__suffix ds-brand__suffix--light"> · StreetLocal</span>
               </span>
@@ -884,6 +900,8 @@ function PageStyles() {
       .ds-nav__inner { max-width: 1200px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
       .ds-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; }
       .ds-brand__bubble { width: 36px; height: 36px; border-radius: 50%; background: #EC4899; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,0.35); }
+      .ds-brand__logo { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 14px rgba(236,72,153,0.30); flex-shrink: 0; }
+      @media (min-width: 600px) { .ds-brand__logo { width: 48px; height: 48px; border-radius: 14px; } }
       .ds-brand__text { font-size: 16px; letter-spacing: -0.02em; }
       .ds-brand__suffix { color: #EC4899; font-weight: 800; }
       .ds-brand__text--light { color: #fff; }
