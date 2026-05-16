@@ -264,9 +264,11 @@ export default function PremiumHome () {
         /* Side-by-side from the smallest screens — text left, phone right.
            Same pattern as DonutSellingPage hero. Text column wider (1.25fr)
            so the H1 still has breathing room; phone column auto-sizes around
-           its narrow mobile width. Becomes 1.05fr 1fr at desktop. */
-        .sl-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: center; }
-        @media (min-width: 900px) { .sl-hero__grid { grid-template-columns: 1.05fr 1fr; gap: 64px; } }
+           its narrow mobile width. Becomes 1.05fr 1fr at desktop.
+           Mobile: align-items: start so the phone sits at the top of the
+           row (no big empty space above it). Desktop reverts to center. */
+        .sl-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+        @media (min-width: 900px) { .sl-hero__grid { grid-template-columns: 1.05fr 1fr; gap: 64px; align-items: center; } }
         .sl-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(250,204,21,0.15); border: 1px solid rgba(234,179,8,0.5); color: #854D0E; font-size: 13px; font-weight: 700; margin-bottom: 22px; }
         .sl-eyebrow__dot { width: 7px; height: 7px; border-radius: 4px; background: var(--sl-yellow-deep); box-shadow: 0 0 10px rgba(250,204,21,0.9); }
         .sl-h1 { font-size: 26px; font-weight: 900; line-height: 1.05; letter-spacing: -0.8px; margin: 0 0 16px; color: var(--sl-black); }
@@ -283,9 +285,8 @@ export default function PremiumHome () {
 
         /* HERO phone — narrow on mobile so it fits the text-left/phone-right
            layout; grows on larger screens. */
-        .sl-phone-wrap { display: flex; justify-content: center; align-items: center; min-height: 280px; position: relative; }
-        @media (min-width: 480px) { .sl-phone-wrap { min-height: 360px; } }
-        @media (min-width: 768px) { .sl-phone-wrap { min-height: 540px; } }
+        .sl-phone-wrap { display: flex; justify-content: center; align-items: flex-start; min-height: 0; position: relative; padding-top: 4px; }
+        @media (min-width: 768px) { .sl-phone-wrap { align-items: center; min-height: 540px; padding-top: 0; } }
         .sl-phone-glow { position: absolute; inset: 0; background: radial-gradient(closest-side, rgba(250,204,21,0.4), transparent 70%); filter: blur(40px); pointer-events: none; animation: slPulse 5s ease-in-out infinite; }
         @keyframes slPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.9; } }
         .sl-phone { position: relative; width: 150px; height: 310px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 28px; padding: 5px; box-shadow: 0 18px 40px rgba(0,0,0,0.22), 0 6px 14px rgba(250,204,21,0.18); border: 2px solid #2a2a2a; overflow: hidden; animation: slFloat 6s ease-in-out infinite; }
@@ -466,7 +467,6 @@ export default function PremiumHome () {
       <section className="sl-hero">
         <div className="sl-container sl-hero__grid">
           <div>
-            <div className="sl-eyebrow"><span className="sl-eyebrow__dot" />Premium PWA platform · 0% commission</div>
             <h1 className="sl-h1">Your business.<br /><span className="sl-h1__accent">Your own app.</span><br />Five minutes to live.</h1>
             <p className="sl-lede">
               StreetLocal builds premium, animated, mobile-first apps for bakeries, restaurants,
