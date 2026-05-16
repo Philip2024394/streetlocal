@@ -1144,11 +1144,13 @@ export default function Affiliate({ onClose }) {
             <p style={{ fontSize: 14, color: '#52525B', margin: '0 0 20px', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.55 }}>
               Your agent code + referral link go live the moment you sign up. No card, no waiting, no approval delay.
             </p>
-            <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 26px', borderRadius: 14, background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 6px 22px rgba(250,204,21,0.45)', cursor: 'pointer' }}>
-              ↑ Activate Dashboard
-            </a>
-            <div style={{ marginTop: 16, fontSize: 12, color: '#71717A' }}>
-              <button onClick={() => setStep('terms')} style={{ background: 'none', border: 'none', color: '#0A0A0A', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: 12, fontFamily: 'inherit', fontWeight: 700 }}>📋 View Terms & Conditions</button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 26px', borderRadius: 14, background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 6px 22px rgba(250,204,21,0.45)', cursor: 'pointer' }}>
+                ↑ Activate Dashboard
+              </a>
+              <button onClick={() => setStep('terms')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 26px', borderRadius: 14, background: '#FFFFFF', border: '2px solid #FACC15', color: '#0A0A0A', fontSize: 15, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(250,204,21,0.18)' }}>
+                📋 View Terms & Conditions
+              </button>
             </div>
           </div>
         </div>
@@ -1171,119 +1173,152 @@ export default function Affiliate({ onClose }) {
           <div style={{ width: 44 }} />
         </div>
 
-        <div style={{ padding: '20px 20px 40px' }}>
-          <p style={{ fontSize: 12, color: '#888', marginBottom: 16 }}>Last updated: May 2026</p>
+        <div style={{ padding: '20px 20px 40px', maxWidth: 720, margin: '0 auto' }}>
+          <p style={{ fontSize: 12, color: '#71717A', marginBottom: 8 }}>Last updated: 17 May 2026</p>
+          <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 12, padding: 14, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E', marginBottom: 4 }}>Effective immediately upon publication</div>
+            <div style={{ fontSize: 12, color: '#78350F', lineHeight: 1.5 }}>By accessing the Agent Programme dashboard, signing up as an agent, or using any referral link, you agree to these Terms in full as they may be amended from time to time. StreetLocal.live may update these Terms at any time without notice.</div>
+          </div>
 
-          {/* 1. Relationship */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>1. Independent Contractor Status</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            Agents are independent contractors and are NOT employees, partners, or representatives of StreetLocal.live. At no point does participation in the Agent Programme create an employment relationship. StreetLocal.live has no obligation to provide benefits, insurance, or protections typically associated with employment.
+          {/* 1. Independent Contractor */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>1. Independent Contractor Status — Not Employed</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Agents are independent contractors and are NOT employees, partners, agents in the legal sense, or representatives of StreetLocal.live or its operating entities. Participation in the Agent Programme does NOT create an employment relationship, partnership, joint venture, franchise, or agency relationship of any kind. StreetLocal.live has no obligation to provide salary, wages, benefits, health insurance, BPJS (Indonesian social security), pension contributions, paid leave, severance, equipment, training, supervision, or any protection typically associated with employment. Agents are solely responsible for their own working conditions, hours, methods, and outcomes. StreetLocal.live exercises no control over the manner in which agents perform their work — agents may stop participating at any time without notice and without consequence.
           </p>
 
-          {/* 2. Tax */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>2. Tax & Government Obligations</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            Agents are fully responsible for all government taxes, fees, and obligations arising from income earned through the Agent Programme. This includes but is not limited to income tax, VAT, and any local government levies. StreetLocal.live will not withhold taxes or file returns on behalf of agents. It is the agent's sole responsibility to comply with all applicable tax laws in their country of residence.
+          {/* 2. Tax & Government Obligations */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>2. Tax & Government Obligations — Agent's Sole Responsibility</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Agents are 100% personally responsible for ALL government taxes, fees, levies, registrations, permits, and obligations arising from any income, activity, or status connected to the Agent Programme. This includes but is not limited to: Indonesian income tax (PPh), VAT (PPN), NPWP registration where applicable, foreign income tax, BPJS contributions, social security in any jurisdiction, professional licenses, business permits, and any local government levies. StreetLocal.live will NOT withhold taxes, file returns, issue tax certificates (Form 1721 or equivalent), register the agent with any government body, or advise the agent on which taxes apply to their situation. It is the agent's sole responsibility to comply with all tax, regulatory, business-registration, and reporting laws in their country of residence and in any country where they conduct agent activities. Failure to comply is the agent's personal liability — StreetLocal.live bears no responsibility for the agent's compliance status or any penalties imposed by any government on the agent.
           </p>
 
-          {/* 3. Account Termination */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>3. Account Deactivation & Termination</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            StreetLocal.live reserves the right to deactivate, suspend, or permanently terminate any agent account without prior notice if the agent is found to be in violation of these terms, engaging in fraudulent activity, or acting in a manner that damages the reputation of StreetLocal.live. No refunds will be issued for the current billing period upon termination for cause.
+          {/* 3. Account Termination + Fund Withholding */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>3. Account Deactivation, Termination & Fund Withholding — At Our Sole Discretion</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            StreetLocal.live reserves the absolute right to deactivate, suspend, restrict, or permanently terminate any agent account at any time, with or without prior notice, with or without stated reason, and with or without an appeal process. This includes circumstances where the agent (a) is suspected of violating these Terms, (b) is suspected of fraudulent activity, (c) damages or threatens to damage the reputation of StreetLocal.live, (d) is non-cooperative with our verification or investigation processes, (e) fails to maintain accurate personal records, or (f) operates in a manner that exposes StreetLocal.live to legal, regulatory, financial, reputational, or operational risk. During any investigation — extending for an investigation timeframe determined solely by StreetLocal.live and which we are under no obligation to disclose — we may freeze, hold, withhold, defer, or forfeit any pending bounties, released balances, or commission accruals connected to the agent's account. We may permanently retain forfeited bounties where fraud, abuse, or material breach is established, and we are under no obligation to refund or pay any forfeited amounts. No refunds will be issued for any period upon termination, and termination does not entitle the agent to compensation of any kind.
           </p>
 
           {/* 4. Prohibited Content */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>4. Prohibited Content & Platforms</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 8 }}>
-            Agent referral links must NOT be shared, posted, or promoted on:
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>4. Prohibited Content & Platforms</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 8 }}>
+            Agent referral links must NEVER be shared, posted, promoted, embedded, redirected, automated, or distributed via any of the following channels or environments:
           </p>
-          <ul style={{ fontSize: 13, color: '#444', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
-            <li>Pornographic, adult, or sexually explicit websites or platforms</li>
-            <li>Content targeting or accessible to underage individuals (under 18)</li>
-            <li>Forums, blogs, or websites that promote illegal activity</li>
-            <li>Dark web or anonymous networks</li>
-            <li>Hate speech, extremist, or violence-promoting platforms</li>
-            <li>Gambling or unregulated financial platforms</li>
-            <li>Any platform where the content violates local laws</li>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 12 }}>
+            <li>Pornographic, adult, or sexually explicit websites, platforms, or content</li>
+            <li>Content targeting or accessible to minors (under 18 in Indonesia, or under the applicable age of majority in the agent's jurisdiction)</li>
+            <li>Forums, blogs, websites, or apps that promote illegal activity of any kind</li>
+            <li>Dark web, anonymous networks (Tor, I2P, etc.), or sanctioned-region services</li>
+            <li>Hate speech, extremist, terrorist, or violence-promoting platforms or content</li>
+            <li>Gambling, unregulated betting, crypto-mining schemes, or unregulated financial promotion platforms</li>
+            <li>Anti-government, separatist, or sanction-evading communities</li>
+            <li>Any platform, group, or channel where the content, recipient, or distribution method violates Indonesian law (UU ITE, KUHP) or the law of any country where the link is accessed</li>
           </ul>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Repeated or material violation will result in immediate account termination, forfeiture of all pending and accrued bounties, and may result in StreetLocal.live reporting the agent to relevant authorities.
+          </p>
 
           {/* 5. Social Media Rules */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>5. Social Media Sharing Rules</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 8 }}>
-            Agent links are intended for sharing on legitimate social media platforms (WhatsApp, Instagram, Facebook, TikTok, Twitter/X, YouTube, Telegram) only. Agents must:
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>5. Social Media Sharing Rules</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 8 }}>
+            Agent links are intended only for sharing on legitimate, mainstream social media platforms (WhatsApp, Instagram, Facebook, TikTok, Twitter/X, YouTube, Telegram). Agents must:
           </p>
-          <ul style={{ fontSize: 13, color: '#444', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
-            <li>Follow all rules and policies of the social media platform being used</li>
-            <li>Not create fake accounts or profiles to distribute links</li>
-            <li>Not impersonate StreetLocal.live or claim to be an official representative</li>
-            <li>Not use bots, automation tools, or click farms to generate traffic</li>
-            <li>Not post misleading, false, or deceptive claims about the products</li>
-            <li>Clearly identify promotional content as such where required by platform rules</li>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
+            <li>Comply with ALL rules, community standards, and policies of every platform used</li>
+            <li>NOT create fake accounts, sockpuppets, ghost profiles, or impersonation accounts to distribute links</li>
+            <li>NOT impersonate StreetLocal.live, its founders, employees, or affiliates</li>
+            <li>NOT use bots, automation tools, scrapers, click farms, paid-engagement services, or any artificial-traffic generators</li>
+            <li>NOT post misleading, false, deceptive, or unsubstantiated claims about StreetLocal.live's products, pricing, commission, earnings potential, or features</li>
+            <li>NOT make any earnings or income claim without an explicit disclaimer that it is personal experience and not a guarantee</li>
+            <li>Clearly identify all promotional content as such (per Indonesian advertising disclosure rules and platform-specific sponsored-content rules)</li>
+            <li>Honour any takedown request from StreetLocal.live within 24 hours of receipt</li>
           </ul>
 
           {/* 6. Spam */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>6. Anti-Spam Policy</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            Spamming is strictly prohibited. This includes but is not limited to: unsolicited bulk emails, mass SMS messages, unsolicited WhatsApp messages to unknown contacts, comment spam on social media posts, and repetitive posting in groups or communities without permission. Violation of this policy will result in immediate account termination without refund.
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>6. Anti-Spam Policy</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Spamming is strictly prohibited and grounds for immediate termination without refund or compensation. Prohibited activities include but are not limited to: unsolicited bulk email, mass SMS, unsolicited WhatsApp messages to unknown contacts, repetitive comment spam on social media, group-spam in WhatsApp/Telegram/Facebook groups without administrator permission, posting referral links to unrelated forum discussions, automated DM campaigns, scraping public contact lists, and any communication that violates UU PDP (Indonesia), GDPR (EU recipients), TCPA (US), or equivalent law. Agents are personally liable for any fine, complaint, or legal action arising from their spam activity.
           </p>
 
           {/* 7. Marketing Materials */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>7. Marketing Materials & Branding</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 8 }}>
-            Agents must adhere to the following regarding promotional materials:
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>7. Marketing Materials, Branding & Intellectual Property</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 8 }}>
+            The StreetLocal.live name, logo, "Streetlocal.live" wordmark, "FoodLocal" wordmark, colour palette, donut artwork, banner designs, and all related visual or textual assets are the exclusive intellectual property of StreetLocal.live. Agents must:
           </p>
-          <ul style={{ fontSize: 13, color: '#444', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
-            <li>Agents may ONLY use banners, videos, and promotional materials officially provided through the Agent Hub Share Kit</li>
-            <li>Creating custom banners, advertisements, or promotional materials using the StreetLocal brand, logo, or trademarks is strictly PROHIBITED unless explicitly approved in writing by StreetLocal.live admin</li>
-            <li>Agents must not modify, edit, or alter official promotional materials</li>
-            <li>Running paid advertisements (Google Ads, Facebook Ads, Instagram Ads, etc.) using StreetLocal branding is NOT permitted unless authorized by admin</li>
-            <li>Agents must not create websites, landing pages, or microsites that mimic or replicate StreetLocal.live</li>
-            <li>Any unauthorized use of the StreetLocal brand will result in immediate termination</li>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
+            <li>Use ONLY the banners, videos, captions, and promotional materials officially provided through the Banner Studio in their dashboard</li>
+            <li>NOT create custom banners, advertisements, edits, mashups, or promotional materials using the StreetLocal brand, logo, fonts, colours, or trademarks under any circumstances</li>
+            <li>NOT modify, edit, crop, recolour, or alter official promotional materials in any way (caption text added at posting time is fine; image edits are prohibited)</li>
+            <li>NOT run paid advertisements (Google Ads, Facebook Ads, Instagram Ads, TikTok Ads, YouTube Ads, etc.) using the StreetLocal brand without prior written approval</li>
+            <li>NOT register or operate any domain, subdomain, social handle, website, landing page, or microsite that mimics, replicates, or could be confused with StreetLocal.live</li>
+            <li>NOT use the StreetLocal brand to apply for trademarks, business registrations, government tenders, or any official capacity in any jurisdiction</li>
           </ul>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Any unauthorized use of the brand will result in immediate termination, forfeiture of all bounties, takedown action, and may include legal proceedings for trademark infringement.
+          </p>
 
-          {/* 8. Commission */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>8. Commission & Payments</h3>
-          <ul style={{ fontSize: 13, color: '#444', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
-            <li>Agents earn a one-time bounty on each referred vendor's first-month subscription: Rp 35K (Starter, 92%), Rp 80K (Professional, 40%), Rp 180K (Enterprise, 40%). No recurring commission on subsequent months.</li>
-            <li>After the first month, all subscription revenue belongs to StreetLocal.live</li>
-            <li>Agents pay Rp 35.000/month for the Agent App subscription</li>
-            <li>Agent app is deactivated immediately if monthly payment is not received</li>
-            <li>Payouts are processed on the 1st of each month via bank transfer</li>
-            <li>Bank account and KTP (ID) must be verified and matching before any payout is made</li>
-            <li>Minimum payout threshold may apply as determined by StreetLocal.live</li>
-            <li>Fraudulent referrals (self-referrals, fake accounts, refunded subscriptions) will not be paid and may result in termination</li>
+          {/* 8. Commission & Payments — Payout Verification */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>8. Commission, Payments & Payout Verification</h3>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
+            <li>Agents earn a one-time bounty on each referred vendor's first-month subscription: Rp 35,000 (Starter, 92% of vendor first-month fee), Rp 80,000 (Professional, 40%), Rp 180,000 (Enterprise, 40%). NO recurring commission on subsequent months or upgrades.</li>
+            <li>After the first month, all subscription revenue, lifetime value, upgrade revenue, and downstream economics belong exclusively to StreetLocal.live.</li>
+            <li>Payouts are processed on the first Monday of each month via direct bank transfer (Indonesia) or Stripe Connect (international).</li>
+            <li>Each commission is held for a verification window of at least 30 days from the vendor's first successful monthly payment before becoming eligible for payout. StreetLocal.live may extend this window during investigation at its sole discretion.</li>
+            <li><strong>Payouts will ONLY be made to a bank account that exactly matches the verified KTP (Indonesian agents) or passport (international agents) name on file.</strong> Any mismatch — different name, different account holder, different bank, suspected straw account, family-member account, third-party account — will result in payout being held indefinitely until the agent provides matching verification documents.</li>
+            <li>Minimum payout thresholds, currency conversion rates, and transfer-fee structures are determined solely by StreetLocal.live and may be changed without notice.</li>
+            <li>Fraudulent referrals (self-referrals, fake signups, chargebacks, refunded subscriptions, abuse of the lead pool, manipulated tracking) result in NO payment, forfeiture of all pending bounties, and may result in account termination and reporting to relevant authorities.</li>
           </ul>
 
           {/* 9. Seat Limits */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>9. Seat Limits & Availability</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            Agent seats are limited per country (Indonesia: 1,000 seats). Once all seats are filled, no new agents can join unless an existing agent cancels or is terminated. Seats are non-transferable. StreetLocal.live reserves the right to adjust seat limits at any time.
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>9. Seat Limits & Availability</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Agent seats are limited per country (Indonesia primary market: 1,000 seats; other markets vary). Once all seats in a country are filled, no new agents from that country can join unless an existing seat is vacated through cancellation, termination, or non-renewal. Seats are non-transferable, non-saleable, and non-assignable. Holding a seat does not entitle the agent to any compensation, refund, or claim if the seat is later revoked. StreetLocal.live reserves the right to adjust seat limits, redistribute seats by region, or restructure the seat system at any time without notice.
           </p>
 
           {/* 10. Data & Privacy */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>10. Data & Privacy</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            Agents must not collect, store, or misuse personal data of any referred users. All customer data belongs to StreetLocal.live. Agents are prohibited from contacting referred customers directly for purposes unrelated to StreetLocal services.
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>10. Data, Privacy & Confidentiality</h3>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
+            <li>Agents must NOT collect, store, scrape, harvest, sell, transfer, or otherwise misuse personal data belonging to any referred customer, vendor, lead, or other agent. All customer and lead data is the exclusive property of StreetLocal.live.</li>
+            <li>Agents are prohibited from contacting referred customers, vendors, or leads outside the channels and purposes explicitly authorized by StreetLocal.live.</li>
+            <li>Information shown in the agent dashboard (lead lists, vendor names, commission rates, system internals) is confidential and must not be published, posted, or shared publicly.</li>
+            <li>Agents must comply with UU PDP (Indonesia), GDPR (EU contacts), and equivalent laws in any country where they operate.</li>
+            <li>StreetLocal.live's privacy policy governs all data we collect from agents (personal information, KTP/passport, banking details). The agent consents to that policy by signing up.</li>
+          </ul>
+
+          {/* 11. Liability + Indemnification */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>11. Limitation of Liability & Indemnification</h3>
+          <ul style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.8, paddingLeft: 20, marginBottom: 16 }}>
+            <li>StreetLocal.live is NOT liable for any loss of income, profits, opportunity, data, reputation, indirect, consequential, or incidental damages arising from participation in the Agent Programme, regardless of cause (including negligence).</li>
+            <li>The Agent Programme is provided "AS IS" with no warranties, express or implied. StreetLocal.live makes NO guarantees about earnings potential, conversion rates, platform uptime, payout timeliness, vendor quality, or future programme structure.</li>
+            <li>Agents participate at their own risk and discretion. Any loss — financial, reputational, legal, regulatory, or otherwise — is the agent's responsibility.</li>
+            <li>The agent agrees to indemnify, defend, and hold harmless StreetLocal.live, its officers, employees, contractors, and affiliates from any claim, suit, complaint, fine, regulatory action, or damages arising from: the agent's breach of these Terms; the agent's violation of any law, regulation, or third-party right; the agent's negligent or wilful conduct; or any content the agent posts, publishes, or distributes.</li>
+            <li>Maximum aggregate liability of StreetLocal.live to any agent under any theory of liability is limited to the total amount of bounties actually paid to that agent in the 90 days preceding the claim.</li>
+          </ul>
+
+          {/* 12. Modifications */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>12. Modifications to Terms — Effective Immediately, No Notice Required</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            StreetLocal.live reserves the absolute right to modify, amend, restructure, suspend, or terminate these Terms, the Agent Programme, the commission structure, the payout mechanism, the lead pool, or any other aspect of the programme at any time, with or without prior notice. Changes are effective immediately upon publication to the dashboard or this Terms page. The agent's continued use of the Agent Programme, the agent dashboard, or any referral link after a change is published constitutes the agent's full and informed acceptance of the updated Terms. It is the agent's responsibility to periodically review these Terms. The "Last updated" date at the top reflects the most recent revision. No notification, email, or in-app alert is required, although StreetLocal.live may at its sole discretion provide one for material changes.
           </p>
 
-          {/* 11. Liability */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>11. Limitation of Liability</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            StreetLocal.live is not liable for any loss of income, profits, or damages arising from participation in the Agent Programme. The Agent Programme is provided "as is" and StreetLocal.live makes no guarantees regarding earnings potential. Agents participate at their own risk and discretion.
+          {/* 13. Governing Law */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>13. Governing Law, Jurisdiction & Force Majeure</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            These Terms are governed by the laws of the Republic of Indonesia. Any dispute, claim, or matter arising from these Terms or the Agent Programme will be resolved exclusively in the courts of Jakarta Pusat, Republic of Indonesia. Agents waive any right to participate in class actions, class arbitrations, or representative proceedings. StreetLocal.live is not liable for any failure or delay in performance due to force majeure events (natural disasters, pandemics, government actions, war, internet outages, payment-processor failures, or any cause beyond reasonable control).
           </p>
 
-          {/* 12. Changes */}
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>12. Modifications to Terms</h3>
-          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 16 }}>
-            StreetLocal.live reserves the right to modify these terms at any time. Agents will be notified of material changes via the Agent Hub. Continued use of the Agent Programme after changes constitutes acceptance of the updated terms.
+          {/* 14. Agent's Personal Compliance Duties */}
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A0A0A', marginBottom: 8 }}>14. Agent's Acknowledgment of Personal Compliance Duties</h3>
+          <p style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.7, marginBottom: 16 }}>
+            Each agent acknowledges that they are 100% personally responsible for: (a) reading, understanding, and following these Terms in their entirety; (b) knowing and complying with all laws, regulations, licensing, business-registration, advertising, tax, data-protection, anti-corruption, and consumer-protection requirements that apply to their activities in their country of residence and any country where they operate; (c) maintaining accurate, current, and lawful personal records, identity documents, bank accounts, and tax filings; (d) ensuring that any business entity or trade name they use is properly registered and current; (e) NOT relying on StreetLocal.live for legal, tax, financial, or compliance advice. The agent acknowledges that "I did not know" is not a valid defence for any breach of these Terms or any law applicable to their conduct.
           </p>
 
-          <div style={{ background: '#FEF3C7', borderRadius: 12, padding: 14, marginTop: 8 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>By registering as an Agent, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions in full.</div>
+          <div style={{ background: '#FEF3C7', borderRadius: 12, padding: 16, marginTop: 12, border: '1px solid #FCD34D' }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: '#92400E', marginBottom: 6 }}>Agreement</div>
+            <div style={{ fontSize: 13, color: '#78350F', lineHeight: 1.55 }}>By registering as an Agent, accessing the Agent dashboard, or using any referral link, the agent acknowledges that they have read, understood, and agree to be bound by these Terms & Conditions in full and as they may be amended from time to time without notice.</div>
           </div>
 
-          <button onClick={() => setStep(agent ? 'dashboard' : 'signup')} style={{ ...s.primaryBtn, marginTop: 16, background: '#1a1a1a' }}>
-            I Understand — Go Back
+          <button onClick={() => setStep(agent ? 'dashboard' : 'signup')} style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #FACC15 0%, #EAB308 100%)', color: '#0A0A0A', fontSize: 16, fontWeight: 900, cursor: 'pointer', marginTop: 20, boxShadow: '0 6px 22px rgba(250,204,21,0.45)', fontFamily: 'inherit' }}>
+            I Understand & Agree — Go Back
           </button>
         </div>
       </div>
