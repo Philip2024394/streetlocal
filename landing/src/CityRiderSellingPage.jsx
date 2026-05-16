@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react'
 
 /* ─────────────────────────────────────────────────────────────────────────
    City Rider — selling page
-   Dark-themed sales page (matches the cityrider app brand). Targeted at
-   independent Indonesian motorcycle couriers considering subscribing.
-   Single-file, vanilla CSS in a <style> block, no Tailwind.
-
-   Live-app iframe + CTAs point to the standalone cityriders Next.js
-   deployment (cityrider.id in prod, localhost:5186 in dev).
+   Dark-themed sales page. Single file, vanilla CSS in a <style> block,
+   inline ID/EN translations (no fetch). Hero phone iframe renders at
+   real mobile viewport (390px wide) and is scaled down via CSS transform
+   so responsive content inside the live app looks right at any frame size.
    ───────────────────────────────────────────────────────────────────── */
 
-// Live-app URL resolver — dev vs prod
+// Live app URL — dev vs prod
 const CITYRIDER_URL = (() => {
   if (typeof window === 'undefined') return 'https://cityrider.id'
   return window.location.hostname === 'localhost'
@@ -18,90 +16,289 @@ const CITYRIDER_URL = (() => {
     : 'https://cityrider.id'
 })()
 
-const STATS = [
-  { value: '0%',          label: 'Komisi platform' },
-  { value: 'Rp 30K',      label: 'Per bulan flat' },
-  { value: '100%',        label: 'Pendapatan rider' },
+const LANGUAGES = [
+  { code: 'id', label: 'ID' },
+  { code: 'en', label: 'EN' },
 ]
 
-const STEPS = [
-  { step: 1, time: '30 detik', icon: '✍️',  title: 'Daftar gratis',
-    desc: 'Email + nama + WhatsApp + password. Tidak ada KTP upload, tidak ada training video.' },
-  { step: 2, time: '2 menit',  icon: '🛵',  title: 'Set motor + harga',
-    desc: 'Merk, model, tahun, warna, plat. Atur sendiri tarif per km (mis. Rp 2.500) dan minimum fee.' },
-  { step: 3, time: '1 menit',  icon: '💳',  title: 'Aktifkan Rp 30.000/bulan',
-    desc: 'Bayar via QRIS, GoPay, OVO, Dana, atau transfer bank. Auto-renew, bisa cancel kapan saja.' },
-  { step: 4, time: 'Selamanya', icon: '🟢',  title: 'Go online → terima quote',
-    desc: 'Tap "Go Online" di dashboard. Customer kontak kamu lewat WhatsApp. Kamu yang atur jam kerjamu.' },
-]
+// All visible text. EN mirrors ID structure. Adapt copy as you like.
+const STRINGS = {
+  id: {
+    nav: { how: 'Cara kerja', vs: 'vs Gojek', price: 'Harga', faq: 'FAQ' },
+    hero: {
+      h1Pre: 'Punya motor?',
+      h1Main: 'Jadi',
+      h1Accent: 'kurir mandiri',
+      h1Post: 'dengan City Rider.',
+      lede: 'Marketplace untuk rider motor independen. Atur harga sendiri, simpan 100% pendapatan, kontak customer langsung lewat WhatsApp. Tanpa komisi dan tanpa dispatch.',
+      ctaSignup: 'Daftar sebagai rider →',
+      ctaMarketplace: 'Lihat marketplace',
+      pill: 'Rp 30.000/bulan · 0% komisi · cancel kapan saja',
+    },
+    stats: [
+      { value: '0%', label: 'Komisi platform' },
+      { value: 'Rp 30K', label: 'Per bulan flat' },
+      { value: '100%', label: 'Pendapatan rider' },
+    ],
+    split: {
+      r: { kicker: 'Untuk rider', title: 'Bangun bisnis kurir sendiri',
+           desc: 'Daftar gratis, set motor + harga, bayar Rp 30K/bulan, go online. Customer kontak kamu langsung lewat WhatsApp. Tidak ada algoritma, tidak ada komisi, tidak ada suspend.',
+           list: ['Atur harga per km dan minimum fee sendiri', 'Customer book — pelanggan kamu, bukan platform', 'Profile publik dengan QR code untuk marketing offline'] },
+      c: { kicker: 'Untuk customer', title: 'Cari kurir terdekat, harga jelas',
+           desc: 'Marketplace gratis untuk siapapun yang butuh kurir motor. Set jemput + antar, bandingkan rider dan harga total, pilih, kontak langsung lewat WhatsApp.',
+           list: ['Tidak perlu install app — buka di browser saja', 'Lihat harga total sebelum kontak rider', 'Bayar langsung ke rider, sesuai kesepakatan'] },
+    },
+    steps: {
+      kicker: 'Cara kerja',
+      title: 'Dari daftar ke online dalam 5 menit',
+      items: [
+        { time: '30 detik', icon: '✍️',  title: 'Daftar gratis',         desc: 'Email + nama + WhatsApp + password. Tidak ada KTP upload, tidak ada training video.' },
+        { time: '2 menit',  icon: '🛵',  title: 'Set motor + harga',     desc: 'Merk, model, tahun, warna, plat. Atur sendiri tarif per km (mis. Rp 2.500) dan minimum fee.' },
+        { time: '1 menit',  icon: '💳',  title: 'Aktifkan Rp 30.000/bulan', desc: 'Bayar via QRIS, GoPay, OVO, Dana, atau transfer bank. Auto-renew, bisa cancel kapan saja.' },
+        { time: 'Selamanya', icon: '🟢',  title: 'Go online → terima quote', desc: 'Tap "Go Online" di dashboard. Customer kontak kamu lewat WhatsApp. Kamu yang atur jam kerjamu.' },
+      ],
+    },
+    compare: {
+      kicker: 'Perbandingan',
+      title: 'Kenapa rider pindah ke City Rider',
+      them: 'Gojek / Grab', us: 'City Rider',
+      rows: [
+        { feat: 'Komisi per order',        them: '15-20% per order',        us: '0% — selamanya' },
+        { feat: 'Harga ditentukan oleh',   them: 'Algoritma platform',      us: 'Kamu sendiri' },
+        { feat: 'Kepemilikan customer',    them: 'Platform',                us: 'Kamu (Customer Book)' },
+        { feat: 'Jam kerja',               them: 'Random dispatch',         us: 'Kamu pilih sendiri' },
+        { feat: 'Risiko suspend',          them: 'Tinggi (rating, cancel)', us: 'Tidak ada' },
+        { feat: 'Pembayaran customer',     them: 'Lewat platform',          us: 'Langsung COD/QRIS/transfer' },
+        { feat: 'Biaya tetap bulanan',     them: 'Tidak ada (tapi cut order)', us: 'Rp 30.000 flat' },
+        { feat: 'Bisa luar kota',          them: 'Sering ditolak',          us: 'Kamu yang setuju' },
+      ],
+    },
+    features: {
+      kicker: 'Apa kamu dapat',
+      title: 'Yang termasuk dalam Rp 30.000/bulan',
+      items: [
+        { icon: '🌐', title: 'Profile publik dengan URL sendiri',  desc: 'Dapat link cityrider.id/r/nama-kamu — share di WhatsApp Status, Instagram, Facebook.' },
+        { icon: '📍', title: 'Listing di marketplace GPS',         desc: 'Saat online, otomatis muncul di marketplace untuk customer terdekat. GPS dot kuning berdenyut.' },
+        { icon: '💬', title: 'Quote inbox + notifikasi suara',     desc: 'Setiap kali customer tap WhatsApp, kamu dapat beep + notifikasi. Tidak pernah lewat customer.' },
+        { icon: '📒', title: 'Customer Book — database sendiri',   desc: 'Daftar semua pelanggan, tracker repeat, "Pesan ulang" 1 tap. Customer kamu, bukan platform.' },
+        { icon: '🪪', title: 'Kartu nama digital + QR',            desc: 'Print kartu nama dengan QR code. Tempel di motor, kasih ke customer, sebar di warung.' },
+        { icon: '⚡', title: '8 template balasan WhatsApp',         desc: 'Salam, info kapasitas, COD, ETA, penutup. Tap copy → paste. Terlihat profesional tanpa ribet.' },
+        { icon: '📊', title: 'Dashboard ROI bulanan',              desc: 'Lihat berapa quote diterima, nilai total, ROI vs subscription. Pasti tahu apakah worth it.' },
+        { icon: '🔄', title: 'Offline fallback (reciprocal)',      desc: 'Saat kamu offline, profilemu rekomendasi rider lain → mereka rekomendasi balik. Network growth.' },
+      ],
+    },
+    pricing: {
+      kicker: 'Harga', title: 'Satu paket, satu harga, semua termasuk',
+      ribbon: '⚡ Aktif sekarang',
+      name: 'City Rider — Rider',
+      period: '/bulan',
+      sub: '0% komisi · auto-renew · cancel kapan saja',
+      list: [
+        'Listing profile di marketplace GPS',
+        'Quote inbox + notifikasi beep + haptic',
+        'Customer Book — database pelanggan sendiri',
+        'Kartu nama digital + QR (printable)',
+        '8 template balasan WhatsApp Bahasa Indonesia',
+        'Dashboard ROI bulanan',
+        'Profile publik URL: cityrider.id/r/nama-kamu',
+        'Offline fallback reciprocal network',
+      ],
+      cta: 'Daftar & aktifkan sekarang →',
+      note: 'Bayar via QRIS, GoPay, OVO, Dana, ShopeePay, atau transfer bank.',
+    },
+    demo: { kicker: 'Coba langsung', title: 'Lihat aplikasinya bekerja sekarang',
+            ctaFull: 'Buka full di tab baru →', ctaDashboard: 'Lihat rider dashboard' },
+    testi: {
+      kicker: 'Rider stories', title: 'Apa kata rider yang sudah pakai',
+      items: [
+        { name: 'Andi Pratama', area: 'Yogyakarta Tengah', bike: 'Honda BeAT 2023',
+          quote: 'Setelah 3 tahun di Gojek, City Rider buat saya merasa punya bisnis sendiri. Customer langganan saya sekarang 12 orang yang chat saya langsung — itu yang Gojek tidak pernah kasih.' },
+        { name: 'Citra Wulandari', area: 'Bantul', bike: 'Honda Scoopy 2024',
+          quote: 'Saya rider perempuan. Di City Rider saya bisa atur jam kerja sendiri (cuma siang) tanpa takut rating turun atau dispatch ke malam. Customer book saya isi 23 langganan dalam 2 bulan.' },
+        { name: 'Gilang Saputra', area: 'Yogyakarta Utara', bike: 'Honda CB150R 2024',
+          quote: 'Motor sport saya untuk paket urgent — di Gojek harga sama dengan motor matic. Di City Rider saya pasang Rp 3.500/km dan customer yang butuh cepat ya bayar harga itu. Selisih ratusan ribu per bulan.' },
+      ],
+    },
+    faq: {
+      kicker: 'FAQ', title: 'Pertanyaan yang sering ditanyakan rider',
+      items: [
+        ['Apa saya bisa cancel subscription kapan saja?',
+         'Ya, kapan saja. Subscription auto-renew bulanan via Midtrans. Tap "Cancel" di dashboard kapanpun — masa aktif berjalan sampai akhir periode yang sudah dibayar, lalu profile otomatis tidak aktif. Tidak ada penalty, tidak ada minimum kontrak.'],
+        ['Bagaimana cara bayar Rp 30.000/bulan?',
+         'Lewat Midtrans — bisa pakai QRIS (semua bank), GoPay, OVO, Dana, ShopeePay, atau transfer BCA/Mandiri/BRI/BNI Virtual Account. Sekali setup, auto-renew tiap bulan. Kalau gagal bayar, ada 3 hari grace period sebelum profile disembunyikan.'],
+        ['Customer bayar ke saya langsung atau ke City Rider?',
+         'Langsung ke kamu. City Rider sama sekali tidak terlibat di transaksi customer-rider. Kamu nego sendiri dengan customer di WhatsApp — COD, transfer ke rekeningmu, QRIS ke barcode kamu, terserah. City Rider cuma platform listing — kamu yang jalankan bisnis.'],
+        ['Berapa lama setup sampai bisa terima customer?',
+         'Sekitar 5 menit total — 30 detik daftar, 2 menit isi profile + motor + harga, 1 menit bayar QRIS, lalu tap "Go Online". Setelah itu profilemu langsung muncul di marketplace untuk customer di area sekitarmu.'],
+        ['Bagaimana City Rider beda dari Gojek atau Grab?',
+         'Gojek/Grab adalah perusahaan dispatch — mereka ambil 15-20% per order, tentukan harga, dan algoritma mereka yang assign customer. City Rider bukan dispatch — kita cuma platform listing seperti yellow pages digital. Kamu yang muncul di pencarian customer, kamu yang nego, kamu yang antar, kamu yang dibayar. 0% komisi, kamu pemilik bisnis.'],
+        ['Apa kalau saya offline (libur, sakit, dsb)?',
+         'Profilemu tetap online di marketplace tapi dengan label "offline". Customer yang mampir ke profilemu otomatis dialihkan ke 5 rider terdekat yang sedang aktif. Saat kamu kembali aktif, profilemu otomatis muncul di pencarian lagi. Tidak ada penalty saat offline.'],
+        ['Customer bisa rating saya?',
+         'Belum di Phase 1 — kami sengaja menunda rating system karena di Gojek/Grab sering disalahgunakan untuk suspend rider tanpa konteks. Kami sedang riset model rating yang adil untuk rider. Untuk sekarang, social proof berdasarkan repeat customer di Customer Book kamu.'],
+        ['Bisa antar luar kota / luar daerah?',
+         'Bisa — kamu yang setuju. Saat customer kontak via WhatsApp, kamu bebas terima atau tolak job manapun. Beberapa rider kami punya niche "kurir luar kota" (Yogya-Magelang, Yogya-Klaten) dan pasang harga lebih tinggi untuk jarak jauh. City Rider tidak ngatur.'],
+      ],
+    },
+    cta: { title: 'Siap jadi kurir mandiri?',
+           sub: '5 menit setup. Rp 30.000/bulan. 0% komisi selamanya. Customer kamu, harga kamu, jam kamu.',
+           primary: 'Daftar sebagai rider →', ghost: 'Buka marketplace' },
+    footer: { tag: 'Bagian dari keluarga aplikasi StreetLocal',
+              links: { home: 'StreetLocal', donut: 'Donut app', affiliate: 'Jadi agen', faq: 'FAQ', contact: 'Kontak' },
+              legal: 'StreetLocal · cityrider.id · Yogyakarta, Indonesia' },
+  },
 
-const FEATURES = [
-  { icon: '🌐', title: 'Profile publik dengan URL sendiri',
-    desc: 'Dapat link cityrider.id/r/nama-kamu — share di WhatsApp Status, Instagram, Facebook.' },
-  { icon: '📍', title: 'Listing di marketplace GPS',
-    desc: 'Saat online, otomatis muncul di marketplace untuk customer terdekat. GPS dot kuning berdenyut.' },
-  { icon: '💬', title: 'Quote inbox + notifikasi suara',
-    desc: 'Setiap kali customer tap WhatsApp, kamu dapat beep + notifikasi. Tidak pernah lewat customer.' },
-  { icon: '📒', title: 'Customer Book — database sendiri',
-    desc: 'Daftar semua pelanggan, tracker repeat, "Pesan ulang" 1 tap. Customer kamu, bukan platform.' },
-  { icon: '🪪', title: 'Kartu nama digital + QR',
-    desc: 'Print kartu nama dengan QR code. Tempel di motor, kasih ke customer, sebar di warung.' },
-  { icon: '⚡', title: '8 template balasan WhatsApp',
-    desc: 'Salam, info kapasitas, COD, ETA, penutup. Tap copy → paste. Terlihat profesional tanpa ribet.' },
-  { icon: '📊', title: 'Dashboard ROI bulanan',
-    desc: 'Lihat berapa quote diterima, nilai total, ROI vs subscription. Pasti tahu apakah worth it.' },
-  { icon: '🔄', title: 'Offline fallback (reciprocal)',
-    desc: 'Saat kamu offline, profilemu rekomendasi rider lain → mereka rekomendasi balik. Network growth.' },
-]
+  en: {
+    nav: { how: 'How it works', vs: 'vs Gojek', price: 'Pricing', faq: 'FAQ' },
+    hero: {
+      h1Pre: 'Got a bike?',
+      h1Main: 'Become an',
+      h1Accent: 'independent courier',
+      h1Post: 'with City Rider.',
+      lede: 'A marketplace for independent motorcycle couriers. Set your own prices, keep 100% of earnings, contact customers directly on WhatsApp. No commission, no dispatch.',
+      ctaSignup: 'Sign up as a rider →',
+      ctaMarketplace: 'View marketplace',
+      pill: 'Rp 30,000/month · 0% commission · cancel anytime',
+    },
+    stats: [
+      { value: '0%', label: 'Platform commission' },
+      { value: 'Rp 30K', label: 'Flat per month' },
+      { value: '100%', label: 'You keep' },
+    ],
+    split: {
+      r: { kicker: 'For riders', title: 'Run your own courier business',
+           desc: 'Sign up free, set your bike + price, pay Rp 30K/month, go online. Customers contact you directly on WhatsApp. No algorithm, no commission, no suspension risk.',
+           list: ['Set your own per-km rate and minimum fee', 'Customer book — your customers, not the platform', 'Public profile with QR code for offline marketing'] },
+      c: { kicker: 'For customers', title: 'Find a nearby courier, clear pricing',
+           desc: 'Free marketplace for anyone needing a motorcycle courier. Set pickup + dropoff, compare riders and prices, pick one, contact them directly on WhatsApp.',
+           list: ['No app install — works in any browser', 'See total price before contacting the rider', 'Pay the rider directly, however you agree'] },
+    },
+    steps: {
+      kicker: 'How it works',
+      title: 'From sign-up to online in 5 minutes',
+      items: [
+        { time: '30 sec',  icon: '✍️',  title: 'Sign up free',          desc: 'Email + name + WhatsApp + password. No KYC upload, no training video.' },
+        { time: '2 min',   icon: '🛵',  title: 'Set bike + price',      desc: 'Make, model, year, colour, plate. Set your own per-km rate (e.g. Rp 2,500) and minimum fee.' },
+        { time: '1 min',   icon: '💳',  title: 'Activate Rp 30K/month', desc: 'Pay via QRIS, GoPay, OVO, Dana, or bank transfer. Auto-renew, cancel anytime.' },
+        { time: 'Forever', icon: '🟢',  title: 'Go online → get quotes', desc: 'Tap "Go Online" in the dashboard. Customers contact you on WhatsApp. You set your own hours.' },
+      ],
+    },
+    compare: {
+      kicker: 'Comparison',
+      title: 'Why riders switch to City Rider',
+      them: 'Gojek / Grab', us: 'City Rider',
+      rows: [
+        { feat: 'Commission per order',    them: '15-20% per order',        us: '0% — forever' },
+        { feat: 'Price set by',            them: 'Platform algorithm',      us: 'You' },
+        { feat: 'Customer ownership',      them: 'Platform',                us: 'You (Customer Book)' },
+        { feat: 'Working hours',           them: 'Random dispatch',         us: 'You choose' },
+        { feat: 'Suspension risk',         them: 'High (rating, cancel)',   us: 'None' },
+        { feat: 'Customer payment',        them: 'Via platform',            us: 'Direct COD/QRIS/transfer' },
+        { feat: 'Monthly fixed cost',      them: 'None (but per-order cut)', us: 'Rp 30,000 flat' },
+        { feat: 'Out-of-town trips',       them: 'Often rejected',          us: 'You decide' },
+      ],
+    },
+    features: {
+      kicker: 'What you get',
+      title: 'Everything included in Rp 30,000/month',
+      items: [
+        { icon: '🌐', title: 'Public profile with your own URL', desc: 'Get cityrider.id/r/your-name — share on WhatsApp Status, Instagram, Facebook.' },
+        { icon: '📍', title: 'GPS marketplace listing',          desc: 'When online, you automatically appear for nearby customers. Pulsing yellow GPS dot.' },
+        { icon: '💬', title: 'Quote inbox + sound alerts',       desc: 'Every time a customer taps WhatsApp, you get a beep + notification. Never miss a customer.' },
+        { icon: '📒', title: 'Customer Book — your own database', desc: 'List of all customers, repeat tracking, "Message again" in 1 tap. Your customers, not the platform.' },
+        { icon: '🪪', title: 'Digital business card + QR',       desc: 'Print a name card with QR code. Stick it on your bike, hand it to customers, spread it at warungs.' },
+        { icon: '⚡', title: '8 WhatsApp reply templates',        desc: 'Greeting, capacity info, COD, ETA, closing. Tap copy → paste. Look professional without typing.' },
+        { icon: '📊', title: 'Monthly ROI dashboard',            desc: 'See how many quotes you got, total value, ROI vs subscription. Always know if it pays back.' },
+        { icon: '🔄', title: 'Offline fallback (reciprocal)',    desc: 'When you go offline, your profile recommends other riders → they recommend yours. Network growth.' },
+      ],
+    },
+    pricing: {
+      kicker: 'Pricing', title: 'One plan, one price, all included',
+      ribbon: '⚡ Active now',
+      name: 'City Rider — Rider',
+      period: '/month',
+      sub: '0% commission · auto-renew · cancel anytime',
+      list: [
+        'Profile listing on the GPS marketplace',
+        'Quote inbox + beep + haptic notifications',
+        'Customer Book — your own customer database',
+        'Digital business card + QR (printable)',
+        '8 Bahasa Indonesia WhatsApp reply templates',
+        'Monthly ROI dashboard',
+        'Public profile URL: cityrider.id/r/your-name',
+        'Offline fallback reciprocal network',
+      ],
+      cta: 'Sign up & activate now →',
+      note: 'Pay via QRIS, GoPay, OVO, Dana, ShopeePay, or bank transfer.',
+    },
+    demo: { kicker: 'Try it', title: 'See the app working right now',
+            ctaFull: 'Open full in new tab →', ctaDashboard: 'View rider dashboard' },
+    testi: {
+      kicker: 'Rider stories', title: 'What riders are saying',
+      items: [
+        { name: 'Andi Pratama', area: 'Yogyakarta Central', bike: 'Honda BeAT 2023',
+          quote: 'After 3 years on Gojek, City Rider makes me feel like I own a real business. I now have 12 regular customers who chat me directly — something Gojek never gave me.' },
+        { name: 'Citra Wulandari', area: 'Bantul', bike: 'Honda Scoopy 2024',
+          quote: "I'm a female rider. On City Rider I can set my own hours (daytime only) without worrying about a rating drop or being dispatched at night. My Customer Book filled with 23 regulars in 2 months." },
+        { name: 'Gilang Saputra', area: 'Yogyakarta North', bike: 'Honda CB150R 2024',
+          quote: 'My sport bike is for urgent packages — on Gojek I get paid the same as a matic. On City Rider I charge Rp 3,500/km and customers who need speed pay it. Hundreds of thousands more per month.' },
+      ],
+    },
+    faq: {
+      kicker: 'FAQ', title: 'Frequently asked rider questions',
+      items: [
+        ['Can I cancel my subscription anytime?',
+         'Yes, anytime. Auto-renews monthly via Midtrans. Tap "Cancel" in the dashboard whenever — your active period runs to the end of the cycle you already paid for, then your profile is hidden automatically. No penalty, no minimum contract.'],
+        ['How do I pay the Rp 30,000/month?',
+         'Through Midtrans — QRIS (any bank), GoPay, OVO, Dana, ShopeePay, or BCA/Mandiri/BRI/BNI Virtual Account transfer. One-time setup, then auto-renew monthly. If payment fails, there is a 3-day grace period before your profile is hidden.'],
+        ['Do customers pay me directly or through City Rider?',
+         "Directly to you. City Rider is not involved in the customer-rider transaction at all. You negotiate on WhatsApp — COD, transfer to your account, QRIS to your barcode, however you like. We're just the listing platform; you run the business."],
+        ['How long to set up and start receiving customers?',
+         'About 5 minutes total — 30 seconds to register, 2 minutes for profile + bike + price, 1 minute to pay via QRIS, then tap "Go Online". Your profile then appears immediately for customers in your area.'],
+        ['How is City Rider different from Gojek or Grab?',
+         "Gojek/Grab are dispatch companies — they take 15-20% per order, set the price, and their algorithm assigns customers. City Rider is NOT a dispatcher — we're just a listing platform like digital yellow pages. You appear in customer searches, you negotiate, you deliver, you get paid. 0% commission, you own the business."],
+        ['What happens when I go offline (off-day, sick, etc.)?',
+         'Your profile stays in the marketplace with an "offline" label. Customers who land on your profile are automatically shown the 5 nearest active riders. When you come back online, your profile appears in search again. No penalty for being offline.'],
+        ['Can customers rate me?',
+         'Not in Phase 1 — we intentionally delayed ratings because on Gojek/Grab they are frequently abused to suspend riders without context. We are researching a fair rating model. For now, social proof is based on repeat customers in your Customer Book.'],
+        ['Can I take out-of-town trips?',
+         "Yes — you decide. When a customer contacts you on WhatsApp, you are free to accept or reject any job. Some of our riders specialise in out-of-town runs (Yogya-Magelang, Yogya-Klaten) and charge more for distance. City Rider doesn't interfere."],
+      ],
+    },
+    cta: { title: 'Ready to be an independent courier?',
+           sub: '5 min setup. Rp 30,000/month. 0% commission forever. Your customers, your prices, your hours.',
+           primary: 'Sign up as a rider →', ghost: 'Open marketplace' },
+    footer: { tag: 'Part of the StreetLocal family of apps',
+              links: { home: 'StreetLocal', donut: 'Donut app', affiliate: 'Become an agent', faq: 'FAQ', contact: 'Contact' },
+              legal: 'StreetLocal · cityrider.id · Yogyakarta, Indonesia' },
+  },
+}
 
-const COMPARISON = [
-  { feature: 'Komisi per order',         gojek: '15-20% per order',          cityrider: '0% — selamanya' },
-  { feature: 'Harga ditentukan oleh',     gojek: 'Algoritma platform',         cityrider: 'Kamu sendiri' },
-  { feature: 'Kepemilikan customer',      gojek: 'Platform',                   cityrider: 'Kamu (Customer Book)' },
-  { feature: 'Jam kerja',                 gojek: 'Random dispatch',            cityrider: 'Kamu pilih sendiri' },
-  { feature: 'Risiko suspend',            gojek: 'Tinggi (rating, cancel)',    cityrider: 'Tidak ada' },
-  { feature: 'Pembayaran customer',       gojek: 'Lewat platform',             cityrider: 'Langsung COD/QRIS/transfer' },
-  { feature: 'Biaya tetap bulanan',       gojek: 'Tidak ada (tapi cut order)',  cityrider: 'Rp 30.000 flat' },
-  { feature: 'Bisa luar kota',            gojek: 'Sering ditolak',             cityrider: 'Kamu yang setuju' },
-]
-
-const FAQS = [
-  ['Apa saya bisa cancel subscription kapan saja?',
-   'Ya, kapan saja. Subscription auto-renew bulanan via Midtrans. Tap "Cancel" di dashboard kapanpun — masa aktif berjalan sampai akhir periode yang sudah dibayar, lalu profile otomatis tidak aktif. Tidak ada penalty, tidak ada minimum kontrak.'],
-  ['Bagaimana cara bayar Rp 30.000/bulan?',
-   'Lewat Midtrans — bisa pakai QRIS (semua bank), GoPay, OVO, Dana, ShopeePay, atau transfer BCA/Mandiri/BRI/BNI Virtual Account. Sekali setup, auto-renew tiap bulan. Kalau gagal bayar, ada 3 hari grace period sebelum profile disembunyikan.'],
-  ['Customer bayar ke saya langsung atau ke City Rider?',
-   'Langsung ke kamu. City Rider sama sekali tidak terlibat di transaksi customer-rider. Kamu nego sendiri dengan customer di WhatsApp — COD, transfer ke rekeningmu, QRIS ke barcode kamu, terserah. City Rider cuma platform listing — kamu yang jalankan bisnis.'],
-  ['Berapa lama setup sampai bisa terima customer?',
-   'Sekitar 5 menit total — 30 detik daftar, 2 menit isi profile + motor + harga, 1 menit bayar QRIS, lalu tap "Go Online". Setelah itu profilemu langsung muncul di marketplace untuk customer di area sekitarmu.'],
-  ['Bagaimana City Rider beda dari Gojek atau Grab?',
-   'Gojek/Grab adalah perusahaan dispatch — mereka ambil 15-20% per order, tentukan harga, dan algoritma mereka yang assign customer. City Rider bukan dispatch — kita cuma platform listing seperti yellow pages digital. Kamu yang muncul di pencarian customer, kamu yang nego, kamu yang antar, kamu yang dibayar. 0% komisi, kamu pemilik bisnis.'],
-  ['Apa kalau saya offline (libur, sakit, dsb)?',
-   'Profilemu tetap online di marketplace tapi dengan label "offline". Customer yang mampir ke profilemu otomatis dialihkan ke 5 rider terdekat yang sedang aktif. Saat kamu kembali aktif, profilemu otomatis muncul di pencarian lagi. Tidak ada penalty saat offline.'],
-  ['Customer bisa rating saya?',
-   'Belum di Phase 1 — kami sengaja menunda rating system karena di Gojek/Grab sering disalahgunakan untuk suspend rider tanpa konteks. Kami sedang riset model rating yang adil untuk rider. Untuk sekarang, social proof berdasarkan repeat customer di Customer Book kamu.'],
-  ['Bisa antar luar kota / luar daerah?',
-   'Bisa — kamu yang setuju. Saat customer kontak via WhatsApp, kamu bebas terima atau tolak job manapun. Beberapa rider kami punya niche "kurir luar kota" (Yogya-Magelang, Yogya-Klaten) dan pasang harga lebih tinggi untuk jarak jauh. City Rider tidak ngatur.'],
-]
-
-const TESTIMONIALS = [
-  { name: 'Andi Pratama', area: 'Yogyakarta Tengah', bike: 'Honda BeAT 2023',
-    quote: 'Setelah 3 tahun di Gojek, City Rider buat saya merasa punya bisnis sendiri. Customer langganan saya sekarang 12 orang yang chat saya langsung — itu yang Gojek tidak pernah kasih.' },
-  { name: 'Citra Wulandari', area: 'Bantul', bike: 'Honda Scoopy 2024',
-    quote: 'Saya rider perempuan. Di City Rider saya bisa atur jam kerja sendiri (cuma siang) tanpa takut rating turun atau dispatch ke malam. Customer book saya isi 23 langganan dalam 2 bulan.' },
-  { name: 'Gilang Saputra', area: 'Yogyakarta Utara', bike: 'Honda CB150R 2024',
-    quote: 'Motor sport saya untuk paket urgent — di Gojek harga sama dengan motor matic. Di City Rider saya pasang Rp 3.500/km dan customer yang butuh cepat ya bayar harga itu. Selisih ratusan ribu per bulan.' },
-]
+function getStoredLocale() {
+  if (typeof window === 'undefined') return 'id'
+  try {
+    const ls = localStorage.getItem('sl_cityrider_locale')
+    if (ls && STRINGS[ls]) return ls
+  } catch { /* ignore */ }
+  return 'id'
+}
 
 export default function CityRiderSellingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
+  const [locale, setLocale] = useState(getStoredLocale)
+  const t = STRINGS[locale]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  function changeLocale(code) {
+    setLocale(code)
+    try { localStorage.setItem('sl_cityrider_locale', code) } catch { /* ignore */ }
+  }
 
   function openLiveApp(path = '/') {
     window.open(`${CITYRIDER_URL}${path}`, '_blank', 'noopener,noreferrer')
@@ -119,13 +316,22 @@ export default function CityRiderSellingPage() {
             <span>City <span className="cr-grad">Rider</span></span>
           </a>
           <nav className="cr-nav__links">
-            <a href="#how">Cara kerja</a>
-            <a href="#vs">vs Gojek</a>
-            <a href="#price">Harga</a>
-            <a href="#faq">FAQ</a>
-            <button onClick={() => openLiveApp('/signup')} className="cr-btn cr-btn--primary cr-btn--sm">
-              Daftar →
-            </button>
+            <a href="#how">{t.nav.how}</a>
+            <a href="#vs">{t.nav.vs}</a>
+            <a href="#price">{t.nav.price}</a>
+            <a href="#faq">{t.nav.faq}</a>
+            <div className="cr-langtog" role="group" aria-label="Language">
+              {LANGUAGES.map(l => (
+                <button
+                  key={l.code}
+                  onClick={() => changeLocale(l.code)}
+                  className={'cr-langtog__btn ' + (locale === l.code ? 'cr-langtog__btn--on' : '')}
+                  aria-pressed={locale === l.code}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </nav>
         </div>
       </header>
@@ -136,35 +342,33 @@ export default function CityRiderSellingPage() {
         <div className="cr-hero__inner">
           <div className="cr-hero__left">
             <h1 className="cr-h1">
-              Punya motor?<br />
-              Jadi <span className="cr-grad">kurir mandiri</span> dengan City Rider.
+              {t.hero.h1Pre}<br />
+              {t.hero.h1Main} <span className="cr-grad">{t.hero.h1Accent}</span> {t.hero.h1Post}
             </h1>
-            <p className="cr-hero__lede">
-              Marketplace untuk rider motor independen. Atur harga sendiri, simpan 100% pendapatan,
-              kontak customer langsung lewat WhatsApp. Tanpa komisi dan tanpa dispatch.
-            </p>
+            <p className="cr-hero__lede">{t.hero.lede}</p>
             <div className="cr-hero__cta">
               <button onClick={() => openLiveApp('/signup')} className="cr-btn cr-btn--primary cr-btn--lg">
-                Daftar sebagai rider →
+                {t.hero.ctaSignup}
               </button>
               <button onClick={() => openLiveApp('/')} className="cr-btn cr-btn--ghost cr-btn--lg">
-                Lihat marketplace
+                {t.hero.ctaMarketplace}
               </button>
             </div>
             <div className="cr-hero__pill">
               <span className="cr-dot" />
-              Rp 30.000/bulan · 0% komisi · cancel kapan saja
+              {t.hero.pill}
             </div>
           </div>
           <div className="cr-hero__right">
-            <div className="cr-hero__phone-tag">
-              <span className="cr-pulse" />
-              Aplikasi langsung — tap untuk coba
-            </div>
             <div className="cr-phone">
               <div className="cr-phone__notch" />
               <div className="cr-phone__screen">
-                <iframe src={CITYRIDER_URL + '/'} title="City Rider live demo" loading="lazy" />
+                <iframe
+                  src={CITYRIDER_URL + '/'}
+                  title="City Rider live demo"
+                  className="cr-phone__frame"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>
@@ -175,7 +379,7 @@ export default function CityRiderSellingPage() {
       <section className="cr-stats">
         <div className="cr-container">
           <div className="cr-stats__grid">
-            {STATS.map(s => (
+            {t.stats.map(s => (
               <div key={s.label} className="cr-stat">
                 <div className="cr-stat__value cr-grad">{s.value}</div>
                 <div className="cr-stat__label">{s.label}</div>
@@ -185,34 +389,24 @@ export default function CityRiderSellingPage() {
         </div>
       </section>
 
-      {/* ─── TWO COLUMNS: RIDERS vs CUSTOMERS ─── */}
+      {/* ─── TWO COLUMNS ─── */}
       <section className="cr-section">
         <div className="cr-container">
           <div className="cr-split">
             <div className="cr-split__col">
-              <span className="cr-kicker cr-kicker--inline">Untuk rider</span>
-              <h3 className="cr-h3">Bangun bisnis kurir sendiri</h3>
-              <p className="cr-muted">
-                Daftar gratis, set motor + harga, bayar Rp 30K/bulan, go online. Customer kontak kamu langsung
-                lewat WhatsApp. Tidak ada algoritma, tidak ada komisi, tidak ada suspend.
-              </p>
+              <span className="cr-kicker cr-kicker--inline">{t.split.r.kicker}</span>
+              <h3 className="cr-h3">{t.split.r.title}</h3>
+              <p className="cr-muted">{t.split.r.desc}</p>
               <ul className="cr-checklist">
-                <li>Atur harga per km dan minimum fee sendiri</li>
-                <li>Customer book — pelanggan kamu, bukan platform</li>
-                <li>Profile publik dengan QR code untuk marketing offline</li>
+                {t.split.r.list.map((li, i) => <li key={i}>{li}</li>)}
               </ul>
             </div>
             <div className="cr-split__col">
-              <span className="cr-kicker cr-kicker--inline">Untuk customer</span>
-              <h3 className="cr-h3">Cari kurir terdekat, harga jelas</h3>
-              <p className="cr-muted">
-                Marketplace gratis untuk siapapun yang butuh kurir motor. Set jemput + antar, bandingkan rider
-                dan harga total, pilih, kontak langsung lewat WhatsApp.
-              </p>
+              <span className="cr-kicker cr-kicker--inline">{t.split.c.kicker}</span>
+              <h3 className="cr-h3">{t.split.c.title}</h3>
+              <p className="cr-muted">{t.split.c.desc}</p>
               <ul className="cr-checklist">
-                <li>Tidak perlu install app — buka di browser saja</li>
-                <li>Lihat harga total sebelum kontak rider</li>
-                <li>Bayar langsung ke rider, sesuai kesepakatan</li>
+                {t.split.c.list.map((li, i) => <li key={i}>{li}</li>)}
               </ul>
             </div>
           </div>
@@ -222,10 +416,10 @@ export default function CityRiderSellingPage() {
       {/* ─── HOW IT WORKS ─── */}
       <section className="cr-section" id="how">
         <div className="cr-container">
-          <SectionHead kicker="Cara kerja" title="Dari daftar ke online dalam 5 menit" />
+          <SectionHead kicker={t.steps.kicker} title={t.steps.title} />
           <div className="cr-steps">
-            {STEPS.map(s => (
-              <div key={s.step} className="cr-step">
+            {t.steps.items.map((s, i) => (
+              <div key={i} className="cr-step">
                 <div className="cr-step__num">
                   <span className="cr-step__icon">{s.icon}</span>
                   <span className="cr-step__time">{s.time}</span>
@@ -241,23 +435,23 @@ export default function CityRiderSellingPage() {
       {/* ─── COMPARISON ─── */}
       <section className="cr-section cr-section--alt" id="vs">
         <div className="cr-container">
-          <SectionHead kicker="Perbandingan" title="Kenapa rider pindah ke City Rider" />
+          <SectionHead kicker={t.compare.kicker} title={t.compare.title} />
           <div className="cr-compare">
             <div className="cr-compare__head">
               <div></div>
-              <div className="cr-compare__col-head cr-compare__col-head--them">Gojek / Grab</div>
-              <div className="cr-compare__col-head cr-compare__col-head--us">City Rider</div>
+              <div className="cr-compare__col-head cr-compare__col-head--them">{t.compare.them}</div>
+              <div className="cr-compare__col-head cr-compare__col-head--us">{t.compare.us}</div>
             </div>
-            {COMPARISON.map((row, i) => (
+            {t.compare.rows.map((row, i) => (
               <div key={i} className="cr-compare__row">
-                <div className="cr-compare__feat">{row.feature}</div>
+                <div className="cr-compare__feat">{row.feat}</div>
                 <div className="cr-compare__cell cr-compare__cell--them">
                   <span className="cr-cell-x">✕</span>
-                  <span>{row.gojek}</span>
+                  <span>{row.them}</span>
                 </div>
                 <div className="cr-compare__cell cr-compare__cell--us">
                   <span className="cr-cell-check">✓</span>
-                  <span>{row.cityrider}</span>
+                  <span>{row.us}</span>
                 </div>
               </div>
             ))}
@@ -268,9 +462,9 @@ export default function CityRiderSellingPage() {
       {/* ─── FEATURES ─── */}
       <section className="cr-section">
         <div className="cr-container">
-          <SectionHead kicker="Apa kamu dapat" title="Yang termasuk dalam Rp 30.000/bulan" />
+          <SectionHead kicker={t.features.kicker} title={t.features.title} />
           <div className="cr-features">
-            {FEATURES.map((f, i) => (
+            {t.features.items.map((f, i) => (
               <div key={i} className="cr-feat">
                 <div className="cr-feat__icon">{f.icon}</div>
                 <div className="cr-feat__title">{f.title}</div>
@@ -284,32 +478,23 @@ export default function CityRiderSellingPage() {
       {/* ─── PRICING ─── */}
       <section className="cr-section cr-section--alt" id="price">
         <div className="cr-container">
-          <SectionHead kicker="Harga" title="Satu paket, satu harga, semua termasuk" />
+          <SectionHead kicker={t.pricing.kicker} title={t.pricing.title} />
           <div className="cr-price">
             <div className="cr-price__card">
-              <div className="cr-price__ribbon">⚡ Aktif sekarang</div>
-              <div className="cr-price__name">City Rider — Rider</div>
+              <div className="cr-price__ribbon">{t.pricing.ribbon}</div>
+              <div className="cr-price__name">{t.pricing.name}</div>
               <div className="cr-price__amount">
                 <span className="cr-price__num cr-grad">Rp 30.000</span>
-                <span className="cr-price__period">/bulan</span>
+                <span className="cr-price__period">{t.pricing.period}</span>
               </div>
-              <div className="cr-price__sub">0% komisi · auto-renew · cancel kapan saja</div>
+              <div className="cr-price__sub">{t.pricing.sub}</div>
               <ul className="cr-price__list">
-                <li>Listing profile di marketplace GPS</li>
-                <li>Quote inbox + notifikasi beep + haptic</li>
-                <li>Customer Book — database pelanggan sendiri</li>
-                <li>Kartu nama digital + QR (printable)</li>
-                <li>8 template balasan WhatsApp Bahasa Indonesia</li>
-                <li>Dashboard ROI bulanan</li>
-                <li>Profile publik URL: cityrider.id/r/nama-kamu</li>
-                <li>Offline fallback reciprocal network</li>
+                {t.pricing.list.map((li, i) => <li key={i}>{li}</li>)}
               </ul>
               <button onClick={() => openLiveApp('/signup')} className="cr-btn cr-btn--primary cr-btn--lg cr-price__cta">
-                Daftar &amp; aktifkan sekarang →
+                {t.pricing.cta}
               </button>
-              <div className="cr-price__note">
-                Bayar via QRIS, GoPay, OVO, Dana, ShopeePay, atau transfer bank.
-              </div>
+              <div className="cr-price__note">{t.pricing.note}</div>
             </div>
           </div>
         </div>
@@ -318,19 +503,21 @@ export default function CityRiderSellingPage() {
       {/* ─── LIVE DEMO ─── */}
       <section className="cr-section">
         <div className="cr-container">
-          <SectionHead kicker="Coba langsung" title="Lihat aplikasinya bekerja sekarang" />
+          <SectionHead kicker={t.demo.kicker} title={t.demo.title} />
           <div className="cr-demo">
             <div className="cr-demo__frame">
-              <iframe src={CITYRIDER_URL + '/cari/rider?pLat=-7.7928&pLng=110.3657&pName=Malioboro&dLat=-7.7700&dLng=110.3782&dName=UGM'}
+              <iframe
+                src={CITYRIDER_URL + '/cari/rider?pLat=-7.7928&pLng=110.3657&pName=Malioboro&dLat=-7.7700&dLng=110.3782&dName=UGM'}
                 title="City Rider — daftar driver"
-                loading="lazy" />
+                loading="lazy"
+              />
             </div>
             <div className="cr-demo__actions">
               <button onClick={() => openLiveApp('/')} className="cr-btn cr-btn--primary cr-btn--lg">
-                Buka full di tab baru →
+                {t.demo.ctaFull}
               </button>
               <button onClick={() => openLiveApp('/dashboard')} className="cr-btn cr-btn--ghost cr-btn--lg">
-                Lihat rider dashboard
+                {t.demo.ctaDashboard}
               </button>
             </div>
           </div>
@@ -340,16 +527,16 @@ export default function CityRiderSellingPage() {
       {/* ─── TESTIMONIALS ─── */}
       <section className="cr-section cr-section--alt">
         <div className="cr-container">
-          <SectionHead kicker="Rider stories" title="Apa kata rider yang sudah pakai" />
+          <SectionHead kicker={t.testi.kicker} title={t.testi.title} />
           <div className="cr-testi-grid">
-            {TESTIMONIALS.map((t, i) => (
+            {t.testi.items.map((ti, i) => (
               <div key={i} className="cr-testi">
-                <div className="cr-testi__quote">&ldquo;{t.quote}&rdquo;</div>
+                <div className="cr-testi__quote">&ldquo;{ti.quote}&rdquo;</div>
                 <div className="cr-testi__meta">
-                  <div className="cr-testi__avatar">{t.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
+                  <div className="cr-testi__avatar">{ti.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
                   <div>
-                    <div className="cr-testi__name">{t.name}</div>
-                    <div className="cr-testi__sub">{t.area} · {t.bike}</div>
+                    <div className="cr-testi__name">{ti.name}</div>
+                    <div className="cr-testi__sub">{ti.area} · {ti.bike}</div>
                   </div>
                 </div>
               </div>
@@ -361,9 +548,9 @@ export default function CityRiderSellingPage() {
       {/* ─── FAQ ─── */}
       <section className="cr-section" id="faq">
         <div className="cr-container cr-container--narrow">
-          <SectionHead kicker="FAQ" title="Pertanyaan yang sering ditanyakan rider" />
+          <SectionHead kicker={t.faq.kicker} title={t.faq.title} />
           <div className="cr-faq">
-            {FAQS.map(([q, a], i) => (
+            {t.faq.items.map(([q, a], i) => (
               <details key={i} className="cr-faq__item" open={openFaq === i} onToggle={(e) => {
                 if ((e.currentTarget).open) setOpenFaq(i)
               }}>
@@ -380,16 +567,14 @@ export default function CityRiderSellingPage() {
         <div className="cr-container">
           <div className="cr-cta__inner">
             <span className="cr-emoji-big">🛵</span>
-            <h2 className="cr-h2">Siap jadi kurir mandiri?</h2>
-            <p className="cr-muted cr-cta__sub">
-              5 menit setup. Rp 30.000/bulan. 0% komisi selamanya. Customer kamu, harga kamu, jam kamu.
-            </p>
+            <h2 className="cr-h2">{t.cta.title}</h2>
+            <p className="cr-muted cr-cta__sub">{t.cta.sub}</p>
             <div className="cr-cta__btns">
               <button onClick={() => openLiveApp('/signup')} className="cr-btn cr-btn--primary cr-btn--xl">
-                Daftar sebagai rider →
+                {t.cta.primary}
               </button>
               <button onClick={() => openLiveApp('/')} className="cr-btn cr-btn--ghost cr-btn--xl">
-                Buka marketplace
+                {t.cta.ghost}
               </button>
             </div>
           </div>
@@ -404,18 +589,18 @@ export default function CityRiderSellingPage() {
               <span className="cr-brand__icon">🛵</span>
               <span>City <span className="cr-grad">Rider</span></span>
             </a>
-            <div className="cr-foot__tag">Part of the StreetLocal family of apps</div>
+            <div className="cr-foot__tag">{t.footer.tag}</div>
           </div>
           <div className="cr-foot__links">
-            <a href="/">StreetLocal home</a>
-            <a href="/donut">Donut app</a>
-            <a href="/affiliate">Become an agent</a>
-            <a href="/faq">FAQ</a>
-            <a href="/contact">Contact</a>
+            <a href="/">{t.footer.links.home}</a>
+            <a href="/donut">{t.footer.links.donut}</a>
+            <a href="/affiliate">{t.footer.links.affiliate}</a>
+            <a href="/faq">{t.footer.links.faq}</a>
+            <a href="/contact">{t.footer.links.contact}</a>
           </div>
         </div>
         <div className="cr-foot__legal">
-          © {new Date().getFullYear()} StreetLocal · cityrider.id · Yogyakarta, Indonesia
+          © {new Date().getFullYear()} {t.footer.legal}
         </div>
       </footer>
     </div>
@@ -481,7 +666,26 @@ function PageStyles() {
       }
       .cr-nav__links a:hover { color: #FFF; background: rgba(255,255,255,0.05); }
       @media (max-width: 640px) {
-        .cr-nav__links a:not(.cr-btn) { display: none; }
+        .cr-nav__links a { display: none; }
+      }
+      /* Language toggle */
+      .cr-langtog {
+        display: inline-flex; padding: 3px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 9999px;
+      }
+      .cr-langtog__btn {
+        background: transparent; border: none; cursor: pointer;
+        font-family: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+        color: rgba(255,255,255,0.55);
+        padding: 5px 12px; border-radius: 9999px;
+        transition: background 0.15s ease, color 0.15s ease;
+        min-height: 28px;
+      }
+      .cr-langtog__btn:hover { color: #fff; }
+      .cr-langtog__btn--on {
+        background: linear-gradient(135deg, #FACC15, #EAB308); color: #0A0A0A;
       }
 
       /* ── BUTTONS ── */
@@ -514,18 +718,6 @@ function PageStyles() {
         padding: 6px 12px; border-radius: 9999px;
       }
       .cr-kicker--inline { background: transparent; border: none; padding: 0; }
-      .cr-pulse {
-        width: 8px; height: 8px; border-radius: 50%; background: #22C55E;
-        box-shadow: 0 0 0 0 rgba(34,197,94,0.55); animation: crPulse 1.8s ease-in-out infinite;
-      }
-      @keyframes crPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
-        70%      { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
-      }
-      .cr-h1 {
-        font-size: clamp(36px, 6vw, 60px); font-weight: 900; line-height: 1.05;
-        letter-spacing: -0.02em; margin: 18px 0 18px;
-      }
       .cr-h2 {
         font-size: clamp(28px, 4.2vw, 40px); font-weight: 900; line-height: 1.1;
         letter-spacing: -0.01em; margin: 14px 0 0;
@@ -535,10 +727,7 @@ function PageStyles() {
 
       /* ── HERO ──
          Mobile-first: text left, phone right, side-by-side from the
-         smallest screens (matches DonutSellingPage pattern). Text column
-         is wider (1.25fr) so H1 has breathing room; phone column
-         auto-sizes around its 130-280px width. Reverts to looser
-         1.15fr 1fr at desktop. */
+         smallest screens. */
       .cr-hero {
         position: relative; padding: 24px 0 56px; overflow: hidden;
       }
@@ -556,17 +745,7 @@ function PageStyles() {
         gap: 18px; align-items: start;
       }
       .cr-hero__left  { min-width: 0; padding-top: 4px; }
-      .cr-hero__right { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
-      /* Floating tag under the header, sits directly above the phone. */
-      .cr-hero__phone-tag {
-        display: inline-flex; align-items: center; gap: 6px;
-        font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
-        color: #FACC15;
-        background: rgba(250,204,21,0.10);
-        border: 1px solid rgba(250,204,21,0.25);
-        padding: 5px 11px; border-radius: 9999px;
-        white-space: nowrap;
-      }
+      .cr-hero__right { display: flex; justify-content: center; min-width: 0; }
       .cr-h1 {
         font-size: 28px; line-height: 1.05; letter-spacing: -0.02em;
         font-weight: 900; margin: 4px 0 0;
@@ -583,49 +762,61 @@ function PageStyles() {
         padding: 6px 12px; border-radius: 9999px;
         margin-top: 12px;
       }
+      /* PHONE FRAME — sized to wrap a 390px iframe scaled down. */
       .cr-phone {
-        position: relative; width: 100%; max-width: 220px;
-        aspect-ratio: 9/19;
+        position: relative;
+        width: 158px; height: 332px;
         background: #1A1A1A; border-radius: 28px;
         border: 2px solid rgba(255,255,255,0.08);
         padding: 6px; overflow: hidden;
-        box-shadow: 0 24px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(250,204,21,0.06);
+        box-shadow: 0 22px 46px rgba(0,0,0,0.45), 0 0 0 1px rgba(250,204,21,0.06);
       }
       .cr-phone__notch {
         position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-        width: 68px; height: 18px; background: #0A0A0A; border-radius: 12px; z-index: 2;
+        width: 60px; height: 16px; background: #0A0A0A; border-radius: 12px; z-index: 2;
       }
       .cr-phone__screen {
         position: absolute; inset: 6px; border-radius: 22px; overflow: hidden;
         background: #0A0A0A;
       }
-      .cr-phone__screen iframe {
-        width: 100%; height: 100%; border: 0; display: block;
+      /* Iframe renders at real mobile viewport (390×800) and is scaled down
+         to fit the phone frame. This way the inner app sees a true mobile
+         width and its responsive breakpoints fire correctly. */
+      .cr-phone__frame {
+        width: 390px; height: 800px;
+        border: 0; display: block;
+        transform-origin: top left;
+        transform: scale(0.374);
+        background: #0A0A0A;
       }
-      /* ≥480px: H1 + lede grow back, phone scales up slightly */
+      /* ≥480px: phone scales up modestly */
       @media (min-width: 480px) {
         .cr-h1        { font-size: 34px; }
         .cr-hero__lede{ font-size: 14px; }
-        .cr-phone     { max-width: 240px; border-radius: 30px; }
+        .cr-phone     { width: 184px; height: 388px; border-radius: 30px; }
+        .cr-phone__frame { transform: scale(0.441); }
       }
-      /* ≥768px: tablet — more breathing room */
+      /* ≥768px tablet */
       @media (min-width: 768px) {
         .cr-hero { padding: 36px 0 80px; }
         .cr-hero__inner { gap: 40px; padding: 0 24px; }
-        .cr-hero__phone-tag { font-size: 13px; padding: 6px 13px; }
         .cr-h1 { font-size: clamp(38px, 5vw, 52px); }
         .cr-hero__lede { font-size: 16px; line-height: 1.7; }
         .cr-hero__cta { gap: 12px; margin-top: 24px; }
         .cr-hero__pill { font-size: 13px; padding: 8px 14px; margin-top: 18px; }
-        .cr-phone { max-width: 280px; border-radius: 34px; padding: 8px; }
-        .cr-phone__notch { width: 84px; height: 20px; top: 14px; }
-        .cr-phone__screen { inset: 8px; border-radius: 26px; }
+        .cr-phone { width: 210px; height: 442px; border-radius: 32px; padding: 7px; }
+        .cr-phone__notch { width: 76px; height: 18px; top: 13px; }
+        .cr-phone__screen { inset: 7px; border-radius: 25px; }
+        .cr-phone__frame { transform: scale(0.502); }
       }
-      /* ≥1024px: desktop — full hero proportions */
+      /* ≥1024px desktop */
       @media (min-width: 1024px) {
         .cr-hero__inner { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; }
         .cr-h1 { font-size: 60px; line-height: 1.05; }
-        .cr-phone { max-width: 320px; }
+        .cr-phone { width: 256px; height: 540px; border-radius: 38px; padding: 8px; }
+        .cr-phone__notch { width: 88px; height: 20px; top: 15px; }
+        .cr-phone__screen { inset: 8px; border-radius: 30px; }
+        .cr-phone__frame { transform: scale(0.616); }
       }
 
       /* ── STATS ── */
@@ -646,7 +837,7 @@ function PageStyles() {
       .cr-section-head { text-align: center; margin-bottom: 44px; }
       .cr-section-head .cr-h2 { margin-top: 14px; }
 
-      /* ── SPLIT (riders / customers) ── */
+      /* ── SPLIT ── */
       .cr-split {
         display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
       }
