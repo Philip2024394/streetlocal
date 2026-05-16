@@ -259,16 +259,20 @@ export default function PremiumHome () {
         .sl-btn--lg { padding: 16px 28px; font-size: 15px; min-height: 52px; border-radius: 14px; }
 
         /* HERO */
-        .sl-hero { padding: 60px 0 80px; position: relative; }
+        .sl-hero { padding: 40px 0 60px; position: relative; }
         @media (min-width: 768px) { .sl-hero { padding: 90px 0 110px; } }
-        .sl-hero__grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
+        /* Side-by-side from the smallest screens — text left, phone right.
+           Same pattern as DonutSellingPage hero. Text column wider (1.25fr)
+           so the H1 still has breathing room; phone column auto-sizes around
+           its narrow mobile width. Becomes 1.05fr 1fr at desktop. */
+        .sl-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: center; }
         @media (min-width: 900px) { .sl-hero__grid { grid-template-columns: 1.05fr 1fr; gap: 64px; } }
         .sl-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(250,204,21,0.15); border: 1px solid rgba(234,179,8,0.5); color: #854D0E; font-size: 13px; font-weight: 700; margin-bottom: 22px; }
         .sl-eyebrow__dot { width: 7px; height: 7px; border-radius: 4px; background: var(--sl-yellow-deep); box-shadow: 0 0 10px rgba(250,204,21,0.9); }
-        .sl-h1 { font-size: 38px; font-weight: 900; line-height: 1.04; letter-spacing: -1.2px; margin: 0 0 24px; color: var(--sl-black); }
-        @media (min-width: 380px) { .sl-h1 { font-size: 44px; letter-spacing: -1.5px; } }
-        @media (min-width: 768px) { .sl-h1 { font-size: 64px; } }
-        @media (min-width: 1100px) { .sl-h1 { font-size: 76px; } }
+        .sl-h1 { font-size: 26px; font-weight: 900; line-height: 1.05; letter-spacing: -0.8px; margin: 0 0 16px; color: var(--sl-black); }
+        @media (min-width: 480px) { .sl-h1 { font-size: 34px; letter-spacing: -1px; margin-bottom: 20px; } }
+        @media (min-width: 768px) { .sl-h1 { font-size: 56px; letter-spacing: -1.5px; line-height: 1.04; margin-bottom: 24px; } }
+        @media (min-width: 1100px) { .sl-h1 { font-size: 72px; } }
         .sl-h1__accent { background: linear-gradient(120deg, var(--sl-yellow-deep) 0%, var(--sl-yellow) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .sl-lede { font-size: 17px; line-height: 1.55; color: var(--sl-gray-600); max-width: 560px; margin: 0 0 30px; }
         @media (min-width: 768px) { .sl-lede { font-size: 19px; } }
@@ -277,15 +281,25 @@ export default function PremiumHome () {
         .sl-trust-row span { display: inline-flex; align-items: center; gap: 6px; }
         .sl-trust-row span::before { content: '✓'; color: var(--sl-black); background: var(--sl-yellow); width: 18px; height: 18px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
 
-        /* HERO phone */
-        .sl-phone-wrap { display: flex; justify-content: center; align-items: center; min-height: 540px; position: relative; }
+        /* HERO phone — narrow on mobile so it fits the text-left/phone-right
+           layout; grows on larger screens. */
+        .sl-phone-wrap { display: flex; justify-content: center; align-items: center; min-height: 280px; position: relative; }
+        @media (min-width: 480px) { .sl-phone-wrap { min-height: 360px; } }
+        @media (min-width: 768px) { .sl-phone-wrap { min-height: 540px; } }
         .sl-phone-glow { position: absolute; inset: 0; background: radial-gradient(closest-side, rgba(250,204,21,0.4), transparent 70%); filter: blur(40px); pointer-events: none; animation: slPulse 5s ease-in-out infinite; }
         @keyframes slPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.9; } }
-        .sl-phone { position: relative; width: min(290px, 78vw); height: min(600px, 165vw); max-height: 620px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 44px; padding: 7px; box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 12px 28px rgba(250,204,21,0.18); border: 2.5px solid #2a2a2a; overflow: hidden; animation: slFloat 6s ease-in-out infinite; }
-        @media (min-width: 480px) { .sl-phone { width: 290px; height: 600px; } }
+        .sl-phone { position: relative; width: 150px; height: 310px; background: linear-gradient(180deg, #1a1a1a, #0a0a0a); border-radius: 28px; padding: 5px; box-shadow: 0 18px 40px rgba(0,0,0,0.22), 0 6px 14px rgba(250,204,21,0.18); border: 2px solid #2a2a2a; overflow: hidden; animation: slFloat 6s ease-in-out infinite; }
+        @media (min-width: 480px) { .sl-phone { width: 200px; height: 410px; border-radius: 32px; padding: 6px; border-width: 2.5px; } }
+        @media (min-width: 768px) { .sl-phone { width: 260px; height: 540px; border-radius: 38px; padding: 7px; box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 12px 28px rgba(250,204,21,0.18); } }
+        @media (min-width: 1100px) { .sl-phone { width: 290px; height: 600px; border-radius: 44px; } }
         @keyframes slFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .sl-phone__notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 110px; height: 22px; background: #000; border-radius: 14px; z-index: 3; }
-        .sl-phone__screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; background: #000; }
+        .sl-phone__notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 60px; height: 14px; background: #000; border-radius: 10px; z-index: 3; }
+        @media (min-width: 480px) { .sl-phone__notch { top: 10px; width: 80px; height: 16px; } }
+        @media (min-width: 768px) { .sl-phone__notch { top: 14px; width: 110px; height: 22px; border-radius: 14px; } }
+        .sl-phone__screen { width: 100%; height: 100%; border-radius: 23px; overflow: hidden; position: relative; background: #000; }
+        @media (min-width: 480px) { .sl-phone__screen { border-radius: 27px; } }
+        @media (min-width: 768px) { .sl-phone__screen { border-radius: 34px; } }
+        @media (min-width: 1100px) { .sl-phone__screen { border-radius: 38px; } }
         .sl-phone__tag { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); background: var(--sl-black); color: #fff; padding: 9px 18px; border-radius: 999px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.25); white-space: nowrap; }
         .sl-phone__tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: slPulse 2s ease-in-out infinite; }
 
