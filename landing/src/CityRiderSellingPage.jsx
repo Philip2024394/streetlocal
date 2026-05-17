@@ -39,13 +39,13 @@ const STRINGS = {
       ctaMarketplace: 'Lihat marketplace',
       pill: 'Rp 30.000/bulan · 0% komisi · cancel kapan saja',
     },
-    // The 3 service categories City Rider supports — replaces the old
-    // stats strip so the page leads with what customers can BOOK rather
-    // than abstract platform metrics.
+    // The 3 service categories City Rider supports — Bike Ride, Bike Parcel,
+    // Bike Food. Each card uses a transparent-bg PNG from imagekit (cached
+    // CDN, no upload needed). Bahasa descriptions below the card title.
     stats: [
-      { icon: '🧍', value: 'Antar Penumpang', label: 'Ojek harian · antar-jemput · ojek event' },
-      { icon: '📦', value: 'Kirim Paket',     label: 'Dokumen · paket besar · kurir luar kota' },
-      { icon: '🍔', value: 'Antar Makanan',   label: 'Resto · warung · COD bahan dapur' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddasdas-removebg-preview.png', value: 'Bike Ride',   label: 'Ojek harian · antar-jemput · ojek event' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitledsddasd-removebg-preview.png?updatedAt=1779013880961', value: 'Bike Parcel', label: 'Dokumen · paket besar · kurir luar kota' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2017,%202026,%2005_29_25%20PM.png?updatedAt=1779013783890', value: 'Bike Food', label: 'Resto · warung · COD bahan dapur' },
     ],
     split: {
       r: { kicker: 'Untuk rider', title: 'Bangun bisnis kurir sendiri',
@@ -168,9 +168,9 @@ const STRINGS = {
       pill: 'Rp 30,000/month · 0% commission · cancel anytime',
     },
     stats: [
-      { icon: '🧍', value: 'Passenger Rides', label: 'Daily ojek · school/office pickup · event rides' },
-      { icon: '📦', value: 'Parcel Delivery', label: 'Documents · large parcels · out-of-town courier' },
-      { icon: '🍔', value: 'Food Delivery',   label: 'Restaurants · warungs · COD groceries' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddasdas-removebg-preview.png', value: 'Bike Ride',   label: 'Daily ojek · school/office pickup · event rides' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitledsddasd-removebg-preview.png?updatedAt=1779013880961', value: 'Bike Parcel', label: 'Documents · large parcels · out-of-town courier' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2017,%202026,%2005_29_25%20PM.png?updatedAt=1779013783890', value: 'Bike Food', label: 'Restaurants · warungs · COD groceries' },
     ],
     split: {
       r: { kicker: 'For riders', title: 'Run your own courier business',
@@ -396,7 +396,8 @@ export default function CityRiderSellingPage() {
           <div className="cr-stats__grid">
             {t.stats.map(s => (
               <div key={s.value} className="cr-stat">
-                {s.icon && <div className="cr-stat__icon">{s.icon}</div>}
+                {s.img && <img src={s.img} alt="" className="cr-stat__img" loading="lazy" />}
+                {s.icon && !s.img && <div className="cr-stat__icon">{s.icon}</div>}
                 <div className="cr-stat__value cr-grad">{s.value}</div>
                 <div className="cr-stat__label">{s.label}</div>
               </div>
@@ -865,8 +866,20 @@ function PageStyles() {
         display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;
       }
       .cr-stat__icon  { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+      .cr-stat__img {
+        width: 96px; height: 96px;
+        object-fit: contain;
+        margin: 0 auto 14px;
+        display: block;
+        filter: drop-shadow(0 6px 16px rgba(250,204,21,0.18));
+        transition: transform 0.25s ease;
+      }
+      .cr-stat:hover .cr-stat__img { transform: translateY(-3px) scale(1.04); }
+      @media (min-width: 640px) {
+        .cr-stat__img { width: 120px; height: 120px; }
+      }
       .cr-stat__value { font-size: clamp(18px, 2.4vw, 22px); font-weight: 900; line-height: 1.2; }
-      .cr-stat__label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.55); margin-top: 8px; }
+      .cr-stat__label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.55); margin-top: 8px; line-height: 1.5; }
 
       /* ── SECTION ── */
       .cr-section { padding: 72px 0; background: rgba(10,10,10,0.88); backdrop-filter: blur(8px); }
