@@ -39,10 +39,13 @@ const STRINGS = {
       ctaMarketplace: 'Lihat marketplace',
       pill: 'Rp 30.000/bulan · 0% komisi · cancel kapan saja',
     },
+    // The 3 service categories City Rider supports — replaces the old
+    // stats strip so the page leads with what customers can BOOK rather
+    // than abstract platform metrics.
     stats: [
-      { value: '0%', label: 'Komisi platform' },
-      { value: 'Rp 30K', label: 'Per bulan flat' },
-      { value: '100%', label: 'Pendapatan rider' },
+      { icon: '🧍', value: 'Antar Penumpang', label: 'Ojek harian · antar-jemput · ojek event' },
+      { icon: '📦', value: 'Kirim Paket',     label: 'Dokumen · paket besar · kurir luar kota' },
+      { icon: '🍔', value: 'Antar Makanan',   label: 'Resto · warung · COD bahan dapur' },
     ],
     split: {
       r: { kicker: 'Untuk rider', title: 'Bangun bisnis kurir sendiri',
@@ -165,9 +168,9 @@ const STRINGS = {
       pill: 'Rp 30,000/month · 0% commission · cancel anytime',
     },
     stats: [
-      { value: '0%', label: 'Platform commission' },
-      { value: 'Rp 30K', label: 'Flat per month' },
-      { value: '100%', label: 'You keep' },
+      { icon: '🧍', value: 'Passenger Rides', label: 'Daily ojek · school/office pickup · event rides' },
+      { icon: '📦', value: 'Parcel Delivery', label: 'Documents · large parcels · out-of-town courier' },
+      { icon: '🍔', value: 'Food Delivery',   label: 'Restaurants · warungs · COD groceries' },
     ],
     split: {
       r: { kicker: 'For riders', title: 'Run your own courier business',
@@ -387,12 +390,13 @@ export default function CityRiderSellingPage() {
         </div>
       </section>
 
-      {/* ─── STATS STRIP ─── */}
+      {/* ─── SERVICE CATEGORIES (replaces old stats strip) ─── */}
       <section className="cr-stats">
         <div className="cr-container">
           <div className="cr-stats__grid">
             {t.stats.map(s => (
-              <div key={s.label} className="cr-stat">
+              <div key={s.value} className="cr-stat">
+                {s.icon && <div className="cr-stat__icon">{s.icon}</div>}
                 <div className="cr-stat__value cr-grad">{s.value}</div>
                 <div className="cr-stat__label">{s.label}</div>
               </div>
@@ -860,8 +864,9 @@ function PageStyles() {
       .cr-stats__grid {
         display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;
       }
-      .cr-stat__value { font-size: clamp(28px, 4vw, 40px); font-weight: 900; line-height: 1; }
-      .cr-stat__label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.55); margin-top: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+      .cr-stat__icon  { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+      .cr-stat__value { font-size: clamp(18px, 2.4vw, 22px); font-weight: 900; line-height: 1.2; }
+      .cr-stat__label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.55); margin-top: 8px; }
 
       /* ── SECTION ── */
       .cr-section { padding: 72px 0; background: rgba(10,10,10,0.88); backdrop-filter: blur(8px); }
