@@ -42,7 +42,7 @@ export default function CityRiderHeroMap({ riderCount = 42, zoom = 13 }) {
       style: STYLE_URL,
       center: [YOGYA.lng, YOGYA.lat],
       zoom,
-      attributionControl: { compact: true },
+      attributionControl: false,
       interactive: false,
     })
     mapRef.current = map
