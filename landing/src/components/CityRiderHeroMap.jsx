@@ -47,6 +47,15 @@ export default function CityRiderHeroMap({ riderCount = 42, zoom = 13 }) {
     })
     mapRef.current = map
 
+    // Silence "Image 'wood-pattern' could not be loaded" — OpenFreeMap dark
+    // style references sprite patterns we don't load. 1×1 transparent
+    // placeholder for any missing image keeps the console clean.
+    map.on('styleimagemissing', (e) => {
+      if (!map.hasImage(e.id)) {
+        map.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) })
+      }
+    })
+
     map.on('load', () => {
       try {
         const layers = map.getStyle().layers
