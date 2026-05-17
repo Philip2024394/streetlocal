@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+
+// Lazy-loaded — maplibre-gl (~85KB gzipped) only enters the bundle when
+// /cityrider is visited, not on every page in the landing app.
+const CityRiderHeroMap = lazy(() => import('./components/CityRiderHeroMap.jsx'))
 
 /* ─────────────────────────────────────────────────────────────────────────
    City Rider — selling page
@@ -307,6 +311,14 @@ export default function CityRiderSellingPage() {
   return (
     <div className="cr-page">
       <PageStyles />
+
+      {/* ─── BACKGROUND MAP ─── */}
+      <div className="cr-page-bg" aria-hidden>
+        <Suspense fallback={null}>
+          <CityRiderHeroMap />
+        </Suspense>
+        <div className="cr-page-bg__overlay" />
+      </div>
 
       {/* ─── NAV ─── */}
       <header className={`cr-nav ${scrolled ? 'cr-nav--scrolled' : ''}`}>
@@ -620,11 +632,31 @@ function PageStyles() {
   return (
     <style>{`
       .cr-page {
+        position: relative;
         background: #0A0A0A; color: #FFFFFF;
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         -webkit-font-smoothing: antialiased; line-height: 1.55;
       }
       .cr-page * { box-sizing: border-box; }
+
+      /* Live map background — fixed behind everything. Overlay above for
+         text legibility. Only the hero section reveals the map at full
+         strength; lower sections sit on near-opaque section backgrounds
+         so the map fades into the brand. */
+      .cr-page-bg {
+        position: fixed; inset: 0; z-index: 0;
+        overflow: hidden; pointer-events: none;
+      }
+      .cr-page-bg__overlay {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 80% 60% at 50% 35%, rgba(250,204,21,0.06) 0%, transparent 60%),
+          linear-gradient(180deg, rgba(10,10,10,0.45) 0%, rgba(10,10,10,0.62) 30%, rgba(10,10,10,0.78) 100%);
+      }
+      /* Content sits above the background. */
+      .cr-nav, .cr-hero, .cr-stats, .cr-section, .cr-cta, .cr-foot {
+        position: relative; z-index: 1;
+      }
 
       .cr-container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
       .cr-container--narrow { max-width: 820px; }
@@ -823,7 +855,7 @@ function PageStyles() {
       .cr-stats {
         padding: 36px 0; border-top: 1px solid rgba(255,255,255,0.05);
         border-bottom: 1px solid rgba(255,255,255,0.05);
-        background: rgba(255,255,255,0.015);
+        background: rgba(10,10,10,0.85); backdrop-filter: blur(8px);
       }
       .cr-stats__grid {
         display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;
@@ -832,8 +864,8 @@ function PageStyles() {
       .cr-stat__label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.55); margin-top: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
 
       /* ── SECTION ── */
-      .cr-section { padding: 72px 0; }
-      .cr-section--alt { background: rgba(255,255,255,0.015); border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); }
+      .cr-section { padding: 72px 0; background: rgba(10,10,10,0.88); backdrop-filter: blur(8px); }
+      .cr-section--alt { background: rgba(10,10,10,0.92); border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); backdrop-filter: blur(8px); }
       .cr-section-head { text-align: center; margin-bottom: 44px; }
       .cr-section-head .cr-h2 { margin-top: 14px; }
 
@@ -1049,7 +1081,9 @@ function PageStyles() {
       .cr-cta {
         padding: 100px 0; position: relative; overflow: hidden;
         background:
-          radial-gradient(ellipse 80% 60% at 50% 50%, rgba(250,204,21,0.10), transparent 60%);
+          radial-gradient(ellipse 80% 60% at 50% 50%, rgba(250,204,21,0.10), transparent 60%),
+          rgba(10,10,10,0.78);
+        backdrop-filter: blur(8px);
       }
       .cr-cta__inner { text-align: center; max-width: 680px; margin: 0 auto; }
       .cr-emoji-big { font-size: 60px; display: inline-block; margin-bottom: 14px; }
