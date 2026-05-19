@@ -39,13 +39,14 @@ const STRINGS = {
       ctaMarketplace: 'Lihat marketplace',
       pill: 'GRATIS 7 hari · lalu Rp 30.000/bulan · 0% komisi · cancel kapan saja',
     },
-    // The 3 service categories City Rider supports — Bike Ride, Bike Parcel,
-    // Bike Food. Each card uses a transparent-bg PNG from imagekit (cached
-    // CDN, no upload needed). Bahasa descriptions below the card title.
+    // The 4 service categories City Rider supports — Bike Ride, Bike
+    // Parcel, Bike Food, Bike Rental. Each card uses a transparent-bg
+    // PNG from imagekit. Bahasa descriptions below the card title.
     stats: [
       { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddasdas-removebg-preview.png', value: 'Bike Ride',   label: 'Ojek harian · antar-jemput · ojek event' },
       { img: 'https://ik.imagekit.io/nepgaxllc/Untitledsddasd-removebg-preview.png?updatedAt=1779013880961', value: 'Bike Parcel', label: 'Dokumen · paket besar · kurir luar kota' },
       { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2017,%202026,%2005_29_25%20PM.png?updatedAt=1779013783890', value: 'Bike Food', label: 'Resto · warung · COD bahan dapur' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitledwrrssswdqw-removebg-preview.png?updatedAt=1778253308442', value: 'Bike Rental', label: 'Sewa motor · self-ride · with-driver tour' },
     ],
     split: {
       r: { kicker: 'Untuk rider', title: 'Bangun bisnis kurir sendiri',
@@ -57,7 +58,7 @@ const STRINGS = {
     },
     steps: {
       kicker: 'Cara kerja',
-      title: 'Dari daftar ke online dalam 5 menit',
+      title: 'Dari daftar ke online dalam ~7 menit',
       items: [
         { time: '30 detik', icon: '✍️',  title: 'Daftar gratis',         desc: 'Email + nama + WhatsApp + password. Tidak ada KTP upload, tidak ada training video.' },
         { time: '2 menit',  icon: '🛵',  title: 'Set motor + harga',     desc: 'Merk, model, tahun, warna, plat. Atur sendiri tarif per km (mis. Rp 2.500) dan minimum fee.' },
@@ -136,7 +137,7 @@ const STRINGS = {
         ['Customer bayar ke saya langsung atau ke City Rider?',
          'Langsung ke kamu. City Rider sama sekali tidak terlibat di transaksi customer-rider. Kamu nego sendiri dengan customer di WhatsApp — COD, transfer ke rekeningmu, QRIS ke barcode kamu, terserah. City Rider cuma platform listing — kamu yang jalankan bisnis.'],
         ['Berapa lama setup sampai bisa terima customer?',
-         'Sekitar 5 menit total — 30 detik daftar, 2 menit isi profile + motor + harga, 1 menit bayar QRIS, lalu tap "Go Online". Setelah itu profilemu langsung muncul di marketplace untuk customer di area sekitarmu.'],
+         'Sekitar 7 menit total — 30 detik daftar phone-OTP, 5–6 menit isi 6-step onboarding (business name, motor, services + harga, payment, lokasi), lalu tap "Go Online". Setelah itu profilemu langsung muncul di marketplace untuk customer di area sekitarmu.'],
         ['Bagaimana City Rider beda dari Gojek atau Grab?',
          'Gojek/Grab adalah perusahaan dispatch — mereka ambil 15-20% per order, tentukan harga, dan algoritma mereka yang assign customer. City Rider bukan dispatch — kita cuma platform listing seperti yellow pages digital. Kamu yang muncul di pencarian customer, kamu yang nego, kamu yang antar, kamu yang dibayar. 0% komisi, kamu pemilik bisnis.'],
         ['Apa kalau saya offline (libur, sakit, dsb)?',
@@ -148,7 +149,7 @@ const STRINGS = {
       ],
     },
     cta: { title: 'Siap jadi kurir mandiri?',
-           sub: '5 menit setup. Rp 30.000/bulan. 0% komisi selamanya. Customer kamu, harga kamu, jam kamu.',
+           sub: 'Setup ~7 menit. Rp 30.000/bulan. 0% komisi selamanya. Customer kamu, harga kamu, jam kamu.',
            primary: 'Daftar sebagai rider →', ghost: 'Buka marketplace' },
     footer: { tag: 'Bagian dari keluarga aplikasi StreetLocal',
               links: { home: 'StreetLocal', donut: 'Donut app', affiliate: 'Jadi agen', faq: 'FAQ', contact: 'Kontak' },
@@ -171,6 +172,7 @@ const STRINGS = {
       { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddasdas-removebg-preview.png', value: 'Bike Ride',   label: 'Daily ojek · school/office pickup · event rides' },
       { img: 'https://ik.imagekit.io/nepgaxllc/Untitledsddasd-removebg-preview.png?updatedAt=1779013880961', value: 'Bike Parcel', label: 'Documents · large parcels · out-of-town courier' },
       { img: 'https://ik.imagekit.io/nepgaxllc/ChatGPT%20Image%20May%2017,%202026,%2005_29_25%20PM.png?updatedAt=1779013783890', value: 'Bike Food', label: 'Restaurants · warungs · COD groceries' },
+      { img: 'https://ik.imagekit.io/nepgaxllc/Untitledwrrssswdqw-removebg-preview.png?updatedAt=1778253308442', value: 'Bike Rental', label: 'Self-ride · with-driver tours · daily/weekly/monthly' },
     ],
     split: {
       r: { kicker: 'For riders', title: 'Run your own courier business',
@@ -182,7 +184,7 @@ const STRINGS = {
     },
     steps: {
       kicker: 'How it works',
-      title: 'From sign-up to online in 5 minutes',
+      title: 'From sign-up to online in ~7 minutes',
       items: [
         { time: '30 sec',  icon: '✍️',  title: 'Sign up free',          desc: 'Email + name + WhatsApp + password. No KYC upload, no training video.' },
         { time: '2 min',   icon: '🛵',  title: 'Set bike + price',      desc: 'Make, model, year, colour, plate. Set your own per-km rate (e.g. Rp 2,500) and minimum fee.' },
@@ -261,7 +263,7 @@ const STRINGS = {
         ['Do customers pay me directly or through City Rider?',
          "Directly to you. City Rider is not involved in the customer-rider transaction at all. You negotiate on WhatsApp — COD, transfer to your account, QRIS to your barcode, however you like. We're just the listing platform; you run the business."],
         ['How long to set up and start receiving customers?',
-         'About 5 minutes total — 30 seconds to register, 2 minutes for profile + bike + price, 1 minute to pay via QRIS, then tap "Go Online". Your profile then appears immediately for customers in your area.'],
+         'About 7 minutes total — 30 seconds phone-OTP signup, 5–6 minutes for the 6-step onboarding (business name, bike, services + pricing, payment, location), then tap "Go Online". Your profile appears immediately for customers in your area.'],
         ['How is City Rider different from Gojek or Grab?',
          "Gojek/Grab are dispatch companies — they take 15-20% per order, set the price, and their algorithm assigns customers. City Rider is NOT a dispatcher — we're just a listing platform like digital yellow pages. You appear in customer searches, you negotiate, you deliver, you get paid. 0% commission, you own the business."],
         ['What happens when I go offline (off-day, sick, etc.)?',
@@ -273,7 +275,7 @@ const STRINGS = {
       ],
     },
     cta: { title: 'Ready to be an independent courier?',
-           sub: '5 min setup. Rp 30,000/month. 0% commission forever. Your customers, your prices, your hours.',
+           sub: '~7 min setup. Rp 30,000/month. 0% commission forever. Your customers, your prices, your hours.',
            primary: 'Sign up as a rider →', ghost: 'Open marketplace' },
     footer: { tag: 'Part of the StreetLocal family of apps',
               links: { home: 'StreetLocal', donut: 'Donut app', affiliate: 'Become an agent', faq: 'FAQ', contact: 'Contact' },
