@@ -60,10 +60,10 @@ const STRINGS = {
       kicker: 'Cara kerja',
       title: 'Dari daftar ke online dalam ~7 menit',
       items: [
-        { time: '30 detik', icon: '✍️',  title: 'Daftar gratis',         desc: 'Email + nama + WhatsApp + password. Tidak ada KTP upload, tidak ada training video.' },
-        { time: '2 menit',  icon: '🛵',  title: 'Set motor + harga',     desc: 'Merk, model, tahun, warna, plat. Atur sendiri tarif per km (mis. Rp 2.500) dan minimum fee.' },
-        { time: '1 menit',  icon: '💳',  title: 'Aktifkan Rp 30.000/bulan', desc: 'Bayar via QRIS, GoPay, OVO, Dana, atau transfer bank. Auto-renew, bisa cancel kapan saja.' },
-        { time: 'Selamanya', icon: '🟢',  title: 'Go online → terima quote', desc: 'Tap "Go Online" di dashboard. Customer kontak kamu lewat WhatsApp. Kamu yang atur jam kerjamu.' },
+        { time: '30 detik', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsss-removebg-preview.png',     title: 'Daftar gratis',         desc: 'Email + nama + WhatsApp + password. Tidak ada KTP upload, tidak ada training video.' },
+        { time: '2 menit',  img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxx-removebg-preview.png',   title: 'Set motor + harga',     desc: 'Merk, model, tahun, warna, plat. Atur sendiri tarif per km (mis. Rp 2.500) dan minimum fee.' },
+        { time: '1 menit',  img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxxgg-removebg-preview.png', title: 'Aktifkan Rp 30.000/bulan', desc: 'Bayar via QRIS, GoPay, OVO, Dana, atau transfer bank. Auto-renew, bisa cancel kapan saja.' },
+        { time: 'Selamanya', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxxgghh-removebg-preview.png', title: 'Go online → terima quote', desc: 'Tap "Go Online" di dashboard. Customer kontak kamu lewat WhatsApp. Kamu yang atur jam kerjamu.' },
       ],
     },
     compare: {
@@ -186,10 +186,10 @@ const STRINGS = {
       kicker: 'How it works',
       title: 'From sign-up to online in ~7 minutes',
       items: [
-        { time: '30 sec',  icon: '✍️',  title: 'Sign up free',          desc: 'Email + name + WhatsApp + password. No KYC upload, no training video.' },
-        { time: '2 min',   icon: '🛵',  title: 'Set bike + price',      desc: 'Make, model, year, colour, plate. Set your own per-km rate (e.g. Rp 2,500) and minimum fee.' },
-        { time: '1 min',   icon: '💳',  title: 'Activate Rp 30K/month', desc: 'Pay via QRIS, GoPay, OVO, Dana, or bank transfer. Auto-renew, cancel anytime.' },
-        { time: 'Forever', icon: '🟢',  title: 'Go online → get quotes', desc: 'Tap "Go Online" in the dashboard. Customers contact you on WhatsApp. You set your own hours.' },
+        { time: '30 sec',  img: 'https://ik.imagekit.io/nepgaxllc/Untitledsss-removebg-preview.png',     title: 'Sign up free',          desc: 'Email + name + WhatsApp + password. No KYC upload, no training video.' },
+        { time: '2 min',   img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxx-removebg-preview.png',   title: 'Set bike + price',      desc: 'Make, model, year, colour, plate. Set your own per-km rate (e.g. Rp 2,500) and minimum fee.' },
+        { time: '1 min',   img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxxgg-removebg-preview.png', title: 'Activate Rp 30K/month', desc: 'Pay via QRIS, GoPay, OVO, Dana, or bank transfer. Auto-renew, cancel anytime.' },
+        { time: 'Forever', img: 'https://ik.imagekit.io/nepgaxllc/Untitledsssxxgghh-removebg-preview.png', title: 'Go online → get quotes', desc: 'Tap "Go Online" in the dashboard. Customers contact you on WhatsApp. You set your own hours.' },
       ],
     },
     compare: {
@@ -329,7 +329,11 @@ export default function CityRiderSellingPage() {
       <header className={`cr-nav ${scrolled ? 'cr-nav--scrolled' : ''}`}>
         <div className="cr-nav__inner">
           <a href="/" className="cr-brand">
-            <span className="cr-brand__icon">🛵</span>
+            <img
+              className="cr-brand__icon cr-brand__icon--img"
+              src="https://ik.imagekit.io/nepgaxllc/Untitleddasdasdasasd-removebg-preview.png?updatedAt=1779015947714"
+              alt=""
+            />
             <span>City <span className="cr-grad">Rider</span></span>
           </a>
           <nav className="cr-nav__links">
@@ -440,7 +444,9 @@ export default function CityRiderSellingPage() {
             {t.steps.items.map((s, i) => (
               <div key={i} className="cr-step">
                 <div className="cr-step__num">
-                  <span className="cr-step__icon">{s.icon}</span>
+                  <span className={`cr-step__icon ${s.img ? 'cr-step__icon--img' : ''}`}>
+                    {s.img ? <img src={s.img} alt="" loading="lazy" /> : s.icon}
+                  </span>
                   <span className="cr-step__time">{s.time}</span>
                 </div>
                 <div className="cr-step__title">{s.title}</div>
@@ -697,6 +703,12 @@ function PageStyles() {
         display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
         box-shadow: 0 0 16px rgba(250,204,21,0.35);
       }
+      .cr-brand__icon--img {
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        object-fit: contain;
+      }
       .cr-nav__links { display: flex; align-items: center; gap: 6px; }
       .cr-nav__links a {
         color: rgba(255,255,255,0.65); text-decoration: none;
@@ -929,6 +941,16 @@ function PageStyles() {
         width: 44px; height: 44px; border-radius: 14px;
         background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(250,204,21,0.04));
         display: inline-flex; align-items: center; justify-content: center; font-size: 22px;
+      }
+      .cr-step__icon--img {
+        background: transparent;
+        border-radius: 0;
+        overflow: visible;
+      }
+      .cr-step__icon--img img {
+        width: 44px; height: 44px;
+        object-fit: contain;
+        display: block;
       }
       .cr-step__time { font-size: 13px; font-weight: 800; color: #FACC15; }
       .cr-step__title { font-size: 17px; font-weight: 900; margin-bottom: 6px; }
