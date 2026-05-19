@@ -37,7 +37,7 @@ const STRINGS = {
       lede: 'Marketplace untuk rider motor independen. Atur harga sendiri, simpan 100% pendapatan, kontak customer langsung lewat WhatsApp. Tanpa komisi dan tanpa dispatch.',
       ctaSignup: 'Daftar sebagai rider →',
       ctaMarketplace: 'Lihat marketplace',
-      pill: 'Rp 30.000/bulan · 0% komisi · cancel kapan saja',
+      pill: 'GRATIS 7 hari · lalu Rp 30.000/bulan · 0% komisi · cancel kapan saja',
     },
     // The 3 service categories City Rider supports — Bike Ride, Bike Parcel,
     // Bike Food. Each card uses a transparent-bg PNG from imagekit (cached
@@ -96,10 +96,10 @@ const STRINGS = {
     },
     pricing: {
       kicker: 'Harga', title: 'Satu paket, satu harga, semua termasuk',
-      ribbon: '⚡ Aktif sekarang',
+      ribbon: '⚡ GRATIS 7 hari pertama',
       name: 'City Rider — Rider',
       period: '/bulan',
-      sub: '0% komisi · auto-renew · cancel kapan saja',
+      sub: '7 hari free trial · 0% komisi · auto-renew · cancel kapan saja',
       list: [
         'Listing profile di marketplace GPS',
         'Quote inbox + notifikasi beep + haptic',
@@ -165,7 +165,7 @@ const STRINGS = {
       lede: 'A marketplace for independent motorcycle couriers. Set your own prices, keep 100% of earnings, contact customers directly on WhatsApp. No commission, no dispatch.',
       ctaSignup: 'Sign up as a rider →',
       ctaMarketplace: 'View marketplace',
-      pill: 'Rp 30,000/month · 0% commission · cancel anytime',
+      pill: 'FREE 7 days · then Rp 30,000/month · 0% commission · cancel anytime',
     },
     stats: [
       { img: 'https://ik.imagekit.io/nepgaxllc/Untitleddasdas-removebg-preview.png', value: 'Bike Ride',   label: 'Daily ojek · school/office pickup · event rides' },
@@ -221,10 +221,10 @@ const STRINGS = {
     },
     pricing: {
       kicker: 'Pricing', title: 'One plan, one price, all included',
-      ribbon: '⚡ Active now',
+      ribbon: '⚡ FREE 7 days first',
       name: 'City Rider — Rider',
       period: '/month',
-      sub: '0% commission · auto-renew · cancel anytime',
+      sub: '7-day free trial · 0% commission · auto-renew · cancel anytime',
       list: [
         'Profile listing on the GPS marketplace',
         'Quote inbox + beep + haptic notifications',
@@ -524,8 +524,8 @@ export default function CityRiderSellingPage() {
           <div className="cr-demo">
             <div className="cr-demo__frame">
               <iframe
-                src={CITYRIDER_URL + '/cari/rider?pLat=-7.7928&pLng=110.3657&pName=Malioboro&dLat=-7.7700&dLng=110.3782&dName=UGM'}
-                title="City Rider — daftar driver"
+                src={CITYRIDER_URL + '/r/andi-pratama-yogya?utm_source=streetlocal-demo'}
+                title="City Rider — driver shareable page demo"
                 loading="lazy"
               />
             </div>
