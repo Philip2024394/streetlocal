@@ -1,6 +1,43 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
+// ============================================================================
+// cityrider affiliate API (added with migration 0018 — RLS lockdown).
+// Sensitive reads + updates against affiliate_agents/affiliate_referrals
+// no longer use the anon key directly; they go through these server
+// routes on cityrider.id which verify a bearer token issued at login.
+// ============================================================================
+const CR_API = (import.meta.env?.VITE_CITYRIDER_API_BASE) || 'https://cityrider.id'
+const TOKEN_KEY = 'sl_affiliate_token'
+
+function crGetToken() { try { return localStorage.getItem(TOKEN_KEY) || null } catch { return null } }
+function crSetToken(t) { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY) } catch {} }
+
+async function crFetch(path, init = {}) {
+  const token = crGetToken()
+  const headers = { 'Content-Type': 'application/json', ...(init.headers || {}) }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${CR_API}${path}`, { ...init, headers })
+  let json = null
+  try { json = await res.json() } catch {}
+  if (!res.ok) {
+    const err = new Error(json?.error || `HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return json
+}
+
+async function crLogin(whatsapp, agentCode) {
+  return crFetch('/api/affiliate/login', {
+    method: 'POST',
+    body: JSON.stringify({ whatsapp, agent_code: agentCode }),
+  })
+}
+async function crGetMe()           { return crFetch('/api/affiliate/me') }
+async function crPatchMe(patch)    { return crFetch('/api/affiliate/me', { method: 'PATCH', body: JSON.stringify(patch) }) }
+async function crGetReferrals()    { return crFetch('/api/affiliate/referrals') }
+
 const COUNTRIES = [
   { code: 'ID', flag: '🇮🇩', name: 'Indonesia', prefix: '+62' },
   { code: 'MY', flag: '🇲🇾', name: 'Malaysia', prefix: '+60' },
@@ -536,22 +573,30 @@ export default function Affiliate({ onClose }) {
   useEffect(() => {
     if (agent) {
       loadDashboardData()
-      // Refresh agent data (skip for dev agent)
-      if (supabase && agent.id && !String(agent.id).startsWith('dev')) {
-        supabase.from('affiliate_agents').select('*').eq('id', agent.id).single().then(({ data }) => {
-          if (data) {
-            const updated = { ...agent, ...data }
-            setAgent(updated)
-            localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
-            setBankName(data.bank_name || '')
-            setBankAccount(data.bank_account || '')
-            setBankHolder(data.bank_holder || '')
-            // Extended profile fields (only present once migration is applied)
-            if (data.email !== undefined) setProfEmail(data.email || '')
-            if (data.city !== undefined) setProfCity(data.city || '')
-            if (data.photo_url !== undefined) setProfPhotoUrl(data.photo_url || '')
-            if (data.npwp !== undefined) setProfNpwp(data.npwp || '')
-            if (data.country) setProfCountry(data.country)
+      // Refresh agent data (skip for dev agent). Now goes through the
+      // bearer-gated /api/affiliate/me route — direct anon reads of
+      // affiliate_agents were locked down in migration 0018.
+      if (agent.id && !String(agent.id).startsWith('dev') && crGetToken()) {
+        crGetMe().then(({ agent: data }) => {
+          if (!data) return
+          const updated = { ...agent, ...data }
+          setAgent(updated)
+          localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+          setBankName(data.bank_name || '')
+          setBankAccount(data.bank_account || '')
+          setBankHolder(data.bank_holder || '')
+          if (data.email !== undefined) setProfEmail(data.email || '')
+          if (data.city !== undefined) setProfCity(data.city || '')
+          if (data.photo_url !== undefined) setProfPhotoUrl(data.photo_url || '')
+          if (data.npwp !== undefined) setProfNpwp(data.npwp || '')
+          if (data.country) setProfCountry(data.country)
+        }).catch((e) => {
+          // Token expired / invalid — sign out gracefully so the agent
+          // hits the login screen on next render.
+          if (e?.status === 401) {
+            crSetToken(null)
+            setAgent(null)
+            localStorage.removeItem('sl_affiliate_agent')
           }
         })
       }
@@ -567,19 +612,25 @@ export default function Affiliate({ onClose }) {
     ])
     if (promoRes.data) setPromoMaterials(promoRes.data)
     if (topAgentsRes.data) setLeaderboard(topAgentsRes.data)
-    // Load referrals only for real agents
-    if (agent?.id && !String(agent.id).startsWith('dev') && !String(agent.id).startsWith('local')) {
-      const { data: refs } = await supabase.from('affiliate_referrals').select('*').eq('agent_id', agent.id).order('created_at', { ascending: false })
-      if (refs) {
-        setReferrals(refs)
-        const totalEarnings = refs.filter(r => r.status === 'paid').reduce((s, r) => s + (r.commission_amount || 0), 0)
-        const pendingPayout = refs.filter(r => r.status === 'approved').reduce((s, r) => s + (r.commission_amount || 0), 0)
-        setStats({
-          totalClicks: agent.total_clicks || 0,
-          totalSignups: refs.length,
-          totalEarnings,
-          pendingPayout,
-        })
+    // Load referrals only for real agents — now via the bearer-gated
+    // /api/affiliate/referrals route (anon reads of the table were
+    // locked down in migration 0018).
+    if (agent?.id && !String(agent.id).startsWith('dev') && !String(agent.id).startsWith('local') && crGetToken()) {
+      try {
+        const { referrals: refs } = await crGetReferrals()
+        if (refs) {
+          setReferrals(refs)
+          const totalEarnings = refs.filter(r => r.status === 'paid').reduce((s, r) => s + (r.commission_amount || 0), 0)
+          const pendingPayout = refs.filter(r => r.status === 'approved').reduce((s, r) => s + (r.commission_amount || 0), 0)
+          setStats({
+            totalClicks: agent.total_clicks || 0,
+            totalSignups: refs.length,
+            totalEarnings,
+            pendingPayout,
+          })
+        }
+      } catch (e) {
+        if (e?.status === 401) { crSetToken(null); setAgent(null) }
       }
     }
   }
@@ -603,16 +654,26 @@ export default function Affiliate({ onClose }) {
         const { data: codeExists } = await supabase.from('affiliate_agents').select('id').eq('agent_code', code).single()
         const finalCode = codeExists ? code + Math.floor(10 + Math.random() * 90) : code
 
+        // Status + total_clicks default in the DB (migration 0016); the
+        // anon role doesn't have INSERT privilege on those columns after
+        // migration 0018's lockdown, so leave them out.
         const { data, error: dbErr } = await supabase.from('affiliate_agents').insert({
           name: name.trim(),
           country,
           whatsapp: waDigits,
           agent_code: finalCode,
-          status: 'pending_payment',
-          total_clicks: 0,
-        }).select().single()
+        }).select('id, name, country, agent_code').single()
         if (dbErr) throw new Error(dbErr.message)
         const agentData = data
+        // Mint a bearer token so the subsequent payment-proof + bank
+        // submissions can hit the /api/affiliate/me PATCH route.
+        try {
+          const loginRes = await crLogin(waDigits, finalCode)
+          if (loginRes?.token) {
+            crSetToken(loginRes.token)
+            if (loginRes.agent) Object.assign(agentData, loginRes.agent)
+          }
+        } catch { /* not fatal — payment_proof step will surface 401 */ }
         setAgent(agentData)
         localStorage.setItem('sl_affiliate_agent', JSON.stringify(agentData))
       } else {
@@ -633,21 +694,22 @@ export default function Affiliate({ onClose }) {
     setError('')
     setLoading(true)
     try {
-      if (supabase) {
-        const { data } = await supabase.from('affiliate_agents').select('*')
-          .eq('whatsapp', loginWhatsapp.replace(/[^0-9]/g, ''))
-          .eq('agent_code', loginCode.trim())
-          .single()
-        if (!data) { setError('Invalid credentials'); setLoading(false); return }
-        setAgent(data)
-        localStorage.setItem('sl_affiliate_agent', JSON.stringify(data))
-        setBankName(data.bank_name || '')
-        setBankAccount(data.bank_account || '')
-        setBankHolder(data.bank_holder || '')
-        setStep(data.status === 'pending_payment' ? 'payment' : 'dashboard')
-      }
-    } catch {
-      setError('Login failed')
+      // Now goes through the bearer-token route. Mint the token and
+      // immediately persist; subsequent dashboard calls authenticate
+      // with it.
+      const wa = loginWhatsapp.replace(/[^0-9]/g, '')
+      const code = loginCode.trim()
+      const { token, agent: data } = await crLogin(wa, code)
+      if (!data || !token) { setError('Invalid credentials'); setLoading(false); return }
+      crSetToken(token)
+      setAgent(data)
+      localStorage.setItem('sl_affiliate_agent', JSON.stringify(data))
+      setBankName(data.bank_name || '')
+      setBankAccount(data.bank_account || '')
+      setBankHolder(data.bank_holder || '')
+      setStep(data.status === 'pending_payment' ? 'payment' : 'dashboard')
+    } catch (e) {
+      setError(e?.message || 'Login failed')
     }
     setLoading(false)
   }
@@ -665,18 +727,19 @@ export default function Affiliate({ onClose }) {
           const { data: urlData } = supabase.storage.from('images').getPublicUrl(path)
           proofUrl = urlData?.publicUrl
         }
-        await supabase.from('affiliate_agents').update({
-          status: 'pending_verification',
-          payment_proof: proofUrl,
-          paid_at: new Date().toISOString(),
-        }).eq('id', agent.id)
-        const updated = { ...agent, status: 'pending_verification', payment_proof: proofUrl }
-        setAgent(updated)
-        localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+      }
+      if (agent?.id && crGetToken()) {
+        // PATCH route auto-flips status pending_payment → pending_verification
+        // when payment_proof is set (see /api/affiliate/me).
+        const { agent: data } = await crPatchMe({ payment_proof: proofUrl })
+        if (data) {
+          setAgent(data)
+          localStorage.setItem('sl_affiliate_agent', JSON.stringify(data))
+        }
       }
       setStep('dashboard')
-    } catch {
-      setError('Upload failed, please try again')
+    } catch (e) {
+      setError(e?.message || 'Upload failed, please try again')
     }
     setPaymentUploading(false)
   }
@@ -697,17 +760,20 @@ export default function Affiliate({ onClose }) {
           ktpUrl = urlData?.publicUrl
         }
       }
-      if (supabase && agent?.id) {
-        await supabase.from('affiliate_agents').update({
+      if (agent?.id && crGetToken()) {
+        // PATCH route auto-flips verification_status none → submitted
+        // when bank_account + bank_holder + bank_name + ktp_url are all
+        // present (see /api/affiliate/me).
+        const { agent: data } = await crPatchMe({
           bank_name: bankName.trim(),
           bank_account: bankAccount.trim(),
           bank_holder: bankHolder.trim(),
           ktp_url: ktpUrl,
-          verification_status: 'submitted',
-        }).eq('id', agent.id)
-        const updated = { ...agent, bank_name: bankName, bank_account: bankAccount, bank_holder: bankHolder, ktp_url: ktpUrl, verification_status: 'submitted' }
-        setAgent(updated)
-        localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+        })
+        if (data) {
+          setAgent(data)
+          localStorage.setItem('sl_affiliate_agent', JSON.stringify(data))
+        }
       }
       setVerifySaved(true)
       setTimeout(() => setVerifySaved(false), 3000)
@@ -750,21 +816,27 @@ export default function Affiliate({ onClose }) {
           setProfPhotoUrl(photoUrl)
         }
       }
-      const payload = {
-        country: profCountry || agent.country,
-        email: profEmail || null,
-        city: profCity || null,
-        photo_url: photoUrl || null,
-        npwp: profNpwp || null,
+      // Only `country` is in the PATCH whitelist on /api/affiliate/me —
+      // email/city/photo_url/npwp aren't actually columns on
+      // affiliate_agents (the original code had a try/catch fallback for
+      // missing columns). Keep them in local state for now; if a future
+      // migration adds those columns, extend the route's whitelist.
+      const patch = { country: profCountry || agent.country }
+      if (crGetToken()) {
+        try {
+          const { agent: data } = await crPatchMe(patch)
+          if (data) {
+            const updated = { ...agent, ...data, email: profEmail, city: profCity, photo_url: photoUrl, npwp: profNpwp }
+            setAgent(updated)
+            localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
+          }
+        } catch { /* fall through — local-only update below */ }
       }
-      let { error: dbErr } = await supabase.from('affiliate_agents').update(payload).eq('id', agent.id)
-      if (dbErr) {
-        // Column missing — retry with only the columns that definitely exist
-        await supabase.from('affiliate_agents').update({ country: payload.country }).eq('id', agent.id)
+      if (!crGetToken()) {
+        const updated = { ...agent, ...patch, email: profEmail, city: profCity, photo_url: photoUrl, npwp: profNpwp }
+        setAgent(updated)
+        localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
       }
-      const updated = { ...agent, ...payload, photo_url: photoUrl }
-      setAgent(updated)
-      localStorage.setItem('sl_affiliate_agent', JSON.stringify(updated))
       setProfSaved(true); setTimeout(() => setProfSaved(false), 2400)
       setProfPhotoFile(null)
     } catch (e) {
@@ -775,6 +847,7 @@ export default function Affiliate({ onClose }) {
 
   function logout() {
     localStorage.removeItem('sl_affiliate_agent')
+    crSetToken(null)
     setAgent(null)
     setStep('signup')
     setTab('apps')
